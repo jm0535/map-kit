@@ -55,7 +55,7 @@ pre-commit run --all-files
 
 ## Project Structure
 
-```
+```text
 map-kit/
 ├── index.html              # Web GIS frontend (standalone, zero-backend)
 ├── src/
@@ -93,7 +93,37 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 The Web GIS is a single-file application. When modifying:
 
-- All user-controlled data must be HTML-escaped before DOM insertion
+### Security
+
+- All user-controlled data must be HTML-escaped via `escapeHtml()` before DOM insertion to prevent XSS
+- Object URLs must be revoked with `setTimeout(1000)` delay to ensure downloads complete
+
+### UI/UX
+
 - Use the existing overlay/modal pattern for dialogs (no `prompt()`/`alert()`)
-- Maintain dark/light theme compatibility
-- Test with at least one sample dataset from `data/`
+- Maintain dark/light theme compatibility (add `body.light` rules for new elements)
+- Use toast notifications (`showToast()`) for user feedback
+
+### Layer Management
+
+- New layers must be added via `addLayerToPanel()` and pushed to `uploadedLayers`
+- Call `refreshExportLayerSelect()`, `refreshAttrLayerSelect()`, and `refreshAnalysisLayerSelect()` after adding/removing layers
+- Layer visibility toggle uses the eye icon (`.layer-eye`) synced with a hidden checkbox
+
+### Feature Info
+
+- All feature click handlers must pass `(props, layerId, leafletLayer, featureIndex)` to `showFeatureInfo()`
+- The `_fiLayerId` and `_fiIndex` state variables track the current selection for navigation
+
+### Spatial Analysis
+
+- New analysis tools must call `addAnalysisLayer()` which auto-builds GeoJSON and properties
+- Heat map layers must provide grid data as point GeoJSON features for export
+- Use `_leafletLayerToGeoJSON()` for converting Leaflet layer types to GeoJSON
+
+### Export
+
+- Use `_downloadBlob()` for all file downloads (handles URL revocation safely)
+- Use `_csvEscape()` for CSV value escaping (RFC 4180 compliant)
+- Use `_layerToFeatures()` for extracting GeoJSON features from any layer type
+- Per-layer exports read from the `export-layer-select` dropdown

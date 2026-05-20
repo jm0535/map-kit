@@ -104,8 +104,11 @@
   .panel-body.hidden { display: none; }
 
   /* Layer item */
-  .layer-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; }
-  .layer-item input[type=checkbox] { accent-color: #63b3ed; cursor: pointer; }
+  .layer-item { display: flex; align-items: center; gap: 6px; padding: 5px 4px; font-size: 12px; border-radius: 4px; transition: background 0.15s; }
+  .layer-item:hover { background: rgba(99,179,237,0.06); }
+  .layer-item input[type=checkbox] { display: none; }
+  .layer-eye { cursor: pointer; font-size: 14px; width: 18px; text-align: center; color: #63b3ed; opacity: 1; transition: opacity 0.15s; -webkit-user-select: none; user-select: none; }
+  .layer-eye.off { color: #4a5568; opacity: 0.5; }
   .layer-item.active-layer { background: rgba(99,179,237,0.08); border-radius: 4px; padding: 5px 4px; margin: 0 -4px; }
   .layer-color-swatch {
     width: 14px; height: 14px; border-radius: 3px;
@@ -477,6 +480,9 @@
   body.light .panel-header:hover { background: #edf2f7; }
   body.light .panel-body { color: #4a5568; }
   body.light .layer-item { color: #2d3748; }
+  body.light .layer-item:hover { background: rgba(43,108,176,0.06); }
+  body.light .layer-eye { color: #2b6cb0; }
+  body.light .layer-eye.off { color: #a0aec0; }
   body.light .layer-item.active-layer { background: rgba(43,108,176,0.08); }
   body.light .layer-count { background: #edf2f7; color: #718096; }
   body.light .basemap-btn { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
@@ -1233,7 +1239,8 @@ function addLayerToPanel(info) {
   el.style.position = 'relative';
   const safeName = escapeHtml(info.name);
   el.innerHTML = `
-    <input type="checkbox" checked onchange="toggleUploadedLayer('${info.id}', this.checked)">
+    <input type="checkbox" checked>
+    <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}', !this.previousElementSibling.checked)" title="Toggle visibility">&#x1F441;</span>
     <div class="layer-color-swatch" style="background:${info.color}"></div>
     <span class="layer-label" title="${safeName}" onclick="selectSymbologyLayer('${info.id}');document.getElementById('symbology-layer-select').value='${info.id}';toggleSection(document.querySelector('#symbology-panel').previousElementSibling.querySelector('.panel-header'));event.stopPropagation();" style="cursor:pointer;">${safeName}</span>
     <span class="layer-count">${info.featureCount}</span>
@@ -1248,6 +1255,14 @@ function toggleUploadedLayer(id, on) {
   const info = uploadedLayers.find(l=>l.id===id);
   if (!info) return;
   if (on) info.layer.addTo(map); else map.removeLayer(info.layer);
+  // Update checkbox and eye icon
+  const el = document.querySelector(`.layer-item[data-layer-id="${id}"]`);
+  if (el) {
+    const cb = el.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = on;
+    const eye = el.querySelector('.layer-eye');
+    if (eye) eye.classList.toggle('off', !on);
+  }
   const cb = document.querySelector(`#profile-tabs input[data-profile="${id}"]`);
   if (cb) { cb.checked = on; rebuildProfileFromCheckboxes(); }
 }

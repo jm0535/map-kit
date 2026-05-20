@@ -1,6 +1,6 @@
 # map-kit
 
-A modern Web GIS toolkit for interactive geospatial visualization and spatial analysis, built entirely in the browser. Includes a Python package for generating publication-ready static and interactive maps with elevation profiles.
+A modern, enterprise-grade Web GIS toolkit for interactive geospatial visualization and spatial analysis, built entirely in the browser. Includes a Python package for generating publication-ready static and interactive maps with elevation profiles.
 
 **Live demo**: [https://jm0535.github.io/map-kit/](https://jm0535.github.io/map-kit/)
 
@@ -10,7 +10,7 @@ A modern Web GIS toolkit for interactive geospatial visualization and spatial an
 
 ### Web GIS (`index.html`)
 
-A standalone, zero-backend Web GIS application powered by Leaflet, Chart.js, and Turf.js:
+A standalone, zero-backend Web GIS application powered by Leaflet and Chart.js:
 
 #### Data Import
 
@@ -27,10 +27,11 @@ A standalone, zero-backend Web GIS application powered by Leaflet, Chart.js, and
 
 #### Layer Management
 
-- Toggle visibility, remove layers, reorder
+- **Eye icon toggle** — click the eye to show/hide each layer (QGIS-style visibility toggle)
+- Remove layers, view feature count
 - Feature labels — choose any attribute as map labels with font size control
 - Per-layer opacity slider
-- Click layer name to select for symbology editing (QGIS-style)
+- Click layer name to select for symbology editing
 
 #### Symbology (QGIS-style)
 
@@ -40,6 +41,18 @@ A standalone, zero-backend Web GIS application powered by Leaflet, Chart.js, and
 - **Categorized Renderer**: Color features by unique attribute values (16-color palette)
 - **Graduated Renderer**: Color ramp by numeric attribute — choose column, classes (2–10), and ramp (Viridis, Heat, Cool, Terrain)
 - **Reset** button to return to default styling
+
+#### Feature Info (Right Panel)
+
+- Click any feature on the map to inspect its attributes
+- **Layer name** with color swatch and **geometry type badge** (Point/Line/Polygon)
+- **Coordinate display** (lat, lng) in monospace
+- **Feature navigation** — Previous/Next buttons with counter (e.g., "Feature 3 of 16")
+- **Zoom to feature** button
+- **Copy attributes** to clipboard
+- **Clear** button to reset panel
+- **Map highlight** — selected feature gets a dashed blue overlay on the map
+- Scrollable property table for many attributes
 
 #### Elevation Profile
 
@@ -51,7 +64,7 @@ A standalone, zero-backend Web GIS application powered by Leaflet, Chart.js, and
 
 #### Spatial Analysis
 
-Select a layer and run analysis tools — results appear in the bottom panel:
+Select a layer and run analysis tools — results appear in the bottom panel and are added as exportable layers:
 
 | Tool | Description | Reference |
 | --- | --- | --- |
@@ -74,13 +87,18 @@ Select a layer and run analysis tools — results appear in the bottom panel:
 #### Attribute Table
 
 - Select a layer to browse all features in a searchable table
-- Click a row to zoom to feature and inspect properties
+- Click a row to zoom to feature, highlight it on the map, and inspect properties in Feature Info
 - Search/filter across all columns
 
 #### Export
 
-- **Map**: PNG or PDF with title, legend, north arrow, scale bar, and optional elevation profile
-- **Data**: CSV or GeoJSON per layer
+All imported and analysis-generated layers are fully exportable:
+
+- **Map export**: PNG or PDF with title, legend, north arrow, scale bar, and optional elevation profile (72–400 DPI)
+- **All-layer data**: CSV (with `_layer` column for attribution) or GeoJSON (with `_layer` property per feature)
+- **Per-layer export**: GeoJSON, CSV, or Shapefile (.zip) for any individual layer
+- Heat map layers (IDW, Density, Weighted Density) export as point features with value attributes
+- Buffer circles export as 24-sided polygon approximations
 
 #### UI/UX
 
@@ -229,7 +247,7 @@ All data is handled in **EPSG:4326** (WGS 84). Imported data in other CRS is rep
 ### Security
 
 - All user-controlled data (layer names, attribute values, property values) is HTML-escaped before insertion into the DOM to prevent XSS.
-- Object URLs are revoked after download to prevent memory leaks.
+- Object URLs are revoked after download (1-second delay) to prevent memory leaks while ensuring downloads complete.
 
 ---
 
@@ -260,14 +278,16 @@ make format   # ruff format
 
 - [Leaflet](https://leafletjs.com/) — interactive maps
 - [Chart.js](https://www.chartjs.org/) — elevation profiles
-- [Turf.js](https://turfjs.org/) — geospatial computations
-- [html2canvas](https://html2canvas.hertzen.com/) — map export
+- [html2canvas](https://html2canvas.hertzen.com/) — map export (PNG/PDF)
 - [jsPDF](https://github.com/parallax/jsPDF) — PDF export
+- [shp-write](https://github.com/mapbox/shp-write) — Shapefile export
 - [SheetJS](https://sheetjs.com/) — XLSX parsing
 - [shpjs](https://github.com/calvinmetcalf/shpjs) — Shapefile parsing
-- [proj4js](http://proj4js.org/) — coordinate reprojection
-- [GeoTIFF.js](https://geotiffjs.github.io/) — GeoTIFF parsing
+- [GeoRaster](https://github.com/GeoTIFF/georaster) + [GeoRaster Layer](https://github.com/GeoTIFF/georaster-layer-for-leaflet) — GeoTIFF parsing
 - [toGeoJSON](https://github.com/mapbox/togeojson) — KML/KMZ/GPX conversion
+- [Leaflet Heat](https://github.com/Leaflet/Leaflet.heat) — heat map layers
+- [Leaflet Measure](https://github.com/ljagis/leaflet-measure) — distance/area measurement
+- [Leaflet Fullscreen](https://github.com/brunob/leaflet.fullscreen) — fullscreen control
 
 **Python package**:
 
