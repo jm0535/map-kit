@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_13862c51bdcf2dc4595f6d62db872058 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+<div style="position:fixed;bottom:30px;left:30px;z-index:1000;
+     background:white;padding:12px 16px;border-radius:8px;
+     box-shadow:2px 2px 8px rgba(0,0,0,0.3);font-family:Arial;font-size:13px;">
+  <b>Elevational Transects — PNG</b><br><br>
+  <span style="color:#E05C2A;">&#11044;</span>
+  &nbsp;YUS Conservation Area<br>
+  <span style="color:#2A7AE0;">&#11044;</span>
+  &nbsp;Mt Wilhelm (4,509 m)<br><br>
+  <span style="font-size:11px;color:#888;">Click markers for details</span>
+</div>
+    
+            <div class="folium-map" id="map_13862c51bdcf2dc4595f6d62db872058" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_13862c51bdcf2dc4595f6d62db872058 = L.map(
+                "map_13862c51bdcf2dc4595f6d62db872058",
+                {
+                    center: [-6.0600000000000005, 146.12150000000003],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 7,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_655de9d37a5d6a99359d8c58c100c19a = L.tileLayer(
+                "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 17,
+  "maxNativeZoom": 17,
+  "noWrap": false,
+  "attribution": "OpenTopoMap",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_655de9d37a5d6a99359d8c58c100c19a.addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+            var poly_line_08416750abe1f6cbb84a9d07a03eab38 = L.polyline(
+                [[-6.08, 147.3], [-6.12, 147.27], [-6.16, 147.24], [-6.2, 147.21], [-6.24, 147.18], [-6.28, 147.15], [-6.32, 147.12], [-6.36, 147.09], [-6.4, 147.06]],
+                {"bubblingMouseEvents": true, "color": "#D94F2B", "dashArray": "8 4", "dashOffset": null, "fill": false, "fillColor": "#D94F2B", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+            poly_line_08416750abe1f6cbb84a9d07a03eab38.bindTooltip(
+                `<div>
+                     YUS Transect
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var poly_line_2ae2853e6d07ef1e4bde168b1d346682 = L.polyline(
+                [[-5.78, 145.0], [-5.77, 144.99], [-5.76, 144.98], [-5.75, 144.97], [-5.74, 144.96], [-5.73, 144.95], [-5.72, 144.943]],
+                {"bubblingMouseEvents": true, "color": "#2166AC", "dashArray": "8 4", "dashOffset": null, "fill": false, "fillColor": "#2166AC", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+            poly_line_2ae2853e6d07ef1e4bde168b1d346682.bindTooltip(
+                `<div>
+                     Mt Wilhelm Transect
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_979d73152e5f67f5675da15e02f860f9 = L.circleMarker(
+                [-6.08, 147.3],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_155261c26630018d87914afd6738a0ec = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_0b0b92ddbd6004b70f146e001f05290a = $(`<div id="html_0b0b92ddbd6004b70f146e001f05290a" style="width: 100.0%; height: 100.0%;"><b>YUS-1</b><br>Transect: YUS<br>Elevation: 200 m a.s.l.<br>Lat: -6.0800, Lon: 147.3000</div>`)[0];
+                popup_155261c26630018d87914afd6738a0ec.setContent(html_0b0b92ddbd6004b70f146e001f05290a);
+            
+        
+
+        circle_marker_979d73152e5f67f5675da15e02f860f9.bindPopup(popup_155261c26630018d87914afd6738a0ec)
+        ;
+
+        
+    
+    
+            circle_marker_979d73152e5f67f5675da15e02f860f9.bindTooltip(
+                `<div>
+                     <b>YUS-1</b><br>Elevation: 200 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_677340b4278dec8c7f77f91bf18b6129 = L.circleMarker(
+                [-6.12, 147.27],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_01f39aed0ae619d9b2fe421d8225bf59 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_4ae4b5ebffb400b985c25fc81d33973d = $(`<div id="html_4ae4b5ebffb400b985c25fc81d33973d" style="width: 100.0%; height: 100.0%;"><b>YUS-2</b><br>Transect: YUS<br>Elevation: 500 m a.s.l.<br>Lat: -6.1200, Lon: 147.2700</div>`)[0];
+                popup_01f39aed0ae619d9b2fe421d8225bf59.setContent(html_4ae4b5ebffb400b985c25fc81d33973d);
+            
+        
+
+        circle_marker_677340b4278dec8c7f77f91bf18b6129.bindPopup(popup_01f39aed0ae619d9b2fe421d8225bf59)
+        ;
+
+        
+    
+    
+            circle_marker_677340b4278dec8c7f77f91bf18b6129.bindTooltip(
+                `<div>
+                     <b>YUS-2</b><br>Elevation: 500 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_21f3f31c197a22cd69ee0330e67f33db = L.circleMarker(
+                [-6.16, 147.24],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_c3ae77fe6c5ed85cd114bba71a42b9b8 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_5fe17321a0b44db2047df2d1dc344a82 = $(`<div id="html_5fe17321a0b44db2047df2d1dc344a82" style="width: 100.0%; height: 100.0%;"><b>YUS-3</b><br>Transect: YUS<br>Elevation: 800 m a.s.l.<br>Lat: -6.1600, Lon: 147.2400</div>`)[0];
+                popup_c3ae77fe6c5ed85cd114bba71a42b9b8.setContent(html_5fe17321a0b44db2047df2d1dc344a82);
+            
+        
+
+        circle_marker_21f3f31c197a22cd69ee0330e67f33db.bindPopup(popup_c3ae77fe6c5ed85cd114bba71a42b9b8)
+        ;
+
+        
+    
+    
+            circle_marker_21f3f31c197a22cd69ee0330e67f33db.bindTooltip(
+                `<div>
+                     <b>YUS-3</b><br>Elevation: 800 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_e8ba205a4ec6d10453ec17196057e7a7 = L.circleMarker(
+                [-6.2, 147.21],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_dfc6abb6254f263905400e78ba9b1a95 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_6000440b08edc2cf9202fea3af4aa7f5 = $(`<div id="html_6000440b08edc2cf9202fea3af4aa7f5" style="width: 100.0%; height: 100.0%;"><b>YUS-4</b><br>Transect: YUS<br>Elevation: 1100 m a.s.l.<br>Lat: -6.2000, Lon: 147.2100</div>`)[0];
+                popup_dfc6abb6254f263905400e78ba9b1a95.setContent(html_6000440b08edc2cf9202fea3af4aa7f5);
+            
+        
+
+        circle_marker_e8ba205a4ec6d10453ec17196057e7a7.bindPopup(popup_dfc6abb6254f263905400e78ba9b1a95)
+        ;
+
+        
+    
+    
+            circle_marker_e8ba205a4ec6d10453ec17196057e7a7.bindTooltip(
+                `<div>
+                     <b>YUS-4</b><br>Elevation: 1100 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_fb5f784e04cab137262767a1e4816fed = L.circleMarker(
+                [-6.24, 147.18],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_35efafe26da9ea7a2a2b6118efd739ad = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_b22dcda7a6026d6b14f82dbfeba88e5c = $(`<div id="html_b22dcda7a6026d6b14f82dbfeba88e5c" style="width: 100.0%; height: 100.0%;"><b>YUS-5</b><br>Transect: YUS<br>Elevation: 1400 m a.s.l.<br>Lat: -6.2400, Lon: 147.1800</div>`)[0];
+                popup_35efafe26da9ea7a2a2b6118efd739ad.setContent(html_b22dcda7a6026d6b14f82dbfeba88e5c);
+            
+        
+
+        circle_marker_fb5f784e04cab137262767a1e4816fed.bindPopup(popup_35efafe26da9ea7a2a2b6118efd739ad)
+        ;
+
+        
+    
+    
+            circle_marker_fb5f784e04cab137262767a1e4816fed.bindTooltip(
+                `<div>
+                     <b>YUS-5</b><br>Elevation: 1400 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_ff1ff9bb634e6ff1778f09c4ca73ba7e = L.circleMarker(
+                [-6.28, 147.15],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_b021c1c6f4ca605600e3ff74e56eca61 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_b8ba3356a62cd6ebd42aaf4f9d8b26b2 = $(`<div id="html_b8ba3356a62cd6ebd42aaf4f9d8b26b2" style="width: 100.0%; height: 100.0%;"><b>YUS-6</b><br>Transect: YUS<br>Elevation: 1700 m a.s.l.<br>Lat: -6.2800, Lon: 147.1500</div>`)[0];
+                popup_b021c1c6f4ca605600e3ff74e56eca61.setContent(html_b8ba3356a62cd6ebd42aaf4f9d8b26b2);
+            
+        
+
+        circle_marker_ff1ff9bb634e6ff1778f09c4ca73ba7e.bindPopup(popup_b021c1c6f4ca605600e3ff74e56eca61)
+        ;
+
+        
+    
+    
+            circle_marker_ff1ff9bb634e6ff1778f09c4ca73ba7e.bindTooltip(
+                `<div>
+                     <b>YUS-6</b><br>Elevation: 1700 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_76495fd98667f4a1d2c5a3c1b0db3aca = L.circleMarker(
+                [-6.32, 147.12],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_df1085eacd20c7b7a2b54383a21eb770 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_c318274336952c684e0fb552f6a8179d = $(`<div id="html_c318274336952c684e0fb552f6a8179d" style="width: 100.0%; height: 100.0%;"><b>YUS-7</b><br>Transect: YUS<br>Elevation: 2000 m a.s.l.<br>Lat: -6.3200, Lon: 147.1200</div>`)[0];
+                popup_df1085eacd20c7b7a2b54383a21eb770.setContent(html_c318274336952c684e0fb552f6a8179d);
+            
+        
+
+        circle_marker_76495fd98667f4a1d2c5a3c1b0db3aca.bindPopup(popup_df1085eacd20c7b7a2b54383a21eb770)
+        ;
+
+        
+    
+    
+            circle_marker_76495fd98667f4a1d2c5a3c1b0db3aca.bindTooltip(
+                `<div>
+                     <b>YUS-7</b><br>Elevation: 2000 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_62d82332002a9047faa28500c28887b6 = L.circleMarker(
+                [-6.36, 147.09],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_b63f8029878aaaf9d82c2ff016654582 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_4751fd2ff4060fe03016f4191bdad233 = $(`<div id="html_4751fd2ff4060fe03016f4191bdad233" style="width: 100.0%; height: 100.0%;"><b>YUS-8</b><br>Transect: YUS<br>Elevation: 2400 m a.s.l.<br>Lat: -6.3600, Lon: 147.0900</div>`)[0];
+                popup_b63f8029878aaaf9d82c2ff016654582.setContent(html_4751fd2ff4060fe03016f4191bdad233);
+            
+        
+
+        circle_marker_62d82332002a9047faa28500c28887b6.bindPopup(popup_b63f8029878aaaf9d82c2ff016654582)
+        ;
+
+        
+    
+    
+            circle_marker_62d82332002a9047faa28500c28887b6.bindTooltip(
+                `<div>
+                     <b>YUS-8</b><br>Elevation: 2400 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a78d38a57bc69a5d433b9e77ebdc3e0e = L.circleMarker(
+                [-6.4, 147.06],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#D94F2B", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_eca9ec4b2ed70d76991e98c2193d2b06 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_ea4b6fa4d6bfe4c1eeb23d5b6039aa6e = $(`<div id="html_ea4b6fa4d6bfe4c1eeb23d5b6039aa6e" style="width: 100.0%; height: 100.0%;"><b>YUS-9</b><br>Transect: YUS<br>Elevation: 2800 m a.s.l.<br>Lat: -6.4000, Lon: 147.0600</div>`)[0];
+                popup_eca9ec4b2ed70d76991e98c2193d2b06.setContent(html_ea4b6fa4d6bfe4c1eeb23d5b6039aa6e);
+            
+        
+
+        circle_marker_a78d38a57bc69a5d433b9e77ebdc3e0e.bindPopup(popup_eca9ec4b2ed70d76991e98c2193d2b06)
+        ;
+
+        
+    
+    
+            circle_marker_a78d38a57bc69a5d433b9e77ebdc3e0e.bindTooltip(
+                `<div>
+                     <b>YUS-9</b><br>Elevation: 2800 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_6631966c66158a5a13e21370e1dea1ef = L.circleMarker(
+                [-5.78, 145.0],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2166AC", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_31e86dd9d9f15069540090bfcfbfcc3f = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_16c0fd1ad718ddd26ec967fda757ef81 = $(`<div id="html_16c0fd1ad718ddd26ec967fda757ef81" style="width: 100.0%; height: 100.0%;"><b>MtW-1</b><br>Transect: Mt Wilhelm<br>Elevation: 2600 m a.s.l.<br>Lat: -5.7800, Lon: 145.0000</div>`)[0];
+                popup_31e86dd9d9f15069540090bfcfbfcc3f.setContent(html_16c0fd1ad718ddd26ec967fda757ef81);
+            
+        
+
+        circle_marker_6631966c66158a5a13e21370e1dea1ef.bindPopup(popup_31e86dd9d9f15069540090bfcfbfcc3f)
+        ;
+
+        
+    
+    
+            circle_marker_6631966c66158a5a13e21370e1dea1ef.bindTooltip(
+                `<div>
+                     <b>MtW-1</b><br>Elevation: 2600 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a1334efd8f3fa85c70f0f65f84d418ce = L.circleMarker(
+                [-5.77, 144.99],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2166AC", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_ae88f85ea678d95be95c14e2f0c34fee = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_cb1ae80d0aaf5821870d43b6ff69e2e4 = $(`<div id="html_cb1ae80d0aaf5821870d43b6ff69e2e4" style="width: 100.0%; height: 100.0%;"><b>MtW-2</b><br>Transect: Mt Wilhelm<br>Elevation: 2900 m a.s.l.<br>Lat: -5.7700, Lon: 144.9900</div>`)[0];
+                popup_ae88f85ea678d95be95c14e2f0c34fee.setContent(html_cb1ae80d0aaf5821870d43b6ff69e2e4);
+            
+        
+
+        circle_marker_a1334efd8f3fa85c70f0f65f84d418ce.bindPopup(popup_ae88f85ea678d95be95c14e2f0c34fee)
+        ;
+
+        
+    
+    
+            circle_marker_a1334efd8f3fa85c70f0f65f84d418ce.bindTooltip(
+                `<div>
+                     <b>MtW-2</b><br>Elevation: 2900 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3c8c3fac5b3fb86f6effe3b0a4c0604c = L.circleMarker(
+                [-5.76, 144.98],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2166AC", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_fd816e297f671bcb9cc505f61400e779 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_7ceafb642b629ea373fb2d06c63c64ba = $(`<div id="html_7ceafb642b629ea373fb2d06c63c64ba" style="width: 100.0%; height: 100.0%;"><b>MtW-3</b><br>Transect: Mt Wilhelm<br>Elevation: 3200 m a.s.l.<br>Lat: -5.7600, Lon: 144.9800</div>`)[0];
+                popup_fd816e297f671bcb9cc505f61400e779.setContent(html_7ceafb642b629ea373fb2d06c63c64ba);
+            
+        
+
+        circle_marker_3c8c3fac5b3fb86f6effe3b0a4c0604c.bindPopup(popup_fd816e297f671bcb9cc505f61400e779)
+        ;
+
+        
+    
+    
+            circle_marker_3c8c3fac5b3fb86f6effe3b0a4c0604c.bindTooltip(
+                `<div>
+                     <b>MtW-3</b><br>Elevation: 3200 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_71a47df03395b17208d08cb9d3b046d4 = L.circleMarker(
+                [-5.75, 144.97],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2166AC", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_d8875a1af1453d982c972b8bda263f34 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_5de7e4aa6abc3754b1dddf08c19995d3 = $(`<div id="html_5de7e4aa6abc3754b1dddf08c19995d3" style="width: 100.0%; height: 100.0%;"><b>MtW-4</b><br>Transect: Mt Wilhelm<br>Elevation: 3500 m a.s.l.<br>Lat: -5.7500, Lon: 144.9700</div>`)[0];
+                popup_d8875a1af1453d982c972b8bda263f34.setContent(html_5de7e4aa6abc3754b1dddf08c19995d3);
+            
+        
+
+        circle_marker_71a47df03395b17208d08cb9d3b046d4.bindPopup(popup_d8875a1af1453d982c972b8bda263f34)
+        ;
+
+        
+    
+    
+            circle_marker_71a47df03395b17208d08cb9d3b046d4.bindTooltip(
+                `<div>
+                     <b>MtW-4</b><br>Elevation: 3500 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3d6b650c759159338e44ffee4d17bcba = L.circleMarker(
+                [-5.74, 144.96],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2166AC", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_c0f284615f98ed4ffefd53888ba62524 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_1539f3171bffe164100798780d627743 = $(`<div id="html_1539f3171bffe164100798780d627743" style="width: 100.0%; height: 100.0%;"><b>MtW-5</b><br>Transect: Mt Wilhelm<br>Elevation: 3800 m a.s.l.<br>Lat: -5.7400, Lon: 144.9600</div>`)[0];
+                popup_c0f284615f98ed4ffefd53888ba62524.setContent(html_1539f3171bffe164100798780d627743);
+            
+        
+
+        circle_marker_3d6b650c759159338e44ffee4d17bcba.bindPopup(popup_c0f284615f98ed4ffefd53888ba62524)
+        ;
+
+        
+    
+    
+            circle_marker_3d6b650c759159338e44ffee4d17bcba.bindTooltip(
+                `<div>
+                     <b>MtW-5</b><br>Elevation: 3800 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_f7cde88f2a851905efe5700d21ba68e3 = L.circleMarker(
+                [-5.73, 144.95],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2166AC", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_0fda81d02fcc975e7472430453b469c4 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_e14b8234a69d81c4ae306eb3996d3d9d = $(`<div id="html_e14b8234a69d81c4ae306eb3996d3d9d" style="width: 100.0%; height: 100.0%;"><b>MtW-6</b><br>Transect: Mt Wilhelm<br>Elevation: 4100 m a.s.l.<br>Lat: -5.7300, Lon: 144.9500</div>`)[0];
+                popup_0fda81d02fcc975e7472430453b469c4.setContent(html_e14b8234a69d81c4ae306eb3996d3d9d);
+            
+        
+
+        circle_marker_f7cde88f2a851905efe5700d21ba68e3.bindPopup(popup_0fda81d02fcc975e7472430453b469c4)
+        ;
+
+        
+    
+    
+            circle_marker_f7cde88f2a851905efe5700d21ba68e3.bindTooltip(
+                `<div>
+                     <b>MtW-6</b><br>Elevation: 4100 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_66ba8a3e68eb253bc721b05c35a3c277 = L.circleMarker(
+                [-5.72, 144.943],
+                {"bubblingMouseEvents": true, "color": "white", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2166AC", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8, "stroke": true, "weight": 1.5}
+            ).addTo(map_13862c51bdcf2dc4595f6d62db872058);
+        
+    
+        var popup_de8673cf41e87310d8be07251c7254ae = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_5dde24eb72822f00084984b4c70a8a9e = $(`<div id="html_5dde24eb72822f00084984b4c70a8a9e" style="width: 100.0%; height: 100.0%;"><b>MtW-7</b><br>Transect: Mt Wilhelm<br>Elevation: 4509 m a.s.l.<br>Lat: -5.7200, Lon: 144.9430</div>`)[0];
+                popup_de8673cf41e87310d8be07251c7254ae.setContent(html_5dde24eb72822f00084984b4c70a8a9e);
+            
+        
+
+        circle_marker_66ba8a3e68eb253bc721b05c35a3c277.bindPopup(popup_de8673cf41e87310d8be07251c7254ae)
+        ;
+
+        
+    
+    
+            circle_marker_66ba8a3e68eb253bc721b05c35a3c277.bindTooltip(
+                `<div>
+                     <b>MtW-7</b><br>Elevation: 4509 m
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+</script>
+</html>
