@@ -1106,22 +1106,37 @@ const MapLegend = L.Control.extend({
   _renderLayer(info) {
     const st = legendState[info.id] || { mode: 'simple', color: info.color, geomType: 'Point' };
     const name = escapeHtml(info.name);
+    const color = st.color || info.color;
     let html = `<div class="map-legend-layer">`;
-    html += `<div class="map-legend-layer-title"><div class="leg-swatch" style="background:${st.color || info.color}"></div>${name}</div>`;
 
     if (st.mode === 'categorized' && st.colorMap) {
-      const entries = Object.entries(st.colorMap);
-      entries.forEach(([val, color]) => {
-        html += this._renderSymbol(st.geomType, color, String(val), st.shape, info.id, true);
+      // Title with plain swatch, then category rows below
+      html += `<div class="map-legend-layer-title"><div class="leg-swatch" style="background:${color}"></div>${name}</div>`;
+      Object.entries(st.colorMap).forEach(([val, c]) => {
+        html += this._renderSymbol(st.geomType, c, String(val), st.shape, info.id, true);
       });
     } else if (st.mode === 'graduated' && st.ramp) {
+      html += `<div class="map-legend-layer-title"><div class="leg-swatch" style="background:${color}"></div>${name}</div>`;
       html += this._renderRamp(st.ramp, st.minVal, st.maxVal, st.breaks, st.geomType, st.shape);
     } else {
-      // Simple symbol
-      html += this._renderSymbol(st.geomType, st.color || info.color, `${st.geomType}`, st.shape, info.id, false);
+      // Simple: inline symbol in title — no redundant "Point" row
+      html += `<div class="map-legend-layer-title">${this._inlineSymbol(st.geomType, color, st.shape)}${name}</div>`;
     }
     html += '</div>';
     return html;
+  },
+  _inlineSymbol(geomType, color, shape) {
+    if (shape && shape !== 'circle') {
+      return `<span style="display:inline-flex;width:12px;height:12px;margin-right:4px;flex-shrink:0;"><svg viewBox="-1.3 -1.3 2.6 2.6" width="12" height="12"><path d="${shape}" fill="${color}" stroke="white" stroke-width="0.15"/></svg></span>`;
+    }
+    if (geomType === 'Point') {
+      return `<span class="leg-swatch" style="background:${color};border-radius:50%;"></span>`;
+    }
+    if (geomType === 'LineString' || geomType === 'MultiLineString') {
+      return `<span style="display:inline-block;width:16px;height:3px;background:${color};border-radius:1px;margin-right:4px;flex-shrink:0;"></span>`;
+    }
+    // Polygon
+    return `<span style="display:inline-block;width:12px;height:8px;background:${color}40;border:1.5px solid ${color};border-radius:2px;margin-right:4px;flex-shrink:0;"></span>`;
   },
   _renderSymbol(geomType, color, label, shape, layerId, editable) {
     let sym = '';
