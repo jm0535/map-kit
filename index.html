@@ -145,7 +145,7 @@
   .map-legend-empty { color: #4a5568; text-align: center; padding: 8px 0; font-size: 10px; }
 
   /* Digitizing toolbar */
-  .digitize-toolbar { position: absolute; top: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 4px; }
+  .digitize-toolbar { position: absolute; top: 52px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 4px; }
   .digitize-btn { width: 34px; height: 34px; border-radius: 6px; border: 1px solid #2d3748; background: rgba(15,17,23,0.92); color: #a0aec0; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.15s; }
   .digitize-btn:hover { background: rgba(45,55,72,0.9); color: #e2e8f0; border-color: #4a5568; }
   .digitize-btn.active { background: rgba(99,179,237,0.15); color: #63b3ed; border-color: #63b3ed; box-shadow: 0 0 8px rgba(99,179,237,0.3); }
@@ -1500,8 +1500,16 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && _digMode) cancelDigitize();
 });
 
-let basemapLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-  {attribution:'OpenTopoMap', maxZoom:17}).addTo(map);
+// Pre-create basemap layers for fast switching (no full tile reload)
+const _basemapCache = {};
+function _getBasemapLayer(url, attr) {
+  const key = url;
+  if (!_basemapCache[key]) {
+    _basemapCache[key] = L.tileLayer(url, {attribution: attr, maxZoom: 19, maxNativeZoom: 18});
+  }
+  return _basemapCache[key];
+}
+let basemapLayer = _getBasemapLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', 'OpenTopoMap').addTo(map);
 
 map.on('mousemove', e => {
   document.getElementById('coord-display').textContent =
@@ -3584,7 +3592,7 @@ function switchBasemap(btn) {
   document.querySelectorAll('.basemap-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   map.removeLayer(basemapLayer);
-  basemapLayer = L.tileLayer(btn.dataset.url, {attribution:btn.dataset.attr, maxZoom:19}).addTo(map);
+  basemapLayer = _getBasemapLayer(btn.dataset.url, btn.dataset.attr).addTo(map);
   basemapLayer.bringToBack();
 }
 
