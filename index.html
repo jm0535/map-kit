@@ -691,14 +691,18 @@
         </div>
         <div class="profile-tabs" id="profile-tabs"></div>
         <div style="flex:1"></div>
-        <span id="profile-hint" style="font-size:10px;color:#4a5568;font-weight:400;letter-spacing:0">Click a marker to highlight on profile</span>
+        <span id="profile-hint" style="font-size:10px;color:#4a5568;font-weight:400;letter-spacing:0">Click a point on the profile to pan the map</span>
       </div>
       <div id="bottom-tab-elevation" class="bottom-tab-content active">
         <div id="profile-canvas-wrap"><canvas id="profile-chart"></canvas></div>
       </div>
       <div id="bottom-tab-analysis" class="bottom-tab-content" style="display:none;">
         <div id="analysis-results-panel" style="flex:1;padding:10px 14px;overflow-y:auto;font-size:11px;color:#a0aec0;line-height:1.7;">
-          <div id="analysis-results-empty" style="color:#4a5568;text-align:center;padding:30px 0;">Run a spatial analysis tool from the left panel to see results here.</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:10px;color:#63b3ed;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Results</span>
+            <button onclick="clearAnalysisResults()" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Clear</button>
+          </div>
+          <div id="analysis-results-empty" style="color:#4a5568;text-align:center;padding:20px 0;">Run a spatial analysis tool from the left panel to see results here.</div>
           <div id="analysis-results-content" style="display:none;"></div>
         </div>
       </div>
@@ -753,6 +757,54 @@
       </div>
       <div class="panel-body hidden" style="padding:8px 12px;">
         <div id="minimap"></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
+        <span>User Guide</span><span class="arrow">&#x25BC;</span>
+      </div>
+      <div class="panel-body hidden" style="font-size:10px;color:#a0aec0;line-height:1.6;max-height:400px;overflow-y:auto;">
+        <b style="color:#63b3ed;">Getting Started</b><br>
+        Drag &amp; drop or use the upload button to import GeoJSON, KML, GPX, Shapefile (.zip), CSV, XLSX, or GeoTIFF files.<br><br>
+        <b style="color:#63b3ed;">Navigation</b><br>
+        Scroll to zoom, drag to pan. Use the zoom buttons (top-left) or double-click to zoom in. Toggle fullscreen with the button top-left.<br><br>
+        <b style="color:#63b3ed;">Basemaps</b><br>
+        Switch between Topo, Satellite, Streets, Relief, Terrain, and Dark basemaps. Adjust basemap opacity with the slider.<br><br>
+        <b style="color:#63b3ed;">Layers</b><br>
+        Toggle layer visibility with checkboxes. Remove layers with the &times; button. The &#x1f3f7; button opens label controls &mdash; choose which attribute to display as map labels.<br><br>
+        <b style="color:#63b3ed;">Symbology</b><br>
+        <b>Simple Symbol</b> &mdash; Change fill color, size, opacity, stroke color/width/style, and marker shape (circle, square, triangle, diamond, star, cross).<br>
+        <b>Categorized</b> &mdash; Color features by unique values of a selected attribute column.<br>
+        <b>Graduated</b> &mdash; Color features along a color ramp based on numeric values. Choose column, number of classes, and color ramp (Viridis, Heat, Cool, Terrain).<br>
+        Click <b>Reset</b> to return to the default single-color symbol.<br><br>
+        <b style="color:#63b3ed;">Elevation Profile</b><br>
+        Layers with elevation data automatically generate a profile chart in the bottom panel. Toggle layers on/off with checkboxes. <b>Click a point on the profile</b> to pan the map to that location. Drag the top edge of the panel to resize.<br><br>
+        <b style="color:#63b3ed;">Spatial Analysis</b><br>
+        Select a layer, then choose a tool:<br>
+        &bull; <b>Mean Center</b> &mdash; Geographic center with standard distance circle<br>
+        &bull; <b>Bounding Box</b> &mdash; Minimum bounding rectangle with area<br>
+        &bull; <b>NNI</b> &mdash; Nearest Neighbor Index (clustered/random/dispersed)<br>
+        &bull; <b>Moran's I</b> &mdash; Spatial autocorrelation with inverse-distance weights<br>
+        &bull; <b>IDW</b> &mdash; Inverse Distance Weighting interpolation surface<br>
+        &bull; <b>Point Density</b> &mdash; Concentration heat map<br>
+        &bull; <b>Weighted Density</b> &mdash; Attribute-weighted density surface<br>
+        &bull; <b>DBSCAN</b> &mdash; Density-based clustering (auto eps, MinPts=3)<br>
+        &bull; <b>Convex Hull</b> &mdash; Minimum convex polygon with perimeter<br>
+        &bull; <b>Line Lengths</b> &mdash; Haversine line distance calculation<br>
+        &bull; <b>Polygon Areas</b> &mdash; Spherical excess area calculation<br>
+        &bull; <b>Centroids</b> &mdash; Area-weighted centroid for polygons, mean center for points<br>
+        &bull; <b>Simplify</b> &mdash; Douglas-Peucker simplification (adjustable tolerance)<br>
+        &bull; <b>Buffer</b> &mdash; Circular buffer zones around features<br>
+        &bull; <b>Voronoi</b> &mdash; Thiessen polygon tessellation<br><br>
+        <b style="color:#63b3ed;">Attribute Table</b><br>
+        Select a layer to view its attribute table. Click a row to zoom to that feature and inspect its properties. Use the search box to filter rows.<br><br>
+        <b style="color:#63b3ed;">Export</b><br>
+        Export the map as PNG or PDF with configurable DPI. Export layer data as CSV or GeoJSON. The "Shapefile" option exports GeoJSON (convert with ogr2ogr/QGIS).<br><br>
+        <b style="color:#63b3ed;">Keyboard Shortcuts</b><br>
+        &bull; <b>+/-</b> &mdash; Zoom in/out<br>
+        &bull; <b>F</b> &mdash; Toggle fullscreen<br>
+        &bull; <b>L</b> &mdash; Toggle layer panel<br>
       </div>
     </div>
   </div>
@@ -1859,7 +1911,7 @@ function registerProfile(id, label, color, latLonElevArray) {
   const points = latLonElevArray.map((p, i) => ({ dist: +dists[i].toFixed(3), elev: p.elev }));
   const idx = profileRegistry.findIndex(p => p.id === id);
   if (idx !== -1) profileRegistry.splice(idx, 1);
-  profileRegistry.push({ id, label, color, points });
+  profileRegistry.push({ id, label, color, points, _latLonElev: latLonElevArray });
   rebuildProfileCheckboxes();
   rebuildProfileFromCheckboxes();
 }
@@ -1935,7 +1987,19 @@ function rebuildProfileFromCheckboxes() {
       },
       scales:{
         x:{type:'linear',title:{display:true,text:'Distance (km)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
-        y:{title:{display:true,text:'Elevation (m)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
+        y:{beginAtZero:false,title:{display:true,text:'Elevation (m a.s.l.)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
+      },
+      onClick:(evt, elements) => {
+        if (elements.length > 0) {
+          const el = elements[0];
+          const ds = profileChart.data.datasets[el.datasetIndex];
+          const pt = ds.data[el.index];
+          const profile = profileRegistry.find(p => p.label === ds.label);
+          if (profile && profile._latLonElev) {
+            const loc = profile._latLonElev[el.index];
+            map.setView([loc.lat, loc.lon], map.getZoom(), {animate:true});
+          }
+        }
       }
     }
   });
@@ -2176,6 +2240,15 @@ function clearAnalysisOverlays() {
   analysisOverlays.forEach(l => map.removeLayer(l));
   analysisOverlays = [];
   activeHeatLayers = [];
+}
+
+function clearAnalysisResults() {
+  clearAnalysisOverlays();
+  const content = document.getElementById('analysis-results-content');
+  const empty = document.getElementById('analysis-results-empty');
+  content.style.display = 'none';
+  content.innerHTML = '';
+  empty.style.display = '';
 }
 
 function runAnalysis(tool) {
