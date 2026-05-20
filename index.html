@@ -671,11 +671,11 @@
       </div>
       <div class="panel-body">
         <div class="basemap-grid" id="basemap-grid">
-          <div class="basemap-btn active" data-url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" data-attr="CartoDB" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Topo</div>
+          <div class="basemap-btn active" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Esri World Topo" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Topo</div>
           <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Imagery" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Satellite</div>
           <div class="basemap-btn" data-url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" data-attr="OSM" data-subdomains="abc" data-maxz="19" onclick="switchBasemap(this)">Streets</div>
           <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Relief" data-subdomains="" data-maxz="13" onclick="switchBasemap(this)">Relief</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Esri World Topo" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Terrain</div>
+          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" data-attr="CartoDB" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Voyager</div>
           <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="CartoDB Dark Matter" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Dark</div>
         </div>
         <div class="slider-row" style="margin-top:8px">
@@ -1539,10 +1539,10 @@ function _getBasemapLayer(url, attr, subdomains, maxNativeZoom) {
   }
   return _basemapCache[key];
 }
-// Default to CartoDB Voyager (fast, reliable)
+// Default: Esri World Topo Map (topographic, fast, reliable)
 let basemapLayer = _getBasemapLayer(
-  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-  'CartoDB', 'abcd', 20
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+  'Esri World Topo', '', 18
 ).addTo(map);
 
 map.on('mousemove', e => {
