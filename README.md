@@ -4,7 +4,7 @@ A lightweight Web GIS toolkit for interactive geospatial visualization and spati
 
 ## Features
 
-### Web GIS (`webgis.html`)
+### Web GIS (`index.html`)
 
 A standalone, zero-backend Web GIS application powered by Leaflet and Chart.js:
 
@@ -27,13 +27,13 @@ A Python script using GeoPandas, Matplotlib, Folium, and Contextily to generate:
 
 ### Web GIS
 
-Open `webgis.html` directly in a modern web browser:
+Open `index.html` directly in a modern web browser:
 
 ```bash
-open webgis.html
+open index.html
 # or
 python -m http.server 8000
-# then navigate to http://localhost:8000/webgis.html
+# then navigate to http://localhost:8000
 ```
 
 ### Static Maps
@@ -42,17 +42,19 @@ Install dependencies and run the generator:
 
 ```bash
 pip install geopandas pandas matplotlib folium contextily shapely pyproj
-python make_maps.py
+python src/make_maps.py
 ```
 
 ## Project Structure
 
-| File | Description |
+| Path | Description |
 |------|-------------|
-| `make_maps.py` | Static & interactive map generator |
-| `webgis.html` | Full-featured standalone Web GIS |
-| `yus_transect.csv` | Sample biodiversity data (species abundance) |
-| `mt_wilhelm_transect.xlsx` | Mt Wilhelm transect data |
+| `index.html` | Full-featured standalone Web GIS (GitHub Pages entry point) |
+| `src/make_maps.py` | Static & interactive map generator |
+| `data/yus_transect.csv` | Sample biodiversity data (species abundance) |
+| `data/mt_wilhelm_transect.xlsx` | Mt Wilhelm transect data |
+| `docs/transect_map.html` | Generated Folium interactive map |
+| `docs/transect_map.png` | Generated static map with elevation profiles |
 
 ## Data
 
@@ -61,7 +63,7 @@ The project includes sample elevational transect data from Papua New Guinea:
 - **YUS Conservation Area** (Huon Peninsula, Morobe): 9 sites, 200m–2800m elevation
 - **Mt Wilhelm** (Chimbu Province): 7 sites, 2600m–4509m (summit)
 
-The CSV (`yus_transect.csv`) contains bird species abundance records across YUS sites.
+The CSV (`data/yus_transect.csv`) contains bird species abundance records across YUS sites.
 
 ## Dependencies
 

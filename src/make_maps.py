@@ -12,7 +12,13 @@ import folium
 from shapely.geometry import Point, LineString
 import contextily as ctx
 import warnings
+from pathlib import Path
 warnings.filterwarnings("ignore")
+
+# Project-relative output directory (repo_root/docs/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DOCS_DIR = PROJECT_ROOT / "docs"
+DOCS_DIR.mkdir(exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Study points: YUS Conservation Area transect (Huon Peninsula, Morobe)
@@ -201,10 +207,10 @@ fig.text(0.5, 0.005,
          "Note: Study point locations are indicative. Replace with actual GPS coordinates before publication.",
          ha="center", fontsize=7.5, color="#777777", style="italic")
 
-plt.savefig("/home/jmoses/maps/pita_transects/transect_map.png",
-            dpi=200, bbox_inches="tight", facecolor="white")
+out_png = DOCS_DIR / "transect_map.png"
+plt.savefig(out_png, dpi=200, bbox_inches="tight", facecolor="white")
 plt.close()
-print("Static map saved: /home/jmoses/maps/pita_transects/transect_map.png")
+print(f"Static map saved: {out_png}")
 
 # ---------------------------------------------------------------------------
 # 3. INTERACTIVE MAP (HTML)
@@ -259,6 +265,6 @@ legend_html = """
 """
 m.get_root().html.add_child(folium.Element(legend_html))
 
-out_html = "/home/jmoses/maps/pita_transects/transect_map.html"
-m.save(out_html)
+out_html = DOCS_DIR / "transect_map.html"
+m.save(str(out_html))
 print(f"Interactive map saved: {out_html}")
