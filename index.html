@@ -2206,7 +2206,9 @@ function runAnalysis(tool) {
       denominator += (vals[i]-mean)**2;
       for (let j = 0; j < n; j++) {
         if (i === j) continue;
-        const w = 1 / (haversineDist(pts[i], pts[j]) + 1);
+        const d = haversineDist(pts[i], pts[j]);
+        if (d === 0) continue;
+        const w = 1 / d;
         W += w;
         numerator += w * (vals[i]-mean) * (vals[j]-mean);
       }
@@ -2214,8 +2216,8 @@ function runAnalysis(tool) {
     const I = (n / W) * (numerator / denominator);
     const expected = -1 / (n - 1);
     let interp = 'No significant autocorrelation';
-    if (I > expected + 0.3) interp = 'Positive spatial autocorrelation (similar values cluster)';
-    else if (I < expected - 0.3) interp = 'Negative spatial autocorrelation (dissimilar values cluster)';
+    if (I > expected + 0.2) interp = 'Positive spatial autocorrelation (similar values cluster)';
+    else if (I < expected - 0.2) interp = 'Negative spatial autocorrelation (dissimilar values cluster)';
     showResult(`<b>Moran's I</b> (attribute: ${attr})<br><b>I:</b> ${I.toFixed(4)}<br><b>Expected:</b> ${expected.toFixed(4)}<br><b>Interpretation:</b> ${interp}<br><span style="color:#718096">Inverse-distance weights used</span>`);
     break;
   }
@@ -2266,8 +2268,8 @@ function runAnalysis(tool) {
     analysisOverlays.push(heat);
     activeHeatLayers.push(heat);
     storeHeatData(heat, heatData);
-    addAnalysisLayer('Kernel Density', [heat], null);
-    showResult(`<b>Kernel Density Estimation</b><br>${pts.length} points<br><span style="color:#718096">Dark=low density, Bright=high density</span>`);
+    addAnalysisLayer('Point Density', [heat], null);
+    showResult(`<b>Point Density</b><br>${pts.length} points<br><span style="color:#718096">Bright=high concentration, Dark=low concentration</span>`);
     break;
   }
 
@@ -2284,16 +2286,23 @@ function runAnalysis(tool) {
     analysisOverlays.push(hotHeat);
     activeHeatLayers.push(hotHeat);
     storeHeatData(hotHeat, hotData);
-    addAnalysisLayer(`Hotspot (${hotAttr})`, [hotHeat], null);
+    addAnalysisLayer(`Weighted Density (${hotAttr})`, [hotHeat], null);
     const sum = hotVals.reduce((a,b)=>a+b,0);
-    showResult(`<b>Hotspot Map</b> weighted by <b>${hotAttr}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:#718096">Purple=low, Red=high intensity</span>`);
+    showResult(`<b>Weighted Density Map</b> weighted by <b>${hotAttr}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:#718096">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
     break;
   }
 
   case 'dbscan': {
     if (pts.length < 4) { showToast('Need at least 4 points', 'error'); return; }
-    const epsMeter = haversineDist(pts[0], pts[1]) * 1.5;
-    const minPts = 2;
+    // Auto-derive eps from median nearest-neighbor distance (more robust than first-pair)
+    const nnDists = pts.map((p, i) => {
+      let minD = Infinity;
+      pts.forEach((q, j) => { if (i !== j) { const d = haversineDist(p, q); if (d < minD) minD = d; } });
+      return minD;
+    });
+    nnDists.sort((a, b) => a - b);
+    const epsMeter = nnDists[Math.floor(nnDists.length / 2)] * 1.5;
+    const minPts = 3;
     const labels = new Array(pts.length).fill(-1);
     let clusterId = 0;
     const visited = new Set();
@@ -2393,17 +2402,53 @@ function runAnalysis(tool) {
     features.forEach(f => {
       if (!f.geometry) return;
       let lat, lon;
-      const allC = [];
-      const extractCoords = (c, type) => {
-        if (type === 'Point') allC.push(c);
-        else if (type === 'MultiPoint' || type === 'LineString') c.forEach(p => allC.push(p));
-        else if (type === 'MultiLineString' || type === 'Polygon') c.forEach(r => r.forEach(p => allC.push(p)));
-        else if (type === 'MultiPolygon') c.forEach(pl => pl.forEach(r => r.forEach(p => allC.push(p))));
-      };
-      extractCoords(f.geometry.coordinates, f.geometry.type);
-      if (allC.length === 0) return;
-      lon = allC.reduce((s,c)=>s+c[0],0) / allC.length;
-      lat = allC.reduce((s,c)=>s+c[1],0) / allC.length;
+      const gt = f.geometry.type;
+      if (gt === 'Polygon' || gt === 'MultiPolygon') {
+        // Area-weighted centroid (shoelace formula)
+        const rings = gt === 'MultiPolygon' ? f.geometry.coordinates.flat() : f.geometry.coordinates;
+        let totalArea = 0, cx = 0, cy = 0;
+        rings.forEach(ring => {
+          const r = ring[0] ? ring : ring; // outer ring
+          for (let i = 0; i < r.length - 1; i++) {
+            const xi = r[i][0], yi = r[i][1], xj = r[i+1][0], yj = r[i+1][1];
+            const cross = xi * yj - xj * yi;
+            totalArea += cross;
+            cx += (xi + xj) * cross;
+            cy += (yi + yj) * cross;
+          }
+        });
+        totalArea /= 2;
+        if (Math.abs(totalArea) > 1e-12) {
+          lon = cx / (6 * totalArea);
+          lat = cy / (6 * totalArea);
+        } else {
+          // Degenerate polygon — fall back to coordinate mean
+          const allC = [];
+          const extractCoords = (c, type) => {
+            if (type === 'Point') allC.push(c);
+            else if (type === 'MultiPoint' || type === 'LineString') c.forEach(p => allC.push(p));
+            else if (type === 'MultiLineString' || type === 'Polygon') c.forEach(r => r.forEach(p => allC.push(p)));
+            else if (type === 'MultiPolygon') c.forEach(pl => pl.forEach(r => r.forEach(p => allC.push(p))));
+          };
+          extractCoords(f.geometry.coordinates, f.geometry.type);
+          if (allC.length === 0) return;
+          lon = allC.reduce((s,c)=>s+c[0],0) / allC.length;
+          lat = allC.reduce((s,c)=>s+c[1],0) / allC.length;
+        }
+      } else {
+        // Points / Lines — coordinate mean center
+        const allC = [];
+        const extractCoords = (c, type) => {
+          if (type === 'Point') allC.push(c);
+          else if (type === 'MultiPoint' || type === 'LineString') c.forEach(p => allC.push(p));
+          else if (type === 'MultiLineString' || type === 'Polygon') c.forEach(r => r.forEach(p => allC.push(p)));
+          else if (type === 'MultiPolygon') c.forEach(pl => pl.forEach(r => r.forEach(p => allC.push(p))));
+        };
+        extractCoords(f.geometry.coordinates, f.geometry.type);
+        if (allC.length === 0) return;
+        lon = allC.reduce((s,c)=>s+c[0],0) / allC.length;
+        lat = allC.reduce((s,c)=>s+c[1],0) / allC.length;
+      }
       const m = L.circleMarker([lat, lon], {radius:6, color:'#f6e05e', weight:2, fillColor:'#f6e05e', fillOpacity:0.7});
       m.bindTooltip(`Centroid ${++count}`, {className:'site-tooltip'});
       analysisOverlays.push(m);
@@ -2480,7 +2525,7 @@ function runAnalysis(tool) {
       });
     });
     addAnalysisLayer(`Buffer ${distKm}km`, bufferCircles, null);
-    showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features — added as layer`);
+    showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features — added as layer<br><span style="color:#718096">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
     break;
   }
 
@@ -2497,7 +2542,7 @@ function runAnalysis(tool) {
         const lon = minLon + (maxLon-minLon) * c / (gridRes-1);
         let minD = Infinity, closest = 0;
         for (let k = 0; k < pts.length; k++) {
-          const d = (lat-pts[k].lat)**2 + (lon-pts[k].lon)**2;
+          const d = haversineDist({lat, lon}, pts[k]);
           if (d < minD) { minD = d; closest = k; }
         }
         voronoiPolys[closest].push([lat, lon]);
