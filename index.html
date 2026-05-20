@@ -101,10 +101,9 @@
   .panel-body.hidden { display: none; }
 
   /* Layer item */
-  .layer-item {
-    display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px;
-  }
+  .layer-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; }
   .layer-item input[type=checkbox] { accent-color: #63b3ed; cursor: pointer; }
+  .layer-item.active-layer { background: rgba(99,179,237,0.08); border-radius: 4px; padding: 5px 4px; margin: 0 -4px; }
   .layer-color-swatch {
     width: 14px; height: 14px; border-radius: 3px;
     border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
@@ -460,6 +459,7 @@
   body.light .panel-header:hover { background: #edf2f7; }
   body.light .panel-body { color: #4a5568; }
   body.light .layer-item { color: #2d3748; }
+  body.light .layer-item.active-layer { background: rgba(43,108,176,0.08); }
   body.light .layer-count { background: #edf2f7; color: #718096; }
   body.light .basemap-btn { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
   body.light .basemap-btn:hover { border-color: #2b6cb0; color: #2d3748; }
@@ -747,6 +747,9 @@
       </div>
       <div class="panel-body hidden" id="symbology-panel">
         <div id="symbology-empty" style="font-size:11px;color:#4a5568;text-align:center;padding:12px 0;">Import data to configure symbology</div>
+        <select id="symbology-layer-select" onchange="selectSymbologyLayer(this.value)" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px;margin-bottom:6px;display:none;">
+          <option value="">— Select layer —</option>
+        </select>
         <div id="symbology-controls"></div>
       </div>
     </div>
@@ -1027,6 +1030,9 @@ function addUploadedGeoJSON(geojson, name, color) {
   // Add to layer panel
   addLayerToPanel(info);
   buildSymbologyControls(info);
+  refreshSymbologyLayerSelect();
+  selectSymbologyLayer(info.id);
+  document.getElementById('symbology-layer-select').value = info.id;
   const layersEmpty = document.getElementById('layers-empty');
   if (layersEmpty) layersEmpty.style.display = 'none';
   const symEmpty = document.getElementById('symbology-empty');
@@ -1064,7 +1070,7 @@ function addLayerToPanel(info) {
   el.innerHTML = `
     <input type="checkbox" checked onchange="toggleUploadedLayer('${info.id}', this.checked)">
     <div class="layer-color-swatch" style="background:${info.color}"></div>
-    <span class="layer-label" title="${safeName}">${safeName}</span>
+    <span class="layer-label" title="${safeName}" onclick="selectSymbologyLayer('${info.id}');document.getElementById('symbology-layer-select').value='${info.id}';toggleSection(document.querySelector('#symbology-panel').previousElementSibling.querySelector('.panel-header'));event.stopPropagation();" style="cursor:pointer;">${safeName}</span>
     <span class="layer-count">${info.featureCount}</span>
     <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this)" title="Show/hide labels">&#x1f3f7;</button>
     <button class="layer-remove" onclick="removeUploadedLayer('${info.id}')" title="Remove layer">&times;</button>
@@ -1251,11 +1257,38 @@ function removeUploadedLayer(id) {
   refreshExportLayerSelect();
   const symEl = document.querySelector(`[data-sym-id="${id}"]`);
   if (symEl) symEl.remove();
+  refreshSymbologyLayerSelect();
   if (uploadedLayers.length === 0) {
     const le = document.getElementById('layers-empty'); if (le) le.style.display = '';
     const se = document.getElementById('symbology-empty'); if (se) se.style.display = '';
   }
   showToast('Layer removed');
+}
+
+function refreshSymbologyLayerSelect() {
+  const sel = document.getElementById('symbology-layer-select');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select layer —</option>';
+  uploadedLayers.forEach(l => {
+    sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+  });
+  if (uploadedLayers.length > 0) {
+    sel.style.display = '';
+  }
+  if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
+  else if (uploadedLayers.length > 0) {
+    sel.value = uploadedLayers[uploadedLayers.length - 1].id;
+    selectSymbologyLayer(sel.value);
+  }
+}
+
+function selectSymbologyLayer(layerId) {
+  document.querySelectorAll('#symbology-controls [data-sym-id]').forEach(el => {
+    el.style.display = el.dataset.symId === layerId ? '' : 'none';
+  });
+  document.querySelectorAll('.layer-item').forEach(el => {
+    el.classList.toggle('active-layer', el.dataset.layerId === layerId);
+  });
 }
 
 function buildSymbologyControls(info) {
@@ -1270,8 +1303,6 @@ function buildSymbologyControls(info) {
   const attrOpts = attrs.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
 
   div.innerHTML = `
-    <div style="font-size:11px;color:#718096;margin-bottom:4px;">${safeName}</div>
-
     <!-- Simple Symbol -->
     <div class="sym-group" style="margin-bottom:6px;">
       <div class="sym-group-title" style="font-size:10px;color:#63b3ed;font-weight:600;margin-bottom:3px;">Simple Symbol</div>
