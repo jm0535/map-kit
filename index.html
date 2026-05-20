@@ -3801,6 +3801,27 @@ async function doExport() {
 
   showToast('Rendering export... please wait');
 
+  // Compute visible layers once for re-use
+  const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
+
+  // Auto-center map on visible layer bounds before export
+  let layerBounds = null;
+  visibleLayers.forEach(lyr => {
+    if (lyr.layer && lyr.layer.getBounds) {
+      const b = lyr.layer.getBounds();
+      if (b && b.isValid && b.isValid()) {
+        if (layerBounds) layerBounds.extend(b);
+        else layerBounds = b;
+      }
+    }
+  });
+  const prevCenter = map.getCenter();
+  const prevZoom = map.getZoom();
+  if (layerBounds && layerBounds.isValid && layerBounds.isValid()) {
+    map.fitBounds(layerBounds, {animate: false, padding: [80, 80]});
+    updateOverview();
+  }
+
   // Hide map UI controls before capture (zoom, fullscreen, attribution, measure, legend control)
   const selectorsToHide = [
     '.leaflet-control-zoom',
@@ -3819,21 +3840,14 @@ async function doExport() {
     }
   });
 
-  // Capture the map area (clean — only basemap + scalebar + north arrow)
+  // Wait for tiles after fit + hide
+  await new Promise(r => setTimeout(r, 800));
+
+  // Capture the map area (clean — centered on data)
   const mapEl = document.getElementById('map');
   const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
 
-  // Restore controls
-  hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
-
-  // Capture profile if needed
-  let profCanvas = null;
-  if (inclProf) {
-    const profEl = document.getElementById('profile-panel');
-    profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
-  }
-
-  // Capture overview map with RED locator rectangle
+  // Capture overview map with RED locator rectangle (while still centered)
   let overviewCanvas = null;
   let prevOverviewStyle = null;
   {
@@ -3847,7 +3861,6 @@ async function doExport() {
       minimap.invalidateSize();
       updateOverview();
     }
-    // Change overview rect to RED for the locator inset
     if (overviewRect) {
       prevOverviewStyle = {color: overviewRect.options.color, weight: overviewRect.options.weight, fillOpacity: overviewRect.options.fillOpacity};
       overviewRect.setStyle({color: '#e53e3e', weight: 2, fillOpacity: 0.15});
@@ -3859,7 +3872,6 @@ async function doExport() {
         overviewCanvas = await html2canvas(minimapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
       }
     }
-    // Restore overview rect to blue
     if (prevOverviewStyle && overviewRect) {
       overviewRect.setStyle(prevOverviewStyle);
     }
@@ -3869,13 +3881,23 @@ async function doExport() {
     }
   }
 
-  // Compose final image: map + legend + north arrow + scalebar + overview inset ONLY
-  const legendRows = inclLeg ? Math.max(1, Math.ceil(uploadedLayers.length / 3)) : 0;
-  const legendH = inclLeg ? (20 + legendRows * 18) * dpiScale : 0;
+  // Restore map view + controls
+  map.setView(prevCenter, prevZoom, {animate: false});
+  updateOverview();
+  hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
+
+  // Capture profile if needed
+  let profCanvas = null;
+  if (inclProf) {
+    const profEl = document.getElementById('profile-panel');
+    profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+  }
+
+  // Compose final image: map + legend overlay + north arrow + scalebar + overview inset ONLY
   const profH = profCanvas ? profCanvas.height : 0;
 
   const outW = mapCanvas.width;
-  const outH = mapCanvas.height + profH + legendH;
+  const outH = mapCanvas.height + profH;
 
   const out = document.createElement('canvas');
   out.width = outW;
@@ -3890,7 +3912,7 @@ async function doExport() {
   let y = 0;
   c.drawImage(mapCanvas, 0, y);
 
-  // Overview map inset (top-right of map area, below north arrow)
+  // Overview map inset (top-right of map area)
   if (overviewCanvas) {
     const ovW = overviewCanvas.width;
     const ovH = overviewCanvas.height;
@@ -3904,17 +3926,8 @@ async function doExport() {
     c.drawImage(overviewCanvas, ovX, ovY, drawW, drawH);
   }
 
-  y += mapCanvas.height;
-
-  // Profile
-  if (profCanvas) {
-    c.drawImage(profCanvas, 0, y);
-    y += profCanvas.height;
-  }
-
-  // Legend (dynamic from legendState — QGIS-style)
-  if (inclLeg && uploadedLayers.length > 0) {
-    const legY = y + 10 * dpiScale;
+  // Legend (drawn ON the map — bottom-left overlay, QGIS-style)
+  if (inclLeg && visibleLayers.length > 0) {
     const legFontSize = Math.round(9 * dpiScale);
     const legTitleFontSize = Math.round(10 * dpiScale);
     const legX = 20 * dpiScale;
@@ -3924,10 +3937,37 @@ async function doExport() {
     const polyW = 12 * dpiScale;
     const polyH = 8 * dpiScale;
     const rowH = 14 * dpiScale;
+
+    // Measure legend height first
+    let tempY = 0;
+    visibleLayers.forEach(lyr => {
+      const st = legendState[lyr.id] || { mode:'simple', color:lyr.color, geomType:'Point' };
+      tempY += rowH;
+      if (st.mode === 'categorized' && st.colorMap) {
+        tempY += Math.min(Object.keys(st.colorMap).length, 12) * (rowH * 0.85);
+        if (Object.keys(st.colorMap).length > 12) tempY += rowH * 0.85;
+      } else if (st.mode === 'graduated' && st.ramp) {
+        tempY += 50 * dpiScale + 4 * dpiScale;
+      }
+      tempY += 4 * dpiScale;
+    });
+    tempY += 10 * dpiScale;
+
+    const legBoxPad = 10 * dpiScale;
+    const legW = 220 * dpiScale;
+    const legH = tempY;
+    const legY = mapCanvas.height - legH - legBoxPad - 20 * dpiScale; // bottom-left, above profile
+
+    // Semi-transparent backdrop
+    c.fillStyle = 'rgba(15,17,23,0.75)';
+    c.fillRect(legX - legBoxPad, legY - legBoxPad, legW, legH + legBoxPad * 2);
+    c.strokeStyle = 'rgba(255,255,255,0.15)';
+    c.lineWidth = dpiScale;
+    c.strokeRect(legX - legBoxPad, legY - legBoxPad, legW, legH + legBoxPad * 2);
+
     let curY = legY;
     c.textAlign = 'left';
 
-    const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
     visibleLayers.forEach(lyr => {
       const st = legendState[lyr.id] || { mode:'simple', color:lyr.color, geomType:'Point' };
 
@@ -3973,14 +4013,17 @@ async function doExport() {
         if (st.maxVal != null) c.fillText(Number(st.maxVal).toFixed(1), barX + barW + 4*dpiScale, barY + legFontSize);
         if (st.minVal != null) c.fillText(Number(st.minVal).toFixed(1), barX + barW + 4*dpiScale, barY + barH);
         curY += barH + 4*dpiScale;
-      } else {
-        // Simple symbol — inline with title, no separate row in export legend
-        // (already handled by title swatch above)
       }
       curY += 4*dpiScale;
     });
-    const actualLegH = Math.max(legendH, curY - legY + 10*dpiScale);
-    y += actualLegH;
+  }
+
+  y += mapCanvas.height;
+
+  // Profile
+  if (profCanvas) {
+    c.drawImage(profCanvas, 0, y);
+    y += profCanvas.height;
   }
 
   // North arrow (top-right of map area)
@@ -4002,7 +4045,7 @@ async function doExport() {
     c.restore();
   }
 
-  // No title, no footer — clean map composition
+  // Clean map composition — no title, no footer, no dark legend band
 
   if (exportFormat === 'png') {
     const link = document.createElement('a');
