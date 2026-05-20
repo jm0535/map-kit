@@ -92,7 +92,7 @@
   .panel-header {
     padding: 8px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 1px; color: #63b3ed; background: #0f1117; cursor: pointer;
-    display: flex; align-items: center; justify-content: space-between; user-select: none;
+    display: flex; align-items: center; justify-content: space-between; -webkit-user-select: none; user-select: none;
   }
   .panel-header:hover { background: #1a202c; }
   .panel-header .arrow { transition: transform 0.2s; }
@@ -828,6 +828,13 @@
 // UTILITIES
 // ═══════════════════════════════════════════════════════════════════════════
 
+function escapeHtml(text) {
+  if (text == null) return '';
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
+}
+
 function haversineKm(pts) {
   const R=6371, d=[0];
   for(let i=1;i<pts.length;i++){
@@ -884,9 +891,9 @@ map.on('moveend',updateOverview); map.on('zoomend',updateOverview);
 
 function showFeatureInfo(props) {
   const el = document.getElementById('feature-info');
-  const rows = Object.entries(props).map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+  const rows = Object.entries(props).map(([k,v]) => `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`).join('');
   const title = props.site || props.name || props.NAME || props.Name || 'Feature';
-  el.innerHTML = `<div class="fi-title">${title}</div><table>${rows}</table>`;
+  el.innerHTML = `<div class="fi-title">${escapeHtml(title)}</div><table>${rows}</table>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -982,10 +989,11 @@ function addLayerToPanel(info) {
   el.className = 'layer-item';
   el.dataset.layerId = info.id;
   el.style.position = 'relative';
+  const safeName = escapeHtml(info.name);
   el.innerHTML = `
     <input type="checkbox" checked onchange="toggleUploadedLayer('${info.id}', this.checked)">
     <div class="layer-color-swatch" style="background:${info.color}"></div>
-    <span class="layer-label" title="${info.name}">${info.name}</span>
+    <span class="layer-label" title="${safeName}">${safeName}</span>
     <span class="layer-count">${info.featureCount}</span>
     <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this)" title="Show/hide labels">&#x1f3f7;</button>
     <button class="layer-remove" onclick="removeUploadedLayer('${info.id}')" title="Remove layer">&times;</button>
@@ -1184,8 +1192,9 @@ function buildSymbologyControls(info) {
   const div = document.createElement('div');
   div.dataset.symId = info.id;
   div.style.cssText = 'margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1a1d23;';
+  const safeName = escapeHtml(info.name);
   div.innerHTML = `
-    <div style="font-size:11px;color:#718096;margin-bottom:4px;">${info.name}</div>
+    <div style="font-size:11px;color:#718096;margin-bottom:4px;">${safeName}</div>
     <div class="symbol-row">
       <span>Fill</span><input type="color" value="${info.color}" onchange="recolorLayer('${info.id}',this.value)">
       <span>Size</span><input type="number" value="7" min="3" max="25" onchange="resizeLayer('${info.id}',this.value)">
@@ -1612,7 +1621,7 @@ function refreshAnalysisLayerSelect() {
   sel.innerHTML = '<option value="">— Select layer —</option>';
   sel.innerHTML += '<option value="__all__">All visible features</option>';
   uploadedLayers.forEach(l => {
-    sel.innerHTML += `<option value="${l.id}">${l.name}</option>`;
+    sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
   });
   if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
 }
@@ -1630,7 +1639,7 @@ function refreshAnalysisAttrSelect() {
     });
   });
   numericAttrs.forEach(a => {
-    attrSel.innerHTML += `<option value="${a}">${a}</option>`;
+    attrSel.innerHTML += `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`;
   });
 }
 
@@ -2314,7 +2323,7 @@ function refreshAttrLayerSelect() {
   const prev = sel.value;
   sel.innerHTML = '<option value="">— Select layer —</option>';
   uploadedLayers.forEach(l => {
-    sel.innerHTML += `<option value="${l.id}">${l.name} (${l.featureCount})</option>`;
+    sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)} (${l.featureCount})</option>`;
   });
   if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
 }
@@ -2329,11 +2338,11 @@ function loadAttrTable(layerId) {
   const info = uploadedLayers.find(l => l.id === layerId);
   if (!info || !info.properties || info.properties.length === 0) return;
   const allKeys = [...new Set(info.properties.flatMap(Object.keys))];
-  thead.innerHTML = allKeys.map(k => `<th>${k}</th>`).join('');
+  thead.innerHTML = allKeys.map(k => `<th>${escapeHtml(k)}</th>`).join('');
   info.properties.forEach((props, i) => {
     const tr = document.createElement('tr');
     tr.dataset.index = i;
-    tr.innerHTML = allKeys.map(k => `<td title="${props[k] || ''}">${props[k] !== undefined ? props[k] : ''}</td>`).join('');
+    tr.innerHTML = allKeys.map(k => `<td title="${escapeHtml(props[k] || '')}">${escapeHtml(props[k] !== undefined ? props[k] : '')}</td>`).join('');
     tr.addEventListener('click', () => {
       tbody.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
       tr.classList.add('selected');
@@ -2380,6 +2389,7 @@ function closeExport() { document.getElementById('export-overlay').classList.rem
 
 async function doExport() {
   closeExport();
+  try {
   const title = document.getElementById('exp-title').value;
   const dpiScale = parseInt(document.getElementById('exp-dpi').value);
   const inclProf = document.getElementById('exp-include-profile').checked;
@@ -2527,6 +2537,10 @@ async function doExport() {
     pdf.save(`map_export_${dpiScale*72}dpi.pdf`);
   }
   showToast(`${exportFormat.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
+  } catch (e) {
+    console.error('Export failed:', e);
+    showToast('Export failed: ' + e.message, 'error');
+  }
 }
 
 function exportAllCSV() {
@@ -2536,7 +2550,9 @@ function exportAllCSV() {
   const keys = [...new Set(allFeatures.flatMap(Object.keys))];
   const csv = [keys.join(','), ...allFeatures.map(f => keys.map(k => `"${(f[k]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
   const blob = new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='all_features.csv'; a.click();
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='all_features.csv'; a.click();
+  URL.revokeObjectURL(url);
   showToast('CSV exported','success');
 }
 
@@ -2549,14 +2565,16 @@ function exportAllGeoJSON() {
   if (features.length === 0) { showToast('No features to export','error'); return; }
   const gj = {type:'FeatureCollection',features};
   const blob = new Blob([JSON.stringify(gj,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='all_features.geojson'; a.click();
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='all_features.geojson'; a.click();
+  URL.revokeObjectURL(url);
   showToast('GeoJSON exported','success');
 }
 
 function refreshExportLayerSelect() {
   const sel = document.getElementById('export-layer-select');
   if (!sel) return;
-  sel.innerHTML = uploadedLayers.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  sel.innerHTML = uploadedLayers.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('');
 }
 
 function exportLayerGeoJSON() {
@@ -2572,8 +2590,10 @@ function exportLayerGeoJSON() {
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
   const gj = {type:'FeatureCollection', features};
   const blob = new Blob([JSON.stringify(gj,null,2)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
   a.download = lyr.name.replace(/[^a-zA-Z0-9_-]/g,'_') + '.geojson'; a.click();
+  URL.revokeObjectURL(url);
   showToast('GeoJSON exported', 'success');
 }
 
@@ -2590,9 +2610,11 @@ function exportLayerShapefile() {
   const gj = {type:'FeatureCollection', features};
   const gjStr = JSON.stringify(gj);
   const blob = new Blob([gjStr], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
   a.download = lyr.name.replace(/[^a-zA-Z0-9_-]/g,'_') + '.geojson';
   a.click();
+  URL.revokeObjectURL(url);
   showToast('Exported as GeoJSON (use ogr2ogr or QGIS to convert to .shp)', 'success');
 }
 
