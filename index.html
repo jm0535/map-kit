@@ -629,8 +629,8 @@
           <input type="range" id="heat-blur-slider" min="5" max="60" value="25" oninput="updateHeatBlur(this.value)">
         </div>
         <button class="export-btn" onclick="runAnalysis('idw')">IDW Interpolation</button>
-        <button class="export-btn" onclick="runAnalysis('density')">Kernel Density (point count)</button>
-        <button class="export-btn" onclick="runAnalysis('hotspot')">Hotspot Map (weighted density)</button>
+        <button class="export-btn" onclick="runAnalysis('density')">Point Density</button>
+        <button class="export-btn" onclick="runAnalysis('hotspot')">Weighted Density Map</button>
 
         <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Clustering</div>
         <button class="export-btn" onclick="runAnalysis('dbscan')">DBSCAN Clustering</button>
@@ -641,6 +641,10 @@
         <button class="export-btn" onclick="runAnalysis('areas')">Polygon Areas</button>
         <button class="export-btn" onclick="runAnalysis('centroid')">Centroids</button>
         <button class="export-btn" onclick="runAnalysis('simplify')">Simplify Geometries</button>
+        <div style="display:flex;align-items:center;gap:6px;margin:4px 0;">
+          <label style="font-size:10px;color:#a0aec0;">Simplify tolerance</label>
+          <input type="number" id="simplify-tol" value="0.002" min="0.0001" max="0.1" step="0.0005" style="width:60px;font-size:10px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;padding:2px 4px;">
+        </div>
         <button class="export-btn" onclick="runAnalysis('buffer')">Buffer</button>
         <button class="export-btn" onclick="runAnalysis('voronoi')">Voronoi / Thiessen Polygons</button>
 
@@ -788,6 +792,21 @@
     <div class="cm-actions">
       <button class="btn-primary" onclick="confirmColumnMapping()">Import</button>
       <button class="btn-secondary" onclick="cancelColumnMapping()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Buffer distance modal -->
+<div id="buffer-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:#13161c;border:1px solid #2d3748;border-radius:8px;padding:20px 24px;width:320px;">
+    <h3 style="margin:0 0 12px;font-size:14px;color:#e2e8f0;">Buffer Distance</h3>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;color:#a0aec0;">Distance (km)</label>
+      <input type="number" id="buf-dist-input" value="5" min="0.01" max="1000" step="0.5" style="width:100%;margin-top:4px;padding:6px 8px;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:13px;">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="cancelBuffer()">Cancel</button>
+      <button class="btn-primary" onclick="confirmBuffer()">Apply Buffer</button>
     </div>
   </div>
 </div>
@@ -1195,7 +1214,6 @@ function buildSymbologyControls(info) {
   const safeName = escapeHtml(info.name);
   const hasPoints = info.geomTypes.some(g => g.includes('Point'));
   const hasLines = info.geomTypes.some(g => g.includes('Line'));
-  const hasPolygons = info.geomTypes.some(g => g.includes('Polygon'));
   const attrs = [...new Set(info.properties.flatMap(Object.keys))];
   const attrOpts = attrs.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
 
@@ -1373,7 +1391,6 @@ function rebuildLayerWithShape(info, svgPath) {
   }
   map.removeLayer(info.layer);
   const color = info.color;
-  const currentOpacity = 0.9;
 
   if (svgPath) {
     // Use DivIcon with SVG for custom shapes
@@ -1970,8 +1987,16 @@ function getAnalysisFeatures(layerId) {
 }
 
 function pointsFromFeatures(features) {
-  return features.filter(f => f.geometry && f.geometry.type === 'Point')
-    .map(f => ({lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], props: f.properties}));
+  const pts = [];
+  features.forEach(f => {
+    if (!f.geometry) return;
+    if (f.geometry.type === 'Point') {
+      pts.push({lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], props: f.properties});
+    } else if (f.geometry.type === 'MultiPoint') {
+      f.geometry.coordinates.forEach(c => pts.push({lat: c[1], lon: c[0], props: f.properties}));
+    }
+  });
+  return pts;
 }
 
 function linesFromFeatures(features) {
@@ -2009,6 +2034,42 @@ function polygonArea(coords) {
   return Math.abs(area * 6371000 * 6371000 / 2);
 }
 
+let pendingBufferFeatures = null;
+
+function cancelBuffer() {
+  document.getElementById('buffer-overlay').style.display = 'none';
+  pendingBufferFeatures = null;
+}
+
+function confirmBuffer() {
+  const distKm = parseFloat(document.getElementById('buf-dist-input').value);
+  document.getElementById('buffer-overlay').style.display = 'none';
+  if (!isFinite(distKm) || distKm <= 0) { showToast('Invalid buffer distance', 'error'); return; }
+  const features = pendingBufferFeatures;
+  pendingBufferFeatures = null;
+  if (!features || features.length === 0) return;
+  const distM = distKm * 1000;
+  const bufferCircles = [];
+  features.forEach(f => {
+    if (!f.geometry) return;
+    const centers = [];
+    const extractPts = (c, type) => {
+      if (type === 'Point') centers.push(c);
+      else if (type === 'MultiPoint' || type === 'LineString') c.forEach(p => centers.push(p));
+      else if (type === 'MultiLineString' || type === 'Polygon') c.forEach(r => r.forEach(p => centers.push(p)));
+      else if (type === 'MultiPolygon') c.forEach(pl => pl.forEach(r => r.forEach(p => centers.push(p))));
+    };
+    extractPts(f.geometry.coordinates, f.geometry.type);
+    centers.forEach(c => {
+      const circle = L.circle([c[1], c[0]], {radius:distM, color:'#f6e05e', weight:1.5, dashArray:'4 3', fillColor:'#f6e05e', fillOpacity:0.08});
+      analysisOverlays.push(circle);
+      bufferCircles.push(circle);
+    });
+  });
+  addAnalysisLayer(`Buffer ${distKm}km`, bufferCircles, null);
+  showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features — added as layer<br><span style="color:#718096">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
+}
+
 function switchBottomTab(tab) {
   document.querySelectorAll('.bottom-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.bottom-tab-content').forEach(c => c.classList.remove('active'));
@@ -2026,7 +2087,8 @@ function showResult(html) {
   if (html) {
     content.style.display = 'block';
     empty.style.display = 'none';
-    content.innerHTML = html;
+    content.textContent = '';
+    content.insertAdjacentHTML('afterbegin', html);
   } else {
     content.style.display = 'none';
     empty.style.display = '';
@@ -2218,7 +2280,7 @@ function runAnalysis(tool) {
     let interp = 'No significant autocorrelation';
     if (I > expected + 0.2) interp = 'Positive spatial autocorrelation (similar values cluster)';
     else if (I < expected - 0.2) interp = 'Negative spatial autocorrelation (dissimilar values cluster)';
-    showResult(`<b>Moran's I</b> (attribute: ${attr})<br><b>I:</b> ${I.toFixed(4)}<br><b>Expected:</b> ${expected.toFixed(4)}<br><b>Interpretation:</b> ${interp}<br><span style="color:#718096">Inverse-distance weights used</span>`);
+    showResult(`<b>Moran's I</b> (attribute: ${escapeHtml(attr)})<br><b>I:</b> ${I.toFixed(4)}<br><b>Expected:</b> ${expected.toFixed(4)}<br><b>Interpretation:</b> ${interp}<br><span style="color:#718096">Inverse-distance weights used</span>`);
     break;
   }
 
@@ -2233,7 +2295,7 @@ function runAnalysis(tool) {
     const minLat = Math.min(...lats), maxLat = Math.max(...lats);
     const minLon = Math.min(...lons), maxLon = Math.max(...lons);
     const pad = 0.05;
-    const gridRes = 30;
+    const gridRes = 50;
     const heatData = [];
     for (let r = 0; r < gridRes; r++) {
       for (let c = 0; c < gridRes; c++) {
@@ -2256,8 +2318,8 @@ function runAnalysis(tool) {
     analysisOverlays.push(heat);
     activeHeatLayers.push(heat);
     storeHeatData(heat, normalized);
-    addAnalysisLayer(`IDW (${attr})`, [heat], null);
-    showResult(`<b>IDW Interpolation</b> (${attr})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:#718096">Blue=low, Red=high</span>`);
+    addAnalysisLayer(`IDW (${escapeHtml(attr)})`, [heat], null);
+    showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:#718096">Blue=low, Red=high</span>`);
     break;
   }
 
@@ -2286,9 +2348,9 @@ function runAnalysis(tool) {
     analysisOverlays.push(hotHeat);
     activeHeatLayers.push(hotHeat);
     storeHeatData(hotHeat, hotData);
-    addAnalysisLayer(`Weighted Density (${hotAttr})`, [hotHeat], null);
+    addAnalysisLayer(`Weighted Density (${escapeHtml(hotAttr)})`, [hotHeat], null);
     const sum = hotVals.reduce((a,b)=>a+b,0);
-    showResult(`<b>Weighted Density Map</b> weighted by <b>${hotAttr}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:#718096">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
+    showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:#718096">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
     break;
   }
 
@@ -2482,7 +2544,7 @@ function runAnalysis(tool) {
         if (maxD < tol) return [ring[0], ring[ring.length-1]];
         return [...simplifyRing(ring.slice(0,idx+1),tol).slice(0,-1), ...simplifyRing(ring.slice(idx),tol)];
       };
-      const tol = 0.001;
+      const tol = parseFloat(document.getElementById('simplify-tol').value) || 0.002;
       const simplifyGeom = (coords, type) => {
         if (type === 'LineString') return simplifyRing(coords, tol);
         if (type === 'Polygon') return coords.map(r => simplifyRing(r, tol));
@@ -2504,29 +2566,9 @@ function runAnalysis(tool) {
   }
 
   case 'buffer': {
-    const distKm = parseFloat(prompt('Buffer distance in km:', '5'));
-    if (!isFinite(distKm) || distKm <= 0) { showToast('Invalid buffer distance', 'error'); return; }
-    const distM = distKm * 1000;
-    const bufferCircles = [];
-    features.forEach(f => {
-      if (!f.geometry) return;
-      const centers = [];
-      const extractPts = (c, type) => {
-        if (type === 'Point') centers.push(c);
-        else if (type === 'MultiPoint' || type === 'LineString') c.forEach(p => centers.push(p));
-        else if (type === 'MultiLineString' || type === 'Polygon') c.forEach(r => r.forEach(p => centers.push(p)));
-        else if (type === 'MultiPolygon') c.forEach(pl => pl.forEach(r => r.forEach(p => centers.push(p))));
-      };
-      extractPts(f.geometry.coordinates, f.geometry.type);
-      centers.forEach(c => {
-        const circle = L.circle([c[1], c[0]], {radius:distM, color:'#f6e05e', weight:1.5, dashArray:'4 3', fillColor:'#f6e05e', fillOpacity:0.08});
-        analysisOverlays.push(circle);
-        bufferCircles.push(circle);
-      });
-    });
-    addAnalysisLayer(`Buffer ${distKm}km`, bufferCircles, null);
-    showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features — added as layer<br><span style="color:#718096">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
-    break;
+    pendingBufferFeatures = features;
+    document.getElementById('buffer-overlay').style.display = 'flex';
+    return;
   }
 
   case 'voronoi': {
@@ -2534,7 +2576,7 @@ function runAnalysis(tool) {
     const lats = pts.map(p=>p.lat), lons = pts.map(p=>p.lon);
     const minLat = Math.min(...lats)-0.1, maxLat = Math.max(...lats)+0.1;
     const minLon = Math.min(...lons)-0.1, maxLon = Math.max(...lons)+0.1;
-    const gridRes = 80;
+    const gridRes = 120;
     const voronoiPolys = pts.map(() => []);
     for (let r = 0; r < gridRes; r++) {
       for (let c = 0; c < gridRes; c++) {
