@@ -3950,7 +3950,7 @@ async function generateExportCanvas() {
 
   // Capture #map directly with scale for DPI
   const mapEl = document.getElementById('map');
-  const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+  const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale, scrollX:0, scrollY:0, x:0, y:0});
 
   // Restore UI controls immediately
   hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
@@ -3977,7 +3977,7 @@ async function generateExportCanvas() {
       await new Promise(r => setTimeout(r, 800));
       const minimapEl = document.getElementById('minimap');
       if (minimapEl) {
-        overviewCanvas = await html2canvas(minimapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+        overviewCanvas = await html2canvas(minimapEl, {useCORS:true, allowTaint:true, scale:dpiScale, scrollX:0, scrollY:0, x:0, y:0});
       }
     }
     if (prevOverviewStyle && overviewRect) {
@@ -3997,7 +3997,7 @@ async function generateExportCanvas() {
   let profCanvas = null;
   if (inclProf) {
     const profEl = document.getElementById('profile-panel');
-    profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+    profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale, scrollX:0, scrollY:0, x:0, y:0});
   }
 
   // Compose final image
