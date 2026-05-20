@@ -881,7 +881,7 @@
       </div>
     </div>
 
-    <div class="panel-section">
+    <div class="panel-section" id="overview-panel">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>Overview</span><span class="arrow">&#x25BC;</span>
       </div>
@@ -3813,19 +3813,31 @@ async function doExport() {
     profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
   }
 
-  // Capture overview map (ensure panel is open briefly)
+  // Capture overview map (properly open panel, wait for tiles)
   let overviewCanvas = null;
   {
-    const overviewBody = document.querySelector('#overview-panel .panel-body');
-    const wasHidden = overviewBody && overviewBody.classList.contains('hidden');
-    if (wasHidden && overviewBody) overviewBody.classList.remove('hidden');
-    if (overviewBody) {
-      // Force a render so the rectangle is current
+    const overviewPanel = document.getElementById('overview-panel');
+    const header = overviewPanel?.querySelector('.panel-header');
+    const body = overviewPanel?.querySelector('.panel-body');
+    const wasCollapsed = header && header.classList.contains('collapsed');
+    if (wasCollapsed && header && body) {
+      header.classList.remove('collapsed');
+      body.classList.remove('hidden');
+      minimap.invalidateSize();
       updateOverview();
-      await new Promise(r => setTimeout(r, 300));
-      overviewCanvas = await html2canvas(overviewBody, {useCORS:true, allowTaint:true, scale:dpiScale});
     }
-    if (wasHidden && overviewBody) overviewBody.classList.add('hidden');
+    if (body) {
+      // Wait for minimap tiles to load
+      await new Promise(r => setTimeout(r, 800));
+      const minimapEl = document.getElementById('minimap');
+      if (minimapEl) {
+        overviewCanvas = await html2canvas(minimapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+      }
+    }
+    if (wasCollapsed && header && body) {
+      header.classList.add('collapsed');
+      body.classList.add('hidden');
+    }
   }
 
   // Compose final image
