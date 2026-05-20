@@ -3920,10 +3920,30 @@ async function generateExportCanvas() {
 
   const prevCenter = map.getCenter();
   const prevZoom = map.getZoom();
+  const prevBounds = map.getBounds();
+
+  // High-DPI fix: resize map container so Leaflet recomputes marker/tile
+  // positions. html2canvas scale alone doesn't multiply CSS transforms,
+  // causing markers to shift. By resizing the actual container we force
+  // Leaflet to layout everything at the larger size, then capture at scale:1.
+  const mapEl = document.getElementById('map');
+  const prevMapWidth = mapEl.style.width;
+  const prevMapHeight = mapEl.style.height;
+  const rect = mapEl.getBoundingClientRect();
+  const newWidth = Math.round(rect.width * dpiScale);
+  const newHeight = Math.round(rect.height * dpiScale);
+  mapEl.style.width = newWidth + 'px';
+  mapEl.style.height = newHeight + 'px';
+  map.invalidateSize();
+  await new Promise(r => setTimeout(r, 200));
 
   if (fitToLayers && layerBounds && layerBounds.isValid && layerBounds.isValid()) {
-    map.invalidateSize();
     map.fitBounds(layerBounds, {animate: false, padding: [80, 80]});
+    updateOverview();
+    await new Promise(r => setTimeout(r, 400));
+  } else {
+    // Current view: preserve same geographic bounds at higher resolution
+    map.fitBounds(prevBounds, {animate: false, padding: [0, 0]});
     updateOverview();
     await new Promise(r => setTimeout(r, 400));
   }
@@ -3946,14 +3966,21 @@ async function generateExportCanvas() {
   });
 
   // Wait for tiles after controls hidden
-  await new Promise(r => setTimeout(r, 800));
+  await new Promise(r => setTimeout(r, 1200));
 
-  // Capture #map directly with scale for DPI
-  const mapEl = document.getElementById('map');
-  const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:false, scale:dpiScale, scrollX:0, scrollY:0, x:0, y:0});
+  // Capture #map at scale:1 (container is already sized for target resolution)
+  const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:false, scale:1});
 
   // Restore UI controls immediately
   hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
+
+  // Restore map container and view BEFORE overview capture
+  mapEl.style.width = prevMapWidth;
+  mapEl.style.height = prevMapHeight;
+  map.invalidateSize();
+  map.setView(prevCenter, prevZoom, {animate: false});
+  updateOverview();
+  await new Promise(r => setTimeout(r, 400));
 
   // Capture overview map with RED locator rectangle
   let overviewCanvas = null;
