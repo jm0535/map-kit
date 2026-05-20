@@ -34,6 +34,9 @@
 <script src="https://unpkg.com/georaster@1.6.0/dist/georaster.browser.bundle.min.js"></script>
 <script src="https://unpkg.com/georaster-layer-for-leaflet@3.10.0/dist/georaster-layer-for-leaflet.min.js"></script>
 
+<!-- Shapefile export -->
+<script src="https://unpkg.com/shp-write@0.3.2/shpwrite.js"></script>
+
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -687,6 +690,7 @@
         <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Per-Layer Export</div>
         <select id="export-layer-select" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
         <button class="export-btn" onclick="exportLayerGeoJSON()"><span class="icon">&#x1f5c3;</span> Export layer as GeoJSON</button>
+        <button class="export-btn" onclick="exportLayerCSV()"><span class="icon">&#x1f4ca;</span> Export layer as CSV</button>
         <button class="export-btn" onclick="exportLayerShapefile()"><span class="icon">&#x1f4e6;</span> Export layer as Shapefile (.zip)</button>
       </div>
     </div>
@@ -3162,14 +3166,14 @@ async function doExport() {
     const sbX = 20 * dpiScale;
     const bounds = map.getBounds();
     const centerLat = (bounds.getSouth() + bounds.getNorth()) / 2;
-    const mapWidthPx = mapEl.offsetWidth;
-    const lngPerPx = (bounds.getEast() - bounds.getWest()) / mapWidthPx;
-    const mPerPx = lngPerPx * Math.cos(centerLat * Math.PI / 180) * 111320;
-    const targetPx = 120 * dpiScale;
-    const targetM = mPerPx * targetPx / dpiScale;
+    const mapWidthScreenPx = mapEl.offsetWidth;
+    const lngPerScreenPx = (bounds.getEast() - bounds.getWest()) / mapWidthScreenPx;
+    const mPerScreenPx = lngPerScreenPx * Math.cos(centerLat * Math.PI / 180) * 111320;
+    // Target ~120 screen pixels worth of distance
+    const targetM = mPerScreenPx * 120;
     const niceVals = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000];
     let scaleM = niceVals.find(v => v >= targetM) || targetM;
-    const scalePx = (scaleM / mPerPx) * dpiScale;
+    const scalePx = (scaleM / mPerScreenPx) * dpiScale;
     const scaleLabel = scaleM >= 1000 ? (scaleM/1000) + ' km' : scaleM + ' m';
     c.save();
     c.strokeStyle = '#e2e8f0'; c.lineWidth = 2 * dpiScale; c.fillStyle = '#e2e8f0';
@@ -3213,32 +3217,80 @@ async function doExport() {
   }
 }
 
+function _csvEscape(val) {
+  if (val === null || val === undefined) return '';
+  const s = String(val);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function _downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function exportAllCSV() {
   const allFeatures = [];
-  uploadedLayers.forEach(l => l.properties.forEach(p => allFeatures.push(p)));
-  if (allFeatures.length === 0) { showToast('No features to export','error'); return; }
-  const keys = [...new Set(allFeatures.flatMap(Object.keys))];
-  const csv = [keys.join(','), ...allFeatures.map(f => keys.map(k => `"${(f[k]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
-  const blob = new Blob([csv],{type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='all_features.csv'; a.click();
-  URL.revokeObjectURL(url);
-  showToast('CSV exported','success');
+  uploadedLayers.forEach(l => {
+    l.properties.forEach(p => {
+      const row = Object.assign({}, p);
+      row._layer = l.name;
+      allFeatures.push(row);
+    });
+  });
+  if (allFeatures.length === 0) { showToast('No features to export', 'error'); return; }
+  const keys = ['_layer', ...new Set(allFeatures.flatMap(Object.keys).filter(k => k !== '_layer'))];
+  const csv = [keys.join(','), ...allFeatures.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  _downloadBlob(blob, 'all_features.csv');
+  showToast('CSV exported', 'success');
+}
+
+function exportLayerCSV() {
+  const layerId = document.getElementById('export-layer-select').value;
+  const lyr = uploadedLayers.find(l => l.id === layerId);
+  if (!lyr) { showToast('Select a layer first', 'error'); return; }
+  if (!lyr.properties || lyr.properties.length === 0) { showToast('No features to export', 'error'); return; }
+  const keys = [...new Set(lyr.properties.flatMap(Object.keys))];
+  const csv = [keys.join(','), ...lyr.properties.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv');
+  showToast('CSV exported', 'success');
+}
+
+function _layerToFeatures(lyr) {
+  const features = [];
+  if (lyr.geojsonFeatures && lyr.geojsonFeatures.length > 0) {
+    features.push(...lyr.geojsonFeatures);
+  } else {
+    lyr.layer.eachLayer(sub => {
+      if (sub.toGeoJSON) features.push(sub.toGeoJSON());
+    });
+  }
+  return features;
 }
 
 function exportAllGeoJSON() {
   const features = [];
   uploadedLayers.forEach(l => {
-    if (l.geojsonFeatures) features.push(...l.geojsonFeatures);
-    else l.layer.eachLayer(sub => { if (sub.toGeoJSON) features.push(sub.toGeoJSON()); });
+    const lFeatures = _layerToFeatures(l);
+    lFeatures.forEach(f => {
+      if (!f.properties) f.properties = {};
+      f.properties._layer = l.name;
+    });
+    features.push(...lFeatures);
   });
-  if (features.length === 0) { showToast('No features to export','error'); return; }
-  const gj = {type:'FeatureCollection',features};
-  const blob = new Blob([JSON.stringify(gj,null,2)],{type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='all_features.geojson'; a.click();
-  URL.revokeObjectURL(url);
-  showToast('GeoJSON exported','success');
+  if (features.length === 0) { showToast('No features to export', 'error'); return; }
+  const gj = {type: 'FeatureCollection', features};
+  const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
+  _downloadBlob(blob, 'all_features.geojson');
+  showToast('GeoJSON exported', 'success');
 }
 
 function refreshExportLayerSelect() {
@@ -3251,19 +3303,11 @@ function exportLayerGeoJSON() {
   const layerId = document.getElementById('export-layer-select').value;
   const lyr = uploadedLayers.find(l => l.id === layerId);
   if (!lyr) { showToast('Select a layer first', 'error'); return; }
-  const features = lyr.geojsonFeatures && lyr.geojsonFeatures.length > 0
-    ? lyr.geojsonFeatures
-    : [];
-  if (features.length === 0) {
-    lyr.layer.eachLayer(sub => { if (sub.toGeoJSON) features.push(sub.toGeoJSON()); });
-  }
+  const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
-  const gj = {type:'FeatureCollection', features};
-  const blob = new Blob([JSON.stringify(gj,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url;
-  a.download = lyr.name.replace(/[^a-zA-Z0-9_-]/g,'_') + '.geojson'; a.click();
-  URL.revokeObjectURL(url);
+  const gj = {type: 'FeatureCollection', features};
+  const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
+  _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.geojson');
   showToast('GeoJSON exported', 'success');
 }
 
@@ -3271,21 +3315,18 @@ function exportLayerShapefile() {
   const layerId = document.getElementById('export-layer-select').value;
   const lyr = uploadedLayers.find(l => l.id === layerId);
   if (!lyr) { showToast('Select a layer first', 'error'); return; }
-  let features = lyr.geojsonFeatures && lyr.geojsonFeatures.length > 0
-    ? lyr.geojsonFeatures : [];
-  if (features.length === 0) {
-    lyr.layer.eachLayer(sub => { if (sub.toGeoJSON) features.push(sub.toGeoJSON()); });
-  }
+  const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
-  const gj = {type:'FeatureCollection', features};
-  const gjStr = JSON.stringify(gj);
-  const blob = new Blob([gjStr], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url;
-  a.download = lyr.name.replace(/[^a-zA-Z0-9_-]/g,'_') + '.geojson';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Exported as GeoJSON (use ogr2ogr or QGIS to convert to .shp)', 'success');
+  const gj = {type: 'FeatureCollection', features};
+  try {
+    shpwrite.download(gj);
+    showToast('Shapefile (.zip) exported', 'success');
+  } catch(e) {
+    console.warn('shpwrite unavailable, falling back to GeoJSON:', e);
+    const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
+    _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.geojson');
+    showToast('Exported as GeoJSON (install shp-write for Shapefile support)', 'success');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
