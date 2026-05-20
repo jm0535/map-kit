@@ -3878,6 +3878,9 @@ async function doExport() {
   const mapEl = document.getElementById('map');
   const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
 
+  // Restore UI controls immediately — they were hidden only for the screenshot
+  hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
+
   // Capture overview map with RED locator rectangle (while still centered)
   let overviewCanvas = null;
   let prevOverviewStyle = null;
@@ -3912,10 +3915,9 @@ async function doExport() {
     }
   }
 
-  // Restore map view + controls
+  // Restore original map view after overview capture
   map.setView(prevCenter, prevZoom, {animate: false});
   updateOverview();
-  hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
 
   // Capture profile if needed
   let profCanvas = null;
@@ -3924,7 +3926,7 @@ async function doExport() {
     profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
   }
 
-  // Compose final image: map-wrap (map + legend + north arrow + scalebar) + overview inset + profile
+  // Compose final image: map (legend + scalebar) + north arrow + overview inset + profile
   const profH = profCanvas ? profCanvas.height : 0;
 
   const outW = mapCanvas.width;
