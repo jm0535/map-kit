@@ -516,6 +516,26 @@
   .exp-row input[type=checkbox] { accent-color: #63b3ed; margin-right: 6px; }
   .exp-actions { display: flex; gap: 8px; margin-top: 14px; }
 
+  /* Preview overlay */
+  #preview-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 9999; align-items: center; justify-content: center;
+  }
+  #preview-overlay.show { display: flex; }
+  #preview-box {
+    background: #13161c; border: 1px solid #2d3748; border-radius: 8px;
+    padding: 16px; max-width: 90vw; max-height: 90vh;
+    display: flex; flex-direction: column;
+  }
+  #preview-box h3 { color: #63b3ed; font-size: 13px; margin-bottom: 10px; flex-shrink: 0; }
+  #preview-img-wrap {
+    flex: 1; overflow: auto; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #0f1117; border-radius: 4px; border: 1px solid #2d3748;
+  }
+  #preview-img-wrap img { max-width: 100%; max-height: 70vh; object-fit: contain; }
+  .preview-actions { display: flex; gap: 8px; margin-top: 12px; flex-shrink: 0; justify-content: center; }
+
   /* Notification toast */
   #toast {
     position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
@@ -604,8 +624,9 @@
   body.light #toast { background: #fff; border-color: #e2e8f0; color: #2b6cb0; }
   body.light #toast.success { border-color: #48bb78; color: #276749; }
   body.light #toast.error { border-color: #e53e3e; color: #c53030; }
-  body.light #export-box, body.light #col-mapper-box { background: #fff; border-color: #e2e8f0; }
-  body.light #export-box h3, body.light #col-mapper-box h3 { color: #2b6cb0; }
+  body.light #export-box, body.light #col-mapper-box, body.light #preview-box { background: #fff; border-color: #e2e8f0; }
+  body.light #export-box h3, body.light #col-mapper-box h3, body.light #preview-box h3 { color: #2b6cb0; }
+  body.light #preview-img-wrap { background: #f7fafc; border-color: #e2e8f0; }
   body.light .exp-row select, body.light .exp-row input[type=text], body.light .cm-row select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
   body.light .symbol-row input[type=number] { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
   body.light #analysis-layer-select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
@@ -1011,12 +1032,33 @@
       </select>
     </div>
     <div class="exp-row">
+      <label>Map extent</label>
+      <select id="exp-extent">
+        <option value="fit">Fit to visible layers</option>
+        <option value="current">Current view</option>
+      </select>
+    </div>
+    <div class="exp-row">
       <label><input type="checkbox" id="exp-include-profile" checked> Include elevation profile</label>
       <label><input type="checkbox" id="exp-include-legend" checked> Include legend</label>
     </div>
     <div class="exp-actions">
       <button class="btn-primary" id="exp-confirm-btn" onclick="doExport()">Export</button>
+      <button class="btn-secondary" onclick="previewExport()">Preview</button>
       <button class="btn-secondary" onclick="closeExport()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview overlay -->
+<div id="preview-overlay">
+  <div id="preview-box">
+    <h3>Export Preview</h3>
+    <div id="preview-img-wrap"></div>
+    <div class="preview-actions">
+      <button class="btn-primary" onclick="downloadPreview('png')">Export PNG</button>
+      <button class="btn-primary" onclick="downloadPreview('pdf')">Export PDF</button>
+      <button class="btn-secondary" onclick="closePreview()">Close</button>
     </div>
   </div>
 </div>
@@ -3792,21 +3834,53 @@ function openExport(fmt) {
 }
 function closeExport() { document.getElementById('export-overlay').classList.remove('show'); }
 
-async function doExport() {
-  closeExport();
-  try {
+let _lastExportCanvas = null; // stores canvas for preview download
+
+function closePreview() {
+  document.getElementById('preview-overlay').classList.remove('show');
+  document.getElementById('preview-img-wrap').innerHTML = '';
+  _lastExportCanvas = null;
+}
+
+function downloadPreview(fmt) {
+  if (!_lastExportCanvas) return;
+  const dpiScale = parseInt(document.getElementById('exp-dpi').value);
+  const outW = _lastExportCanvas.width;
+  const outH = _lastExportCanvas.height;
+  if (fmt === 'png') {
+    const link = document.createElement('a');
+    link.download = `map_export_${dpiScale*72}dpi.png`;
+    link.href = _lastExportCanvas.toDataURL('image/png');
+    link.click();
+  } else {
+    const {jsPDF} = window.jspdf;
+    const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    const imgData = _lastExportCanvas.toDataURL('image/png');
+    const imgRatio = outW / outH;
+    let imgW = pw;
+    let imgH = pw / imgRatio;
+    if (imgH > ph) { imgH = ph; imgW = ph * imgRatio; }
+    const imgX = (pw - imgW) / 2;
+    const imgY = (ph - imgH) / 2;
+    pdf.addImage(imgData, 'PNG', imgX, imgY, imgW, imgH);
+    pdf.save(`map_export_${dpiScale*72}dpi.pdf`);
+  }
+  showToast(`${fmt.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
+  closePreview();
+}
+
+async function generateExportCanvas() {
   const dpiScale = parseInt(document.getElementById('exp-dpi').value);
   const inclProf = document.getElementById('exp-include-profile').checked;
   const inclLeg = document.getElementById('exp-include-legend').checked;
-
-  showToast('Rendering export... please wait');
+  const fitToLayers = document.getElementById('exp-extent').value === 'fit';
 
   // Compute visible layers once for re-use
   const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
 
-  // Auto-center map on visible layer bounds before export
-  // Fallback: manually compute from geojson coordinates because
-  // Leaflet GeoJSON point layers sometimes return invalid getBounds()
+  // Auto-center map on visible layer bounds before export (if requested)
   let layerBounds = null;
   visibleLayers.forEach(lyr => {
     if (lyr.layer && lyr.layer.getBounds) {
@@ -3843,28 +3917,25 @@ async function doExport() {
       }
     });
   });
+
   const prevCenter = map.getCenter();
   const prevZoom = map.getZoom();
-  if (layerBounds && layerBounds.isValid && layerBounds.isValid()) {
+
+  if (fitToLayers && layerBounds && layerBounds.isValid && layerBounds.isValid()) {
     map.invalidateSize();
     map.fitBounds(layerBounds, {animate: false, padding: [80, 80]});
     updateOverview();
-    // Give Leaflet a moment to finish internal pan/zoom settle
     await new Promise(r => setTimeout(r, 400));
   }
-  const fittedCenter = map.getCenter();
-  const fittedZoom = map.getZoom();
 
   // Hide map UI controls before capture
-  // Comprehensive: hide ALL leaflet controls except scalebar and legend
   const hiddenEls = [];
   document.querySelectorAll('#map .leaflet-control').forEach(el => {
     if (el.classList.contains('leaflet-control-scale')) return;
-    if (el.classList.contains('map-legend')) return;
+    if (el.classList.contains('map-legend') && inclLeg) return;
     hiddenEls.push({el, prev: el.style.display});
     el.style.display = 'none';
   });
-  // Also hide non-Leaflet UI overlays
   const extraSelectors = ['#digitize-toolbar', '#north-arrow'];
   extraSelectors.forEach(sel => {
     const el = document.querySelector(sel);
@@ -3881,10 +3952,10 @@ async function doExport() {
   const mapEl = document.getElementById('map');
   const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
 
-  // Restore UI controls immediately — they were hidden only for the screenshot
+  // Restore UI controls immediately
   hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
 
-  // Capture overview map with RED locator rectangle (while still centered)
+  // Capture overview map with RED locator rectangle
   let overviewCanvas = null;
   let prevOverviewStyle = null;
   {
@@ -3929,9 +4000,8 @@ async function doExport() {
     profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
   }
 
-  // Compose final image: map (legend + scalebar) + north arrow + overview inset + profile
+  // Compose final image
   const profH = profCanvas ? profCanvas.height : 0;
-
   const outW = mapCanvas.width;
   const outH = mapCanvas.height + profH;
 
@@ -3940,15 +4010,13 @@ async function doExport() {
   out.height = outH;
   const c = out.getContext('2d');
 
-  // Background
   c.fillStyle = '#1a1d23';
   c.fillRect(0, 0, outW, outH);
 
-  // Map (includes app's styled legend and scalebar)
   let y = 0;
   c.drawImage(mapCanvas, 0, y);
 
-  // North arrow (top-right, above overview inset)
+  // North arrow (top-right)
   {
     const naSize = 30 * dpiScale;
     const naX = outW - naSize * 1.5;
@@ -3967,7 +4035,7 @@ async function doExport() {
     c.restore();
   }
 
-  // Overview map inset (top-right, below north arrow)
+  // Overview map inset
   if (overviewCanvas) {
     const ovW = overviewCanvas.width;
     const ovH = overviewCanvas.height;
@@ -3982,36 +4050,58 @@ async function doExport() {
   }
 
   y += mapCanvas.height;
-
-  // Profile
   if (profCanvas) {
     c.drawImage(profCanvas, 0, y);
     y += profCanvas.height;
   }
 
-  // Clean map composition — app's legend and north arrow captured from DOM
+  return {canvas: out, dpiScale};
+}
 
-  if (exportFormat === 'png') {
-    const link = document.createElement('a');
-    link.download = `map_export_${dpiScale*72}dpi.png`;
-    link.href = out.toDataURL('image/png');
-    link.click();
-  } else {
-    const {jsPDF} = window.jspdf;
-    const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
-    const pw = pdf.internal.pageSize.getWidth();
-    const ph = pdf.internal.pageSize.getHeight();
-    const imgData = out.toDataURL('image/png');
-    const imgRatio = outW / outH;
-    let imgW = pw;
-    let imgH = pw / imgRatio;
-    if (imgH > ph) { imgH = ph; imgW = ph * imgRatio; }
-    const imgX = (pw - imgW) / 2;
-    const imgY = (ph - imgH) / 2;
-    pdf.addImage(imgData, 'PNG', imgX, imgY, imgW, imgH);
-    pdf.save(`map_export_${dpiScale*72}dpi.pdf`);
+async function previewExport() {
+  closeExport();
+  showToast('Generating preview... please wait');
+  try {
+    const {canvas} = await generateExportCanvas();
+    _lastExportCanvas = canvas;
+    const wrap = document.getElementById('preview-img-wrap');
+    wrap.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL('image/png');
+    wrap.appendChild(img);
+    document.getElementById('preview-overlay').classList.add('show');
+  } catch (e) {
+    console.error('Preview failed:', e);
+    showToast('Preview failed: ' + e.message, 'error');
   }
-  showToast(`${exportFormat.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
+}
+
+async function doExport() {
+  closeExport();
+  showToast('Rendering export... please wait');
+  try {
+    const {canvas, dpiScale} = await generateExportCanvas();
+    if (exportFormat === 'png') {
+      const link = document.createElement('a');
+      link.download = `map_export_${dpiScale*72}dpi.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } else {
+      const {jsPDF} = window.jspdf;
+      const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const imgData = canvas.toDataURL('image/png');
+      const imgRatio = canvas.width / canvas.height;
+      let imgW = pw;
+      let imgH = pw / imgRatio;
+      if (imgH > ph) { imgH = ph; imgW = ph * imgRatio; }
+      const imgX = (pw - imgW) / 2;
+      const imgY = (ph - imgH) / 2;
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgW, imgH);
+      pdf.save(`map_export_${dpiScale*72}dpi.pdf`);
+    }
+    showToast(`${exportFormat.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
   } catch (e) {
     console.error('Export failed:', e);
     showToast('Export failed: ' + e.message, 'error');
