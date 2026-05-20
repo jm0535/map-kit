@@ -601,6 +601,19 @@
   .layout-actions {
     display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
   }
+  #layout-loading {
+    position: absolute; inset: 0; z-index: 20;
+    display: none; align-items: center; justify-content: center;
+    gap: 8px; background: rgba(15,17,23,0.7);
+    font-size: 13px; color: #63b3ed;
+  }
+  #layout-loading.show { display: flex; }
+  #layout-loading .spinner {
+    display: inline-block; width: 18px; height: 18px;
+    border: 2px solid #2d3748; border-top-color: #63b3ed; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ── Light theme ── */
   body.light { background: #f7fafc; color: #1a202c; }
@@ -690,6 +703,8 @@
   body.light #layout-north { color: #e53e3e; }
   body.light #layout-overview-label { color: #718096; }
   body.light #layout-scale { color: #4a5568; }
+  body.light #layout-loading { background: rgba(255,255,255,0.7); color: #2b6cb0; }
+  body.light #layout-loading .spinner { border-color: #e2e8f0; border-top-color: #2b6cb0; }
   body.light .exp-row select, body.light .exp-row input[type=text], body.light .cm-row select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
   body.light .symbol-row input[type=number] { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
   body.light #analysis-layer-select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
@@ -1130,6 +1145,7 @@
       </div>
       <div id="layout-legend"></div>
       <div id="layout-title"></div>
+      <div id="layout-loading"><span class="spinner"></span>Loading tiles…</div>
     </div>
     <div class="layout-actions">
       <button class="btn-primary" onclick="layoutExport('png')">Export PNG</button>
@@ -4055,6 +4071,9 @@ async function buildLayout() {
     }
   });
 
+  // ── Show loading spinner ──
+  document.getElementById('layout-loading').classList.add('show');
+
   // ── Set view ──
   if (fitToLayers && layerBounds && layerBounds.isValid && layerBounds.isValid()) {
     layoutMap.fitBounds(layerBounds, {animate: false, padding: [60, 60]});
@@ -4062,15 +4081,16 @@ async function buildLayout() {
     layoutMap.setView(map.getCenter(), map.getZoom(), {animate: false});
   }
 
-  // ── Wait for tiles ──
-  await new Promise(r => setTimeout(r, 1500));
+  // ── Wait for basemap tiles to actually load (not fixed timeout) ──
+  await _waitForTiles(basemap, 3000);
 
-  // ── Title ──
+  // ── Build overlays in parallel with overview ──
+  // Title
   const titleEl = document.getElementById('layout-title');
   titleEl.textContent = titleText;
   titleEl.style.display = titleText ? 'block' : 'none';
 
-  // ── Legend ──
+  // Legend
   const legendEl = document.getElementById('layout-legend');
   if (inclLeg) {
     legendEl.style.display = 'block';
@@ -4103,7 +4123,7 @@ async function buildLayout() {
     legendEl.style.display = 'none';
   }
 
-  // ── Scale bar text ──
+  // Scale
   const scaleEl = document.getElementById('layout-scale');
   const scaleM = _getScaleFromMap(layoutMap);
   scaleEl.textContent = scaleM ? `Scale 1:${scaleM.toLocaleString()}` : 'Scale';
@@ -4117,16 +4137,52 @@ async function buildLayout() {
     dragging: false, scrollWheelZoom: false,
     doubleClickZoom: false, boxZoom: false
   });
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
+  const ovBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 13, crossOrigin: true
   }).addTo(layoutOverviewMap);
   layoutOverviewMap.setView(layoutMap.getCenter(), Math.max(1, layoutMap.getZoom() - 4), {animate: false});
-  // Add red rectangle showing main map extent
   const mainBounds = layoutMap.getBounds();
   L.rectangle(mainBounds, {color:'#e53e3e', weight:1.5, fillOpacity:0.15}).addTo(layoutOverviewMap);
 
-  // ── One more tile wait for overview ──
-  await new Promise(r => setTimeout(r, 800));
+  await _waitForTiles(ovBasemap, 2000);
+
+  // ── Hide loading spinner ──
+  document.getElementById('layout-loading').classList.remove('show');
+}
+
+// Wait for tile layer to finish loading, with a hard timeout fallback
+function _waitForTiles(tileLayer, timeoutMs) {
+  return new Promise(resolve => {
+    let resolved = false;
+    const done = () => {
+      if (resolved) return;
+      resolved = true;
+      tileLayer.off('load', done);
+      tileLayer.off('tileerror', done);
+      resolve();
+    };
+    // If already loaded (cached tiles), resolve quickly
+    const check = () => {
+      if (tileLayer._loading === 0 || tileLayer._loading == null) {
+        done();
+        return true;
+      }
+      return false;
+    };
+    if (!check()) {
+      tileLayer.on('load', done);
+      tileLayer.on('tileerror', done);
+    }
+    // Hard timeout fallback
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        tileLayer.off('load', done);
+        tileLayer.off('tileerror', done);
+        resolve();
+      }
+    }, timeoutMs);
+  });
 }
 
 function _getScaleFromMap(lmap) {
