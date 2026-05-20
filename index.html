@@ -115,6 +115,29 @@
     border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
   }
   .layer-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Map legend control */
+  .map-legend { background: rgba(15,17,23,0.92); border: 1px solid #2d3748; border-radius: 6px; padding: 0; font-size: 11px; color: #e2e8f0; max-width: 260px; max-height: 50vh; overflow-y: auto; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+  .map-legend-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(26,29,35,0.95); border-bottom: 1px solid #2d3748; border-radius: 6px 6px 0 0; font-weight: 600; font-size: 11px; color: #63b3ed; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; -webkit-user-select: none; user-select: none; }
+  .map-legend-header:hover { background: rgba(45,55,72,0.6); }
+  .map-legend-header .arrow { transition: transform 0.2s; font-size: 10px; }
+  .map-legend-header.collapsed .arrow { transform: rotate(-90deg); }
+  .map-legend-body { padding: 6px 10px 8px; }
+  .map-legend-body.hidden { display: none; }
+  .map-legend-layer { margin-bottom: 6px; }
+  .map-legend-layer:last-child { margin-bottom: 0; }
+  .map-legend-layer-title { font-weight: 600; font-size: 11px; color: #e2e8f0; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+  .map-legend-layer-title .leg-swatch { width: 10px; height: 10px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+  .map-legend-row { display: flex; align-items: center; gap: 6px; padding: 1px 0; font-size: 10px; color: #a0aec0; }
+  .map-legend-symbol { flex-shrink: 0; }
+  .map-legend-symbol.point { width: 10px; height: 10px; border-radius: 50%; border: 1.2px solid rgba(255,255,255,0.6); }
+  .map-legend-symbol.line { width: 18px; height: 3px; border-radius: 1px; }
+  .map-legend-symbol.polygon { width: 14px; height: 10px; border-radius: 2px; border: 1.5px solid; opacity: 0.85; }
+  .map-legend-symbol.shape { width: 12px; height: 12px; }
+  .map-legend-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .map-legend-ramp { display: flex; align-items: stretch; gap: 0; margin: 2px 0 2px 0; }
+  .map-legend-ramp-bar { width: 14px; height: 60px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); }
+  .map-legend-ramp-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: #718096; padding: 0 4px; }
+  .map-legend-empty { color: #4a5568; text-align: center; padding: 8px 0; font-size: 10px; }
   .layer-count {
     font-size: 10px; color: #718096; background: #1a1d23;
     padding: 1px 5px; border-radius: 8px; white-space: nowrap;
@@ -484,6 +507,16 @@
   body.light .layer-eye { color: #2b6cb0; }
   body.light .layer-eye.off { color: #a0aec0; }
   body.light .layer-item.active-layer { background: rgba(43,108,176,0.08); }
+  body.light .map-legend { background: rgba(255,255,255,0.95); border-color: #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+  body.light .map-legend-header { background: rgba(247,250,252,0.95); border-bottom-color: #e2e8f0; color: #2b6cb0; }
+  body.light .map-legend-header:hover { background: rgba(237,242,247,0.95); }
+  body.light .map-legend-body { color: #4a5568; }
+  body.light .map-legend-layer-title { color: #2d3748; }
+  body.light .map-legend-row { color: #4a5568; }
+  body.light .map-legend-symbol.point { border-color: rgba(0,0,0,0.3); }
+  body.light .map-legend-symbol.polygon { border-color: rgba(0,0,0,0.4); }
+  body.light .map-legend-ramp-labels { color: #718096; }
+  body.light .map-legend-empty { color: #a0aec0; }
   body.light .layer-count { background: #edf2f7; color: #718096; }
   body.light .basemap-btn { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
   body.light .basemap-btn:hover { border-color: #2b6cb0; color: #2d3748; }
@@ -968,6 +1001,134 @@ try {
   }).addTo(map);
 } catch(e) {}
 
+// ═══════════════════════════════════════════════════════════════════════════
+// MAP LEGEND CONTROL
+// ═══════════════════════════════════════════════════════════════════════════
+const legendState = {}; // per-layer: { mode:'simple'|'categorized'|'graduated', color, geomType, attr, colorMap, ramp, breaks, minVal, maxVal, shape }
+
+const MapLegend = L.Control.extend({
+  options: { position: 'bottomleft' },
+  onAdd() {
+    this._container = L.DomUtil.create('div', 'map-legend');
+    L.DomEvent.disableClickPropagation(this._container);
+    L.DomEvent.disableScrollPropagation(this._container);
+    this._collapsed = false;
+    this._render();
+    return this._container;
+  },
+  toggle() {
+    this._collapsed = !this._collapsed;
+    this._render();
+  },
+  update() { this._render(); },
+  _render() {
+    const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
+    if (this._collapsed) {
+      this._container.innerHTML = `<div class="map-legend-header collapsed" onclick="mapLegend.toggle()">Legend <span class="arrow">&#x25BC;</span></div>`;
+      return;
+    }
+    let body = '';
+    if (visibleLayers.length === 0) {
+      body = '<div class="map-legend-empty">No visible layers</div>';
+    } else {
+      visibleLayers.forEach(l => {
+        body += this._renderLayer(l);
+      });
+    }
+    this._container.innerHTML =
+      `<div class="map-legend-header" onclick="mapLegend.toggle()">Legend <span class="arrow">&#x25BC;</span></div>` +
+      `<div class="map-legend-body">${body}</div>`;
+  },
+  _renderLayer(info) {
+    const st = legendState[info.id] || { mode: 'simple', color: info.color, geomType: 'Point' };
+    const name = escapeHtml(info.name);
+    let html = `<div class="map-legend-layer">`;
+    html += `<div class="map-legend-layer-title"><div class="leg-swatch" style="background:${st.color || info.color}"></div>${name}</div>`;
+
+    if (st.mode === 'categorized' && st.colorMap) {
+      const entries = Object.entries(st.colorMap);
+      entries.forEach(([val, color]) => {
+        html += this._renderSymbol(st.geomType, color, String(val), st.shape);
+      });
+    } else if (st.mode === 'graduated' && st.ramp) {
+      html += this._renderRamp(st.ramp, st.minVal, st.maxVal, st.breaks, st.geomType, st.shape);
+    } else {
+      // Simple symbol
+      html += this._renderSymbol(st.geomType, st.color || info.color, `${st.geomType}`, st.shape);
+    }
+    html += '</div>';
+    return html;
+  },
+  _renderSymbol(geomType, color, label, shape) {
+    let sym = '';
+    if (shape && shape !== 'circle') {
+      sym = `<div class="map-legend-symbol shape"><svg viewBox="-1.3 -1.3 2.6 2.6" width="12" height="12"><path d="${shape}" fill="${color}" stroke="white" stroke-width="0.15"/></svg></div>`;
+    } else if (geomType === 'Point') {
+      sym = `<div class="map-legend-symbol point" style="background:${color}"></div>`;
+    } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
+      sym = `<div class="map-legend-symbol line" style="background:${color}"></div>`;
+    } else {
+      sym = `<div class="map-legend-symbol polygon" style="background:${color}40;border-color:${color}"></div>`;
+    }
+    return `<div class="map-legend-row">${sym}<span class="map-legend-label">${escapeHtml(label)}</span></div>`;
+  },
+  _renderRamp(ramp, minVal, maxVal, breaks, geomType, shape) {
+    const colors = ramp.join(',');
+    const gradient = `linear-gradient(${colors})`;
+    const topLabel = maxVal != null ? Number(maxVal).toFixed(1) : '';
+    const botLabel = minVal != null ? Number(minVal).toFixed(1) : '';
+    let html = `<div class="map-legend-ramp">`;
+    if (shape && shape !== 'circle') {
+      html += `<div class="map-legend-symbol shape"><svg viewBox="-1.3 -1.3 2.6 2.6" width="12" height="12"><path d="${shape}" fill="${ramp[Math.floor(ramp.length/2)]}" stroke="white" stroke-width="0.15"/></svg></div>`;
+    } else if (geomType === 'Point') {
+      html += `<div class="map-legend-symbol point" style="background:${ramp[Math.floor(ramp.length/2)]}"></div>`;
+    } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
+      html += `<div class="map-legend-symbol line" style="background:${ramp[Math.floor(ramp.length/2)]}"></div>`;
+    } else {
+      html += `<div class="map-legend-symbol polygon" style="background:${ramp[Math.floor(ramp.length/2)]}40;border-color:${ramp[Math.floor(ramp.length/2)]}"></div>`;
+    }
+    html += `<div class="map-legend-ramp-bar" style="background:${gradient}"></div>`;
+    html += `<div class="map-legend-ramp-labels"><span>${topLabel}</span><span>${botLabel}</span></div>`;
+    html += '</div>';
+    return html;
+  }
+});
+
+const mapLegend = new MapLegend();
+mapLegend.addControl(mapLegend);
+
+function refreshMapLegend() { mapLegend.update(); }
+
+function _detectGeomType(info) {
+  if (info.geomTypes && info.geomTypes.length > 0) {
+    const t = info.geomTypes[0];
+    if (t === 'Analysis') return 'Point';
+    if (t.includes('Line')) return 'LineString';
+    if (t.includes('Polygon')) return 'Polygon';
+  }
+  // Fallback: inspect first feature
+  let gtype = 'Point';
+  info.layer.eachLayer(sub => {
+    if (sub.feature) {
+      const gt = sub.feature.geometry.type;
+      if (gt.includes('Line')) gtype = 'LineString';
+      else if (gt.includes('Polygon')) gtype = 'Polygon';
+      else gtype = 'Point';
+    }
+  });
+  return gtype;
+}
+
+function initLegendState(info) {
+  legendState[info.id] = {
+    mode: 'simple',
+    color: info.color,
+    geomType: _detectGeomType(info),
+    shape: null,
+  };
+  refreshMapLegend();
+}
+
 let basemapLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
   {attribution:'OpenTopoMap', maxZoom:17}).addTo(map);
 
@@ -1249,6 +1410,7 @@ function addLayerToPanel(info) {
     <div class="label-popover" id="lp-${info.id}"></div>
   `;
   document.getElementById('uploaded-layers-list').appendChild(el);
+  initLegendState(info);
 }
 
 function toggleUploadedLayer(id, on) {
@@ -1265,6 +1427,7 @@ function toggleUploadedLayer(id, on) {
   }
   const cb = document.querySelector(`#profile-tabs input[data-profile="${id}"]`);
   if (cb) { cb.checked = on; rebuildProfileFromCheckboxes(); }
+  refreshMapLegend();
 }
 
 const labelAttrState = {};
@@ -1443,6 +1606,8 @@ function removeUploadedLayer(id) {
     const se = document.getElementById('symbology-empty'); if (se) se.style.display = '';
   }
   showToast('Layer removed');
+  delete legendState[id];
+  refreshMapLegend();
 }
 
 function refreshSymbologyLayerSelect() {
@@ -1567,6 +1732,8 @@ function recolorLayer(id, color) {
   });
   const swatch = document.querySelector(`[data-layer-id="${id}"] .layer-color-swatch`);
   if (swatch) swatch.style.background = color;
+  if (legendState[id]) { legendState[id].color = color; legendState[id].mode = 'simple'; }
+  refreshMapLegend();
 }
 
 function resizeLayer(id, size) {
@@ -1705,6 +1872,8 @@ function rebuildLayerWithShape(info, svgPath) {
       }
     }).addTo(map);
   }
+  if (legendState[info.id]) { legendState[info.id].shape = svgPath; legendState[info.id].mode = 'simple'; }
+  refreshMapLegend();
 }
 
 const CATEGORIZED_COLORS = ['#e6194B','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#42d4f4','#f032e6','#bfef45','#fabed4','#469990','#dcbeff','#9A6324','#800000','#aaffc3','#808000'];
@@ -1749,6 +1918,8 @@ function applyCategorized(id) {
   }).addTo(map);
 
   showToast(`Categorized by ${attr} (${vals.length} classes)`, 'success');
+  legendState[id] = { mode:'categorized', color:info.color, geomType:_detectGeomType(info), attr, colorMap, shape:null };
+  refreshMapLegend();
 }
 
 const COLOR_RAMPS = {
@@ -1810,6 +1981,8 @@ function applyGraduated(id) {
   }).addTo(map);
 
   showToast(`Graduated by ${attr} (${numClasses} classes, ${rampName})`, 'success');
+  legendState[id] = { mode:'graduated', color:info.color, geomType:_detectGeomType(info), attr, ramp, minVal, maxVal, numClasses, shape:null };
+  refreshMapLegend();
 }
 
 function resetSymbology(id) {
@@ -1825,6 +1998,7 @@ function resetSymbology(id) {
     if (strokeInput) strokeInput.value = '#ffffff';
   }
   showToast('Symbology reset', 'success');
+  initLegendState(info);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3185,26 +3359,85 @@ async function doExport() {
     y += profCanvas.height;
   }
 
-  // Legend (dynamic from uploaded layers)
+  // Legend (dynamic from legendState — QGIS-style)
   if (inclLeg && uploadedLayers.length > 0) {
     const legY = y + 10 * dpiScale;
-    const legFontSize = Math.round(10 * dpiScale);
-    c.font = `bold ${legFontSize}px 'Segoe UI', sans-serif`;
-    c.textAlign = 'left';
+    const legFontSize = Math.round(9 * dpiScale);
+    const legTitleFontSize = Math.round(10 * dpiScale);
     const legX = 20 * dpiScale;
-    const dotR = 5 * dpiScale;
-    const colW = 200 * dpiScale;
-    uploadedLayers.forEach((lyr, idx) => {
-      const col = idx % 3;
-      const row = Math.floor(idx / 3);
-      const cx = legX + col * colW + dotR;
-      const cy = legY + row * (dotR * 3) + dotR;
-      c.fillStyle = lyr.color || '#f6e05e';
-      c.beginPath(); c.arc(cx, cy, dotR, 0, Math.PI * 2); c.fill();
+    const dotR = 4 * dpiScale;
+    const lineW = 16 * dpiScale;
+    const lineH = 3 * dpiScale;
+    const polyW = 12 * dpiScale;
+    const polyH = 8 * dpiScale;
+    const rowH = 14 * dpiScale;
+    let curY = legY;
+    c.textAlign = 'left';
+
+    const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
+    visibleLayers.forEach(lyr => {
+      const st = legendState[lyr.id] || { mode:'simple', color:lyr.color, geomType:'Point' };
+
+      // Layer title
+      c.font = `bold ${legTitleFontSize}px 'Segoe UI', sans-serif`;
       c.fillStyle = '#e2e8f0';
-      c.fillText(lyr.name, cx + dotR * 2.5, cy + legFontSize * 0.35);
+      // Color swatch
+      c.fillStyle = st.color || lyr.color || '#f6e05e';
+      c.fillRect(legX, curY, 8*dpiScale, 8*dpiScale);
+      c.fillStyle = '#e2e8f0';
+      c.fillText(lyr.name, legX + 12*dpiScale, curY + 8*dpiScale);
+      curY += rowH;
+
+      if (st.mode === 'categorized' && st.colorMap) {
+        c.font = `${legFontSize}px 'Segoe UI', sans-serif`;
+        Object.entries(st.colorMap).slice(0, 12).forEach(([val, color]) => {
+          c.fillStyle = color;
+          if (st.geomType === 'Point') { c.beginPath(); c.arc(legX + dotR + 4*dpiScale, curY + dotR, dotR, 0, Math.PI*2); c.fill(); }
+          else if (st.geomType.includes('Line')) { c.fillRect(legX + 4*dpiScale, curY + dotR - lineH/2, lineW, lineH); }
+          else { c.globalAlpha = 0.3; c.fillRect(legX + 4*dpiScale, curY, polyW, polyH); c.globalAlpha = 1; c.strokeStyle = color; c.lineWidth = dpiScale; c.strokeRect(legX + 4*dpiScale, curY, polyW, polyH); }
+          c.fillStyle = '#a0aec0';
+          c.fillText(String(val), legX + 24*dpiScale, curY + legFontSize);
+          curY += rowH * 0.85;
+        });
+        if (Object.keys(st.colorMap).length > 12) {
+          c.fillStyle = '#718096';
+          c.fillText(`... +${Object.keys(st.colorMap).length - 12} more`, legX + 24*dpiScale, curY + legFontSize);
+          curY += rowH * 0.85;
+        }
+      } else if (st.mode === 'graduated' && st.ramp) {
+        // Draw color ramp bar
+        const barW = 14 * dpiScale;
+        const barH = 50 * dpiScale;
+        const barX = legX + 4*dpiScale;
+        const barY = curY;
+        for (let i = 0; i < st.ramp.length; i++) {
+          const segH = barH / st.ramp.length;
+          c.fillStyle = st.ramp[st.ramp.length - 1 - i];
+          c.fillRect(barX, barY + i * segH, barW, segH + 1);
+        }
+        c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = dpiScale; c.strokeRect(barX, barY, barW, barH);
+        c.font = `${Math.round(8*dpiScale)}px 'Segoe UI', sans-serif`;
+        c.fillStyle = '#a0aec0';
+        c.textAlign = 'left';
+        if (st.maxVal != null) c.fillText(Number(st.maxVal).toFixed(1), barX + barW + 4*dpiScale, barY + legFontSize);
+        if (st.minVal != null) c.fillText(Number(st.minVal).toFixed(1), barX + barW + 4*dpiScale, barY + barH);
+        curY += barH + 4*dpiScale;
+      } else {
+        // Simple symbol
+        c.font = `${legFontSize}px 'Segoe UI', sans-serif`;
+        c.fillStyle = st.color || lyr.color;
+        if (st.geomType === 'Point') { c.beginPath(); c.arc(legX + dotR + 4*dpiScale, curY + dotR, dotR, 0, Math.PI*2); c.fill(); }
+        else if (st.geomType.includes('Line')) { c.fillRect(legX + 4*dpiScale, curY + dotR - lineH/2, lineW, lineH); }
+        else { c.globalAlpha = 0.3; c.fillRect(legX + 4*dpiScale, curY, polyW, polyH); c.globalAlpha = 1; c.strokeStyle = st.color||lyr.color; c.lineWidth = dpiScale; c.strokeRect(legX + 4*dpiScale, curY, polyW, polyH); }
+        c.fillStyle = '#a0aec0';
+        c.fillText(st.geomType, legX + 24*dpiScale, curY + legFontSize);
+        curY += rowH;
+      }
+      curY += 4*dpiScale;
     });
-    y += legendH;
+    // Recalculate legend height
+    const actualLegH = Math.max(legendH, curY - legY + 10*dpiScale);
+    y += actualLegH;
   }
 
   // North arrow (top-right of map area)
