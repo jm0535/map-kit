@@ -116,7 +116,7 @@
   }
   .layer-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* Map legend control */
-  .map-legend { background: rgba(15,17,23,0.92); border: 1px solid #2d3748; border-radius: 6px; padding: 0; font-size: 11px; color: #e2e8f0; max-width: 260px; max-height: 50vh; overflow-y: auto; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+  .map-legend { background: rgba(15,17,23,0.92); border: 1px solid #2d3748; border-radius: 6px; padding: 0; font-size: 11px; color: #e2e8f0; max-width: 260px; max-height: 50vh; overflow-y: auto; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
   .map-legend-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(26,29,35,0.95); border-bottom: 1px solid #2d3748; border-radius: 6px 6px 0 0; font-weight: 600; font-size: 11px; color: #63b3ed; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; -webkit-user-select: none; user-select: none; }
   .map-legend-header:hover { background: rgba(45,55,72,0.6); }
   .map-legend-header .arrow { transition: transform 0.2s; font-size: 10px; }
@@ -138,6 +138,38 @@
   .map-legend-ramp-bar { width: 14px; height: 60px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); }
   .map-legend-ramp-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: #718096; padding: 0 4px; }
   .map-legend-empty { color: #4a5568; text-align: center; padding: 8px 0; font-size: 10px; }
+
+  /* Digitizing toolbar */
+  .digitize-toolbar { position: absolute; top: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 4px; }
+  .digitize-btn { width: 34px; height: 34px; border-radius: 6px; border: 1px solid #2d3748; background: rgba(15,17,23,0.92); color: #a0aec0; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.15s; }
+  .digitize-btn:hover { background: rgba(45,55,72,0.9); color: #e2e8f0; border-color: #4a5568; }
+  .digitize-btn.active { background: rgba(99,179,237,0.15); color: #63b3ed; border-color: #63b3ed; box-shadow: 0 0 8px rgba(99,179,237,0.3); }
+  .digitize-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
+  .digitize-sep { width: 24px; height: 1px; background: #2d3748; margin: 2px auto; }
+
+  /* Digitize cursor styles */
+  .leaflet-container.digitize-point { cursor: crosshair; }
+  .leaflet-container.digitize-line { cursor: crosshair; }
+  .leaflet-container.digitize-polygon { cursor: crosshair; }
+
+  /* Vertex markers */
+  .vertex-marker { width: 10px; height: 10px; border-radius: 50%; background: #63b3ed; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4); }
+
+  /* Attribute form overlay */
+  .attr-form-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+  .attr-form-box { background: #1a1d23; border: 1px solid #2d3748; border-radius: 8px; padding: 16px 20px; min-width: 300px; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+  .attr-form-box h3 { font-size: 13px; color: #63b3ed; margin-bottom: 12px; }
+  .attr-form-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .attr-form-row label { font-size: 11px; color: #a0aec0; width: 80px; flex-shrink: 0; }
+  .attr-form-row input { flex: 1; font-size: 11px; padding: 4px 8px; background: #0f1117; border: 1px solid #2d3748; border-radius: 4px; color: #e2e8f0; }
+  .attr-form-row input:focus { border-color: #63b3ed; outline: none; }
+  .attr-form-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+  .attr-form-actions button { font-size: 11px; padding: 4px 12px; border-radius: 4px; cursor: pointer; border: 1px solid #2d3748; }
+  .attr-form-actions .btn-ok { background: #2b6cb0; color: white; border-color: #2b6cb0; }
+  .attr-form-actions .btn-ok:hover { background: #3182ce; }
+  .attr-form-actions .btn-cancel { background: #2d3748; color: #a0aec0; }
+  .attr-form-actions .btn-cancel:hover { background: #4a5568; }
+
   .layer-count {
     font-size: 10px; color: #718096; background: #1a1d23;
     padding: 1px 5px; border-radius: 8px; white-space: nowrap;
@@ -516,6 +548,17 @@
   body.light .map-legend-symbol.point { border-color: rgba(0,0,0,0.3); }
   body.light .map-legend-symbol.polygon { border-color: rgba(0,0,0,0.4); }
   body.light .map-legend-ramp-labels { color: #718096; }
+  body.light .digitize-btn { background: rgba(255,255,255,0.95); border-color: #e2e8f0; color: #4a5568; }
+  body.light .digitize-btn:hover { background: rgba(237,242,247,0.95); color: #2d3748; border-color: #cbd5e0; }
+  body.light .digitize-btn.active { background: rgba(43,108,176,0.12); color: #2b6cb0; border-color: #2b6cb0; }
+  body.light .digitize-sep { background: #e2e8f0; }
+  body.light .attr-form-box { background: #fff; border-color: #e2e8f0; }
+  body.light .attr-form-box h3 { color: #2b6cb0; }
+  body.light .attr-form-row label { color: #4a5568; }
+  body.light .attr-form-row input { background: #f7fafc; border-color: #e2e8f0; color: #2d3748; }
+  body.light .attr-form-row input:focus { border-color: #2b6cb0; }
+  body.light .attr-form-actions .btn-ok { background: #2b6cb0; border-color: #2b6cb0; }
+  body.light .attr-form-actions .btn-cancel { background: #edf2f7; color: #4a5568; border-color: #e2e8f0; }
   body.light .map-legend-empty { color: #a0aec0; }
   body.light .layer-count { background: #edf2f7; color: #718096; }
   body.light .basemap-btn { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
@@ -740,6 +783,14 @@
   <div id="map-wrap">
     <div id="loading"><div class="spinner" style="width:18px;height:18px;border:2px solid #2d3748;border-top-color:#63b3ed;border-radius:50%;animation:spin 0.7s linear infinite"></div> Loading...</div>
     <div id="map"></div>
+    <!-- Digitizing toolbar -->
+    <div class="digitize-toolbar" id="digitize-toolbar">
+      <button class="digitize-btn" id="dig-point" onclick="startDigitize('point')" title="Draw point">&#x1f4cd;</button>
+      <button class="digitize-btn" id="dig-line" onclick="startDigitize('line')" title="Draw line">&#x2500;</button>
+      <button class="digitize-btn" id="dig-polygon" onclick="startDigitize('polygon')" title="Draw polygon">&#x2B1F;</button>
+      <div class="digitize-sep"></div>
+      <button class="digitize-btn" id="dig-cancel" onclick="cancelDigitize()" title="Cancel drawing (Esc)" disabled>&#x2716;</button>
+    </div>
     <svg id="north-arrow" viewBox="0 0 36 36">
       <circle cx="18" cy="18" r="17" fill="rgba(15,17,23,0.8)" stroke="#2d3748"/>
       <polygon points="18,4 22,18 18,14 14,18" fill="#e53e3e"/>
@@ -1128,6 +1179,280 @@ function initLegendState(info) {
   };
   refreshMapLegend();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DIGITIZING (QGIS-STYLE POINT/LINE/POLYGON DRAWING)
+// ═══════════════════════════════════════════════════════════════════════════
+let _digMode = null;       // 'point' | 'line' | 'polygon' | null
+let _digLatLngs = [];      // collected vertices
+let _digTempLayer = null;  // temporary polyline/polygon on map
+let _digVertexMarkers = []; // vertex marker icons
+let _digDrawnLayerId = null; // ID of the "Drawn Features" layer group
+
+function _getDrawnLayer() {
+  if (_digDrawnLayerId) {
+    const info = uploadedLayers.find(l => l.id === _digDrawnLayerId);
+    if (info) return info;
+  }
+  // Create "Drawn Features" layer if not exists
+  const id = 'drawn-features';
+  const group = L.layerGroup().addTo(map);
+  const info = {
+    id, name: 'Drawn Features', color: '#63b3ed', layer: group,
+    featureCount: 0, geomTypes: ['Mixed'], properties: [],
+    geojsonFeatures: [], isAnalysis: false,
+  };
+  uploadedLayers.push(info);
+  addLayerToPanel(info);
+  buildSymbologyControls(info);
+  refreshSymbologyLayerSelect();
+  refreshAnalysisLayerSelect();
+  refreshExportLayerSelect();
+  refreshAttrLayerSelect();
+  _digDrawnLayerId = id;
+  return info;
+}
+
+function startDigitize(mode) {
+  if (_digMode === mode) { cancelDigitize(); return; }
+  cancelDigitize(); // clear any previous mode
+  _digMode = mode;
+  _digLatLngs = [];
+
+  // Update toolbar buttons
+  document.querySelectorAll('.digitize-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dig-' + mode).classList.add('active');
+  document.getElementById('dig-cancel').disabled = false;
+
+  // Set cursor
+  const container = map.getContainer();
+  container.classList.add('digitize-' + mode);
+
+  // Disable map dragging for line/polygon to allow clicking vertices
+  if (mode !== 'point') {
+    map.dragging.disable();
+    map.doubleClickZoom.disable();
+  }
+
+  // Bind map click handler
+  map.on('click', _onDigClick);
+  map.on('dblclick', _onDigDblClick);
+
+  showToast(`Drawing ${mode} — click to add vertices, double-click to finish`, 'info');
+}
+
+function cancelDigitize() {
+  if (!_digMode) return;
+  const prev = _digMode;
+  _digMode = null;
+  _digLatLngs = [];
+
+  // Remove temp layer and vertex markers
+  if (_digTempLayer) { map.removeLayer(_digTempLayer); _digTempLayer = null; }
+  _digVertexMarkers.forEach(m => map.removeLayer(m));
+  _digVertexMarkers = [];
+
+  // Update toolbar
+  document.querySelectorAll('.digitize-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dig-cancel').disabled = true;
+
+  // Restore cursor and map behavior
+  const container = map.getContainer();
+  container.classList.remove('digitize-point', 'digitize-line', 'digitize-polygon');
+  map.dragging.enable();
+  map.doubleClickZoom.enable();
+
+  // Unbind handlers
+  map.off('click', _onDigClick);
+  map.off('dblclick', _onDigDblClick);
+
+  if (prev) showToast('Drawing cancelled', 'info');
+}
+
+function _onDigClick(e) {
+  if (!_digMode) return;
+  _digLatLngs.push(e.latlng);
+
+  // Add vertex marker
+  const vm = L.marker(e.latlng, {
+    icon: L.divIcon({ className: 'vertex-marker', iconSize: [10, 10], iconAnchor: [5, 5] }),
+    interactive: false,
+  }).addTo(map);
+  _digVertexMarkers.push(vm);
+
+  if (_digMode === 'point') {
+    // Single click = done for points
+    _finishDigitize();
+    return;
+  }
+
+  // Update temp line/polygon
+  if (_digTempLayer) map.removeLayer(_digTempLayer);
+  if (_digMode === 'line') {
+    if (_digLatLngs.length >= 2) {
+      _digTempLayer = L.polyline(_digLatLngs, { color: '#63b3ed', weight: 2.5, dashArray: '6 4', opacity: 0.8 }).addTo(map);
+    }
+  } else if (_digMode === 'polygon') {
+    if (_digLatLngs.length >= 2) {
+      _digTempLayer = L.polygon(_digLatLngs, { color: '#63b3ed', weight: 2, fillColor: '#63b3ed', fillOpacity: 0.15, dashArray: '6 4' }).addTo(map);
+    }
+  }
+}
+
+function _onDigDblClick(e) {
+  if (!_digMode || _digMode === 'point') return;
+  e.originalEvent.preventDefault();
+  e.originalEvent.stopPropagation();
+  // Remove the extra vertex added by the second click of dblclick
+  if (_digLatLngs.length > 1) _digLatLngs.pop();
+  if (_digVertexMarkers.length > 1) {
+    const last = _digVertexMarkers.pop();
+    map.removeLayer(last);
+  }
+  if (_digLatLngs.length >= 2) _finishDigitize();
+}
+
+function _finishDigitize() {
+  if (_digLatLngs.length === 0) { cancelDigitize(); return; }
+
+  // Build GeoJSON feature
+  let feature;
+  if (_digMode === 'point') {
+    const ll = _digLatLngs[0];
+    feature = { type: 'Feature', geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] }, properties: {} };
+  } else if (_digMode === 'line') {
+    if (_digLatLngs.length < 2) { showToast('Need at least 2 vertices for a line', 'error'); cancelDigitize(); return; }
+    feature = { type: 'Feature', geometry: { type: 'LineString', coordinates: _digLatLngs.map(ll => [ll.lng, ll.lat]) }, properties: {} };
+  } else if (_digMode === 'polygon') {
+    if (_digLatLngs.length < 3) { showToast('Need at least 3 vertices for a polygon', 'error'); cancelDigitize(); return; }
+    const ring = _digLatLngs.map(ll => [ll.lng, ll.lat]);
+    ring.push(ring[0]); // close ring
+    feature = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} };
+  }
+
+  // Clean up temp drawing state
+  const mode = _digMode;
+  if (_digTempLayer) { map.removeLayer(_digTempLayer); _digTempLayer = null; }
+  _digVertexMarkers.forEach(m => map.removeLayer(m));
+  _digVertexMarkers = [];
+  _digLatLngs = [];
+
+  // Restore map behavior before showing form
+  const container = map.getContainer();
+  container.classList.remove('digitize-point', 'digitize-line', 'digitize-polygon');
+  map.dragging.enable();
+  map.doubleClickZoom.enable();
+  map.off('click', _onDigClick);
+  map.off('dblclick', _onDigDblClick);
+  document.querySelectorAll('.digitize-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dig-cancel').disabled = true;
+  _digMode = null;
+
+  // Show attribute form
+  _showAttrForm(feature, mode);
+}
+
+function _showAttrForm(feature, geomType) {
+  const geomLabel = geomType.charAt(0).toUpperCase() + geomType.slice(1);
+  const coords = feature.geometry.coordinates;
+  let coordStr = '';
+  if (geomType === 'point') coordStr = `${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}`;
+  else coordStr = `${coords.length} vertices`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'attr-form-overlay';
+  overlay.innerHTML = `
+    <div class="attr-form-box">
+      <h3>New ${geomLabel} Feature</h3>
+      <div class="attr-form-row">
+        <label>Name</label><input type="text" id="af-name" placeholder="Feature name" autofocus>
+      </div>
+      <div class="attr-form-row">
+        <label>Description</label><input type="text" id="af-desc" placeholder="Optional description">
+      </div>
+      <div class="attr-form-row">
+        <label>Category</label><input type="text" id="af-cat" placeholder="Optional category">
+      </div>
+      <div class="attr-form-row">
+        <label>Coordinates</label><input type="text" value="${coordStr}" readonly style="color:#718096;">
+      </div>
+      <div class="attr-form-actions">
+        <button class="btn-cancel" onclick="this.closest('.attr-form-overlay').remove();window._pendingDigFeature=null;">Cancel</button>
+        <button class="btn-ok" onclick="_confirmAttrForm()">Add Feature</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // Store pending feature
+  window._pendingDigFeature = feature;
+
+  // Focus name input
+  setTimeout(() => { const inp = document.getElementById('af-name'); if (inp) inp.focus(); }, 50);
+
+  // Enter/Escape keys
+  overlay.addEventListener('keydown', e => {
+    if (e.key === 'Enter') _confirmAttrForm();
+    if (e.key === 'Escape') { overlay.remove(); window._pendingDigFeature = null; }
+  });
+}
+
+function _confirmAttrForm() {
+  const feature = window._pendingDigFeature;
+  if (!feature) return;
+  window._pendingDigFeature = null;
+
+  // Set properties from form
+  const name = document.getElementById('af-name')?.value || '';
+  const desc = document.getElementById('af-desc')?.value || '';
+  const cat = document.getElementById('af-cat')?.value || '';
+  feature.properties = { name, description: desc, category: cat };
+
+  // Remove form
+  document.querySelector('.attr-form-overlay')?.remove();
+
+  // Add to drawn features layer
+  const info = _getDrawnLayer();
+  info.geojsonFeatures.push(feature);
+  info.properties.push(feature.properties);
+  info.featureCount = info.geojsonFeatures.length;
+
+  // Add Leaflet layer to the group
+  const gj = { type: 'FeatureCollection', features: [feature] };
+  const leafletLayer = L.geoJSON(gj, {
+    style: { color: '#63b3ed', weight: 2, fillColor: '#63b3ed', fillOpacity: 0.2 },
+    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 6, color: 'white', weight: 1.2, fillColor: '#63b3ed', fillOpacity: 0.9 }),
+    onEachFeature: (f, layer) => {
+      const props = f.properties || {};
+      const label = props.name || '';
+      if (label) layer.bindTooltip(String(label), { className: 'site-tooltip', direction: 'top', offset: [0, -8] });
+      layer.on('click', () => showFeatureInfo(props, info.id, layer));
+    }
+  });
+  leafletLayer.eachLayer(sub => info.layer.addLayer(sub));
+
+  // Update UI
+  updateStats();
+  updateFeatureCount();
+  const countEl = document.querySelector(`[data-layer-id="${info.id}"] .layer-count`);
+  if (countEl) countEl.textContent = info.featureCount;
+
+  // Update legend state geom type
+  if (legendState[info.id]) {
+    const gtypes = new Set(info.geojsonFeatures.map(f => f.geometry.type));
+    if (gtypes.has('Polygon') || gtypes.has('MultiPolygon')) legendState[info.id].geomType = 'Polygon';
+    else if (gtypes.has('LineString') || gtypes.has('MultiLineString')) legendState[info.id].geomType = 'LineString';
+    else legendState[info.id].geomType = 'Point';
+  }
+  refreshMapLegend();
+
+  showToast(`${feature.geometry.type} feature added`, 'success');
+}
+
+// Escape key to cancel digitizing
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && _digMode) cancelDigitize();
+});
 
 let basemapLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
   {attribution:'OpenTopoMap', maxZoom:17}).addTo(map);

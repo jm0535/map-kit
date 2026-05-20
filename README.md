@@ -33,6 +33,19 @@ A standalone, zero-backend Web GIS application powered by Leaflet and Chart.js:
 - Per-layer opacity slider
 - Click layer name to select for symbology editing
 
+#### Digitizing (QGIS-Style Drawing)
+
+Draw new features directly on the map using the digitizing toolbar (top-right of map):
+
+- **Point** — click once to place a marker
+- **Line** — click to add vertices, double-click to finish
+- **Polygon** — click to add vertices, double-click to close the polygon
+- **Attribute form** — after drawing, enter name, description, and category
+- **Cancel** — press Escape or click the cancel button
+- Drawn features are stored in a **"Drawn Features"** layer that is fully exportable (GeoJSON, CSV, Shapefile)
+- Vertex markers shown during drawing with dashed preview of line/polygon
+- Crosshair cursor during digitizing mode
+
 #### Symbology (QGIS-style)
 
 - **Layer selector** dropdown to pick which layer to style
