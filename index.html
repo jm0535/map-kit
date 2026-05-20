@@ -671,12 +671,12 @@
       </div>
       <div class="panel-body">
         <div class="basemap-grid" id="basemap-grid">
-          <div class="basemap-btn active" data-url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png" data-attr="OpenTopoMap" onclick="switchBasemap(this)">Topo</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Imagery" onclick="switchBasemap(this)">Satellite</div>
-          <div class="basemap-btn" data-url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" data-attr="OSM" onclick="switchBasemap(this)">Streets</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Relief" onclick="switchBasemap(this)">Relief</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Esri World Topo" onclick="switchBasemap(this)">Terrain</div>
-          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="CartoDB Dark Matter" onclick="switchBasemap(this)">Dark</div>
+          <div class="basemap-btn active" data-url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" data-attr="CartoDB" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Topo</div>
+          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Imagery" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Satellite</div>
+          <div class="basemap-btn" data-url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" data-attr="OSM" data-subdomains="abc" data-maxz="19" onclick="switchBasemap(this)">Streets</div>
+          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Relief" data-subdomains="" data-maxz="13" onclick="switchBasemap(this)">Relief</div>
+          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Esri World Topo" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Terrain</div>
+          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="CartoDB Dark Matter" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Dark</div>
         </div>
         <div class="slider-row" style="margin-top:8px">
           <label>Opacity <span id="bm-opacity-val">100%</span></label>
@@ -1156,7 +1156,7 @@ const MapLegend = L.Control.extend({
 });
 
 const mapLegend = new MapLegend();
-mapLegend.addControl(mapLegend);
+map.addControl(mapLegend);
 
 function refreshMapLegend() { mapLegend.update(); _bindLegendEdits(); }
 
@@ -1502,14 +1502,30 @@ document.addEventListener('keydown', e => {
 
 // Pre-create basemap layers for fast switching (no full tile reload)
 const _basemapCache = {};
-function _getBasemapLayer(url, attr) {
+function _getBasemapLayer(url, attr, subdomains, maxNativeZoom) {
   const key = url;
   if (!_basemapCache[key]) {
-    _basemapCache[key] = L.tileLayer(url, {attribution: attr, maxZoom: 19, maxNativeZoom: 18});
+    const opts = {
+      attribution: attr,
+      maxZoom: 20,
+      maxNativeZoom: parseInt(maxNativeZoom) || 18,
+      crossOrigin: true,
+    };
+    if (subdomains) opts.subdomains = subdomains;
+    const layer = L.tileLayer(url, opts);
+    // Show grey tile on error instead of blank
+    layer.on('tileerror', function(ev) {
+      ev.tile.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect fill="%232d3748" width="256" height="256"/></svg>';
+    });
+    _basemapCache[key] = layer;
   }
   return _basemapCache[key];
 }
-let basemapLayer = _getBasemapLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', 'OpenTopoMap').addTo(map);
+// Default to CartoDB Voyager (fast, reliable)
+let basemapLayer = _getBasemapLayer(
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  'CartoDB', 'abcd', 20
+).addTo(map);
 
 map.on('mousemove', e => {
   document.getElementById('coord-display').textContent =
@@ -1526,8 +1542,10 @@ const minimap = L.map('minimap', {
   center:[-5.9,145.5], zoom:4, zoomControl:false, attributionControl:false,
   dragging:false, scrollWheelZoom:false,
 });
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
-  {maxZoom:10}).addTo(minimap);
+_getBasemapLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
+  'Esri Relief', '', 13
+).addTo(minimap);
 let overviewRect = null;
 function updateOverview() {
   const b=map.getBounds();
@@ -3592,8 +3610,10 @@ function switchBasemap(btn) {
   document.querySelectorAll('.basemap-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   map.removeLayer(basemapLayer);
-  basemapLayer = _getBasemapLayer(btn.dataset.url, btn.dataset.attr).addTo(map);
+  basemapLayer = _getBasemapLayer(btn.dataset.url, btn.dataset.attr, btn.dataset.subdomains, btn.dataset.maxz).addTo(map);
   basemapLayer.bringToBack();
+  // Cached layers may not fire 'load' again; hide spinner immediately
+  _hideLoading();
 }
 
 function setBasemapOpacity(v) {
@@ -4129,8 +4149,10 @@ updateOverview();
 refreshAnalysisLayerSelect();
 refreshAttrLayerSelect();
 refreshExportLayerSelect();
-basemapLayer.on('load', () => { document.getElementById('loading').style.display='none'; });
-setTimeout(() => { document.getElementById('loading').style.display='none'; }, 4000);
+function _hideLoading() { document.getElementById('loading').style.display='none'; }
+// First basemap load hides spinner; 2s fallback in case tiles are slow/fail
+basemapLayer.on('load', _hideLoading);
+setTimeout(_hideLoading, 2000);
 </script>
 </body>
 </html>
