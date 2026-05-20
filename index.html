@@ -516,26 +516,6 @@
   .exp-row input[type=checkbox] { accent-color: #63b3ed; margin-right: 6px; }
   .exp-actions { display: flex; gap: 8px; margin-top: 14px; }
 
-  /* Preview overlay */
-  #preview-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-    z-index: 9999; align-items: center; justify-content: center;
-  }
-  #preview-overlay.show { display: flex; }
-  #preview-box {
-    background: #13161c; border: 1px solid #2d3748; border-radius: 8px;
-    padding: 16px; max-width: 90vw; max-height: 90vh;
-    display: flex; flex-direction: column;
-  }
-  #preview-box h3 { color: #63b3ed; font-size: 13px; margin-bottom: 10px; flex-shrink: 0; }
-  #preview-img-wrap {
-    flex: 1; overflow: auto; min-height: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: #0f1117; border-radius: 4px; border: 1px solid #2d3748;
-  }
-  #preview-img-wrap img { max-width: 100%; max-height: 70vh; object-fit: contain; }
-  .preview-actions { display: flex; gap: 8px; margin-top: 12px; flex-shrink: 0; justify-content: center; }
-
   /* Notification toast */
   #toast {
     position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
@@ -547,6 +527,80 @@
   #toast.success { border-color: #48bb78; color: #48bb78; }
   #toast.error { border-color: #e53e3e; color: #e53e3e; }
   @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  /* Layout Composer */
+  #layout-modal {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+    z-index: 9999; align-items: center; justify-content: center;
+    overflow: auto; padding: 20px;
+  }
+  #layout-modal.show { display: flex; }
+  #layout-box {
+    background: #13161c; border: 1px solid #2d3748; border-radius: 8px;
+    padding: 12px; max-width: 95vw;
+    display: flex; flex-direction: column;
+    margin: auto;
+  }
+  .layout-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; flex-shrink: 0;
+  }
+  .layout-header h3 { color: #63b3ed; font-size: 13px; margin: 0; }
+  #layout-paper {
+    position: relative;
+    flex-shrink: 0;
+    border: 2px solid #2d3748; border-radius: 4px;
+    background: #0f1117;
+  }
+  #layout-map {
+    position: absolute; inset: 0;
+  }
+  #layout-north {
+    position: absolute; top: 12px; right: 12px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold; color: #e53e3e;
+    pointer-events: none; z-index: 10;
+  }
+  #layout-scale {
+    position: absolute; bottom: 12px; right: 12px;
+    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
+    border-radius: 3px; padding: 3px 8px;
+    font-size: 10px; color: #e2e8f0; pointer-events: none; z-index: 10;
+  }
+  #layout-overview-wrap {
+    position: absolute; top: 50px; right: 12px;
+    width: 160px; height: 110px;
+    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
+    border-radius: 4px; padding: 3px; pointer-events: none; z-index: 10;
+  }
+  #layout-overview {
+    width: 100%; height: calc(100% - 14px);
+    border-radius: 2px; overflow: hidden;
+  }
+  #layout-overview-label {
+    font-size: 8px; color: #a0aec0; text-align: center;
+    height: 14px; line-height: 14px;
+  }
+  #layout-legend {
+    position: absolute; bottom: 12px; left: 12px;
+    max-width: 180px; max-height: 200px; overflow: auto;
+    background: rgba(15,17,23,0.88); border: 1px solid #2d3748;
+    border-radius: 4px; padding: 8px; font-size: 10px; color: #e2e8f0;
+    pointer-events: none; z-index: 10;
+  }
+  #layout-title {
+    position: absolute; top: 12px; left: 12px;
+    max-width: 50%;
+    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
+    border-radius: 4px; padding: 6px 12px;
+    font-size: 12px; font-weight: bold; color: #63b3ed;
+    pointer-events: none; z-index: 10;
+  }
+  .layout-actions {
+    display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
+  }
 
   /* ── Light theme ── */
   body.light { background: #f7fafc; color: #1a202c; }
@@ -624,9 +678,18 @@
   body.light #toast { background: #fff; border-color: #e2e8f0; color: #2b6cb0; }
   body.light #toast.success { border-color: #48bb78; color: #276749; }
   body.light #toast.error { border-color: #e53e3e; color: #c53030; }
-  body.light #export-box, body.light #col-mapper-box, body.light #preview-box { background: #fff; border-color: #e2e8f0; }
-  body.light #export-box h3, body.light #col-mapper-box h3, body.light #preview-box h3 { color: #2b6cb0; }
-  body.light #preview-img-wrap { background: #f7fafc; border-color: #e2e8f0; }
+  body.light #export-box, body.light #col-mapper-box { background: #fff; border-color: #e2e8f0; }
+  body.light #export-box h3, body.light #col-mapper-box h3 { color: #2b6cb0; }
+  body.light #layout-box { background: #fff; border-color: #e2e8f0; }
+  body.light .layout-header h3 { color: #2b6cb0; }
+  body.light #layout-paper { background: #fff; border-color: #e2e8f0; }
+  body.light #layout-north, body.light #layout-scale, body.light #layout-overview-wrap,
+  body.light #layout-legend, body.light #layout-title {
+    background: rgba(255,255,255,0.9); border-color: #e2e8f0; color: #2d3748;
+  }
+  body.light #layout-north { color: #e53e3e; }
+  body.light #layout-overview-label { color: #718096; }
+  body.light #layout-scale { color: #4a5568; }
   body.light .exp-row select, body.light .exp-row input[type=text], body.light .cm-row select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
   body.light .symbol-row input[type=number] { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
   body.light #analysis-layer-select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
@@ -1050,15 +1113,27 @@
   </div>
 </div>
 
-<!-- Preview overlay -->
-<div id="preview-overlay">
-  <div id="preview-box">
-    <h3>Export Preview</h3>
-    <div id="preview-img-wrap"></div>
-    <div class="preview-actions">
-      <button class="btn-primary" onclick="downloadPreview('png')">Export PNG</button>
-      <button class="btn-primary" onclick="downloadPreview('pdf')">Export PDF</button>
-      <button class="btn-secondary" onclick="closePreview()">Close</button>
+<!-- Layout Composer modal -->
+<div id="layout-modal">
+  <div id="layout-box">
+    <div class="layout-header">
+      <h3>Map Layout Composer</h3>
+      <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
+    </div>
+    <div id="layout-paper">
+      <div id="layout-map"></div>
+      <div id="layout-north">N</div>
+      <div id="layout-scale">Scale</div>
+      <div id="layout-overview-wrap">
+        <div id="layout-overview"></div>
+        <div id="layout-overview-label">Overview</div>
+      </div>
+      <div id="layout-legend"></div>
+      <div id="layout-title"></div>
+    </div>
+    <div class="layout-actions">
+      <button class="btn-primary" onclick="layoutExport('png')">Export PNG</button>
+      <button class="btn-primary" onclick="layoutExport('pdf')">Export PDF</button>
     </div>
   </div>
 </div>
@@ -3834,281 +3909,263 @@ function openExport(fmt) {
 }
 function closeExport() { document.getElementById('export-overlay').classList.remove('show'); }
 
-let _lastExportCanvas = null; // stores canvas for preview download
+// Layout Composer: dedicated map instance for clean export
+let layoutMap = null;
+let layoutOverviewMap = null;
+let layoutLayers = [];
 
-function closePreview() {
-  document.getElementById('preview-overlay').classList.remove('show');
-  document.getElementById('preview-img-wrap').innerHTML = '';
-  _lastExportCanvas = null;
+function closeLayoutModal() {
+  document.getElementById('layout-modal').classList.remove('show');
+  if (layoutMap) { layoutMap.remove(); layoutMap = null; }
+  if (layoutOverviewMap) { layoutOverviewMap.remove(); layoutOverviewMap = null; }
+  layoutLayers.forEach(l => { if (l.remove) l.remove(); });
+  layoutLayers = [];
 }
 
-function downloadPreview(fmt) {
-  if (!_lastExportCanvas) return;
-  const dpiScale = parseInt(document.getElementById('exp-dpi').value);
-  const outW = _lastExportCanvas.width;
-  const outH = _lastExportCanvas.height;
-  if (fmt === 'png') {
-    const link = document.createElement('a');
-    link.download = `map_export_${dpiScale*72}dpi.png`;
-    link.href = _lastExportCanvas.toDataURL('image/png');
-    link.click();
-  } else {
-    const {jsPDF} = window.jspdf;
-    const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
-    const pw = pdf.internal.pageSize.getWidth();
-    const ph = pdf.internal.pageSize.getHeight();
-    const imgData = _lastExportCanvas.toDataURL('image/png');
-    const imgRatio = outW / outH;
-    let imgW = pw;
-    let imgH = pw / imgRatio;
-    if (imgH > ph) { imgH = ph; imgW = ph * imgRatio; }
-    const imgX = (pw - imgW) / 2;
-    const imgY = (ph - imgH) / 2;
-    pdf.addImage(imgData, 'PNG', imgX, imgY, imgW, imgH);
-    pdf.save(`map_export_${dpiScale*72}dpi.pdf`);
-  }
-  showToast(`${fmt.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
-  closePreview();
-}
-
-async function generateExportCanvas() {
-  const dpiScale = parseInt(document.getElementById('exp-dpi').value);
-  const inclProf = document.getElementById('exp-include-profile').checked;
-  const inclLeg = document.getElementById('exp-include-legend').checked;
+async function buildLayout() {
+  const dpiScale = parseInt(document.getElementById('exp-dpi').value) || 2;
   const fitToLayers = document.getElementById('exp-extent').value === 'fit';
-
-  // Compute visible layers once for re-use
+  const inclLeg = document.getElementById('exp-include-legend').checked;
+  const titleText = document.getElementById('exp-title').value || '';
   const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
 
-  // Auto-center map on visible layer bounds before export (if requested)
+  // ── Size the paper to exact pixel dimensions for target DPI ──
+  const paper = document.getElementById('layout-paper');
+  const baseW = 1000;
+  const baseH = 562; // 16:9
+  const paperW = Math.round(baseW * dpiScale);
+  const paperH = Math.round(baseH * dpiScale);
+  paper.style.width = paperW + 'px';
+  paper.style.height = paperH + 'px';
+
+  // ── Destroy previous layout map if exists ──
+  if (layoutMap) { layoutMap.remove(); layoutMap = null; }
+  layoutLayers.forEach(l => { if (l.remove) l.remove(); });
+  layoutLayers = [];
+
+  // ── Create fresh dedicated layout map ──
+  const mapEl = document.getElementById('layout-map');
+  mapEl.style.width = paperW + 'px';
+  mapEl.style.height = paperH + 'px';
+  layoutMap = L.map('layout-map', {
+    zoomControl: false, attributionControl: false,
+    dragging: false, scrollWheelZoom: false,
+    doubleClickZoom: false, boxZoom: false
+  });
+
+  // ── Add same basemap as main map ──
+  const currentBasemapUrl = basemapLayer._url;
+  const currentAttribution = basemapLayer.options.attribution;
+  const currentMaxNative = basemapLayer.options.maxNativeZoom;
+  const basemap = L.tileLayer(currentBasemapUrl, {
+    attribution: currentAttribution,
+    maxZoom: 20, maxNativeZoom: currentMaxNative || 18,
+    crossOrigin: true
+  }).addTo(layoutMap);
+  basemap.on('tileerror', ev => {
+    ev.tile.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect fill="%232d3748" width="256" height="256"/></svg>';
+  });
+
+  // ── Clone visible GeoJSON layers ──
   let layerBounds = null;
-  visibleLayers.forEach(lyr => {
-    if (lyr.layer && lyr.layer.getBounds) {
-      const b = lyr.layer.getBounds();
-      if (b && b.isValid && b.isValid()) {
-        if (layerBounds) layerBounds.extend(b);
-        else layerBounds = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
-      }
+  visibleLayers.forEach(info => {
+    const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
+    if (geojson.features.length === 0) {
+      info.layer.eachLayer(sub => { if (sub.toGeoJSON) geojson.features.push(sub.toGeoJSON()); });
     }
-    // Fallback: compute from raw geojson coordinates
-    const features = lyr.geojsonFeatures || [];
-    features.forEach(f => {
-      const coords = f.geometry && f.geometry.coordinates;
-      if (!coords) return;
-      const type = f.geometry.type;
-      if (type === 'Point') {
-        const [lon, lat] = coords;
-        const p = L.latLng(lat, lon);
-        if (layerBounds) layerBounds.extend(p);
-        else layerBounds = L.latLngBounds(p, p);
-      } else if (type === 'MultiPoint') {
-        coords.forEach(([lon, lat]) => {
-          const p = L.latLng(lat, lon);
-          if (layerBounds) layerBounds.extend(p);
-          else layerBounds = L.latLngBounds(p, p);
-        });
-      } else if (type.includes('Line') || type.includes('Polygon')) {
-        const flat = type === 'Polygon' ? coords[0] : coords;
-        flat.forEach(([lon, lat]) => {
-          const p = L.latLng(lat, lon);
-          if (layerBounds) layerBounds.extend(p);
-          else layerBounds = L.latLngBounds(p, p);
-        });
-      }
-    });
+    // Re-apply current symbology from legendState if available
+    const sym = legendState[info.id];
+    let newLayer;
+    if (sym && sym.mode === 'categorized' && sym.attr && sym.colorMap) {
+      newLayer = L.geoJSON(geojson, {
+        style: f => {
+          const v = f.properties && f.properties[sym.attr];
+          const c = sym.colorMap[v] || '#718096';
+          const gt = f.geometry.type;
+          if (gt.includes('Polygon')) return { color:c, weight:2, fillColor:c, fillOpacity:0.3 };
+          if (gt.includes('Line')) return { color:c, weight:2.5, opacity:0.9 };
+          return {};
+        },
+        pointToLayer: (f, latlng) => {
+          const v = f.properties && f.properties[sym.attr];
+          const c = sym.colorMap[v] || '#718096';
+          return L.circleMarker(latlng, { radius:7, color:'white', weight:1.2, fillColor:c, fillOpacity:0.9 });
+        }
+      }).addTo(layoutMap);
+    } else if (sym && sym.mode === 'graduated' && sym.attr && sym.ramp) {
+      const range = sym.maxVal - sym.minVal || 1;
+      newLayer = L.geoJSON(geojson, {
+        style: f => {
+          const v = parseFloat(f.properties && f.properties[sym.attr]);
+          const t = Math.max(0, Math.min(1, (v - sym.minVal) / range));
+          const idx = Math.min(Math.floor(t * sym.ramp.length), sym.ramp.length - 1);
+          const c = sym.ramp[idx] || '#718096';
+          const gt = f.geometry.type;
+          if (gt.includes('Polygon')) return { color:c, weight:2, fillColor:c, fillOpacity:0.3 };
+          if (gt.includes('Line')) return { color:c, weight:2.5, opacity:0.9 };
+          return {};
+        },
+        pointToLayer: (f, latlng) => {
+          const v = parseFloat(f.properties && f.properties[sym.attr]);
+          const t = Math.max(0, Math.min(1, (v - sym.minVal) / range));
+          const idx = Math.min(Math.floor(t * sym.ramp.length), sym.ramp.length - 1);
+          const c = sym.ramp[idx] || '#718096';
+          return L.circleMarker(latlng, { radius:7, color:'white', weight:1.2, fillColor:c, fillOpacity:0.9 });
+        }
+      }).addTo(layoutMap);
+    } else {
+      newLayer = L.geoJSON(geojson, {
+        style: () => ({
+          color: info.color || '#63b3ed', weight: 2.5, fillOpacity: 0.25
+        }),
+        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+          radius: 7, color: 'white', weight: 1.2,
+          fillColor: info.color || '#63b3ed', fillOpacity: 0.9
+        })
+      }).addTo(layoutMap);
+    }
+    layoutLayers.push(newLayer);
+
+    // Compute bounds
+    if (newLayer.getBounds && newLayer.getBounds().isValid && newLayer.getBounds().isValid()) {
+      const b = newLayer.getBounds();
+      if (layerBounds) layerBounds.extend(b);
+      else layerBounds = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+    } else {
+      (info.geojsonFeatures || []).forEach(f => {
+        const coords = f.geometry && f.geometry.coordinates;
+        if (!coords) return;
+        const type = f.geometry.type;
+        if (type === 'Point') {
+          const p = L.latLng(coords[1], coords[0]);
+          if (layerBounds) layerBounds.extend(p); else layerBounds = L.latLngBounds(p, p);
+        } else if (type === 'MultiPoint') {
+          coords.forEach(([lon, lat]) => {
+            const p = L.latLng(lat, lon);
+            if (layerBounds) layerBounds.extend(p); else layerBounds = L.latLngBounds(p, p);
+          });
+        } else if (type.includes('Line') || type.includes('Polygon')) {
+          const flat = type === 'Polygon' ? coords[0] : coords;
+          flat.forEach(([lon, lat]) => {
+            const p = L.latLng(lat, lon);
+            if (layerBounds) layerBounds.extend(p); else layerBounds = L.latLngBounds(p, p);
+          });
+        }
+      });
+    }
   });
 
-  const prevCenter = map.getCenter();
-  const prevZoom = map.getZoom();
-  const prevBounds = map.getBounds();
-
-  // High-DPI fix: resize map container so Leaflet recomputes marker/tile
-  // positions. html2canvas scale alone doesn't multiply CSS transforms,
-  // causing markers to shift. By resizing the actual container we force
-  // Leaflet to layout everything at the larger size, then capture at scale:1.
-  const mapEl = document.getElementById('map');
-  const prevMapWidth = mapEl.style.width;
-  const prevMapHeight = mapEl.style.height;
-  const rect = mapEl.getBoundingClientRect();
-  const newWidth = Math.round(rect.width * dpiScale);
-  const newHeight = Math.round(rect.height * dpiScale);
-  mapEl.style.width = newWidth + 'px';
-  mapEl.style.height = newHeight + 'px';
-  map.invalidateSize();
-  await new Promise(r => setTimeout(r, 200));
-
+  // ── Set view ──
   if (fitToLayers && layerBounds && layerBounds.isValid && layerBounds.isValid()) {
-    map.fitBounds(layerBounds, {animate: false, padding: [80, 80]});
-    updateOverview();
-    await new Promise(r => setTimeout(r, 400));
+    layoutMap.fitBounds(layerBounds, {animate: false, padding: [60, 60]});
   } else {
-    // Current view: preserve same geographic bounds at higher resolution
-    map.fitBounds(prevBounds, {animate: false, padding: [0, 0]});
-    updateOverview();
-    await new Promise(r => setTimeout(r, 400));
+    layoutMap.setView(map.getCenter(), map.getZoom(), {animate: false});
   }
 
-  // Hide map UI controls before capture
-  const hiddenEls = [];
-  document.querySelectorAll('#map .leaflet-control').forEach(el => {
-    if (el.classList.contains('leaflet-control-scale')) return;
-    if (el.classList.contains('map-legend') && inclLeg) return;
-    hiddenEls.push({el, prev: el.style.display});
-    el.style.display = 'none';
-  });
-  const extraSelectors = ['#digitize-toolbar', '#north-arrow'];
-  extraSelectors.forEach(sel => {
-    const el = document.querySelector(sel);
-    if (el) {
-      hiddenEls.push({el, prev: el.style.display});
-      el.style.display = 'none';
-    }
-  });
+  // ── Wait for tiles ──
+  await new Promise(r => setTimeout(r, 1500));
 
-  // Wait for tiles after controls hidden
-  await new Promise(r => setTimeout(r, 1200));
+  // ── Title ──
+  const titleEl = document.getElementById('layout-title');
+  titleEl.textContent = titleText;
+  titleEl.style.display = titleText ? 'block' : 'none';
 
-  // Capture #map at scale:1 (container is already sized for target resolution)
-  const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:false, scale:1});
-
-  // Restore UI controls immediately
-  hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
-
-  // Restore map container and view BEFORE overview capture
-  mapEl.style.width = prevMapWidth;
-  mapEl.style.height = prevMapHeight;
-  map.invalidateSize();
-  map.setView(prevCenter, prevZoom, {animate: false});
-  updateOverview();
-  await new Promise(r => setTimeout(r, 400));
-
-  // Capture overview map with RED locator rectangle
-  let overviewCanvas = null;
-  let prevOverviewStyle = null;
-  {
-    const overviewPanel = document.getElementById('overview-panel');
-    const header = overviewPanel?.querySelector('.panel-header');
-    const body = overviewPanel?.querySelector('.panel-body');
-    const wasCollapsed = header && header.classList.contains('collapsed');
-    if (wasCollapsed && header && body) {
-      header.classList.remove('collapsed');
-      body.classList.remove('hidden');
-      minimap.invalidateSize();
-      updateOverview();
-    }
-    if (overviewRect) {
-      prevOverviewStyle = {color: overviewRect.options.color, weight: overviewRect.options.weight, fillOpacity: overviewRect.options.fillOpacity};
-      overviewRect.setStyle({color: '#e53e3e', weight: 2, fillOpacity: 0.15});
-    }
-    if (body) {
-      await new Promise(r => setTimeout(r, 800));
-      const minimapEl = document.getElementById('minimap');
-      if (minimapEl) {
-        overviewCanvas = await html2canvas(minimapEl, {useCORS:true, allowTaint:false, scale:dpiScale, scrollX:0, scrollY:0, x:0, y:0});
+  // ── Legend ──
+  const legendEl = document.getElementById('layout-legend');
+  if (inclLeg) {
+    legendEl.style.display = 'block';
+    legendEl.innerHTML = '';
+    const head = document.createElement('div');
+    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:#63b3ed;';
+    head.textContent = 'Legend';
+    legendEl.appendChild(head);
+    visibleLayers.forEach(info => {
+      const sym = legendState[info.id];
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:4px 0;';
+      const dot = document.createElement('span');
+      dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${info.color || '#63b3ed'};border:1px solid #e2e8f0;flex-shrink:0;`;
+      if (sym && sym.mode === 'categorized') {
+        dot.style.borderRadius = '2px';
+        dot.style.width = '14px'; dot.style.height = '8px';
       }
-    }
-    if (prevOverviewStyle && overviewRect) {
-      overviewRect.setStyle(prevOverviewStyle);
-    }
-    if (wasCollapsed && header && body) {
-      header.classList.add('collapsed');
-      body.classList.add('hidden');
-    }
+      if (sym && sym.mode === 'graduated') {
+        dot.style.borderRadius = '2px';
+        dot.style.width = '14px'; dot.style.height = '8px';
+      }
+      row.appendChild(dot);
+      const name = document.createElement('span');
+      name.textContent = info.name;
+      row.appendChild(name);
+      legendEl.appendChild(row);
+    });
+  } else {
+    legendEl.style.display = 'none';
   }
 
-  // Restore original map view after overview capture
-  map.setView(prevCenter, prevZoom, {animate: false});
-  updateOverview();
+  // ── Scale bar text ──
+  const scaleEl = document.getElementById('layout-scale');
+  const scaleM = _getScaleFromMap(layoutMap);
+  scaleEl.textContent = scaleM ? `Scale 1:${scaleM.toLocaleString()}` : 'Scale';
 
-  // Capture profile if needed
-  let profCanvas = null;
-  if (inclProf) {
-    const profEl = document.getElementById('profile-panel');
-    profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:false, scale:dpiScale, scrollX:0, scrollY:0, x:0, y:0});
-  }
+  // ── Overview inset map ──
+  const ovEl = document.getElementById('layout-overview');
+  ovEl.innerHTML = '';
+  if (layoutOverviewMap) { layoutOverviewMap.remove(); layoutOverviewMap = null; }
+  layoutOverviewMap = L.map('layout-overview', {
+    zoomControl: false, attributionControl: false,
+    dragging: false, scrollWheelZoom: false,
+    doubleClickZoom: false, boxZoom: false
+  });
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 13, crossOrigin: true
+  }).addTo(layoutOverviewMap);
+  layoutOverviewMap.setView(layoutMap.getCenter(), Math.max(1, layoutMap.getZoom() - 4), {animate: false});
+  // Add red rectangle showing main map extent
+  const mainBounds = layoutMap.getBounds();
+  L.rectangle(mainBounds, {color:'#e53e3e', weight:1.5, fillOpacity:0.15}).addTo(layoutOverviewMap);
 
-  // Compose final image
-  const profH = profCanvas ? profCanvas.height : 0;
-  const outW = mapCanvas.width;
-  const outH = mapCanvas.height + profH;
+  // ── One more tile wait for overview ──
+  await new Promise(r => setTimeout(r, 800));
+}
 
-  const out = document.createElement('canvas');
-  out.width = outW;
-  out.height = outH;
-  const c = out.getContext('2d');
-
-  c.fillStyle = '#1a1d23';
-  c.fillRect(0, 0, outW, outH);
-
-  let y = 0;
-  c.drawImage(mapCanvas, 0, y);
-
-  // North arrow (top-right)
-  {
-    const naSize = 30 * dpiScale;
-    const naX = outW - naSize * 1.5;
-    const naY = naSize * 0.5;
-    c.save();
-    c.fillStyle = 'rgba(15,17,23,0.8)';
-    c.beginPath(); c.arc(naX + naSize/2, naY + naSize/2, naSize/2, 0, Math.PI*2); c.fill();
-    c.strokeStyle = '#2d3748'; c.lineWidth = dpiScale; c.stroke();
-    const cx = naX + naSize/2, cy = naY + naSize/2;
-    c.fillStyle = '#e53e3e';
-    c.beginPath(); c.moveTo(cx, cy - naSize*0.4); c.lineTo(cx + naSize*0.12, cy); c.lineTo(cx, cy - naSize*0.12); c.lineTo(cx - naSize*0.12, cy); c.closePath(); c.fill();
-    c.fillStyle = '#e2e8f0';
-    c.beginPath(); c.moveTo(cx, cy + naSize*0.4); c.lineTo(cx + naSize*0.12, cy); c.lineTo(cx, cy + naSize*0.12); c.lineTo(cx - naSize*0.12, cy); c.closePath(); c.fill();
-    c.fillStyle = 'white'; c.font = `bold ${Math.round(7*dpiScale)}px sans-serif`; c.textAlign = 'center';
-    c.fillText('N', cx, cy - naSize*0.18);
-    c.restore();
-  }
-
-  // Overview map inset
-  if (overviewCanvas) {
-    const ovW = overviewCanvas.width;
-    const ovH = overviewCanvas.height;
-    const ovScale = Math.min(180 * dpiScale / ovW, 120 * dpiScale / ovH);
-    const drawW = ovW * ovScale;
-    const drawH = ovH * ovScale;
-    const ovX = outW - drawW - 16 * dpiScale;
-    const ovY = 52 * dpiScale;
-    c.fillStyle = 'rgba(15,17,23,0.7)';
-    c.fillRect(ovX - 4*dpiScale, ovY - 4*dpiScale, drawW + 8*dpiScale, drawH + 8*dpiScale);
-    c.drawImage(overviewCanvas, ovX, ovY, drawW, drawH);
-  }
-
-  y += mapCanvas.height;
-  if (profCanvas) {
-    c.drawImage(profCanvas, 0, y);
-    y += profCanvas.height;
-  }
-
-  return {canvas: out, dpiScale};
+function _getScaleFromMap(lmap) {
+  const center = lmap.getCenter();
+  const pointC = lmap.latLngToContainerPoint(center);
+  const pointR = lmap.latLngToContainerPoint([center.lat, center.lng + 0.001]);
+  const pxPerMeter = Math.abs(pointR.x - pointC.x) / (0.001 * 111320);
+  const pxWidth = lmap.getContainer().offsetWidth;
+  const realMeters = pxWidth / pxPerMeter;
+  // Round to nice scale denominator
+  const scale = Math.round(realMeters / 0.00026458); // 1 pixel at 96 DPI ~= 0.00026458m
+  if (!isFinite(scale)) return null;
+  const digits = Math.pow(10, Math.floor(Math.log10(scale)));
+  return Math.round(scale / digits) * digits;
 }
 
 async function previewExport() {
   closeExport();
-  showToast('Generating preview... please wait');
+  showToast('Building layout... please wait');
   try {
-    const {canvas} = await generateExportCanvas();
-    _lastExportCanvas = canvas;
-    const wrap = document.getElementById('preview-img-wrap');
-    wrap.innerHTML = '';
-    const img = document.createElement('img');
-    img.src = canvas.toDataURL('image/png');
-    wrap.appendChild(img);
-    document.getElementById('preview-overlay').classList.add('show');
+    await buildLayout();
+    document.getElementById('layout-modal').classList.add('show');
   } catch (e) {
-    console.error('Preview failed:', e);
-    showToast('Preview failed: ' + e.message, 'error');
+    console.error('Layout failed:', e);
+    showToast('Layout failed: ' + e.message, 'error');
   }
 }
 
-async function doExport() {
-  closeExport();
+async function layoutExport(fmt) {
   showToast('Rendering export... please wait');
   try {
-    const {canvas, dpiScale} = await generateExportCanvas();
-    if (exportFormat === 'png') {
+    const paper = document.getElementById('layout-paper');
+    const canvas = await html2canvas(paper, {
+      useCORS: true, allowTaint: false, scale: 1,
+      scrollX: 0, scrollY: 0, x: 0, y: 0,
+      backgroundColor: document.body.classList.contains('light') ? '#ffffff' : '#1a1d23'
+    });
+    const dpiScale = parseInt(document.getElementById('exp-dpi').value) || 2;
+    if (fmt === 'png') {
       const link = document.createElement('a');
       link.download = `map_export_${dpiScale*72}dpi.png`;
       link.href = canvas.toDataURL('image/png');
@@ -4128,7 +4185,19 @@ async function doExport() {
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgW, imgH);
       pdf.save(`map_export_${dpiScale*72}dpi.pdf`);
     }
-    showToast(`${exportFormat.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
+    showToast(`${fmt.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
+  } catch (e) {
+    console.error('Export failed:', e);
+    showToast('Export failed: ' + e.message, 'error');
+  }
+}
+
+async function doExport() {
+  closeExport();
+  showToast('Building layout... please wait');
+  try {
+    await buildLayout();
+    await layoutExport(exportFormat);
   } catch (e) {
     console.error('Export failed:', e);
     showToast('Export failed: ' + e.message, 'error');
