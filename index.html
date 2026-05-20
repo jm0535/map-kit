@@ -2357,22 +2357,70 @@ function showResult(html) {
   switchBottomTab('analysis');
 }
 
+function _leafletLayerToGeoJSON(sub) {
+  // Try native toGeoJSON first (markers, polylines, polygons)
+  if (sub.toGeoJSON) {
+    const gj = sub.toGeoJSON();
+    if (gj && gj.type === 'Feature') return gj;
+  }
+  // Circle -> approximate as Point
+  if (sub.getLatLng) {
+    const ll = sub.getLatLng();
+    return {type: 'Feature', geometry: {type: 'Point', coordinates: [ll.lng, ll.lat]}, properties: {}};
+  }
+  // Rectangle -> Polygon
+  if (sub.getBounds && !sub.getRadius) {
+    const b = sub.getBounds();
+    const sw = b.getSouthWest(), ne = b.getNorthEast();
+    return {type: 'Feature', geometry: {type: 'Polygon', coordinates: [[[sw.lng,sw.lat],[ne.lng,sw.lat],[ne.lng,ne.lat],[sw.lng,ne.lat],[sw.lng,sw.lat]]]}, properties: {}};
+  }
+  // Circle with radius -> Polygon approximation (24-sided)
+  if (sub.getLatLng && sub.getRadius) {
+    const c = sub.getLatLng();
+    const r = sub.getRadius(); // meters
+    const coords = [];
+    for (let i = 0; i <= 24; i++) {
+      const brng = (i / 24) * 2 * Math.PI;
+      const dLat = (r / 6371000) * Math.cos(brng) * (180 / Math.PI);
+      const dLon = (r / 6371000) * Math.sin(brng) * (180 / Math.PI) / Math.cos(c.lat * Math.PI / 180);
+      coords.push([c.lng + dLon, c.lat + dLat]);
+    }
+    return {type: 'Feature', geometry: {type: 'Polygon', coordinates: [coords]}, properties: {}};
+  }
+  return null;
+}
+
 function addAnalysisLayer(name, leafletLayers, geojsonFC) {
   const id = 'analysis-' + (++uploadCounter);
   const group = L.layerGroup(leafletLayers).addTo(map);
+
+  // Build GeoJSON if not provided
+  let features = geojsonFC ? geojsonFC.features : [];
+  if (features.length === 0) {
+    leafletLayers.forEach(sub => {
+      const gj = _leafletLayerToGeoJSON(sub);
+      if (gj) features.push(gj);
+    });
+  }
+
+  // Build properties array from features for CSV export
+  const allProps = features.map(f => f.properties || {});
+
   const info = {
     id, name, color: '#f6e05e', layer: group,
-    featureCount: geojsonFC ? geojsonFC.features.length : leafletLayers.length,
-    geomTypes: ['Analysis'], properties: [],
-    geojsonFeatures: geojsonFC ? geojsonFC.features : [],
+    featureCount: features.length || leafletLayers.length,
+    geomTypes: ['Analysis'], properties: allProps,
+    geojsonFeatures: features,
     isAnalysis: true,
   };
   uploadedLayers.push(info);
   addLayerToPanel(info);
+  buildSymbologyControls(info);
   updateStats();
   updateFeatureCount();
   refreshAnalysisLayerSelect();
   refreshExportLayerSelect();
+  refreshAttrLayerSelect();
   return id;
 }
 
@@ -2587,7 +2635,8 @@ function runAnalysis(tool) {
     analysisOverlays.push(heat);
     activeHeatLayers.push(heat);
     storeHeatData(heat, normalized);
-    addAnalysisLayer(`IDW (${escapeHtml(attr)})`, [heat], null);
+    const idwFeatures = heatData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{value: +d[2].toFixed(4), latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
+    addAnalysisLayer(`IDW (${escapeHtml(attr)})`, [heat], {type:'FeatureCollection', features:idwFeatures});
     showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:#718096">Blue=low, Red=high</span>`);
     break;
   }
@@ -2599,7 +2648,8 @@ function runAnalysis(tool) {
     analysisOverlays.push(heat);
     activeHeatLayers.push(heat);
     storeHeatData(heat, heatData);
-    addAnalysisLayer('Point Density', [heat], null);
+    const densityFeatures = heatData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{count: d[2], latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
+    addAnalysisLayer('Point Density', [heat], {type:'FeatureCollection', features:densityFeatures});
     showResult(`<b>Point Density</b><br>${pts.length} points<br><span style="color:#718096">Bright=high concentration, Dark=low concentration</span>`);
     break;
   }
@@ -2617,7 +2667,8 @@ function runAnalysis(tool) {
     analysisOverlays.push(hotHeat);
     activeHeatLayers.push(hotHeat);
     storeHeatData(hotHeat, hotData);
-    addAnalysisLayer(`Weighted Density (${escapeHtml(hotAttr)})`, [hotHeat], null);
+    const weightedFeatures = hotData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{weight: +d[2].toFixed(4), attribute: escapeHtml(hotAttr), latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
+    addAnalysisLayer(`Weighted Density (${escapeHtml(hotAttr)})`, [hotHeat], {type:'FeatureCollection', features:weightedFeatures});
     const sum = hotVals.reduce((a,b)=>a+b,0);
     showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:#718096">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
     break;
@@ -3270,7 +3321,8 @@ function _layerToFeatures(lyr) {
     features.push(...lyr.geojsonFeatures);
   } else {
     lyr.layer.eachLayer(sub => {
-      if (sub.toGeoJSON) features.push(sub.toGeoJSON());
+      const gj = _leafletLayerToGeoJSON(sub);
+      if (gj) features.push(gj);
     });
   }
   return features;
