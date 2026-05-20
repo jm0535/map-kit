@@ -3878,13 +3878,6 @@ async function doExport() {
   const mapEl = document.getElementById('map');
   const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
 
-  // Capture north arrow SVG separately (it's outside #map)
-  let northCanvas = null;
-  const northArrowEl = document.getElementById('north-arrow');
-  if (northArrowEl) {
-    northCanvas = await html2canvas(northArrowEl, {useCORS:true, allowTaint:true, scale:dpiScale});
-  }
-
   // Capture overview map with RED locator rectangle (while still centered)
   let overviewCanvas = null;
   let prevOverviewStyle = null;
@@ -3951,11 +3944,22 @@ async function doExport() {
   c.drawImage(mapCanvas, 0, y);
 
   // North arrow (top-right, above overview inset)
-  if (northCanvas) {
-    const naSize = 36 * dpiScale;
-    const naX = outW - naSize - 16 * dpiScale;
-    const naY = 10 * dpiScale;
-    c.drawImage(northCanvas, naX, naY, naSize, naSize);
+  {
+    const naSize = 30 * dpiScale;
+    const naX = outW - naSize * 1.5;
+    const naY = naSize * 0.5;
+    c.save();
+    c.fillStyle = 'rgba(15,17,23,0.8)';
+    c.beginPath(); c.arc(naX + naSize/2, naY + naSize/2, naSize/2, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#2d3748'; c.lineWidth = dpiScale; c.stroke();
+    const cx = naX + naSize/2, cy = naY + naSize/2;
+    c.fillStyle = '#e53e3e';
+    c.beginPath(); c.moveTo(cx, cy - naSize*0.4); c.lineTo(cx + naSize*0.12, cy); c.lineTo(cx, cy - naSize*0.12); c.lineTo(cx - naSize*0.12, cy); c.closePath(); c.fill();
+    c.fillStyle = '#e2e8f0';
+    c.beginPath(); c.moveTo(cx, cy + naSize*0.4); c.lineTo(cx + naSize*0.12, cy); c.lineTo(cx, cy + naSize*0.12); c.lineTo(cx - naSize*0.12, cy); c.closePath(); c.fill();
+    c.fillStyle = 'white'; c.font = `bold ${Math.round(7*dpiScale)}px sans-serif`; c.textAlign = 'center';
+    c.fillText('N', cx, cy - naSize*0.18);
+    c.restore();
   }
 
   // Overview map inset (top-right, below north arrow)
