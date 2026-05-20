@@ -1004,10 +1004,10 @@
     <div class="exp-row">
       <label>Resolution (DPI)</label>
       <select id="exp-dpi">
-        <option value="1">Screen (72 dpi)</option>
-        <option value="2" selected>High (150 dpi)</option>
-        <option value="3">Print (300 dpi)</option>
-        <option value="4">Ultra (400 dpi)</option>
+        <option value="1">72 DPI (Screen)</option>
+        <option value="2" selected>144 DPI (High)</option>
+        <option value="3">216 DPI (Print)</option>
+        <option value="4">288 DPI (Ultra)</option>
       </select>
     </div>
     <div class="exp-row">
@@ -3852,6 +3852,8 @@ async function doExport() {
     // Give Leaflet a moment to finish internal pan/zoom settle
     await new Promise(r => setTimeout(r, 400));
   }
+  const fittedCenter = map.getCenter();
+  const fittedZoom = map.getZoom();
 
   // Hide map UI controls before capture
   const selectorsToHide = [
@@ -3874,9 +3876,40 @@ async function doExport() {
   // Wait for tiles after controls hidden
   await new Promise(r => setTimeout(r, 800));
 
-  // Capture #map directly (html2canvas handles Leaflet transforms correctly)
+  // High-DPI export: temporarily enlarge map container and zoom in
+  // so Leaflet loads higher-zoom tiles. html2canvas scale alone just
+  // upscales the same low-res raster tiles — no real detail gain.
   const mapEl = document.getElementById('map');
-  const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+  const originalMapWidth = mapEl.style.width;
+  const originalMapHeight = mapEl.style.height;
+  const originalMapFlex = mapEl.style.flex;
+  const rect = mapEl.getBoundingClientRect();
+  let captureScale = dpiScale;
+
+  if (dpiScale > 1) {
+    const extraZoom = Math.round(Math.log2(dpiScale));
+    mapEl.style.width = (rect.width * dpiScale) + 'px';
+    mapEl.style.height = (rect.height * dpiScale) + 'px';
+    mapEl.style.flex = 'none';
+    map.setView(fittedCenter, fittedZoom + extraZoom, {animate: false});
+    map.invalidateSize();
+    // Longer wait for higher-zoom tiles (more tiles at higher zoom)
+    await new Promise(r => setTimeout(r, 800 + dpiScale * 600));
+    captureScale = 1; // container is already dpiScale× larger
+  }
+
+  // Capture #map directly (html2canvas handles Leaflet transforms correctly)
+  const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:captureScale});
+
+  // Restore map container to fitted view size before overview capture
+  if (dpiScale > 1) {
+    mapEl.style.width = originalMapWidth;
+    mapEl.style.height = originalMapHeight;
+    mapEl.style.flex = originalMapFlex;
+    map.setView(fittedCenter, fittedZoom, {animate: false});
+    map.invalidateSize();
+    await new Promise(r => setTimeout(r, 200));
+  }
 
   // Restore UI controls immediately — they were hidden only for the screenshot
   hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
