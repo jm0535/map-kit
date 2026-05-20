@@ -3795,16 +3795,36 @@ function closeExport() { document.getElementById('export-overlay').classList.rem
 async function doExport() {
   closeExport();
   try {
-  const title = document.getElementById('exp-title').value;
   const dpiScale = parseInt(document.getElementById('exp-dpi').value);
   const inclProf = document.getElementById('exp-include-profile').checked;
   const inclLeg = document.getElementById('exp-include-legend').checked;
 
   showToast('Rendering export... please wait');
 
-  // Capture the map area
+  // Hide map UI controls before capture (zoom, fullscreen, attribution, measure, legend control)
+  const selectorsToHide = [
+    '.leaflet-control-zoom',
+    '.leaflet-control-fullscreen',
+    '.leaflet-control-attribution',
+    '.leaflet-control-layers',
+    '.leaflet-control-measure',
+    '.map-legend'
+  ];
+  const hiddenEls = [];
+  selectorsToHide.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) {
+      hiddenEls.push({el, prev: el.style.display});
+      el.style.display = 'none';
+    }
+  });
+
+  // Capture the map area (clean — only basemap + scalebar + north arrow)
   const mapEl = document.getElementById('map');
   const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+
+  // Restore controls
+  hiddenEls.forEach(({el, prev}) => { el.style.display = prev; });
 
   // Capture profile if needed
   let profCanvas = null;
@@ -3813,8 +3833,9 @@ async function doExport() {
     profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
   }
 
-  // Capture overview map (properly open panel, wait for tiles)
+  // Capture overview map with RED locator rectangle
   let overviewCanvas = null;
+  let prevOverviewStyle = null;
   {
     const overviewPanel = document.getElementById('overview-panel');
     const header = overviewPanel?.querySelector('.panel-header');
@@ -3826,13 +3847,21 @@ async function doExport() {
       minimap.invalidateSize();
       updateOverview();
     }
+    // Change overview rect to RED for the locator inset
+    if (overviewRect) {
+      prevOverviewStyle = {color: overviewRect.options.color, weight: overviewRect.options.weight, fillOpacity: overviewRect.options.fillOpacity};
+      overviewRect.setStyle({color: '#e53e3e', weight: 2, fillOpacity: 0.15});
+    }
     if (body) {
-      // Wait for minimap tiles to load
       await new Promise(r => setTimeout(r, 800));
       const minimapEl = document.getElementById('minimap');
       if (minimapEl) {
         overviewCanvas = await html2canvas(minimapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
       }
+    }
+    // Restore overview rect to blue
+    if (prevOverviewStyle && overviewRect) {
+      overviewRect.setStyle(prevOverviewStyle);
     }
     if (wasCollapsed && header && body) {
       header.classList.add('collapsed');
@@ -3840,15 +3869,13 @@ async function doExport() {
     }
   }
 
-  // Compose final image
-  const titleH = 50 * dpiScale;
+  // Compose final image: map + legend + north arrow + scalebar + overview inset ONLY
   const legendRows = inclLeg ? Math.max(1, Math.ceil(uploadedLayers.length / 3)) : 0;
   const legendH = inclLeg ? (20 + legendRows * 18) * dpiScale : 0;
-  const footerH = 30 * dpiScale;
   const profH = profCanvas ? profCanvas.height : 0;
 
   const outW = mapCanvas.width;
-  const outH = titleH + mapCanvas.height + profH + legendH + footerH;
+  const outH = mapCanvas.height + profH + legendH;
 
   const out = document.createElement('canvas');
   out.width = outW;
@@ -3859,18 +3886,11 @@ async function doExport() {
   c.fillStyle = '#1a1d23';
   c.fillRect(0, 0, outW, outH);
 
-  // Title
-  const titleSize = Math.round(16 * dpiScale);
-  c.fillStyle = '#e2e8f0';
-  c.font = `bold ${titleSize}px 'Segoe UI', sans-serif`;
-  c.textAlign = 'center';
-  c.fillText(title, outW / 2, titleH * 0.65);
-
   // Map
-  let y = titleH;
+  let y = 0;
   c.drawImage(mapCanvas, 0, y);
 
-  // Overview map (top-right of map area, below north arrow)
+  // Overview map inset (top-right of map area, below north arrow)
   if (overviewCanvas) {
     const ovW = overviewCanvas.width;
     const ovH = overviewCanvas.height;
@@ -3878,8 +3898,7 @@ async function doExport() {
     const drawW = ovW * ovScale;
     const drawH = ovH * ovScale;
     const ovX = outW - drawW - 16 * dpiScale;
-    const ovY = y + 52 * dpiScale; // below north arrow
-    // Semi-transparent backdrop
+    const ovY = 52 * dpiScale;
     c.fillStyle = 'rgba(15,17,23,0.7)';
     c.fillRect(ovX - 4*dpiScale, ovY - 4*dpiScale, drawW + 8*dpiScale, drawH + 8*dpiScale);
     c.drawImage(overviewCanvas, ovX, ovY, drawW, drawH);
@@ -3915,7 +3934,6 @@ async function doExport() {
       // Layer title
       c.font = `bold ${legTitleFontSize}px 'Segoe UI', sans-serif`;
       c.fillStyle = '#e2e8f0';
-      // Color swatch
       c.fillStyle = st.color || lyr.color || '#f6e05e';
       c.fillRect(legX, curY, 8*dpiScale, 8*dpiScale);
       c.fillStyle = '#e2e8f0';
@@ -3939,7 +3957,6 @@ async function doExport() {
           curY += rowH * 0.85;
         }
       } else if (st.mode === 'graduated' && st.ramp) {
-        // Draw color ramp bar
         const barW = 14 * dpiScale;
         const barH = 50 * dpiScale;
         const barX = legX + 4*dpiScale;
@@ -3957,19 +3974,11 @@ async function doExport() {
         if (st.minVal != null) c.fillText(Number(st.minVal).toFixed(1), barX + barW + 4*dpiScale, barY + barH);
         curY += barH + 4*dpiScale;
       } else {
-        // Simple symbol
-        c.font = `${legFontSize}px 'Segoe UI', sans-serif`;
-        c.fillStyle = st.color || lyr.color;
-        if (st.geomType === 'Point') { c.beginPath(); c.arc(legX + dotR + 4*dpiScale, curY + dotR, dotR, 0, Math.PI*2); c.fill(); }
-        else if (st.geomType.includes('Line')) { c.fillRect(legX + 4*dpiScale, curY + dotR - lineH/2, lineW, lineH); }
-        else { c.globalAlpha = 0.3; c.fillRect(legX + 4*dpiScale, curY, polyW, polyH); c.globalAlpha = 1; c.strokeStyle = st.color||lyr.color; c.lineWidth = dpiScale; c.strokeRect(legX + 4*dpiScale, curY, polyW, polyH); }
-        c.fillStyle = '#a0aec0';
-        c.fillText(st.geomType, legX + 24*dpiScale, curY + legFontSize);
-        curY += rowH;
+        // Simple symbol — inline with title, no separate row in export legend
+        // (already handled by title swatch above)
       }
       curY += 4*dpiScale;
     });
-    // Recalculate legend height
     const actualLegH = Math.max(legendH, curY - legY + 10*dpiScale);
     y += actualLegH;
   }
@@ -3978,7 +3987,7 @@ async function doExport() {
   {
     const naSize = 30 * dpiScale;
     const naX = outW - naSize * 1.5;
-    const naY = titleH + naSize * 0.5;
+    const naY = naSize * 0.5;
     c.save();
     c.fillStyle = 'rgba(15,17,23,0.8)';
     c.beginPath(); c.arc(naX + naSize/2, naY + naSize/2, naSize/2, 0, Math.PI*2); c.fill();
@@ -3993,12 +4002,7 @@ async function doExport() {
     c.restore();
   }
 
-  // Footer
-  const footFontSize = Math.round(8 * dpiScale);
-  c.fillStyle = '#4a5568';
-  c.font = `${footFontSize}px 'Segoe UI', sans-serif`;
-  c.textAlign = 'center';
-  c.fillText(`CRS: EPSG:4326 (WGS 84)  |  ${new Date().toLocaleDateString()}  |  DPI: ${dpiScale * 72}`, outW / 2, outH - 10 * dpiScale);
+  // No title, no footer — clean map composition
 
   if (exportFormat === 'png') {
     const link = document.createElement('a');
