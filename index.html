@@ -1062,6 +1062,9 @@ try {
   }).addTo(map);
 } catch(e) {}
 
+// Global layer storage (declared here because MapLegend references it)
+let uploadedLayers = [];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MAP LEGEND CONTROL
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1701,7 +1704,6 @@ function fiClear() {
 // ═══════════════════════════════════════════════════════════════════════════
 // UPLOADED LAYERS
 // ═══════════════════════════════════════════════════════════════════════════
-let uploadedLayers = [];
 let uploadCounter = 0;
 const LAYER_COLORS = ['#e6194B','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#42d4f4','#f032e6','#bfef45','#fabed4'];
 
