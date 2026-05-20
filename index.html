@@ -3813,6 +3813,21 @@ async function doExport() {
     profCanvas = await html2canvas(profEl, {useCORS:true, allowTaint:true, scale:dpiScale});
   }
 
+  // Capture overview map (ensure panel is open briefly)
+  let overviewCanvas = null;
+  {
+    const overviewBody = document.querySelector('#overview-panel .panel-body');
+    const wasHidden = overviewBody && overviewBody.classList.contains('hidden');
+    if (wasHidden && overviewBody) overviewBody.classList.remove('hidden');
+    if (overviewBody) {
+      // Force a render so the rectangle is current
+      updateOverview();
+      await new Promise(r => setTimeout(r, 300));
+      overviewCanvas = await html2canvas(overviewBody, {useCORS:true, allowTaint:true, scale:dpiScale});
+    }
+    if (wasHidden && overviewBody) overviewBody.classList.add('hidden');
+  }
+
   // Compose final image
   const titleH = 50 * dpiScale;
   const legendRows = inclLeg ? Math.max(1, Math.ceil(uploadedLayers.length / 3)) : 0;
@@ -3842,6 +3857,22 @@ async function doExport() {
   // Map
   let y = titleH;
   c.drawImage(mapCanvas, 0, y);
+
+  // Overview map (top-right of map area, below north arrow)
+  if (overviewCanvas) {
+    const ovW = overviewCanvas.width;
+    const ovH = overviewCanvas.height;
+    const ovScale = Math.min(180 * dpiScale / ovW, 120 * dpiScale / ovH);
+    const drawW = ovW * ovScale;
+    const drawH = ovH * ovScale;
+    const ovX = outW - drawW - 16 * dpiScale;
+    const ovY = y + 52 * dpiScale; // below north arrow
+    // Semi-transparent backdrop
+    c.fillStyle = 'rgba(15,17,23,0.7)';
+    c.fillRect(ovX - 4*dpiScale, ovY - 4*dpiScale, drawW + 8*dpiScale, drawH + 8*dpiScale);
+    c.drawImage(overviewCanvas, ovX, ovY, drawW, drawH);
+  }
+
   y += mapCanvas.height;
 
   // Profile
