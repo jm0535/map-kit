@@ -1,6 +1,6 @@
 # map-kit
 
-A lightweight Web GIS toolkit for interactive geospatial visualization and spatial analysis, built entirely in the browser. Includes a Python pipeline for generating publication-ready static maps with elevation profiles.
+A modern Web GIS toolkit for interactive geospatial visualization and spatial analysis, built entirely in the browser. Includes a Python package for generating publication-ready static and interactive maps with elevation profiles.
 
 **Live demo**: [https://jm0535.github.io/map-kit/](https://jm0535.github.io/map-kit/)
 
@@ -13,21 +13,28 @@ A lightweight Web GIS toolkit for interactive geospatial visualization and spati
 A standalone, zero-backend Web GIS application powered by Leaflet, Chart.js, and Turf.js:
 
 #### Data Import
+
 - Drag-and-drop or file picker for **GeoJSON**, **KML/KMZ**, **GPX**, **Shapefile** (.zip), **CSV**, **XLSX**, and **GeoTIFF**
 - Smart column mapper for CSV/XLSX — auto-detects lat/lon/elevation columns
 - Coordinate reprojection from any supported CRS to EPSG:4326
 
 #### Basemaps
+
 6 free basemaps with opacity control:
+
 - **Topo** (OpenTopoMap), **Satellite** (Esri World Imagery), **Streets** (OSM)
 - **Relief** (Esri Shaded Relief), **Terrain** (Esri World Topo), **Dark** (CartoDB Dark Matter)
 
 #### Layer Management
+
 - Toggle visibility, remove layers, reorder
 - Feature labels — choose any attribute as map labels with font size control
 - Per-layer opacity slider
+- Click layer name to select for symbology editing (QGIS-style)
 
 #### Symbology (QGIS-style)
+
+- **Layer selector** dropdown to pick which layer to style
 - **Simple Symbol**: Fill color, size, opacity, stroke color/width/style (solid, dashed, dotted, dash-dot)
 - **Marker Shapes**: Circle, square, triangle, diamond, star, cross (SVG-based)
 - **Categorized Renderer**: Color features by unique attribute values (16-color palette)
@@ -35,6 +42,7 @@ A standalone, zero-backend Web GIS application powered by Leaflet, Chart.js, and
 - **Reset** button to return to default styling
 
 #### Elevation Profile
+
 - Automatic profile generation for layers with elevation data
 - Multi-layer comparison with toggle checkboxes
 - **Click-to-pan**: Click a point on the profile to pan the map to that location
@@ -42,15 +50,16 @@ A standalone, zero-backend Web GIS application powered by Leaflet, Chart.js, and
 - Chart.js with distance (km) on X-axis, elevation (m a.s.l.) on Y-axis
 
 #### Spatial Analysis
+
 Select a layer and run analysis tools — results appear in the bottom panel:
 
 | Tool | Description | Reference |
-|------|-------------|-----------|
+| --- | --- | --- |
 | Mean Center & Std Distance | Geographic mean center with standard distance circle | Mitchell (2005) |
 | Bounding Box | Minimum bounding rectangle with width/height/area | — |
 | Nearest Neighbor Index (NNI) | Point pattern analysis: clustered / random / dispersed | Clark & Evans (1954) |
 | Moran's I | Spatial autocorrelation with inverse-distance weights | Moran (1950) |
-| IDW Interpolation | Inverse Distance Weighting surface (p=2, 50×50 grid) | Shepard (1968) |
+| IDW Interpolation | Inverse Distance Weighting surface (p=2, 50x50 grid) | Shepard (1968) |
 | Point Density | Concentration heat map | — |
 | Weighted Density | Attribute-weighted density surface | — |
 | DBSCAN Clustering | Density-based spatial clustering (auto eps, MinPts=3) | Ester et al. (1996) |
@@ -60,18 +69,21 @@ Select a layer and run analysis tools — results appear in the bottom panel:
 | Centroids | Area-weighted centroid (polygons), coordinate mean (points/lines) | — |
 | Simplify | Douglas-Peucker with adjustable tolerance | Douglas & Peucker (1973) |
 | Buffer | Circular buffer zones (user-specified distance) | — |
-| Voronoi / Thiessen | Thiessen polygon tessellation (120×120 grid, haversine distance) | — |
+| Voronoi / Thiessen | Thiessen polygon tessellation (120x120 grid, haversine distance) | — |
 
 #### Attribute Table
+
 - Select a layer to browse all features in a searchable table
 - Click a row to zoom to feature and inspect properties
 - Search/filter across all columns
 
 #### Export
+
 - **Map**: PNG or PDF with title, legend, north arrow, scale bar, and optional elevation profile
 - **Data**: CSV or GeoJSON per layer
 
 #### UI/UX
+
 - Resizable left and right panels with drag handles
 - Dark/light theme toggle
 - Minimap overview (bottom-right panel)
@@ -79,15 +91,46 @@ Select a layer and run analysis tools — results appear in the bottom panel:
 - Feature inspection on click (right panel)
 - Toast notifications for errors and feedback
 - Keyboard shortcuts: `+/-` zoom, `F` fullscreen, `L` toggle layers
+- In-app User Guide panel
 
 ---
 
-### Static Map Generator (`src/make_maps.py`)
+### Python Package (`map_kit`)
 
-A Python script using GeoPandas, Matplotlib, Folium, and Contextily to generate:
+A Python package using GeoPandas, Matplotlib, Folium, and Contextily to generate:
 
 - **Static map** (`docs/transect_map.png`): Topographic basemap with transect lines, study points, and stacked elevation profiles
 - **Interactive map** (`docs/transect_map.html`): Folium/Leaflet map with popups and tooltips
+
+#### CLI Usage
+
+```bash
+# Install the package
+pip install -e .
+
+# Generate both maps
+make-maps
+
+# Options
+make-maps --output-dir docs/ --dpi 300 --verbose
+make-maps --static-only
+make-maps --interactive-only
+```
+
+#### Makefile Targets
+
+```bash
+make help              # Show all targets
+make lint              # Run Ruff linter
+make format            # Run Ruff formatter
+make typecheck         # Run mypy type checker
+make check             # Run all checks
+make build             # Generate both maps
+make build-static      # Generate static map only
+make build-interactive # Generate interactive map only
+make serve             # Serve Web GIS on localhost:8000
+make clean             # Remove generated files
+```
 
 ---
 
@@ -101,17 +144,23 @@ Open `index.html` in a modern web browser:
 # Direct file open
 open index.html
 
-# Or serve locally (needed for some features)
-python -m http.server 8000
+# Or serve locally (recommended)
+make serve
 # then navigate to http://localhost:8000
 ```
 
-### Static Maps
-
-Install dependencies and run the generator:
+### Python Package
 
 ```bash
-pip install geopandas pandas matplotlib folium contextily shapely pyproj
+# Create virtual environment and install
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+
+# Generate maps
+make-maps
+
+# Or use legacy script
 python src/make_maps.py
 ```
 
@@ -119,18 +168,30 @@ python src/make_maps.py
 
 ## Project Structure
 
-```
+```text
 map-kit/
-├── index.html              # Full-featured standalone Web GIS (GitHub Pages entry point)
-├── README.md               # This file
+├── index.html                # Full-featured standalone Web GIS (GitHub Pages entry point)
+├── README.md                 # This file
+├── LICENSE                   # MIT License
+├── CONTRIBUTING.md           # Contribution guidelines
+├── pyproject.toml            # Project config, dependencies, tool settings
+├── Makefile                  # Common development tasks
+├── .editorconfig             # Editor settings
+├── .gitignore                # Git ignore rules
+├── .pre-commit-config.yaml   # Pre-commit hooks
 ├── src/
-│   └── make_maps.py        # Static & interactive map generator
+│   ├── make_maps.py          # Legacy script (backward compatible)
+│   └── map_kit/              # Python package
+│       ├── __init__.py       # Package metadata
+│       ├── cli.py            # CLI entry point (make-maps)
+│       ├── data.py           # Study site data constants
+│       └── maps.py           # Map generation functions
 ├── data/
-│   ├── yus_transect.csv    # Sample biodiversity data (YUS Conservation Area)
-│   └── mt_wilhelm_transect.xlsx  # Mt Wilhelm transect data
+│   ├── yus_transect.csv      # Sample biodiversity data (YUS Conservation Area)
+│   └── mt_wilhelm_transect.xlsx # Mt Wilhelm transect data
 └── docs/
-    ├── transect_map.html   # Generated Folium interactive map
-    └── transect_map.png    # Generated static map with elevation profiles
+    ├── transect_map.html     # Generated Folium interactive map
+    └── transect_map.png     # Generated static map with elevation profiles
 ```
 
 ---
@@ -139,8 +200,8 @@ map-kit/
 
 The project includes sample elevational transect data from Papua New Guinea:
 
-- **YUS Conservation Area** (Huon Peninsula, Morobe Province): 9 sites, 200m–2800m elevation
-- **Mt Wilhelm** (Chimbu Province): 7 sites, 2600m–4509m (Papua New Guinea's highest summit)
+- **YUS Conservation Area** (Huon Peninsula, Morobe Province): 9 sites, 200 m - 2800 m elevation
+- **Mt Wilhelm** (Chimbu Province): 7 sites, 2600 m - 4509 m (Papua New Guinea's highest summit)
 
 The CSV (`data/yus_transect.csv`) contains bird species abundance records across YUS sites.
 
@@ -149,28 +210,54 @@ The CSV (`data/yus_transect.csv`) contains bird species abundance records across
 ## Technical Notes
 
 ### Coordinate Reference System
+
 All data is handled in **EPSG:4326** (WGS 84). Imported data in other CRS is reprojected client-side using `proj4js`.
 
 ### Distance & Area Calculations
+
 - Distances use the **haversine formula** (R = 6,371,000 m)
 - Polygon areas use the **spherical excess formula** (Chamberlain & Duquette, 2009)
 - Centroids for polygons use the **area-weighted shoelace** method
 
 ### Spatial Analysis Limitations
+
 - **Buffer**: Circular approximation per vertex; not a true geometric buffer. Use QGIS/PostGIS for production buffers.
-- **Voronoi**: Grid-based approximation (120×120 raster); not a true Voronoi tessellation. Cell boundaries are pixelated.
+- **Voronoi**: Grid-based approximation (120x120 raster); not a true Voronoi tessellation. Cell boundaries are pixelated.
 - **Point Density / Weighted Density**: These are heat-map surfaces, not statistically rigorous KDE or Getis-Ord Gi* analyses.
-- **DBSCAN**: Epsilon is auto-derived from the median nearest-neighbor distance × 1.5. For precise control, use a dedicated clustering library.
+- **DBSCAN**: Epsilon is auto-derived from the median nearest-neighbor distance x 1.5. For precise control, use a dedicated clustering library.
 
 ### Security
+
 - All user-controlled data (layer names, attribute values, property values) is HTML-escaped before insertion into the DOM to prevent XSS.
 - Object URLs are revoked after download to prevent memory leaks.
+
+---
+
+## Development
+
+### Code Quality Tools
+
+| Tool | Purpose | Config |
+| --- | --- | --- |
+| [Ruff](https://docs.astral.sh/ruff/) | Linter + formatter | `pyproject.toml` |
+| [mypy](https://mypy.readthedocs.io/) | Static type checker | `pyproject.toml` |
+| [pre-commit](https://pre-commit.com/) | Git hook automation | `.pre-commit-config.yaml` |
+| [EditorConfig](https://editorconfig.org/) | Cross-editor consistency | `.editorconfig` |
+
+### Running Checks
+
+```bash
+make check    # lint + typecheck
+make lint     # ruff check
+make format   # ruff format
+```
 
 ---
 
 ## Dependencies
 
 **Web GIS** (all loaded from CDN, no build step required):
+
 - [Leaflet](https://leafletjs.com/) — interactive maps
 - [Chart.js](https://www.chartjs.org/) — elevation profiles
 - [Turf.js](https://turfjs.org/) — geospatial computations
@@ -182,11 +269,16 @@ All data is handled in **EPSG:4326** (WGS 84). Imported data in other CRS is rep
 - [GeoTIFF.js](https://geotiffjs.github.io/) — GeoTIFF parsing
 - [toGeoJSON](https://github.com/mapbox/togeojson) — KML/KMZ/GPX conversion
 
-**Python pipeline**:
+**Python package**:
+
 - geopandas, pandas, matplotlib, folium, contextily, shapely, pyproj
+
+**Dev dependencies**:
+
+- ruff, mypy, pre-commit
 
 ---
 
 ## License
 
-MIT
+[MIT](LICENSE)
