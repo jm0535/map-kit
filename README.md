@@ -28,6 +28,8 @@ A standalone, zero-backend Web GIS application powered by Leaflet and Chart.js:
 #### Layer Management
 
 - **Eye icon toggle** — click the eye to show/hide each layer (QGIS-style visibility toggle)
+- **Rename layer** — double-click the layer name to edit inline (Enter to confirm, Escape to cancel)
+- **Zoom to layer** — click the 🔍 button or right-click the layer name to zoom to layer extent
 - Remove layers, view feature count
 - Feature labels — choose any attribute as map labels with font size control
 - Per-layer opacity slider
@@ -54,6 +56,7 @@ Draw new features directly on the map using the digitizing toolbar (top-right of
 - **Categorized Renderer**: Color features by unique attribute values (16-color palette)
 - **Graduated Renderer**: Color ramp by numeric attribute — choose column, classes (2–10), and ramp (Viridis, Heat, Cool, Terrain)
 - **Reset** button to return to default styling
+- **Editable legend labels** — click categorized legend entries on the map to rename them inline
 
 #### Feature Info (Right Panel)
 

@@ -115,6 +115,9 @@
     border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
   }
   .layer-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .layer-label.editing { background: #1a1d23; border: 1px solid #63b3ed; border-radius: 3px; padding: 0 4px; outline: none; cursor: text; min-width: 40px; }
+  .layer-action-btn { font-size: 11px; cursor: pointer; opacity: 0.35; background: none; border: none; padding: 0 2px; color: #a0aec0; line-height: 1; }
+  .layer-action-btn:hover { opacity: 1; color: #63b3ed; }
   /* Map legend control */
   .map-legend { background: rgba(15,17,23,0.92); border: 1px solid #2d3748; border-radius: 6px; padding: 0; font-size: 11px; color: #e2e8f0; max-width: 260px; max-height: 50vh; overflow-y: auto; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
   .map-legend-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(26,29,35,0.95); border-bottom: 1px solid #2d3748; border-radius: 6px 6px 0 0; font-weight: 600; font-size: 11px; color: #63b3ed; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; -webkit-user-select: none; user-select: none; }
@@ -133,7 +136,9 @@
   .map-legend-symbol.line { width: 18px; height: 3px; border-radius: 1px; }
   .map-legend-symbol.polygon { width: 14px; height: 10px; border-radius: 2px; border: 1.5px solid; opacity: 0.85; }
   .map-legend-symbol.shape { width: 12px; height: 12px; }
-  .map-legend-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .map-legend-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
+  .map-legend-label[contenteditable] { cursor: text; border-bottom: 1px dashed #4a5568; outline: none; }
+  .map-legend-label[contenteditable]:focus { border-bottom-color: #63b3ed; color: #e2e8f0; }
   .map-legend-ramp { display: flex; align-items: stretch; gap: 0; margin: 2px 0 2px 0; }
   .map-legend-ramp-bar { width: 14px; height: 60px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); }
   .map-legend-ramp-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: #718096; padding: 0 4px; }
@@ -534,6 +539,9 @@
   body.light .panel-header { background: #f7fafc; color: #2b6cb0; }
   body.light .panel-header:hover { background: #edf2f7; }
   body.light .panel-body { color: #4a5568; }
+  body.light .layer-label.editing { background: #fff; border-color: #2b6cb0; color: #2d3748; }
+  body.light .layer-action-btn { color: #4a5568; }
+  body.light .layer-action-btn:hover { color: #2b6cb0; }
   body.light .layer-item { color: #2d3748; }
   body.light .layer-item:hover { background: rgba(43,108,176,0.06); }
   body.light .layer-eye { color: #2b6cb0; }
@@ -544,6 +552,8 @@
   body.light .map-legend-header:hover { background: rgba(237,242,247,0.95); }
   body.light .map-legend-body { color: #4a5568; }
   body.light .map-legend-layer-title { color: #2d3748; }
+  body.light .map-legend-label[contenteditable] { border-bottom-color: #cbd5e0; }
+  body.light .map-legend-label[contenteditable]:focus { border-bottom-color: #2b6cb0; color: #2d3748; }
   body.light .map-legend-row { color: #4a5568; }
   body.light .map-legend-symbol.point { border-color: rgba(0,0,0,0.3); }
   body.light .map-legend-symbol.polygon { border-color: rgba(0,0,0,0.4); }
@@ -1099,18 +1109,18 @@ const MapLegend = L.Control.extend({
     if (st.mode === 'categorized' && st.colorMap) {
       const entries = Object.entries(st.colorMap);
       entries.forEach(([val, color]) => {
-        html += this._renderSymbol(st.geomType, color, String(val), st.shape);
+        html += this._renderSymbol(st.geomType, color, String(val), st.shape, info.id, true);
       });
     } else if (st.mode === 'graduated' && st.ramp) {
       html += this._renderRamp(st.ramp, st.minVal, st.maxVal, st.breaks, st.geomType, st.shape);
     } else {
       // Simple symbol
-      html += this._renderSymbol(st.geomType, st.color || info.color, `${st.geomType}`, st.shape);
+      html += this._renderSymbol(st.geomType, st.color || info.color, `${st.geomType}`, st.shape, info.id, false);
     }
     html += '</div>';
     return html;
   },
-  _renderSymbol(geomType, color, label, shape) {
+  _renderSymbol(geomType, color, label, shape, layerId, editable) {
     let sym = '';
     if (shape && shape !== 'circle') {
       sym = `<div class="map-legend-symbol shape"><svg viewBox="-1.3 -1.3 2.6 2.6" width="12" height="12"><path d="${shape}" fill="${color}" stroke="white" stroke-width="0.15"/></svg></div>`;
@@ -1121,7 +1131,7 @@ const MapLegend = L.Control.extend({
     } else {
       sym = `<div class="map-legend-symbol polygon" style="background:${color}40;border-color:${color}"></div>`;
     }
-    return `<div class="map-legend-row">${sym}<span class="map-legend-label">${escapeHtml(label)}</span></div>`;
+    return `<div class="map-legend-row">${sym}<span class="map-legend-label" ${editable ? 'contenteditable="true"' : ''} data-layer-id="${layerId}" data-legend-key="${label}">${escapeHtml(label)}</span></div>`;
   },
   _renderRamp(ramp, minVal, maxVal, breaks, geomType, shape) {
     const colors = ramp.join(',');
@@ -1148,7 +1158,43 @@ const MapLegend = L.Control.extend({
 const mapLegend = new MapLegend();
 mapLegend.addControl(mapLegend);
 
-function refreshMapLegend() { mapLegend.update(); }
+function refreshMapLegend() { mapLegend.update(); _bindLegendEdits(); }
+
+function _bindLegendEdits() {
+  // Make categorized legend labels editable and save changes
+  const container = mapLegend._container;
+  if (!container) return;
+  container.querySelectorAll('.map-legend-label[contenteditable]').forEach(el => {
+    el.removeEventListener('blur', _onLegendLabelBlur);
+    el.removeEventListener('keydown', _onLegendLabelKey);
+    el.addEventListener('blur', _onLegendLabelBlur);
+    el.addEventListener('keydown', _onLegendLabelKey);
+  });
+}
+
+function _onLegendLabelBlur(e) {
+  const el = e.target;
+  const layerId = el.dataset.layerId;
+  const originalKey = el.dataset.legendKey;
+  const newLabel = el.textContent.trim();
+  if (newLabel && newLabel !== originalKey && legendState[layerId] && legendState[layerId].colorMap) {
+    // Rename the key in colorMap
+    const cm = legendState[layerId].colorMap;
+    const color = cm[originalKey];
+    if (color) {
+      delete cm[originalKey];
+      cm[newLabel] = color;
+      el.dataset.legendKey = newLabel;
+    }
+  } else {
+    el.textContent = originalKey; // revert
+  }
+}
+
+function _onLegendLabelKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  if (e.key === 'Escape') { e.target.textContent = e.target.dataset.legendKey; e.target.blur(); }
+}
 
 function _detectGeomType(info) {
   if (info.geomTypes && info.geomTypes.length > 0) {
@@ -1728,7 +1774,8 @@ function addLayerToPanel(info) {
     <input type="checkbox" checked>
     <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}', !this.previousElementSibling.checked)" title="Toggle visibility">&#x1F441;</span>
     <div class="layer-color-swatch" style="background:${info.color}"></div>
-    <span class="layer-label" title="${safeName}" onclick="selectSymbologyLayer('${info.id}');document.getElementById('symbology-layer-select').value='${info.id}';toggleSection(document.querySelector('#symbology-panel').previousElementSibling.querySelector('.panel-header'));event.stopPropagation();" style="cursor:pointer;">${safeName}</span>
+    <span class="layer-label" title="${safeName}&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this)" oncontextmenu="zoomToLayer('${info.id}');event.preventDefault();">${safeName}</span>
+    <button class="layer-action-btn" onclick="zoomToLayer('${info.id}')" title="Zoom to layer">&#x1f50d;</button>
     <span class="layer-count">${info.featureCount}</span>
     <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this)" title="Show/hide labels">&#x1f3f7;</button>
     <button class="layer-remove" onclick="removeUploadedLayer('${info.id}')" title="Remove layer">&times;</button>
@@ -1736,6 +1783,80 @@ function addLayerToPanel(info) {
   `;
   document.getElementById('uploaded-layers-list').appendChild(el);
   initLegendState(info);
+}
+
+function zoomToLayer(id) {
+  const info = uploadedLayers.find(l => l.id === id);
+  if (!info) return;
+  try {
+    if (info.layer.getBounds) {
+      map.fitBounds(info.layer.getBounds().pad(0.1));
+    } else {
+      // LayerGroup — collect bounds from sub-layers
+      const bounds = L.latLngBounds([]);
+      info.layer.eachLayer(sub => {
+        if (sub.getBounds) bounds.extend(sub.getBounds());
+        else if (sub.getLatLng) bounds.extend(sub.getLatLng());
+      });
+      if (bounds.isValid()) map.fitBounds(bounds.pad(0.1));
+    }
+  } catch(e) {
+    showToast('Could not zoom to layer', 'error');
+  }
+}
+
+function renameLayer(id, labelEl) {
+  const info = uploadedLayers.find(l => l.id === id);
+  if (!info) return;
+  const el = labelEl || document.querySelector(`[data-layer-id="${id}"] .layer-label`);
+  if (!el) return;
+
+  // Enter editing mode
+  el.contentEditable = true;
+  el.classList.add('editing');
+  el.focus();
+
+  // Select all text
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  const finish = () => {
+    el.contentEditable = false;
+    el.classList.remove('editing');
+    const newName = el.textContent.trim();
+    if (newName && newName !== info.name) {
+      info.name = newName;
+      el.title = escapeHtml(newName) + '\nDouble-click to rename\nRight-click for options';
+      // Update symbology select
+      const symSel = document.getElementById('symbology-layer-select');
+      if (symSel) {
+        const opt = symSel.querySelector(`option[value="${id}"]`);
+        if (opt) opt.textContent = newName;
+      }
+      // Update analysis/attr/export selects
+      ['analysis-layer-select','attr-layer-select','export-layer-select'].forEach(selId => {
+        const s = document.getElementById(selId);
+        if (s) { const o = s.querySelector(`option[value="${id}"]`); if (o) o.textContent = newName; }
+      });
+      refreshMapLegend();
+      showToast('Layer renamed', 'success');
+    } else {
+      el.textContent = info.name; // revert
+    }
+    el.removeEventListener('blur', finish);
+    el.removeEventListener('keydown', onKey);
+  };
+
+  const onKey = e => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(); }
+    if (e.key === 'Escape') { el.textContent = info.name; finish(); }
+  };
+
+  el.addEventListener('blur', finish);
+  el.addEventListener('keydown', onKey);
 }
 
 function toggleUploadedLayer(id, on) {
