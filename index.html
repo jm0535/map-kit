@@ -1193,12 +1193,85 @@ function buildSymbologyControls(info) {
   div.dataset.symId = info.id;
   div.style.cssText = 'margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1a1d23;';
   const safeName = escapeHtml(info.name);
+  const hasPoints = info.geomTypes.some(g => g.includes('Point'));
+  const hasLines = info.geomTypes.some(g => g.includes('Line'));
+  const hasPolygons = info.geomTypes.some(g => g.includes('Polygon'));
+  const attrs = [...new Set(info.properties.flatMap(Object.keys))];
+  const attrOpts = attrs.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+
   div.innerHTML = `
     <div style="font-size:11px;color:#718096;margin-bottom:4px;">${safeName}</div>
-    <div class="symbol-row">
-      <span>Fill</span><input type="color" value="${info.color}" onchange="recolorLayer('${info.id}',this.value)">
-      <span>Size</span><input type="number" value="7" min="3" max="25" onchange="resizeLayer('${info.id}',this.value)">
-      <span>Opacity</span><input type="range" min="10" max="100" value="90" style="width:60px" onchange="opacityLayer('${info.id}',this.value)">
+
+    <!-- Simple Symbol -->
+    <div class="sym-group" style="margin-bottom:6px;">
+      <div class="sym-group-title" style="font-size:10px;color:#63b3ed;font-weight:600;margin-bottom:3px;">Simple Symbol</div>
+      <div class="symbol-row">
+        <span>Fill</span><input type="color" value="${info.color}" onchange="recolorLayer('${info.id}',this.value)">
+        ${hasPoints ? `<span>Size</span><input type="number" value="7" min="3" max="30" style="width:40px" onchange="resizeLayer('${info.id}',this.value)">` : ''}
+        <span>Opacity</span><input type="range" min="10" max="100" value="90" style="width:60px" onchange="opacityLayer('${info.id}',this.value)">
+      </div>
+      <div class="symbol-row" style="margin-top:4px;">
+        <span>Stroke</span><input type="color" value="#ffffff" onchange="strokeColorLayer('${info.id}',this.value)">
+        <span>Width</span><input type="number" value="1.2" min="0" max="10" step="0.5" style="width:45px" onchange="strokeWidthLayer('${info.id}',this.value)">
+        <span>Style</span><select onchange="strokeStyleLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">
+          <option value="solid">Solid</option>
+          <option value="dash">Dashed</option>
+          <option value="dot">Dotted</option>
+          <option value="dashdot">Dash-Dot</option>
+        </select>
+      </div>
+      ${hasPoints ? `
+      <div class="symbol-row" style="margin-top:4px;">
+        <span>Shape</span><select onchange="markerShapeLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
+          <option value="triangle">Triangle</option>
+          <option value="diamond">Diamond</option>
+          <option value="star">Star</option>
+          <option value="cross">Cross</option>
+        </select>
+      </div>` : ''}
+      ${hasLines ? `
+      <div class="symbol-row" style="margin-top:4px;">
+        <span>Line W</span><input type="number" value="2.5" min="0.5" max="15" step="0.5" style="width:45px" onchange="lineWidthLayer('${info.id}',this.value)">
+      </div>` : ''}
+    </div>
+
+    <!-- Categorized -->
+    <div class="sym-group" style="margin-bottom:6px;">
+      <div class="sym-group-title" style="font-size:10px;color:#63b3ed;font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Categorized &#x25BC;</div>
+      <div class="hidden" style="padding-top:3px;">
+        <div class="symbol-row">
+          <span>Column</span><select id="cat-attr-${info.id}" style="font-size:10px;max-width:120px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">${attrOpts}</select>
+        </div>
+        <div class="symbol-row" style="margin-top:3px;">
+          <button onclick="applyCategorized('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Apply</button>
+          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graduated -->
+    <div class="sym-group" style="margin-bottom:6px;">
+      <div class="sym-group-title" style="font-size:10px;color:#63b3ed;font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Graduated &#x25BC;</div>
+      <div class="hidden" style="padding-top:3px;">
+        <div class="symbol-row">
+          <span>Column</span><select id="grad-attr-${info.id}" style="font-size:10px;max-width:120px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">${attrOpts}</select>
+        </div>
+        <div class="symbol-row" style="margin-top:3px;">
+          <span>Classes</span><input type="number" id="grad-classes-${info.id}" value="5" min="2" max="10" style="width:35px">
+          <span>Ramp</span><select id="grad-ramp-${info.id}" style="font-size:10px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">
+            <option value="viridis">Viridis</option>
+            <option value="heat">Heat</option>
+            <option value="cool">Cool</option>
+            <option value="terrain">Terrain</option>
+          </select>
+        </div>
+        <div class="symbol-row" style="margin-top:3px;">
+          <button onclick="applyGraduated('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Apply</button>
+          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Reset</button>
+        </div>
+      </div>
     </div>
   `;
   container.appendChild(div);
@@ -1230,6 +1303,248 @@ function opacityLayer(id, val) {
   info.layer.eachLayer(sub => {
     if (sub.setStyle) sub.setStyle({ opacity, fillOpacity: opacity * 0.8 });
   });
+}
+
+function strokeColorLayer(id, color) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  info.layer.eachLayer(sub => {
+    if (sub.setStyle) sub.setStyle({ color });
+    if (sub instanceof L.CircleMarker) sub.setStyle({ color });
+  });
+}
+
+function strokeWidthLayer(id, weight) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  info.layer.eachLayer(sub => {
+    if (sub.setStyle) sub.setStyle({ weight: parseFloat(weight) });
+  });
+}
+
+const DASH_PATTERNS = {
+  solid: null,
+  dash: '10 6',
+  dot: '2 4',
+  dashdot: '10 4 2 4',
+};
+
+function strokeStyleLayer(id, style) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  const dashArray = DASH_PATTERNS[style] || null;
+  info.layer.eachLayer(sub => {
+    if (sub.setStyle) sub.setStyle({ dashArray });
+  });
+}
+
+function lineWidthLayer(id, weight) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  info.layer.eachLayer(sub => {
+    if (sub.setStyle) sub.setStyle({ weight: parseFloat(weight) });
+  });
+}
+
+const MARKER_SHAPES = {
+  circle: null, // default CircleMarker
+  square: 'M-1,-1 L1,-1 L1,1 L-1,1 Z',
+  triangle: 'M0,-1.2 L1.1,0.8 L-1.1,0.8 Z',
+  diamond: 'M0,-1.2 L1.1,0 L0,1.2 L-1.1,0 Z',
+  star: 'M0,-1.2 L0.35,-0.4 L1.1,-0.4 L0.5,0.15 L0.7,1 L0,0.5 L-0.7,1 L-0.5,0.15 L-1.1,-0.4 L-0.35,-0.4 Z',
+  cross: 'M-0.35,-1.1 L0.35,-1.1 L0.35,-0.35 L1.1,-0.35 L1.1,0.35 L0.35,0.35 L0.35,1.1 L-0.35,1.1 L-0.35,0.35 L-1.1,0.35 L-1.1,-0.35 L-0.35,-0.35 Z',
+};
+
+function markerShapeLayer(id, shape) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  if (shape === 'circle') {
+    // Re-create as CircleMarkers
+    rebuildLayerWithShape(info, null);
+  } else {
+    rebuildLayerWithShape(info, MARKER_SHAPES[shape]);
+  }
+}
+
+function rebuildLayerWithShape(info, svgPath) {
+  const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
+  if (geojson.features.length === 0) {
+    info.layer.eachLayer(sub => { if (sub.toGeoJSON) geojson.features.push(sub.toGeoJSON()); });
+  }
+  map.removeLayer(info.layer);
+  const color = info.color;
+  const currentOpacity = 0.9;
+
+  if (svgPath) {
+    // Use DivIcon with SVG for custom shapes
+    info.layer = L.geoJSON(geojson, {
+      style: feature => {
+        const gt = feature.geometry.type;
+        if (gt.includes('Polygon')) return { color, weight:2, fillColor:color, fillOpacity:0.3 };
+        if (gt.includes('Line')) return { color, weight:2.5, opacity:0.9 };
+        return {};
+      },
+      pointToLayer: (feature, latlng) => {
+        const size = 14;
+        const icon = L.divIcon({
+          html: `<svg viewBox="-1.3 -1.3 2.6 2.6" width="${size}" height="${size}" style="display:block;">
+            <path d="${svgPath}" fill="${color}" stroke="white" stroke-width="0.15"/>
+          </svg>`,
+          className: '',
+          iconSize: [size, size],
+          iconAnchor: [size/2, size/2],
+        });
+        return L.marker(latlng, { icon });
+      },
+      onEachFeature: (feature, layer) => {
+        const props = feature.properties || {};
+        const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
+        if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
+        layer.on('click', () => showFeatureInfo(props));
+      }
+    }).addTo(map);
+  } else {
+    // Default CircleMarker
+    info.layer = L.geoJSON(geojson, {
+      style: feature => {
+        const gt = feature.geometry.type;
+        if (gt.includes('Polygon')) return { color, weight:2, fillColor:color, fillOpacity:0.3 };
+        if (gt.includes('Line')) return { color, weight:2.5, opacity:0.9 };
+        return {};
+      },
+      pointToLayer: (feature, latlng) => {
+        return L.circleMarker(latlng, {
+          radius:7, color:'white', weight:1.2, fillColor:color, fillOpacity:0.9,
+        });
+      },
+      onEachFeature: (feature, layer) => {
+        const props = feature.properties || {};
+        const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
+        if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
+        layer.on('click', () => showFeatureInfo(props));
+      }
+    }).addTo(map);
+  }
+}
+
+const CATEGORIZED_COLORS = ['#e6194B','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4','#42d4f4','#f032e6','#bfef45','#fabed4','#469990','#dcbeff','#9A6324','#800000','#aaffc3','#808000'];
+
+function applyCategorized(id) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  const attr = document.getElementById(`cat-attr-${id}`).value;
+  if (!attr) { showToast('Select a column', 'error'); return; }
+
+  // Get unique values
+  const vals = [...new Set(info.properties.map(p => p[attr]))].filter(v => v != null && v !== '');
+  const colorMap = {};
+  vals.forEach((v, i) => colorMap[v] = CATEGORIZED_COLORS[i % CATEGORIZED_COLORS.length]);
+
+  const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
+  if (geojson.features.length === 0) {
+    info.layer.eachLayer(sub => { if (sub.toGeoJSON) geojson.features.push(sub.toGeoJSON()); });
+  }
+  map.removeLayer(info.layer);
+
+  info.layer = L.geoJSON(geojson, {
+    style: feature => {
+      const v = feature.properties && feature.properties[attr];
+      const c = colorMap[v] || '#718096';
+      const gt = feature.geometry.type;
+      if (gt.includes('Polygon')) return { color:c, weight:2, fillColor:c, fillOpacity:0.3 };
+      if (gt.includes('Line')) return { color:c, weight:2.5, opacity:0.9 };
+      return {};
+    },
+    pointToLayer: (feature, latlng) => {
+      const v = feature.properties && feature.properties[attr];
+      const c = colorMap[v] || '#718096';
+      return L.circleMarker(latlng, { radius:7, color:'white', weight:1.2, fillColor:c, fillOpacity:0.9 });
+    },
+    onEachFeature: (feature, layer) => {
+      const props = feature.properties || {};
+      const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
+      if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
+      layer.on('click', () => showFeatureInfo(props));
+    }
+  }).addTo(map);
+
+  showToast(`Categorized by ${attr} (${vals.length} classes)`, 'success');
+}
+
+const COLOR_RAMPS = {
+  viridis: ['#440154','#482777','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'],
+  heat:   ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'],
+  cool:   ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b'],
+  terrain:['#a50026','#d73027','#f46d43','#fdae61','#fee08b','#ffffbf','#d9ef8b','#a6d96a','#66bd63','#1a9850','#006837'],
+};
+
+function applyGraduated(id) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  const attr = document.getElementById(`grad-attr-${id}`).value;
+  const numClasses = parseInt(document.getElementById(`grad-classes-${id}`).value) || 5;
+  const rampName = document.getElementById(`grad-ramp-${id}`).value;
+  if (!attr) { showToast('Select a column', 'error'); return; }
+
+  // Get numeric values
+  const numVals = info.properties.map(p => parseFloat(p[attr])).filter(v => isFinite(v));
+  if (numVals.length === 0) { showToast('No numeric values in selected column', 'error'); return; }
+
+  const minVal = Math.min(...numVals);
+  const maxVal = Math.max(...numVals);
+  const range = maxVal - minVal || 1;
+  const ramp = COLOR_RAMPS[rampName] || COLOR_RAMPS.viridis;
+
+  function getColorForValue(v) {
+    const t = Math.max(0, Math.min(1, (v - minVal) / range));
+    const idx = Math.min(Math.floor(t * ramp.length), ramp.length - 1);
+    return ramp[idx];
+  }
+
+  const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
+  if (geojson.features.length === 0) {
+    info.layer.eachLayer(sub => { if (sub.toGeoJSON) geojson.features.push(sub.toGeoJSON()); });
+  }
+  map.removeLayer(info.layer);
+
+  info.layer = L.geoJSON(geojson, {
+    style: feature => {
+      const v = feature.properties && parseFloat(feature.properties[attr]);
+      const c = isFinite(v) ? getColorForValue(v) : '#718096';
+      const gt = feature.geometry.type;
+      if (gt.includes('Polygon')) return { color:c, weight:2, fillColor:c, fillOpacity:0.3 };
+      if (gt.includes('Line')) return { color:c, weight:2.5, opacity:0.9 };
+      return {};
+    },
+    pointToLayer: (feature, latlng) => {
+      const v = feature.properties && parseFloat(feature.properties[attr]);
+      const c = isFinite(v) ? getColorForValue(v) : '#718096';
+      return L.circleMarker(latlng, { radius:7, color:'white', weight:1.2, fillColor:c, fillOpacity:0.9 });
+    },
+    onEachFeature: (feature, layer) => {
+      const props = feature.properties || {};
+      const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
+      if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
+      layer.on('click', () => showFeatureInfo(props));
+    }
+  }).addTo(map);
+
+  showToast(`Graduated by ${attr} (${numClasses} classes, ${rampName})`, 'success');
+}
+
+function resetSymbology(id) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  rebuildLayerWithShape(info, null);
+  // Reset UI controls
+  const symDiv = document.querySelector(`[data-sym-id="${id}"]`);
+  if (symDiv) {
+    const fillInput = symDiv.querySelector('input[type="color"]');
+    if (fillInput) fillInput.value = info.color;
+    const strokeInput = symDiv.querySelectorAll('input[type="color"]')[1];
+    if (strokeInput) strokeInput.value = '#ffffff';
+  }
+  showToast('Symbology reset', 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
