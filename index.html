@@ -3874,9 +3874,16 @@ async function doExport() {
   // Wait for tiles after controls hidden
   await new Promise(r => setTimeout(r, 800));
 
-  // Capture map-wrap (includes map + styled legend + north arrow SVG + scalebar)
-  const mapEl = document.getElementById('map-wrap');
+  // Capture #map directly (html2canvas handles Leaflet transforms correctly)
+  const mapEl = document.getElementById('map');
   const mapCanvas = await html2canvas(mapEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+
+  // Capture north arrow SVG separately (it's outside #map)
+  let northCanvas = null;
+  const northArrowEl = document.getElementById('north-arrow');
+  if (northArrowEl) {
+    northCanvas = await html2canvas(northArrowEl, {useCORS:true, allowTaint:true, scale:dpiScale});
+  }
 
   // Capture overview map with RED locator rectangle (while still centered)
   let overviewCanvas = null;
@@ -3939,11 +3946,19 @@ async function doExport() {
   c.fillStyle = '#1a1d23';
   c.fillRect(0, 0, outW, outH);
 
-  // Map (includes app's styled legend, north arrow SVG, and scalebar)
+  // Map (includes app's styled legend and scalebar)
   let y = 0;
   c.drawImage(mapCanvas, 0, y);
 
-  // Overview map inset (top-right, below the app's north arrow)
+  // North arrow (top-right, above overview inset)
+  if (northCanvas) {
+    const naSize = 36 * dpiScale;
+    const naX = outW - naSize - 16 * dpiScale;
+    const naY = 10 * dpiScale;
+    c.drawImage(northCanvas, naX, naY, naSize, naSize);
+  }
+
+  // Overview map inset (top-right, below north arrow)
   if (overviewCanvas) {
     const ovW = overviewCanvas.width;
     const ovH = overviewCanvas.height;
