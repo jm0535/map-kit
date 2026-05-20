@@ -3805,21 +3805,52 @@ async function doExport() {
   const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
 
   // Auto-center map on visible layer bounds before export
+  // Fallback: manually compute from geojson coordinates because
+  // Leaflet GeoJSON point layers sometimes return invalid getBounds()
   let layerBounds = null;
   visibleLayers.forEach(lyr => {
     if (lyr.layer && lyr.layer.getBounds) {
       const b = lyr.layer.getBounds();
       if (b && b.isValid && b.isValid()) {
         if (layerBounds) layerBounds.extend(b);
-        else layerBounds = b;
+        else layerBounds = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
       }
     }
+    // Fallback: compute from raw geojson coordinates
+    const features = lyr.geojsonFeatures || [];
+    features.forEach(f => {
+      const coords = f.geometry && f.geometry.coordinates;
+      if (!coords) return;
+      const type = f.geometry.type;
+      if (type === 'Point') {
+        const [lon, lat] = coords;
+        const p = L.latLng(lat, lon);
+        if (layerBounds) layerBounds.extend(p);
+        else layerBounds = L.latLngBounds(p, p);
+      } else if (type === 'MultiPoint') {
+        coords.forEach(([lon, lat]) => {
+          const p = L.latLng(lat, lon);
+          if (layerBounds) layerBounds.extend(p);
+          else layerBounds = L.latLngBounds(p, p);
+        });
+      } else if (type.includes('Line') || type.includes('Polygon')) {
+        const flat = type === 'Polygon' ? coords[0] : coords;
+        flat.forEach(([lon, lat]) => {
+          const p = L.latLng(lat, lon);
+          if (layerBounds) layerBounds.extend(p);
+          else layerBounds = L.latLngBounds(p, p);
+        });
+      }
+    });
   });
   const prevCenter = map.getCenter();
   const prevZoom = map.getZoom();
   if (layerBounds && layerBounds.isValid && layerBounds.isValid()) {
+    map.invalidateSize();
     map.fitBounds(layerBounds, {animate: false, padding: [80, 80]});
     updateOverview();
+    // Give Leaflet a moment to finish internal pan/zoom settle
+    await new Promise(r => setTimeout(r, 400));
   }
 
   // Hide map UI controls before capture (zoom, fullscreen, attribution, measure, legend control)
@@ -3840,7 +3871,7 @@ async function doExport() {
     }
   });
 
-  // Wait for tiles after fit + hide
+  // Wait for tiles after controls hidden
   await new Promise(r => setTimeout(r, 800));
 
   // Capture the map area (clean — centered on data)
