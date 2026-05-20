@@ -338,12 +338,27 @@
   }
   #right-panel.collapsed { width: 0 !important; min-width: 0 !important; padding: 0 !important; overflow: hidden; border-left: none; }
   #feature-info { padding: 10px 12px; font-size: 11px; }
-  #feature-info .fi-title { font-weight: 700; color: #63b3ed; font-size: 12px; margin-bottom: 6px; }
+  #feature-info .fi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  #feature-info .fi-title { font-weight: 700; color: #63b3ed; font-size: 12px; }
+  #feature-info .fi-layer-name { font-size: 10px; color: #718096; margin-bottom: 4px; }
+  #feature-info .fi-layer-name span { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  #feature-info .fi-geom-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #2d3748; color: #a0aec0; margin-left: 6px; }
+  #feature-info .fi-nav { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+  #feature-info .fi-nav button { background: #2d3748; border: 1px solid #4a5568; border-radius: 3px; color: #e2e8f0; cursor: pointer; font-size: 10px; padding: 1px 6px; }
+  #feature-info .fi-nav button:hover { background: #4a5568; }
+  #feature-info .fi-nav span { font-size: 10px; color: #718096; }
+  #feature-info .fi-actions { display: flex; gap: 4px; margin-bottom: 6px; }
+  #feature-info .fi-actions button { font-size: 10px; padding: 2px 8px; background: #2d3748; border: 1px solid #4a5568; border-radius: 3px; color: #e2e8f0; cursor: pointer; }
+  #feature-info .fi-actions button:hover { background: #4a5568; }
+  #feature-info .fi-coords { font-size: 10px; color: #718096; margin-bottom: 6px; font-family: monospace; }
+  #feature-info .fi-props { max-height: 260px; overflow-y: auto; }
   #feature-info table { width: 100%; border-collapse: collapse; }
   #feature-info td { padding: 3px 0; vertical-align: top; }
   #feature-info td:first-child { color: #718096; padding-right: 6px; white-space: nowrap; }
   #feature-info td:last-child { color: #e2e8f0; font-weight: 500; word-break: break-word; }
-  .fi-empty { color: #4a5568; font-style: italic; font-size: 11px; margin-top: 6px; }
+  .fi-empty { color: #4a5648; font-style: italic; font-size: 11px; margin-top: 6px; }
+  .fi-highlight { animation: fi-flash 0.6s ease-out; }
+  @keyframes fi-flash { 0% { box-shadow: 0 0 0 2px #63b3ed; } 100% { box-shadow: none; } }
 
   /* Attribute table */
   #attr-table-section { border-top: 1px solid #2d3748; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
@@ -476,6 +491,14 @@
   body.light #feature-info td:first-child { color: #718096; }
   body.light #feature-info td:last-child { color: #2d3748; }
   body.light #feature-info .fi-title { color: #2b6cb0; }
+  body.light #feature-info .fi-layer-name { color: #718096; }
+  body.light #feature-info .fi-geom-badge { background: #edf2f7; color: #4a5568; }
+  body.light #feature-info .fi-nav button { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
+  body.light #feature-info .fi-nav button:hover { background: #e2e8f0; }
+  body.light #feature-info .fi-nav span { color: #718096; }
+  body.light #feature-info .fi-actions button { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
+  body.light #feature-info .fi-actions button:hover { background: #e2e8f0; }
+  body.light #feature-info .fi-coords { color: #718096; }
   body.light .fi-empty { color: #a0aec0; }
   body.light #attr-table th { background: #f7fafc; color: #2b6cb0; border-bottom-color: #e2e8f0; }
   body.light #attr-table td { color: #4a5568; border-bottom-color: #edf2f7; }
@@ -963,11 +986,148 @@ function updateOverview() {
 }
 map.on('moveend',updateOverview); map.on('zoomend',updateOverview);
 
-function showFeatureInfo(props) {
+let _fiLayerId = null;
+let _fiIndex = -1;
+let _fiHighlightLayer = null;
+
+function clearFeatureHighlight() {
+  if (_fiHighlightLayer) { map.removeLayer(_fiHighlightLayer); _fiHighlightLayer = null; }
+}
+
+function highlightFeature(leafletLayer) {
+  clearFeatureHighlight();
+  try {
+    const json = leafletLayer.toGeoJSON();
+    _fiHighlightLayer = L.geoJSON(json, {
+      style: { color: '#63b3ed', weight: 3, fillColor: '#63b3ed', fillOpacity: 0.25, dashArray: '6 4' },
+      pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 12, color: '#63b3ed', weight: 3, fillColor: '#63b3ed', fillOpacity: 0.25 })
+    }).addTo(map);
+  } catch(e) {}
+}
+
+function showFeatureInfo(props, layerId, leafletLayer, featureIndex) {
+  _fiLayerId = layerId || null;
+  _fiIndex = (featureIndex !== undefined) ? featureIndex : -1;
   const el = document.getElementById('feature-info');
-  const rows = Object.entries(props).map(([k,v]) => `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`).join('');
-  const title = props.site || props.name || props.NAME || props.Name || 'Feature';
-  el.innerHTML = `<div class="fi-title">${escapeHtml(title)}</div><table>${rows}</table>`;
+
+  // Ensure Feature Info section is visible
+  const header = el.previousElementSibling;
+  if (header && header.classList.contains('collapsed')) {
+    header.classList.remove('collapsed');
+    el.classList.remove('hidden');
+  }
+
+  // Layer info
+  const info = layerId ? uploadedLayers.find(l => l.id === layerId) : null;
+  const layerName = info ? info.name : '';
+  const layerColor = info ? info.color : '#718096';
+  const geomType = props._geomType || (leafletLayer ? detectGeomType(leafletLayer) : '');
+  delete props._geomType;
+
+  // Title
+  const title = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || 'Feature';
+
+  // Coordinates
+  let coords = '';
+  if (leafletLayer) {
+    try {
+      const ll = leafletLayer.getLatLng ? leafletLayer.getLatLng() : leafletLayer.getBounds ? leafletLayer.getBounds().getCenter() : null;
+      if (ll) coords = `${ll.lat.toFixed(6)}, ${ll.lng.toFixed(6)}`;
+    } catch(e) {}
+  }
+
+  // Feature count / nav
+  const total = info ? info.featureCount : 0;
+  const navHtml = (info && total > 1) ? `
+    <div class="fi-nav">
+      <button onclick="fiPrev()" title="Previous feature">&#x25C0;</button>
+      <span>Feature ${_fiIndex + 1} of ${total}</span>
+      <button onclick="fiNext()" title="Next feature">&#x25B6;</button>
+    </div>` : '';
+
+  // Actions
+  const actionsHtml = `
+    <div class="fi-actions">
+      <button onclick="fiZoomTo()" title="Zoom to feature">Zoom</button>
+      <button onclick="fiCopyAttrs()" title="Copy attributes to clipboard">Copy</button>
+      <button onclick="fiClear()" title="Clear feature info">Clear</button>
+    </div>`;
+
+  // Property rows
+  const rows = Object.entries(props).filter(([k]) => k !== '_leaflet_id').map(([k,v]) =>
+    `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(String(v))}</td></tr>`
+  ).join('');
+
+  el.innerHTML = `
+    <div class="fi-layer-name"><span style="background:${layerColor}"></span>${escapeHtml(layerName)}${geomType ? `<span class="fi-geom-badge">${escapeHtml(geomType)}</span>` : ''}</div>
+    <div class="fi-header"><div class="fi-title">${escapeHtml(title)}</div></div>
+    ${coords ? `<div class="fi-coords">${coords}</div>` : ''}
+    ${navHtml}
+    ${actionsHtml}
+    <div class="fi-props"><table>${rows}</table></div>`;
+
+  // Highlight on map
+  if (leafletLayer) highlightFeature(leafletLayer);
+}
+
+function detectGeomType(layer) {
+  try {
+    const json = layer.toGeoJSON();
+    const t = json.geometry.type;
+    if (t.includes('Point')) return 'Point';
+    if (t.includes('Line')) return 'Line';
+    if (t.includes('Polygon')) return 'Polygon';
+    return t;
+  } catch(e) { return ''; }
+}
+
+function fiZoomTo() {
+  const info = _fiLayerId ? uploadedLayers.find(l => l.id === _fiLayerId) : null;
+  if (!info) return;
+  const layers = [];
+  info.layer.eachLayer(l => layers.push(l));
+  if (_fiIndex >= 0 && _fiIndex < layers.length) {
+    const l = layers[_fiIndex];
+    if (l.getLatLng) map.setView(l.getLatLng(), Math.max(map.getZoom(), 14), { animate: true });
+    else if (l.getBounds) map.fitBounds(l.getBounds().pad(0.3), { animate: true });
+  }
+}
+
+function fiPrev() {
+  const info = _fiLayerId ? uploadedLayers.find(l => l.id === _fiLayerId) : null;
+  if (!info || _fiIndex < 0) return;
+  const layers = [];
+  info.layer.eachLayer(l => layers.push(l));
+  const newIdx = (_fiIndex - 1 + layers.length) % layers.length;
+  const sub = layers[newIdx];
+  const props = sub.feature ? sub.feature.properties : {};
+  showFeatureInfo(props, _fiLayerId, sub, newIdx);
+}
+
+function fiNext() {
+  const info = _fiLayerId ? uploadedLayers.find(l => l.id === _fiLayerId) : null;
+  if (!info || _fiIndex < 0) return;
+  const layers = [];
+  info.layer.eachLayer(l => layers.push(l));
+  const newIdx = (_fiIndex + 1) % layers.length;
+  const sub = layers[newIdx];
+  const props = sub.feature ? sub.feature.properties : {};
+  showFeatureInfo(props, _fiLayerId, sub, newIdx);
+}
+
+function fiCopyAttrs() {
+  const el = document.querySelector('#feature-info .fi-props table');
+  if (!el) return;
+  const text = Array.from(el.rows).map(r => r.cells[0].textContent + ': ' + r.cells[1].textContent).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Attributes copied', 'success')).catch(() => showToast('Copy failed', 'error'));
+}
+
+function fiClear() {
+  clearFeatureHighlight();
+  _fiLayerId = null;
+  _fiIndex = -1;
+  const el = document.getElementById('feature-info');
+  el.innerHTML = '<div class="fi-empty">Click a feature on the map to inspect its attributes.</div>';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1010,8 +1170,9 @@ function addUploadedGeoJSON(geojson, name, color) {
       if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
 
       // Click → feature info
+      const fi = featureCount - 1;
       layer.on('click', () => {
-        showFeatureInfo(props);
+        showFeatureInfo(props, id, layer, fi);
       });
     }
   }).addTo(map);
@@ -1500,7 +1661,7 @@ function rebuildLayerWithShape(info, svgPath) {
         const props = feature.properties || {};
         const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
         if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
-        layer.on('click', () => showFeatureInfo(props));
+        layer.on('click', () => showFeatureInfo(props, info.id, layer));
       }
     }).addTo(map);
   } else {
@@ -1521,7 +1682,7 @@ function rebuildLayerWithShape(info, svgPath) {
         const props = feature.properties || {};
         const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
         if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
-        layer.on('click', () => showFeatureInfo(props));
+        layer.on('click', () => showFeatureInfo(props, info.id, layer));
       }
     }).addTo(map);
   }
@@ -1560,11 +1721,11 @@ function applyCategorized(id) {
       const c = colorMap[v] || '#718096';
       return L.circleMarker(latlng, { radius:7, color:'white', weight:1.2, fillColor:c, fillOpacity:0.9 });
     },
-    onEachFeature: (feature, layer) => {
+    onEachFeature: (feature, layer, context) => {
       const props = feature.properties || {};
       const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
       if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
-      layer.on('click', () => showFeatureInfo(props));
+      layer.on('click', () => showFeatureInfo(props, info.id, layer));
     }
   }).addTo(map);
 
@@ -1625,7 +1786,7 @@ function applyGraduated(id) {
       const props = feature.properties || {};
       const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
       if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
-      layer.on('click', () => showFeatureInfo(props));
+      layer.on('click', () => showFeatureInfo(props, info.id, layer));
     }
   }).addTo(map);
 
@@ -2852,7 +3013,10 @@ function loadAttrTable(layerId) {
     tr.addEventListener('click', () => {
       tbody.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
       tr.classList.add('selected');
-      showFeatureInfo(props);
+      const layers = [];
+      info.layer.eachLayer(l => layers.push(l));
+      const sub = layers[i];
+      showFeatureInfo(props, info.id, sub, i);
       zoomToFeature(info, i);
     });
     tbody.appendChild(tr);
