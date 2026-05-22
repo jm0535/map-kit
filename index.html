@@ -1039,6 +1039,9 @@
       <button class="digitize-btn" id="dig-select-rect" onclick="startSelectMode('rect')" title="Rectangle select">&#x25fb;</button>
       <button class="digitize-btn" id="dig-select-circle" onclick="startSelectMode('circle')" title="Circle select">&#x25ef;</button>
       <div class="digitize-sep"></div>
+      <button class="digitize-btn" id="dig-undo" onclick="historyUndo()" title="Undo (Ctrl+Z)" disabled>&#x21B6;</button>
+      <button class="digitize-btn" id="dig-redo" onclick="historyRedo()" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>&#x21B7;</button>
+      <div class="digitize-sep"></div>
       <button class="digitize-btn" id="dig-cancel" onclick="cancelDigitize()" title="Cancel / clear selection (Esc)" disabled>&#x2716;</button>
     </div>
     <svg id="north-arrow" viewBox="0 0 36 36">
@@ -1543,6 +1546,133 @@ function initLegendState(info) {
 // ═══════════════════════════════════════════════════════════════════════════
 // DIGITIZING (QGIS-STYLE POINT/LINE/POLYGON DRAWING)
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// UNDO / REDO HISTORY (per-session, max 100 entries)
+// Each entry: { type: 'add'|'delete'|'edit', layerId, index, before, after }
+// `before` / `after` are deep-cloned GeoJSON Feature snapshots (or null).
+// ═══════════════════════════════════════════════════════════════════════════
+const HISTORY_MAX = 100;
+let _undoStack = [];
+let _redoStack = [];
+
+function _cloneFeature(f) { return f ? JSON.parse(JSON.stringify(f)) : null; }
+
+function _findLeafletSubForIndex(info, index) {
+  let found = null;
+  if (info && info.layer && info.layer.eachLayer) {
+    info.layer.eachLayer(sub => {
+      if (sub._mkFeatureIndex === index) found = sub;
+    });
+  }
+  return found;
+}
+
+// Build a styled Leaflet sublayer for a single feature using the same
+// visual conventions as _confirmAttrForm. Tags it with _mkFeatureIndex.
+function _buildSubLayerForFeature(info, feature, index) {
+  const gj = { type: 'FeatureCollection', features: [feature] };
+  const ll = L.geoJSON(gj, {
+    style: { color: info.color || '#63b3ed', weight: 2, fillColor: info.color || '#63b3ed', fillOpacity: 0.2 },
+    pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+      radius: 6, color: 'white', weight: 1.2,
+      fillColor: info.color || '#63b3ed', fillOpacity: 0.9
+    }),
+    onEachFeature: (f, layer) => {
+      const props = f.properties || {};
+      const label = props.name || '';
+      if (label) layer.bindTooltip(String(label), { className: 'site-tooltip', direction: 'top', offset: [0, -8] });
+      layer.on('click', () => showFeatureInfo(props, info.id, layer));
+    }
+  });
+  let sub = null;
+  ll.eachLayer(s => { sub = s; });
+  if (sub) sub._mkFeatureIndex = index;
+  return sub;
+}
+
+// Single primitive: replace (or add/remove) feature at index in a layer.
+// newFeature = null → delete; null→feature = add; feature→feature = edit.
+function _applyFeatureMutation(layerId, index, newFeature) {
+  const info = uploadedLayers.find(l => l.id === layerId);
+  if (!info) return;
+  // Remove existing sublayer at this index, if any
+  const existing = _findLeafletSubForIndex(info, index);
+  if (existing) info.layer.removeLayer(existing);
+  if (newFeature) {
+    // Ensure array slot exists
+    info.geojsonFeatures[index] = _cloneFeature(newFeature);
+    if (!info.properties) info.properties = [];
+    info.properties[index] = info.geojsonFeatures[index].properties || {};
+    const sub = _buildSubLayerForFeature(info, info.geojsonFeatures[index], index);
+    if (sub) info.layer.addLayer(sub);
+  } else {
+    // Delete — leave a hole (null) so other indices remain stable
+    info.geojsonFeatures[index] = null;
+    if (info.properties) info.properties[index] = null;
+  }
+  // Recompute featureCount as non-null entries
+  info.featureCount = info.geojsonFeatures.filter(Boolean).length;
+  const countEl = document.querySelector(`[data-layer-id="${info.id}"] .layer-count`);
+  if (countEl) countEl.textContent = info.featureCount;
+  updateStats();
+  updateFeatureCount();
+  refreshMapLegend();
+}
+
+function _updateHistoryButtons() {
+  const u = document.getElementById('dig-undo');
+  const r = document.getElementById('dig-redo');
+  if (u) u.disabled = _undoStack.length === 0;
+  if (r) r.disabled = _redoStack.length === 0;
+}
+
+function historyPush(entry) {
+  _undoStack.push({
+    type: entry.type,
+    layerId: entry.layerId,
+    index: entry.index,
+    before: _cloneFeature(entry.before),
+    after: _cloneFeature(entry.after),
+  });
+  if (_undoStack.length > HISTORY_MAX) _undoStack.shift();
+  _redoStack = []; // new action invalidates redo
+  _updateHistoryButtons();
+}
+
+function historyUndo() {
+  const e = _undoStack.pop();
+  if (!e) return;
+  _applyFeatureMutation(e.layerId, e.index, e.before);
+  _redoStack.push(e);
+  _updateHistoryButtons();
+  showToast(`Undo: ${e.type}`, 'info');
+}
+
+function historyRedo() {
+  const e = _redoStack.pop();
+  if (!e) return;
+  _applyFeatureMutation(e.layerId, e.index, e.after);
+  _undoStack.push(e);
+  _updateHistoryButtons();
+  showToast(`Redo: ${e.type}`, 'info');
+}
+
+function historyClear() {
+  _undoStack = []; _redoStack = []; _updateHistoryButtons();
+}
+
+// Keyboard shortcuts (text inputs are excluded so typing isn't hijacked)
+document.addEventListener('keydown', e => {
+  const tag = (e.target && e.target.tagName || '').toLowerCase();
+  const isText = tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable);
+  if (isText) return;
+  const meta = e.ctrlKey || e.metaKey;
+  if (!meta) return;
+  const k = e.key.toLowerCase();
+  if (k === 'z' && !e.shiftKey) { e.preventDefault(); historyUndo(); }
+  else if ((k === 'y') || (k === 'z' && e.shiftKey)) { e.preventDefault(); historyRedo(); }
+});
+
 let _digMode = null;       // 'point' | 'line' | 'polygon' | null
 let _digLatLngs = [];      // collected vertices
 let _digTempLayer = null;  // temporary polyline/polygon on map
@@ -1784,23 +1914,17 @@ function _confirmAttrForm() {
 
   // Add to drawn features layer
   const info = _getDrawnLayer();
+  const newIndex = info.geojsonFeatures.length;
   info.geojsonFeatures.push(feature);
   info.properties.push(feature.properties);
-  info.featureCount = info.geojsonFeatures.length;
+  info.featureCount = info.geojsonFeatures.filter(Boolean).length;
 
-  // Add Leaflet layer to the group
-  const gj = { type: 'FeatureCollection', features: [feature] };
-  const leafletLayer = L.geoJSON(gj, {
-    style: { color: '#63b3ed', weight: 2, fillColor: '#63b3ed', fillOpacity: 0.2 },
-    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 6, color: 'white', weight: 1.2, fillColor: '#63b3ed', fillOpacity: 0.9 }),
-    onEachFeature: (f, layer) => {
-      const props = f.properties || {};
-      const label = props.name || '';
-      if (label) layer.bindTooltip(String(label), { className: 'site-tooltip', direction: 'top', offset: [0, -8] });
-      layer.on('click', () => showFeatureInfo(props, info.id, layer));
-    }
-  });
-  leafletLayer.eachLayer(sub => info.layer.addLayer(sub));
+  // Build tagged Leaflet sublayer and add to the group
+  const sub = _buildSubLayerForFeature(info, feature, newIndex);
+  if (sub) info.layer.addLayer(sub);
+
+  // History: record the add
+  historyPush({ type: 'add', layerId: info.id, index: newIndex, before: null, after: feature });
 
   // Update UI
   updateStats();
@@ -1840,6 +1964,10 @@ let _editMidpointMarkers = [];
 let _editDragIndex = -1;
 let _editIsMidpoint = false;
 let _editMoveFeature = false;
+let _editPreSnapshot = null;   // GeoJSON snapshot before current edit session
+let _editPreIndex = -1;
+let _editPreLayerId = null;
+let _editDirty = false;        // true after first vertex mutation
 
 function startEditMode() {
   if (_editMode) { cancelEditMode(); return; }
@@ -1894,6 +2022,31 @@ function _setupEdit(leafletLayer, info) {
   const geo = leafletLayer.toGeoJSON ? leafletLayer.toGeoJSON() : leafletLayer.feature;
   if (!geo) return;
 
+  // Ensure the sublayer is tagged with a stable index so history can target it.
+  if (info && typeof leafletLayer._mkFeatureIndex !== 'number') {
+    const sourceGeo = geo;
+    let idx = info.geojsonFeatures.findIndex(f => f &&
+      f.geometry && f.geometry.type === sourceGeo.geometry.type &&
+      JSON.stringify(f.geometry.coordinates) === JSON.stringify(sourceGeo.geometry.coordinates));
+    if (idx < 0) {
+      // Fallback: append
+      idx = info.geojsonFeatures.length;
+      info.geojsonFeatures.push(_cloneFeature(sourceGeo));
+    }
+    leafletLayer._mkFeatureIndex = idx;
+  }
+  // Snapshot pre-edit state once per editing session for this feature.
+  // _setupEdit is re-called after midpoint inserts — don't clobber baseline.
+  if (info && typeof leafletLayer._mkFeatureIndex === 'number') {
+    const idx = leafletLayer._mkFeatureIndex;
+    if (_editPreLayerId !== info.id || _editPreIndex !== idx || !_editPreSnapshot) {
+      _editPreSnapshot = _cloneFeature(info.geojsonFeatures[idx]);
+      _editPreIndex = idx;
+      _editPreLayerId = info.id;
+      _editDirty = false;
+    }
+  }
+
   const type = geo.geometry.type;
   const coords = geo.geometry.coordinates;
 
@@ -1915,7 +2068,7 @@ function _setupEdit(leafletLayer, info) {
     }).addTo(map);
     m.on('dragstart', () => { _editDragIndex = i; _editIsMidpoint = false; });
     m.on('drag', e => _onVertexDrag(e, i, false));
-    m.on('dragend', () => { _editDragIndex = -1; });
+    m.on('dragend', () => { _editDragIndex = -1; _commitEditHistory(); });
     m.on('dblclick', () => _deleteVertex(i));
     _editVertexMarkers.push(m);
   });
@@ -1933,7 +2086,7 @@ function _setupEdit(leafletLayer, info) {
       const segIndex = i;
       m.on('dragstart', () => { _editDragIndex = segIndex; _editIsMidpoint = true; });
       m.on('drag', e => _onVertexDrag(e, segIndex, true));
-      m.on('dragend', () => { _editDragIndex = -1; _editIsMidpoint = false; });
+      m.on('dragend', () => { _editDragIndex = -1; _editIsMidpoint = false; _commitEditHistory(); });
       _editMidpointMarkers.push(m);
     }
   }
@@ -1942,6 +2095,7 @@ function _setupEdit(leafletLayer, info) {
 }
 
 function _onVertexDrag(e, index, isMidpoint) {
+  _editDirty = true;
   const latlng = e.latlng;
   const geo = _editTargetLayer.toGeoJSON ? _editTargetLayer.toGeoJSON() : _editTargetLayer.feature;
   if (!geo) return;
@@ -2000,37 +2154,62 @@ function _onVertexDrag(e, index, isMidpoint) {
 }
 
 function _deleteVertex(index) {
-  const geo = _editTargetLayer.toGeoJSON ? _editTargetLayer.toGeoJSON() : _editTargetLayer.feature;
-  if (!geo) return;
-  const type = geo.geometry.type;
+  if (!_editTargetLayer || !_editTargetInfo) return;
+  const featIdx = _editTargetLayer._mkFeatureIndex;
+  if (typeof featIdx !== 'number') return;
+  const info = _editTargetInfo;
+  const current = info.geojsonFeatures[featIdx];
+  if (!current) return;
+  const before = _cloneFeature(current);
+  const type = current.geometry.type;
+
   if (type === 'Point') {
-    // Delete whole point feature
-    if (_editTargetInfo) {
-      const idx = _editTargetInfo.geojsonFeatures.indexOf(geo);
-      if (idx >= 0) {
-        _editTargetInfo.geojsonFeatures.splice(idx, 1);
-        _editTargetInfo.properties.splice(idx, 1);
-        _editTargetInfo.featureCount--;
-      }
-      _editTargetInfo.layer.removeLayer(_editTargetLayer);
-    }
+    // Delete whole point feature → history-recorded delete
+    historyPush({ type: 'delete', layerId: info.id, index: featIdx, before, after: null });
+    _applyFeatureMutation(info.id, featIdx, null);
     cancelEditMode();
     showToast('Point feature deleted', 'success');
     return;
   }
   if (type === 'LineString') {
-    if (geo.geometry.coordinates.length <= 2) { showToast('Line needs at least 2 vertices', 'error'); return; }
-    geo.geometry.coordinates.splice(index, 1);
-    _editTargetLayer.setLatLngs(geo.geometry.coordinates.map(c => L.latLng(c[1], c[0])));
+    if (current.geometry.coordinates.length <= 2) { showToast('Line needs at least 2 vertices', 'error'); return; }
+    const after = _cloneFeature(current);
+    after.geometry.coordinates.splice(index, 1);
+    historyPush({ type: 'edit', layerId: info.id, index: featIdx, before, after });
+    _applyFeatureMutation(info.id, featIdx, after);
   } else if (type === 'Polygon') {
-    const ring = geo.geometry.coordinates[0];
+    const ring = current.geometry.coordinates[0];
     if (ring.length <= 4) { showToast('Polygon needs at least 3 vertices', 'error'); return; }
-    ring.splice(index, 1);
-    ring[ring.length - 1] = ring[0];
-    _editTargetLayer.setLatLngs(ring.map(c => L.latLng(c[1], c[0])));
+    const after = _cloneFeature(current);
+    const newRing = after.geometry.coordinates[0];
+    newRing.splice(index, 1);
+    newRing[newRing.length - 1] = newRing[0]; // keep closed
+    historyPush({ type: 'edit', layerId: info.id, index: featIdx, before, after });
+    _applyFeatureMutation(info.id, featIdx, after);
   }
-  _setupEdit(_editTargetLayer, _editTargetInfo);
+  // Re-attach edit handles to the rebuilt sublayer
+  const newSub = _findLeafletSubForIndex(info, featIdx);
+  if (newSub) _setupEdit(newSub, info);
   showToast('Vertex deleted', 'success');
+}
+
+function _commitEditHistory() {
+  if (!_editDirty || _editPreIndex < 0 || !_editPreLayerId) return;
+  const info = uploadedLayers.find(l => l.id === _editPreLayerId);
+  if (!info) { _editDirty = false; return; }
+  const after = _cloneFeature(info.geojsonFeatures[_editPreIndex]);
+  // Skip if nothing actually changed
+  if (JSON.stringify(after) === JSON.stringify(_editPreSnapshot)) {
+    _editDirty = false;
+    return;
+  }
+  historyPush({
+    type: 'edit', layerId: _editPreLayerId, index: _editPreIndex,
+    before: _editPreSnapshot, after,
+  });
+  // Roll snapshot forward for next edit
+  _editPreSnapshot = after;
+  _editDirty = false;
 }
 
 function _clearEditMarkers() {
@@ -2041,10 +2220,16 @@ function _clearEditMarkers() {
 }
 
 function cancelEditMode() {
+  // Commit any pending vertex edits to history before closing
+  _commitEditHistory();
   _editMode = false;
   _clearEditMarkers();
   _editTargetLayer = null;
   _editTargetInfo = null;
+  _editPreSnapshot = null;
+  _editPreIndex = -1;
+  _editPreLayerId = null;
+  _editDirty = false;
   document.getElementById('dig-edit').classList.remove('active');
   document.getElementById('dig-cancel').disabled = true;
   // Remove click handlers
