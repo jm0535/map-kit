@@ -546,6 +546,17 @@
     white-space: nowrap;
   }
   .leaflet-tooltip.layout-label::before { display: none !important; }
+  /* DOM-overlay labels rendered inside #layout-paper (bypasses Leaflet tooltip pane) */
+  #layout-paper .layout-feature-label {
+    position: absolute; z-index: 900;
+    transform: translate(-50%, -100%);
+    background: rgba(255,255,255,0.94);
+    border: 1px solid #1a202c; color: #1a202c;
+    font: bold 10px Arial, Helvetica, sans-serif;
+    padding: 2px 6px; border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    pointer-events: none; white-space: nowrap;
+  }
 
   /* Leaflet overrides */
   .leaflet-control-zoom a, .leaflet-control-fullscreen a {
@@ -4749,6 +4760,9 @@ async function buildLayout() {
   const paper = document.getElementById('layout-paper');
   const paperW = 1000;
   const paperH = 562; // 16:9
+  const pendingLayoutLabels = [];
+  // Wipe any previous label overlays
+  paper.querySelectorAll('.layout-feature-label').forEach(n => n.remove());
   paper.style.width = paperW + 'px';
   paper.style.height = paperH + 'px';
 
@@ -4845,35 +4859,17 @@ async function buildLayout() {
     }
     layoutLayers.push(newLayer);
 
-    // ── Replicate permanent feature labels from source layer ──
-    // Build a map of feature-key → label text from the source layer.
-    const sourceLabels = new Map();
-    let srcIdx = 0;
+    // ── Harvest permanent labels (text + latlng) for DOM-overlay rendering ──
     info.layer.eachLayer(sub => {
       const tt = sub.getTooltip && sub.getTooltip();
-      if (tt && tt.options && tt.options.permanent) {
-        const key = sub.feature ? JSON.stringify(sub.feature.properties || {}) + '|' + srcIdx : String(srcIdx);
-        sourceLabels.set(key, String(tt.getContent ? tt.getContent() : tt._content || ''));
-        // Also store by pure index as a fallback
-        sourceLabels.set('idx:' + srcIdx, String(tt.getContent ? tt.getContent() : tt._content || ''));
-      }
-      srcIdx++;
+      if (!tt || !tt.options || !tt.options.permanent) return;
+      const text = String(tt.getContent ? tt.getContent() : (tt._content || ''));
+      if (!text) return;
+      let latlng = null;
+      if (sub.getLatLng) latlng = sub.getLatLng();
+      else if (sub.getBounds) latlng = sub.getBounds().getCenter();
+      if (latlng) pendingLayoutLabels.push({ text, latlng });
     });
-    if (sourceLabels.size > 0) {
-      let dstIdx = 0;
-      newLayer.eachLayer(sub => {
-        const key = sub.feature ? JSON.stringify(sub.feature.properties || {}) + '|' + dstIdx : String(dstIdx);
-        const text = sourceLabels.get(key) || sourceLabels.get('idx:' + dstIdx);
-        if (text) {
-          sub.bindTooltip(text, {
-            permanent: true, className: 'site-tooltip layout-label',
-            direction: 'top', offset: [0, -14], opacity: 1
-          });
-          if (sub._map) sub.openTooltip();
-        }
-        dstIdx++;
-      });
-    }
 
     // Compute bounds
     if (newLayer.getBounds && newLayer.getBounds().isValid && newLayer.getBounds().isValid()) {
@@ -4916,6 +4912,18 @@ async function buildLayout() {
 
   // ── Wait for basemap tiles to actually load (not fixed timeout) ──
   await _waitForTiles(basemap, 3000);
+
+  // ── Render harvested permanent labels as DOM overlays on the paper ──
+  pendingLayoutLabels.forEach(({ text, latlng }) => {
+    const pt = layoutMap.latLngToContainerPoint(latlng);
+    const el = document.createElement('div');
+    el.className = 'layout-feature-label';
+    el.textContent = text;
+    // Position with translate so center-x aligns over the marker, sit above it
+    el.style.left = pt.x + 'px';
+    el.style.top = (pt.y - 16) + 'px';
+    paper.appendChild(el);
+  });
 
   // ── Build overlays in parallel with overview ──
   // Title
@@ -5024,8 +5032,19 @@ async function buildLayout() {
   if (inclProfile && activeProfiles.length > 0) {
     profileEl.classList.add('show');
     const ctx = document.getElementById('layout-profile-canvas').getContext('2d');
+    // Clean series label: strip common file extensions and replace _ with space.
+    const cleanLabel = s => String(s || '').replace(/\.(csv|geojson|json|kml|gpx|zip|shp|tif|tiff)$/i, '').replace(/_/g, ' ');
+    // Find overall elevation range to set sensible y-axis ticks.
+    let elevMin = Infinity, elevMax = -Infinity;
+    activeProfiles.forEach(p => p.points.forEach(pt => {
+      if (isFinite(pt.elev)) { if (pt.elev < elevMin) elevMin = pt.elev; if (pt.elev > elevMax) elevMax = pt.elev; }
+    }));
+    if (!isFinite(elevMin)) { elevMin = 0; elevMax = 100; }
+    const pad = Math.max(50, (elevMax - elevMin) * 0.08);
+    const ySuggMin = Math.floor((elevMin - pad) / 100) * 100;
+    const ySuggMax = Math.ceil((elevMax + pad) / 100) * 100;
     const datasets = activeProfiles.map(p => ({
-      label: p.label,
+      label: cleanLabel(p.label),
       data: p.points.map(pt => ({ x: pt.dist, y: pt.elev })),
       borderColor: p.color, backgroundColor: hexToRgba(p.color, 0.18),
       fill: true, tension: 0.25, pointRadius: 2, borderWidth: 1.5,
@@ -5037,16 +5056,18 @@ async function buildLayout() {
         responsive: true, maintainAspectRatio: false, animation: false,
         devicePixelRatio: 4,
         plugins: {
-          legend: { labels: { color: '#1a202c', font: { size: 9, family: 'Arial' }, boxWidth: 10 } },
+          legend: { display: activeProfiles.length > 1,
+                    labels: { color: '#1a202c', font: { size: 9, family: 'Arial' }, boxWidth: 10 } },
           tooltip: { enabled: false },
-          title: { display: true, text: 'Elevation profile', color: '#1a202c', font: { size: 10, weight: 'bold', family: 'Arial' } }
+          title: { display: true, text: 'Elevation profile', color: '#1a202c', font: { size: 11, weight: 'bold', family: 'Arial' } }
         },
         scales: {
           x: { type: 'linear', title: { display: true, text: 'Distance (km)', color: '#1a202c', font: { size: 9, family: 'Arial' } },
-               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' } },
+               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' }, maxTicksLimit: 6 },
                grid: { color: '#cbd5e0' } },
-          y: { beginAtZero: false, title: { display: true, text: 'Elevation (m a.s.l.)', color: '#1a202c', font: { size: 9, family: 'Arial' } },
-               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' } },
+          y: { suggestedMin: ySuggMin, suggestedMax: ySuggMax,
+               title: { display: true, text: 'Elevation (m a.s.l.)', color: '#1a202c', font: { size: 9, family: 'Arial' } },
+               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' }, maxTicksLimit: 5 },
                grid: { color: '#cbd5e0' } }
         }
       }
