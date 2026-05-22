@@ -667,6 +667,17 @@
     font-size: 12px; font-weight: bold; color: #63b3ed;
     pointer-events: none; z-index: 1000;
   }
+  #layout-profile {
+    position: absolute; bottom: 12px;
+    left: 50%; transform: translateX(-50%);
+    width: 360px; height: 110px;
+    background: rgba(255,255,255,0.96); border: 1px solid #2d3748;
+    border-radius: 4px; padding: 6px 8px 4px;
+    pointer-events: none; z-index: 1000;
+    display: none;
+  }
+  #layout-profile.show { display: block; }
+  #layout-profile canvas { width: 100% !important; height: 100% !important; }
   .layout-actions {
     display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
   }
@@ -1209,10 +1220,10 @@
     <div class="exp-row">
       <label>Resolution (DPI)</label>
       <select id="exp-dpi">
-        <option value="1">72 DPI (Screen)</option>
-        <option value="2" selected>144 DPI (High)</option>
-        <option value="3">216 DPI (Print)</option>
-        <option value="4">288 DPI (Ultra)</option>
+        <option value="96">96 DPI (Screen)</option>
+        <option value="150">150 DPI (Draft print)</option>
+        <option value="300" selected>300 DPI (Journal print)</option>
+        <option value="600">600 DPI (Line art / poster)</option>
       </select>
     </div>
     <div class="exp-row">
@@ -1251,6 +1262,7 @@
       </div>
       <div id="layout-legend"></div>
       <div id="layout-title"></div>
+      <div id="layout-profile"><canvas id="layout-profile-canvas"></canvas></div>
       <div id="layout-loading"><span class="spinner"></span>Loading tiles…</div>
     </div>
     <div class="layout-actions">
@@ -4703,11 +4715,13 @@ function closeExport() { document.getElementById('export-overlay').classList.rem
 let layoutMap = null;
 let layoutOverviewMap = null;
 let layoutLayers = [];
+let layoutProfileChart = null;
 
 function closeLayoutModal() {
   document.getElementById('layout-modal').classList.remove('show');
   if (layoutMap) { layoutMap.remove(); layoutMap = null; }
   if (layoutOverviewMap) { layoutOverviewMap.remove(); layoutOverviewMap = null; }
+  if (layoutProfileChart) { layoutProfileChart.destroy(); layoutProfileChart = null; }
   layoutLayers.forEach(l => { if (l.remove) l.remove(); });
   layoutLayers = [];
 }
@@ -4954,6 +4968,50 @@ async function buildLayout() {
 
   await _waitForTiles(ovBasemap, 2000);
 
+  // ── Elevation profile inset (publication-friendly, print colors) ──
+  const profileEl = document.getElementById('layout-profile');
+  const inclProfile = document.getElementById('exp-include-profile').checked;
+  if (layoutProfileChart) { layoutProfileChart.destroy(); layoutProfileChart = null; }
+  const activeProfiles = (typeof profileRegistry !== 'undefined' && Array.isArray(profileRegistry))
+    ? profileRegistry.filter(p => {
+        const cb = document.querySelector(`#profile-tabs input[type=checkbox][data-profile="${p.id}"]`);
+        return cb ? cb.checked : true;
+      })
+    : [];
+  if (inclProfile && activeProfiles.length > 0) {
+    profileEl.classList.add('show');
+    const ctx = document.getElementById('layout-profile-canvas').getContext('2d');
+    const datasets = activeProfiles.map(p => ({
+      label: p.label,
+      data: p.points.map(pt => ({ x: pt.dist, y: pt.elev })),
+      borderColor: p.color, backgroundColor: hexToRgba(p.color, 0.18),
+      fill: true, tension: 0.25, pointRadius: 2, borderWidth: 1.5,
+      pointBackgroundColor: p.color, pointBorderColor: '#1a202c', pointBorderWidth: 0.5
+    }));
+    layoutProfileChart = new Chart(ctx, {
+      type: 'line', data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        devicePixelRatio: 4,
+        plugins: {
+          legend: { labels: { color: '#1a202c', font: { size: 9, family: 'Arial' }, boxWidth: 10 } },
+          tooltip: { enabled: false },
+          title: { display: true, text: 'Elevation profile', color: '#1a202c', font: { size: 10, weight: 'bold', family: 'Arial' } }
+        },
+        scales: {
+          x: { type: 'linear', title: { display: true, text: 'Distance (km)', color: '#1a202c', font: { size: 9, family: 'Arial' } },
+               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' } },
+               grid: { color: '#cbd5e0' } },
+          y: { beginAtZero: false, title: { display: true, text: 'Elevation (m a.s.l.)', color: '#1a202c', font: { size: 9, family: 'Arial' } },
+               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' } },
+               grid: { color: '#cbd5e0' } }
+        }
+      }
+    });
+  } else {
+    profileEl.classList.remove('show');
+  }
+
   // Final size/redraw pass in case container dimensions just became real.
   layoutMap.invalidateSize(false);
   if (layoutOverviewMap) layoutOverviewMap.invalidateSize(false);
@@ -5052,13 +5110,14 @@ async function layoutExport(fmt) {
   showToast('Rendering export... please wait');
   try {
     const paper = document.getElementById('layout-paper');
-    const dpiScale = parseInt(document.getElementById('exp-dpi').value) || 2;
-    const targetDpi = dpiScale * 72;
+    const targetDpi = parseInt(document.getElementById('exp-dpi').value) || 300;
+    // html2canvas `scale` oversamples relative to 96 CSS DPI baseline.
+    const dpiScale = targetDpi / 96;
 
     const canvas = await html2canvas(paper, {
       useCORS: true,
       allowTaint: false,
-      scale: dpiScale, // oversample for true high-DPI output
+      scale: dpiScale, // true DPI oversampling vs 96 CSS DPI
       scrollX: 0, scrollY: 0, x: 0, y: 0,
       backgroundColor: document.body.classList.contains('light') ? '#ffffff' : '#1a1d23',
       logging: false
