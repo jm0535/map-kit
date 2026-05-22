@@ -533,6 +533,19 @@
     padding: 4px 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
   }
   .site-tooltip::before { display: none !important; }
+  /* Layout/export labels: smaller, white halo for legibility over any basemap */
+  .leaflet-tooltip.layout-label {
+    background: rgba(255,255,255,0.92) !important;
+    border: 1px solid #1a202c !important;
+    color: #1a202c !important;
+    font-size: 9px !important;
+    font-weight: bold !important;
+    padding: 1px 5px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.35) !important;
+    pointer-events: none !important;
+    white-space: nowrap;
+  }
+  .leaflet-tooltip.layout-label::before { display: none !important; }
 
   /* Leaflet overrides */
   .leaflet-control-zoom a, .leaflet-control-fullscreen a {
@@ -4831,6 +4844,36 @@ async function buildLayout() {
       }).addTo(layoutMap);
     }
     layoutLayers.push(newLayer);
+
+    // ── Replicate permanent feature labels from source layer ──
+    // Build a map of feature-key → label text from the source layer.
+    const sourceLabels = new Map();
+    let srcIdx = 0;
+    info.layer.eachLayer(sub => {
+      const tt = sub.getTooltip && sub.getTooltip();
+      if (tt && tt.options && tt.options.permanent) {
+        const key = sub.feature ? JSON.stringify(sub.feature.properties || {}) + '|' + srcIdx : String(srcIdx);
+        sourceLabels.set(key, String(tt.getContent ? tt.getContent() : tt._content || ''));
+        // Also store by pure index as a fallback
+        sourceLabels.set('idx:' + srcIdx, String(tt.getContent ? tt.getContent() : tt._content || ''));
+      }
+      srcIdx++;
+    });
+    if (sourceLabels.size > 0) {
+      let dstIdx = 0;
+      newLayer.eachLayer(sub => {
+        const key = sub.feature ? JSON.stringify(sub.feature.properties || {}) + '|' + dstIdx : String(dstIdx);
+        const text = sourceLabels.get(key) || sourceLabels.get('idx:' + dstIdx);
+        if (text) {
+          sub.bindTooltip(text, {
+            permanent: true, className: 'site-tooltip layout-label',
+            direction: 'top', offset: [0, -14], opacity: 1
+          });
+          if (sub._map) sub.openTooltip();
+        }
+        dstIdx++;
+      });
+    }
 
     // Compute bounds
     if (newLayer.getBounds && newLayer.getBounds().isValid && newLayer.getBounds().isValid()) {
