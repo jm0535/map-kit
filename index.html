@@ -2516,7 +2516,7 @@ function addLayerToPanel(info) {
   el.innerHTML = `
     <span class="layer-drag-handle" title="Drag to reorder">&#x2630;</span>
     <input type="checkbox" checked>
-    <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}', !this.previousElementSibling.previousElementSibling.checked)" title="Toggle visibility">&#x1F441;</span>
+    <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}')" title="Toggle visibility">&#x1F441;</span>
     <div class="layer-color-swatch" style="background:${info.color}"></div>
     <span class="layer-label" title="${safeName}&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this)" oncontextmenu="zoomToLayer('${info.id}');event.preventDefault();">${safeName}</span>
     <button class="layer-action-btn" onclick="zoomToLayer('${info.id}')" title="Zoom to layer">&#x1f50d;</button>
@@ -2607,6 +2607,8 @@ function renameLayer(id, labelEl) {
 function toggleUploadedLayer(id, on) {
   const info = uploadedLayers.find(l=>l.id===id);
   if (!info) return;
+  // If `on` not specified, infer from current map state and flip it.
+  if (typeof on !== 'boolean') on = !map.hasLayer(info.layer);
   if (on) info.layer.addTo(map); else map.removeLayer(info.layer);
   // Update checkbox and eye icon
   const el = document.querySelector(`.layer-item[data-layer-id="${id}"]`);
