@@ -4705,27 +4705,25 @@ function closeLayoutModal() {
 }
 
 async function buildLayout() {
-  const dpiScale = parseInt(document.getElementById('exp-dpi').value) || 2;
   const fitToLayers = document.getElementById('exp-extent').value === 'fit';
   const inclLeg = document.getElementById('exp-include-legend').checked;
   const titleText = document.getElementById('exp-title').value || '';
   const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
 
-  // ── Size the paper to exact pixel dimensions for target DPI ──
+  // Paper kept at base CSS pixels; html2canvas `scale` produces high DPI.
   const paper = document.getElementById('layout-paper');
-  const baseW = 1000;
-  const baseH = 562; // 16:9
-  const paperW = Math.round(baseW * dpiScale);
-  const paperH = Math.round(baseH * dpiScale);
+  const paperW = 1000;
+  const paperH = 562; // 16:9
   paper.style.width = paperW + 'px';
   paper.style.height = paperH + 'px';
 
-  // ── Destroy previous layout map if exists ──
+  // Callers (previewExport / doExport) must add `.show` to #layout-modal
+  // before calling buildLayout so the Leaflet container has real dimensions.
+
   if (layoutMap) { layoutMap.remove(); layoutMap = null; }
   layoutLayers.forEach(l => { if (l.remove) l.remove(); });
   layoutLayers = [];
 
-  // ── Create fresh dedicated layout map ──
   const mapEl = document.getElementById('layout-map');
   mapEl.style.width = paperW + 'px';
   mapEl.style.height = paperH + 'px';
@@ -4734,15 +4732,16 @@ async function buildLayout() {
     dragging: false, scrollWheelZoom: false,
     doubleClickZoom: false, boxZoom: false
   });
+  layoutMap.invalidateSize(false);
 
-  // ── Add same basemap as main map ──
   const currentBasemapUrl = basemapLayer._url;
   const currentAttribution = basemapLayer.options.attribution;
   const currentMaxNative = basemapLayer.options.maxNativeZoom;
   const basemap = L.tileLayer(currentBasemapUrl, {
     attribution: currentAttribution,
     maxZoom: 20, maxNativeZoom: currentMaxNative || 18,
-    crossOrigin: true
+    crossOrigin: 'anonymous',
+    detectRetina: true
   }).addTo(layoutMap);
   basemap.on('tileerror', ev => {
     ev.tile.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect fill="%232d3748" width="256" height="256"/></svg>';
@@ -4912,7 +4911,10 @@ async function buildLayout() {
 
   await _waitForTiles(ovBasemap, 2000);
 
-  // ── Hide loading spinner ──
+  // Final size/redraw pass in case container dimensions just became real.
+  layoutMap.invalidateSize(false);
+  if (layoutOverviewMap) layoutOverviewMap.invalidateSize(false);
+
   document.getElementById('layout-loading').classList.remove('show');
 }
 
@@ -4969,8 +4971,9 @@ async function previewExport() {
   closeExport();
   showToast('Building layout... please wait');
   try {
-    await buildLayout();
+    // Show modal FIRST so the layout container has real dimensions.
     document.getElementById('layout-modal').classList.add('show');
+    await buildLayout();
   } catch (e) {
     console.error('Layout failed:', e);
     showToast('Layout failed: ' + e.message, 'error');
@@ -4981,33 +4984,45 @@ async function layoutExport(fmt) {
   showToast('Rendering export... please wait');
   try {
     const paper = document.getElementById('layout-paper');
-    const canvas = await html2canvas(paper, {
-      useCORS: true, allowTaint: false, scale: 1,
-      scrollX: 0, scrollY: 0, x: 0, y: 0,
-      backgroundColor: document.body.classList.contains('light') ? '#ffffff' : '#1a1d23'
-    });
     const dpiScale = parseInt(document.getElementById('exp-dpi').value) || 2;
+    const targetDpi = dpiScale * 72;
+
+    const canvas = await html2canvas(paper, {
+      useCORS: true,
+      allowTaint: false,
+      scale: dpiScale, // oversample for true high-DPI output
+      scrollX: 0, scrollY: 0, x: 0, y: 0,
+      backgroundColor: document.body.classList.contains('light') ? '#ffffff' : '#1a1d23',
+      logging: false
+    });
+
+    let imgData;
+    try {
+      imgData = canvas.toDataURL('image/png');
+    } catch (taintErr) {
+      throw new Error('Canvas tainted by cross-origin tile. Try a different basemap or check tile CORS headers. (' + taintErr.message + ')');
+    }
+
     if (fmt === 'png') {
       const link = document.createElement('a');
-      link.download = `map_export_${dpiScale*72}dpi.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.download = `map_export_${targetDpi}dpi.png`;
+      link.href = imgData;
       link.click();
     } else {
       const {jsPDF} = window.jspdf;
-      const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
-      const pw = pdf.internal.pageSize.getWidth();
-      const ph = pdf.internal.pageSize.getHeight();
-      const imgData = canvas.toDataURL('image/png');
-      const imgRatio = canvas.width / canvas.height;
-      let imgW = pw;
-      let imgH = pw / imgRatio;
-      if (imgH > ph) { imgH = ph; imgW = ph * imgRatio; }
-      const imgX = (pw - imgW) / 2;
-      const imgY = (ph - imgH) / 2;
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgW, imgH);
-      pdf.save(`map_export_${dpiScale*72}dpi.pdf`);
+      // PDF page sized to canvas pixels at target DPI (mm).
+      const widthMm = (canvas.width / targetDpi) * 25.4;
+      const heightMm = (canvas.height / targetDpi) * 25.4;
+      const pdf = new jsPDF({
+        orientation: widthMm >= heightMm ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: [widthMm, heightMm],
+        compress: true
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, widthMm, heightMm, undefined, 'FAST');
+      pdf.save(`map_export_${targetDpi}dpi.pdf`);
     }
-    showToast(`${fmt.toUpperCase()} exported at ${dpiScale*72} DPI`, 'success');
+    showToast(`${fmt.toUpperCase()} exported at ${targetDpi} DPI`, 'success');
   } catch (e) {
     console.error('Export failed:', e);
     showToast('Export failed: ' + e.message, 'error');
@@ -5018,8 +5033,12 @@ async function doExport() {
   closeExport();
   showToast('Building layout... please wait');
   try {
+    const modal = document.getElementById('layout-modal');
+    const alreadyOpen = modal.classList.contains('show');
+    if (!alreadyOpen) modal.classList.add('show');
     await buildLayout();
     await layoutExport(exportFormat);
+    if (!alreadyOpen) closeLayoutModal();
   } catch (e) {
     console.error('Export failed:', e);
     showToast('Export failed: ' + e.message, 'error');
