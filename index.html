@@ -683,14 +683,6 @@
     border-radius: 4px; padding: 8px; font-size: 10px; color: #e2e8f0;
     pointer-events: none; z-index: 1000;
   }
-  #layout-title {
-    position: absolute; top: 12px; left: 12px;
-    max-width: 50%;
-    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
-    border-radius: 4px; padding: 6px 12px;
-    font-size: 12px; font-weight: bold; color: #63b3ed;
-    pointer-events: none; z-index: 1000;
-  }
   #layout-profile {
     position: absolute; bottom: 12px;
     left: 50%; transform: translateX(-50%);
@@ -801,7 +793,7 @@
   body.light .layout-header h3 { color: #2b6cb0; }
   body.light #layout-paper { background: #fff; border-color: #e2e8f0; }
   body.light #layout-north, body.light #layout-scale, body.light #layout-overview-wrap,
-  body.light #layout-legend, body.light #layout-title {
+  body.light #layout-legend {
     background: rgba(255,255,255,0.9); border-color: #e2e8f0; color: #2d3748;
   }
   body.light #layout-north { color: #e53e3e; }
@@ -1238,10 +1230,6 @@
   <div id="export-box">
     <h3>Export Map</h3>
     <div class="exp-row">
-      <label>Title</label>
-      <input type="text" id="exp-title" value="Map-Kit · powered by In4Metrix">
-    </div>
-    <div class="exp-row">
       <label>Resolution (DPI)</label>
       <select id="exp-dpi">
         <option value="96">96 DPI (Screen)</option>
@@ -1285,7 +1273,6 @@
         <div id="layout-overview-label">Overview</div>
       </div>
       <div id="layout-legend"></div>
-      <div id="layout-title"></div>
       <div id="layout-profile"><canvas id="layout-profile-canvas"></canvas></div>
       <div id="layout-loading"><span class="spinner"></span>Loading tiles…</div>
     </div>
@@ -4753,7 +4740,6 @@ function closeLayoutModal() {
 async function buildLayout() {
   const fitToLayers = document.getElementById('exp-extent').value === 'fit';
   const inclLeg = document.getElementById('exp-include-legend').checked;
-  const titleText = document.getElementById('exp-title').value || '';
   const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
 
   // Paper kept at base CSS pixels; html2canvas `scale` produces high DPI.
@@ -4926,11 +4912,6 @@ async function buildLayout() {
   });
 
   // ── Build overlays in parallel with overview ──
-  // Title
-  const titleEl = document.getElementById('layout-title');
-  titleEl.textContent = titleText;
-  titleEl.style.display = titleText ? 'block' : 'none';
-
   // Legend
   const legendEl = document.getElementById('layout-legend');
   if (inclLeg) {
