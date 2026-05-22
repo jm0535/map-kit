@@ -220,6 +220,67 @@
     color: #e2e8f0; font-size: 10px; padding: 2px 4px;
   }
 
+  /* Search box */
+  .search-box { display: flex; align-items: center; gap: 4px; }
+  .search-box input {
+    background: #1a1d23; border: 1px solid #2d3748; border-radius: 4px;
+    color: #e2e8f0; font-size: 11px; padding: 3px 8px; width: 180px;
+    outline: none;
+  }
+  .search-box input:focus { border-color: #63b3ed; }
+  .search-box button {
+    background: #2d3748; border: 1px solid #4a5568; border-radius: 4px;
+    color: #e2e8f0; font-size: 12px; cursor: pointer; padding: 3px 8px;
+  }
+  .search-box button:hover { background: #4a5568; }
+
+  /* Layer drag handle */
+  .layer-drag-handle {
+    cursor: grab; font-size: 10px; color: #4a5568; padding: 0 2px;
+    -webkit-user-select: none; user-select: none;
+  }
+  .layer-item.dragging { opacity: 0.5; }
+  .layer-item.drag-over { border-top: 2px solid #63b3ed; }
+
+  /* Bookmarks */
+  .bookmark-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 6px; border-radius: 4px; cursor: pointer;
+    font-size: 11px; color: #e2e8f0;
+  }
+  .bookmark-item:hover { background: rgba(99,179,237,0.08); }
+  .bookmark-item button {
+    background: none; border: none; color: #e53e3e; cursor: pointer;
+    font-size: 11px; opacity: 0; padding: 0 2px;
+  }
+  .bookmark-item:hover button { opacity: 0.6; }
+  .bookmark-item:hover button:hover { opacity: 1; }
+
+  /* Feature selection highlight */
+  .feature-selected { filter: drop-shadow(0 0 4px #63b3ed); }
+
+  /* Edit vertex markers */
+  .edit-vertex {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #e53e3e; border: 2px solid white;
+    box-shadow: 0 0 4px rgba(0,0,0,0.4); cursor: move;
+  }
+  .edit-midpoint {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #f6ad55; border: 2px solid white;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3); cursor: pointer;
+  }
+
+  /* Select box (leaflet-draw-style) */
+  .select-box { border: 2px dashed #63b3ed; background: rgba(99,179,237,0.1); }
+
+  /* Attribute table sorting */
+  #attr-table th { cursor: pointer; position: relative; }
+  #attr-table th.sort-asc::after { content: " ▲"; color: #63b3ed; font-size: 9px; }
+  #attr-table th.sort-desc::after { content: " ▼"; color: #63b3ed; font-size: 9px; }
+  #attr-table tr.filtered-out { display: none; }
+  #attr-table tr.selected { background: rgba(99,179,237,0.15); }
+
   /* Slider */
   .slider-row { margin: 6px 0; }
   .slider-row label { font-size: 11px; color: #a0aec0; display: flex; justify-content: space-between; }
@@ -716,6 +777,18 @@
   body.light .panel-section { border-bottom-color: #e2e8f0; }
   body.light #attr-table-header { background: #f7fafc; color: #2b6cb0; }
   body.light #attr-table-section { border-top-color: #e2e8f0; }
+  body.light .search-box input { background: #f7fafc; border-color: #e2e8f0; color: #2d3748; }
+  body.light .search-box input:focus { border-color: #2b6cb0; }
+  body.light .search-box button { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
+  body.light .search-box button:hover { background: #e2e8f0; }
+  body.light .layer-drag-handle { color: #a0aec0; }
+  body.light .layer-item.drag-over { border-top-color: #2b6cb0; }
+  body.light .bookmark-item { color: #2d3748; }
+  body.light .bookmark-item:hover { background: rgba(43,108,176,0.08); }
+  body.light .bookmark-item button { color: #e53e3e; }
+  body.light #attr-table th.sort-asc::after, body.light #attr-table th.sort-desc::after { color: #2b6cb0; }
+  body.light #attr-table tr.selected { background: rgba(43,108,176,0.12); }
+  body.light .select-box { border-color: #2b6cb0; background: rgba(43,108,176,0.1); }
   body.light #loading { background: rgba(247,250,252,0.8); color: #2b6cb0; }
   body.light .leaflet-control-zoom a, body.light .leaflet-control-fullscreen a { background: #fff !important; color: #2d3748 !important; border-color: #e2e8f0 !important; }
   body.light .leaflet-bar { border-color: #e2e8f0 !important; }
@@ -727,6 +800,10 @@
 <div id="topbar">
   <div class="logo">&#x1f5fa; Map-Kit</div>
   <div class="spacer"></div>
+  <div class="search-box" id="search-box" title="Enter coordinates (lat, lon) or place name">
+    <input type="text" id="goto-search" placeholder="Go to XY or search place…" onkeydown="if(event.key==='Enter')doGotoSearch()">
+    <button onclick="doGotoSearch()">&#x1f50d;</button>
+  </div>
   <div class="coord-display" id="coord-display">Move cursor over map</div>
   <div class="scale-display" id="zoom-display">Zoom: --</div>
   <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode" style="background:none;border:1px solid #2d3748;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:14px;color:#e2e8f0;">&#x1f319;</button>
@@ -898,7 +975,11 @@
       <button class="digitize-btn" id="dig-line" onclick="startDigitize('line')" title="Draw line">&#x2500;</button>
       <button class="digitize-btn" id="dig-polygon" onclick="startDigitize('polygon')" title="Draw polygon">&#x2B1F;</button>
       <div class="digitize-sep"></div>
-      <button class="digitize-btn" id="dig-cancel" onclick="cancelDigitize()" title="Cancel drawing (Esc)" disabled>&#x2716;</button>
+      <button class="digitize-btn" id="dig-edit" onclick="startEditMode()" title="Edit features (move vertices)">&#x270f;</button>
+      <button class="digitize-btn" id="dig-select-rect" onclick="startSelectMode('rect')" title="Rectangle select">&#x25fb;</button>
+      <button class="digitize-btn" id="dig-select-circle" onclick="startSelectMode('circle')" title="Circle select">&#x25ef;</button>
+      <div class="digitize-sep"></div>
+      <button class="digitize-btn" id="dig-cancel" onclick="cancelDigitize()" title="Cancel / clear selection (Esc)" disabled>&#x2716;</button>
     </div>
     <svg id="north-arrow" viewBox="0 0 36 36">
       <circle cx="18" cy="18" r="17" fill="rgba(15,17,23,0.8)" stroke="#2d3748"/>
@@ -956,9 +1037,12 @@
         <select id="attr-layer-select" onchange="loadAttrTable(this.value)" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px;margin-bottom:6px;">
           <option value="">— Select layer —</option>
         </select>
-        <div style="font-size:10px;color:#718096;margin-bottom:4px;display:flex;justify-content:space-between;">
+        <div style="font-size:10px;color:#718096;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:6px;">
           <span id="attr-count"></span>
-          <input type="text" id="attr-search" placeholder="Search..." oninput="filterAttrTable(this.value)" style="background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;font-size:10px;padding:2px 6px;width:120px;">
+          <input type="text" id="attr-filter-expr" placeholder="Filter: col > 5" onkeydown="if(event.key==='Enter')applyAttrFilter()" style="flex:1;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;font-size:10px;padding:2px 6px;">
+          <button onclick="applyAttrFilter()" style="font-size:10px;padding:2px 6px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Filter</button>
+          <button onclick="clearAttrFilter()" style="font-size:10px;padding:2px 6px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Clear</button>
+          <input type="text" id="attr-search" placeholder="Search..." oninput="filterAttrTable(this.value)" style="background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;font-size:10px;padding:2px 6px;width:100px;">
         </div>
         <div id="attr-table-wrap" style="flex:1;overflow:auto;">
           <table id="attr-table"><thead><tr></tr></thead><tbody></tbody></table>
@@ -986,6 +1070,20 @@
       </div>
       <div class="panel-body hidden" style="padding:8px 12px;">
         <div id="minimap"></div>
+      </div>
+    </div>
+
+    <!-- Bookmarks -->
+    <div class="panel-section">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
+        <span>Bookmarks</span><span class="arrow">&#x25BC;</span>
+      </div>
+      <div class="panel-body hidden" id="bookmarks-panel">
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <input type="text" id="bookmark-name" placeholder="Bookmark name" style="flex:1;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px 6px;">
+          <button class="btn-ok" onclick="addBookmark()" style="font-size:11px;padding:4px 8px;">Save</button>
+        </div>
+        <div id="bookmarks-list" style="font-size:11px;"></div>
       </div>
     </div>
 
@@ -1412,7 +1510,9 @@ function _getDrawnLayer() {
 
 function startDigitize(mode) {
   if (_digMode === mode) { cancelDigitize(); return; }
-  cancelDigitize(); // clear any previous mode
+  cancelDigitize();
+  cancelEditMode();
+  cancelSelectMode();
   _digMode = mode;
   _digLatLngs = [];
 
@@ -1439,6 +1539,8 @@ function startDigitize(mode) {
 }
 
 function cancelDigitize() {
+  if (_editMode) { cancelEditMode(); return; }
+  if (_selectMode) { cancelSelectMode(); return; }
   if (!_digMode) return;
   const prev = _digMode;
   _digMode = null;
@@ -1648,8 +1750,400 @@ function _confirmAttrForm() {
 
 // Escape key to cancel digitizing
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && _digMode) cancelDigitize();
+  if (e.key === 'Escape') {
+    if (_digMode) cancelDigitize();
+    else if (_editMode) cancelEditMode();
+    else if (_selectMode) cancelSelectMode();
+  }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EDIT MODE (move vertices, move features)
+// ═══════════════════════════════════════════════════════════════════════════
+let _editMode = false;
+let _editTargetInfo = null;
+let _editTargetLayer = null;
+let _editVertexMarkers = [];
+let _editMidpointMarkers = [];
+let _editDragIndex = -1;
+let _editIsMidpoint = false;
+let _editMoveFeature = false;
+
+function startEditMode() {
+  if (_editMode) { cancelEditMode(); return; }
+  cancelDigitize();
+  cancelSelectMode();
+  _editMode = true;
+  document.getElementById('dig-edit').classList.add('active');
+  document.getElementById('dig-cancel').disabled = false;
+  showToast('Click a feature to edit it', 'info');
+
+  // Listen for feature clicks to enter vertex editing
+  map.eachLayer(l => {
+    if (l.feature && l.setStyle) {
+      l.on('click', _onEditFeatureClick);
+    }
+  });
+  // Also handle layer groups
+  uploadedLayers.forEach(info => {
+    if (info.layer && info.layer.eachLayer) {
+      info.layer.eachLayer(sub => {
+        if (sub.feature) sub.on('click', _onEditFeatureClick);
+      });
+    }
+  });
+}
+
+function _onEditFeatureClick(e) {
+  if (!_editMode) return;
+  L.DomEvent.stopPropagation(e);
+  const layer = e.target;
+  const geo = layer.toGeoJSON ? layer.toGeoJSON() : (layer.feature || null);
+  if (!geo || !geo.geometry) return;
+
+  // Find which uploaded layer this belongs to
+  let info = null;
+  uploadedLayers.forEach(u => {
+    if (u.layer && u.layer.eachLayer) {
+      u.layer.eachLayer(sub => { if (sub === layer) info = u; });
+    }
+  });
+  if (!info) {
+    // Maybe it's a direct layer (drawn feature)
+    info = uploadedLayers.find(u => u.id === _digDrawnLayerId);
+  }
+  _setupEdit(layer, info);
+}
+
+function _setupEdit(leafletLayer, info) {
+  _clearEditMarkers();
+  _editTargetLayer = leafletLayer;
+  _editTargetInfo = info;
+  const geo = leafletLayer.toGeoJSON ? leafletLayer.toGeoJSON() : leafletLayer.feature;
+  if (!geo) return;
+
+  const type = geo.geometry.type;
+  const coords = geo.geometry.coordinates;
+
+  // Build vertex and midpoint markers
+  let points = [];
+  if (type === 'Point') {
+    points = [L.latLng(coords[1], coords[0])];
+  } else if (type === 'LineString') {
+    points = coords.map(c => L.latLng(c[1], c[0]));
+  } else if (type === 'Polygon') {
+    // Use outer ring, skip closing point
+    points = coords[0].slice(0, -1).map(c => L.latLng(c[1], c[0]));
+  }
+
+  points.forEach((pt, i) => {
+    const m = L.marker(pt, {
+      icon: L.divIcon({ className: 'edit-vertex', iconSize: [10, 10], iconAnchor: [5, 5] }),
+      draggable: true
+    }).addTo(map);
+    m.on('dragstart', () => { _editDragIndex = i; _editIsMidpoint = false; });
+    m.on('drag', e => _onVertexDrag(e, i, false));
+    m.on('dragend', () => { _editDragIndex = -1; });
+    m.on('dblclick', () => _deleteVertex(i));
+    _editVertexMarkers.push(m);
+  });
+
+  // Midpoint markers for lines/polygons
+  if (points.length >= 2 && (type === 'LineString' || type === 'Polygon')) {
+    for (let i = 0; i < points.length; i++) {
+      const j = (i + 1) % points.length;
+      if (type === 'Polygon' && j === 0 && points.length < 3) continue;
+      const mid = L.latLng((points[i].lat + points[j].lat) / 2, (points[i].lng + points[j].lng) / 2);
+      const m = L.marker(mid, {
+        icon: L.divIcon({ className: 'edit-midpoint', iconSize: [8, 8], iconAnchor: [4, 4] }),
+        draggable: true
+      }).addTo(map);
+      const segIndex = i;
+      m.on('dragstart', () => { _editDragIndex = segIndex; _editIsMidpoint = true; });
+      m.on('drag', e => _onVertexDrag(e, segIndex, true));
+      m.on('dragend', () => { _editDragIndex = -1; _editIsMidpoint = false; });
+      _editMidpointMarkers.push(m);
+    }
+  }
+
+  showToast('Drag vertices to reshape. Double-click vertex to delete. Drag feature body to move.', 'info');
+}
+
+function _onVertexDrag(e, index, isMidpoint) {
+  const latlng = e.latlng;
+  const geo = _editTargetLayer.toGeoJSON ? _editTargetLayer.toGeoJSON() : _editTargetLayer.feature;
+  if (!geo) return;
+
+  const type = geo.geometry.type;
+  const coords = geo.geometry.coordinates;
+
+  if (type === 'Point') {
+    geo.geometry.coordinates = [latlng.lng, latlng.lat];
+    _editTargetLayer.setLatLng(latlng);
+  } else if (type === 'LineString') {
+    if (isMidpoint) {
+      // Insert new vertex at midpoint position
+      const newCoords = [...coords];
+      newCoords.splice(index + 1, 0, [latlng.lng, latlng.lat]);
+      geo.geometry.coordinates = newCoords;
+    } else {
+      coords[index] = [latlng.lng, latlng.lat];
+    }
+    _editTargetLayer.setLatLngs(geo.geometry.coordinates.map(c => L.latLng(c[1], c[0])));
+  } else if (type === 'Polygon') {
+    const ring = coords[0];
+    if (isMidpoint) {
+      const newRing = [...ring];
+      newRing.splice(index + 1, 0, [latlng.lng, latlng.lat]);
+      geo.geometry.coordinates = [newRing];
+    } else {
+      ring[index] = [latlng.lng, latlng.lat];
+      ring[ring.length - 1] = ring[0]; // keep closed
+    }
+    _editTargetLayer.setLatLngs(geo.geometry.coordinates[0].map(c => L.latLng(c[1], c[0])));
+  }
+
+  // Update stored geojsonFeatures
+  if (_editTargetInfo) {
+    const idx = _editTargetInfo.geojsonFeatures.findIndex(f => f === geo);
+    if (idx >= 0) _editTargetInfo.geojsonFeatures[idx] = geo;
+    else {
+      // Try match by geometry equality
+      const str = JSON.stringify(geo.geometry.coordinates);
+      const matchIdx = _editTargetInfo.geojsonFeatures.findIndex(f =>
+        JSON.stringify(f.geometry.coordinates) === str ||
+        (f.geometry.type === geo.geometry.type && f.geometry.coordinates.length === geo.geometry.coordinates.length)
+      );
+      if (matchIdx >= 0) _editTargetInfo.geojsonFeatures[matchIdx] = geo;
+    }
+  }
+
+  // Refresh markers after dragend if midpoint was inserted
+  if (isMidpoint) {
+    _setupEdit(_editTargetLayer, _editTargetInfo);
+  } else {
+    // Update marker position
+    if (_editVertexMarkers[index]) _editVertexMarkers[index].setLatLng(latlng);
+  }
+}
+
+function _deleteVertex(index) {
+  const geo = _editTargetLayer.toGeoJSON ? _editTargetLayer.toGeoJSON() : _editTargetLayer.feature;
+  if (!geo) return;
+  const type = geo.geometry.type;
+  if (type === 'Point') {
+    // Delete whole point feature
+    if (_editTargetInfo) {
+      const idx = _editTargetInfo.geojsonFeatures.indexOf(geo);
+      if (idx >= 0) {
+        _editTargetInfo.geojsonFeatures.splice(idx, 1);
+        _editTargetInfo.properties.splice(idx, 1);
+        _editTargetInfo.featureCount--;
+      }
+      _editTargetInfo.layer.removeLayer(_editTargetLayer);
+    }
+    cancelEditMode();
+    showToast('Point feature deleted', 'success');
+    return;
+  }
+  if (type === 'LineString') {
+    if (geo.geometry.coordinates.length <= 2) { showToast('Line needs at least 2 vertices', 'error'); return; }
+    geo.geometry.coordinates.splice(index, 1);
+    _editTargetLayer.setLatLngs(geo.geometry.coordinates.map(c => L.latLng(c[1], c[0])));
+  } else if (type === 'Polygon') {
+    const ring = geo.geometry.coordinates[0];
+    if (ring.length <= 4) { showToast('Polygon needs at least 3 vertices', 'error'); return; }
+    ring.splice(index, 1);
+    ring[ring.length - 1] = ring[0];
+    _editTargetLayer.setLatLngs(ring.map(c => L.latLng(c[1], c[0])));
+  }
+  _setupEdit(_editTargetLayer, _editTargetInfo);
+  showToast('Vertex deleted', 'success');
+}
+
+function _clearEditMarkers() {
+  _editVertexMarkers.forEach(m => map.removeLayer(m));
+  _editMidpointMarkers.forEach(m => map.removeLayer(m));
+  _editVertexMarkers = [];
+  _editMidpointMarkers = [];
+}
+
+function cancelEditMode() {
+  _editMode = false;
+  _clearEditMarkers();
+  _editTargetLayer = null;
+  _editTargetInfo = null;
+  document.getElementById('dig-edit').classList.remove('active');
+  document.getElementById('dig-cancel').disabled = true;
+  // Remove click handlers
+  map.eachLayer(l => {
+    if (l.feature && l.setStyle) l.off('click', _onEditFeatureClick);
+  });
+  uploadedLayers.forEach(info => {
+    if (info.layer && info.layer.eachLayer) {
+      info.layer.eachLayer(sub => {
+        if (sub.feature) sub.off('click', _onEditFeatureClick);
+      });
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FEATURE SELECTION (rectangle / circle)
+// ═══════════════════════════════════════════════════════════════════════════
+let _selectMode = null; // 'rect' | 'circle' | null
+let _selectStart = null;
+let _selectBox = null;
+let _selectCircle = null;
+let _selectedFeatures = new Set();
+let _selectedHighlightLayer = null;
+
+function startSelectMode(mode) {
+  if (_selectMode === mode) { cancelSelectMode(); return; }
+  cancelDigitize();
+  cancelEditMode();
+  _selectMode = mode;
+  document.getElementById(mode === 'rect' ? 'dig-select-rect' : 'dig-select-circle').classList.add('active');
+  document.getElementById('dig-cancel').disabled = false;
+  map.getContainer().style.cursor = 'crosshair';
+  showToast(mode === 'rect' ? 'Drag rectangle to select features' : 'Drag circle to select features', 'info');
+
+  map.dragging.disable();
+  map.on('mousedown', _onSelectMouseDown);
+}
+
+function _onSelectMouseDown(e) {
+  if (!_selectMode) return;
+  _selectStart = e.latlng;
+  if (_selectMode === 'rect') {
+    _selectBox = L.rectangle([_selectStart, _selectStart], {
+      color: '#63b3ed', weight: 1.5, dashArray: '4 4', fillOpacity: 0.1
+    }).addTo(map);
+  } else {
+    _selectCircle = L.circle(_selectStart, { radius: 0, color: '#63b3ed', weight: 1.5, dashArray: '4 4', fillOpacity: 0.1 }).addTo(map);
+  }
+  map.on('mousemove', _onSelectMouseMove);
+  map.on('mouseup', _onSelectMouseUp);
+}
+
+function _onSelectMouseMove(e) {
+  if (!_selectMode || !_selectStart) return;
+  if (_selectMode === 'rect' && _selectBox) {
+    _selectBox.setBounds([_selectStart, e.latlng]);
+  } else if (_selectCircle) {
+    const dist = _selectStart.distanceTo(e.latlng);
+    _selectCircle.setRadius(dist);
+  }
+}
+
+function _onSelectMouseUp(e) {
+  if (!_selectMode || !_selectStart) return;
+  map.off('mousemove', _onSelectMouseMove);
+  map.off('mouseup', _onSelectMouseUp);
+
+  let bounds = null;
+  if (_selectMode === 'rect' && _selectBox) {
+    bounds = _selectBox.getBounds();
+    map.removeLayer(_selectBox);
+    _selectBox = null;
+  } else if (_selectCircle) {
+    const center = _selectCircle.getLatLng();
+    const radius = _selectCircle.getRadius();
+    map.removeLayer(_selectCircle);
+    _selectCircle = null;
+    // Convert to approximate bounds for intersection testing
+    const dLat = radius / 111320;
+    const dLng = radius / (111320 * Math.cos(center.lat * Math.PI / 180));
+    bounds = L.latLngBounds([center.lat - dLat, center.lng - dLng], [center.lat + dLat, center.lng + dLng]);
+  }
+  _selectStart = null;
+
+  if (!bounds) return;
+  _selectFeaturesInBounds(bounds, _selectMode);
+  map.dragging.enable();
+  map.getContainer().style.cursor = '';
+}
+
+function _selectFeaturesInBounds(bounds, mode) {
+  const selectedLayers = [];
+  // Check all uploaded layers
+  uploadedLayers.forEach(info => {
+    if (!info.layer || !info.layer.eachLayer) return;
+    info.layer.eachLayer(sub => {
+      if (!sub.feature) return;
+      let inside = false;
+      const geo = sub.feature.geometry;
+      if (geo.type === 'Point') {
+        const p = L.latLng(geo.coordinates[1], geo.coordinates[0]);
+        inside = mode === 'rect' ? bounds.contains(p) : bounds.contains(p);
+        if (mode === 'circle') {
+          const center = L.latLng((bounds.getSouth() + bounds.getNorth()) / 2, (bounds.getWest() + bounds.getEast()) / 2);
+          const radius = bounds.getSouthWest().distanceTo(bounds.getNorthEast()) / 2;
+          inside = center.distanceTo(p) <= radius;
+        }
+      } else if (geo.type === 'LineString' || geo.type === 'MultiLineString') {
+        const pts = geo.type === 'LineString' ? geo.coordinates : geo.coordinates.flat();
+        inside = pts.some(c => {
+          const p = L.latLng(c[1], c[0]);
+          if (mode === 'rect') return bounds.contains(p);
+          const center = L.latLng((bounds.getSouth() + bounds.getNorth()) / 2, (bounds.getWest() + bounds.getEast()) / 2);
+          const radius = bounds.getSouthWest().distanceTo(bounds.getNorthEast()) / 2;
+          return center.distanceTo(p) <= radius;
+        });
+      } else if (geo.type === 'Polygon' || geo.type === 'MultiPolygon') {
+        const rings = geo.type === 'Polygon' ? [geo.coordinates[0]] : geo.coordinates.map(p => p[0]);
+        inside = rings.some(ring => ring.some(c => {
+          const p = L.latLng(c[1], c[0]);
+          if (mode === 'rect') return bounds.contains(p);
+          const center = L.latLng((bounds.getSouth() + bounds.getNorth()) / 2, (bounds.getWest() + bounds.getEast()) / 2);
+          const radius = bounds.getSouthWest().distanceTo(bounds.getNorthEast()) / 2;
+          return center.distanceTo(p) <= radius;
+        }));
+      }
+      if (inside) {
+        selectedLayers.push(sub);
+        _selectedFeatures.add(sub);
+      }
+    });
+  });
+
+  // Highlight selected
+  _refreshSelectionHighlight();
+  showToast(`${selectedLayers.length} feature(s) selected`, 'success');
+}
+
+function _refreshSelectionHighlight() {
+  if (_selectedHighlightLayer) { map.removeLayer(_selectedHighlightLayer); _selectedHighlightLayer = null; }
+  const features = [];
+  _selectedFeatures.forEach(layer => {
+    if (layer.toGeoJSON) features.push(layer.toGeoJSON());
+  });
+  if (features.length === 0) return;
+  _selectedHighlightLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
+    style: { color: '#63b3ed', weight: 4, opacity: 0.8, fillOpacity: 0.15 },
+    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 10, color: '#63b3ed', weight: 3, fillOpacity: 0.3 })
+  }).addTo(map);
+}
+
+function cancelSelectMode() {
+  _selectMode = null;
+  document.getElementById('dig-select-rect').classList.remove('active');
+  document.getElementById('dig-select-circle').classList.remove('active');
+  document.getElementById('dig-cancel').disabled = true;
+  map.getContainer().style.cursor = '';
+  map.dragging.enable();
+  map.off('mousedown', _onSelectMouseDown);
+  map.off('mousemove', _onSelectMouseMove);
+  map.off('mouseup', _onSelectMouseUp);
+  if (_selectBox) { map.removeLayer(_selectBox); _selectBox = null; }
+  if (_selectCircle) { map.removeLayer(_selectCircle); _selectCircle = null; }
+  _selectStart = null;
+}
+
+function clearFeatureSelection() {
+  _selectedFeatures.clear();
+  if (_selectedHighlightLayer) { map.removeLayer(_selectedHighlightLayer); _selectedHighlightLayer = null; }
+}
 
 // Pre-create basemap layers for fast switching (no full tile reload)
 const _basemapCache = {};
@@ -1946,9 +2440,11 @@ function addLayerToPanel(info) {
   el.dataset.layerId = info.id;
   el.style.position = 'relative';
   const safeName = escapeHtml(info.name);
+  el.draggable = true;
   el.innerHTML = `
+    <span class="layer-drag-handle" title="Drag to reorder">&#x2630;</span>
     <input type="checkbox" checked>
-    <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}', !this.previousElementSibling.checked)" title="Toggle visibility">&#x1F441;</span>
+    <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}', !this.previousElementSibling.previousElementSibling.checked)" title="Toggle visibility">&#x1F441;</span>
     <div class="layer-color-swatch" style="background:${info.color}"></div>
     <span class="layer-label" title="${safeName}&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this)" oncontextmenu="zoomToLayer('${info.id}');event.preventDefault();">${safeName}</span>
     <button class="layer-action-btn" onclick="zoomToLayer('${info.id}')" title="Zoom to layer">&#x1f50d;</button>
@@ -1957,6 +2453,7 @@ function addLayerToPanel(info) {
     <button class="layer-remove" onclick="removeUploadedLayer('${info.id}')" title="Remove layer">&times;</button>
     <div class="label-popover" id="lp-${info.id}"></div>
   `;
+  initLayerDrag(el);
   document.getElementById('uploaded-layers-list').appendChild(el);
   initLegendState(info);
 }
@@ -3869,26 +4366,16 @@ function loadAttrTable(layerId) {
   thead.innerHTML = '';
   tbody.innerHTML = '';
   document.getElementById('attr-count').textContent = '';
+  _attrSortCol = null;
+  _attrSortDir = 'asc';
+  _attrFilterExpr = null;
+  _attrRawRows = [];
   if (!layerId) return;
   const info = uploadedLayers.find(l => l.id === layerId);
   if (!info || !info.properties || info.properties.length === 0) return;
   const allKeys = [...new Set(info.properties.flatMap(Object.keys))];
-  thead.innerHTML = allKeys.map(k => `<th>${escapeHtml(k)}</th>`).join('');
-  info.properties.forEach((props, i) => {
-    const tr = document.createElement('tr');
-    tr.dataset.index = i;
-    tr.innerHTML = allKeys.map(k => `<td title="${escapeHtml(props[k] || '')}">${escapeHtml(props[k] !== undefined ? props[k] : '')}</td>`).join('');
-    tr.addEventListener('click', () => {
-      tbody.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
-      tr.classList.add('selected');
-      const layers = [];
-      info.layer.eachLayer(l => layers.push(l));
-      const sub = layers[i];
-      showFeatureInfo(props, info.id, sub, i);
-      zoomToFeature(info, i);
-    });
-    tbody.appendChild(tr);
-  });
+  _attrRawRows = info.properties.map((props, i) => ({ ...props, _origIndex: i }));
+  renderSortedTable(layerId, _attrRawRows, allKeys);
   document.getElementById('attr-count').textContent = `${info.properties.length} rows`;
 }
 
@@ -3911,6 +4398,285 @@ function zoomToFeature(layerInfo, featureIndex) {
     }
     i++;
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYER REORDERING (drag & drop)
+// ═══════════════════════════════════════════════════════════════════════════
+let _dragSrcEl = null;
+
+function initLayerDrag(el) {
+  el.addEventListener('dragstart', e => {
+    _dragSrcEl = el;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', el.dataset.layerId);
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    document.querySelectorAll('.layer-item.drag-over').forEach(i => i.classList.remove('drag-over'));
+    _dragSrcEl = null;
+  });
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const target = e.currentTarget;
+    if (target !== _dragSrcEl) target.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave', e => {
+    e.currentTarget.classList.remove('drag-over');
+  });
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    const target = e.currentTarget;
+    target.classList.remove('drag-over');
+    if (!target || target === _dragSrcEl) return;
+    const srcId = e.dataTransfer.getData('text/plain');
+    const dstId = target.dataset.layerId;
+    if (!srcId || !dstId) return;
+    reorderLayers(srcId, dstId);
+  });
+}
+
+function reorderLayers(srcId, dstId) {
+  const srcIdx = uploadedLayers.findIndex(l => l.id === srcId);
+  const dstIdx = uploadedLayers.findIndex(l => l.id === dstId);
+  if (srcIdx < 0 || dstIdx < 0) return;
+  const [moved] = uploadedLayers.splice(srcIdx, 1);
+  uploadedLayers.splice(dstIdx, 0, moved);
+  // Rebuild DOM order
+  const list = document.getElementById('uploaded-layers-list');
+  uploadedLayers.forEach(info => {
+    const el = document.querySelector(`.layer-item[data-layer-id="${info.id}"]`);
+    if (el) list.appendChild(el);
+  });
+  // Apply Z-order on map (last = on top)
+  uploadedLayers.forEach(info => {
+    if (map.hasLayer(info.layer)) {
+      info.layer.bringToFront && info.layer.bringToFront();
+    }
+  });
+  showToast('Layer order updated', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BOOKMARKS
+// ═══════════════════════════════════════════════════════════════════════════
+const BOOKMARKS_KEY = 'mapkit_bookmarks';
+let bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
+
+function renderBookmarks() {
+  const container = document.getElementById('bookmarks-list');
+  if (!container) return;
+  if (bookmarks.length === 0) {
+    container.innerHTML = '<div style="color:#4a5568;text-align:center;padding:8px 0;">No bookmarks saved</div>';
+    return;
+  }
+  container.innerHTML = bookmarks.map((b, i) => `
+    <div class="bookmark-item" onclick="goToBookmark(${i})" title="Zoom to ${escapeHtml(b.name)}">
+      <span>${escapeHtml(b.name)}</span>
+      <button onclick="event.stopPropagation();deleteBookmark(${i})" title="Remove">&times;</button>
+    </div>
+  `).join('');
+}
+
+function addBookmark() {
+  const nameInput = document.getElementById('bookmark-name');
+  const name = (nameInput?.value || '').trim();
+  if (!name) { showToast('Enter a bookmark name', 'error'); return; }
+  const center = map.getCenter();
+  const zoom = map.getZoom();
+  bookmarks.push({ name, lat: center.lat, lng: center.lng, zoom });
+  localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  if (nameInput) nameInput.value = '';
+  renderBookmarks();
+  showToast(`Bookmark "${name}" saved`, 'success');
+}
+
+function deleteBookmark(index) {
+  const name = bookmarks[index]?.name || '';
+  bookmarks.splice(index, 1);
+  localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  renderBookmarks();
+  showToast(`Bookmark "${name}" removed`, 'success');
+}
+
+function goToBookmark(index) {
+  const b = bookmarks[index];
+  if (!b) return;
+  map.setView([b.lat, b.lng], b.zoom, { animate: true });
+  showToast(`Zoomed to "${b.name}"`, 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GO TO XY / SEARCH
+// ═══════════════════════════════════════════════════════════════════════════
+async function doGotoSearch() {
+  const input = document.getElementById('goto-search');
+  const query = input?.value.trim();
+  if (!query) return;
+
+  // Try coordinate parsing first: "lat, lon" or "lon, lat"
+  const coordMatch = query.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (coordMatch) {
+    let a = parseFloat(coordMatch[1]);
+    let b = parseFloat(coordMatch[2]);
+    // Heuristic: if |a| > 90 it's likely lon first; if |b| > 90 it's lat first
+    let lat, lng;
+    if (Math.abs(a) > 90 && Math.abs(b) <= 90) { lng = a; lat = b; }
+    else if (Math.abs(b) > 90 && Math.abs(a) <= 90) { lat = a; lng = b; }
+    else { lat = a; lng = b; } // assume lat,lon
+    map.setView([lat, lng], 14, { animate: true });
+    showToast(`Zoomed to ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
+    if (input) input.value = '';
+    return;
+  }
+
+  // Place name search via Nominatim
+  try {
+    showToast('Searching…', 'info');
+    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+    const data = await resp.json();
+    if (!data || data.length === 0) { showToast('No results found', 'error'); return; }
+    const place = data[0];
+    const lat = parseFloat(place.lat);
+    const lon = parseFloat(place.lon);
+    const bbox = place.boundingbox ? [
+      [parseFloat(place.boundingbox[0]), parseFloat(place.boundingbox[2])],
+      [parseFloat(place.boundingbox[1]), parseFloat(place.boundingbox[3])]
+    ] : null;
+    if (bbox) map.fitBounds(bbox, { animate: true, maxZoom: 16 });
+    else map.setView([lat, lon], 14, { animate: true });
+    showToast(`Found: ${place.display_name}`, 'success');
+    if (input) input.value = '';
+  } catch (e) {
+    showToast('Search failed: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ATTRIBUTE TABLE SORTING & FILTERING
+// ═══════════════════════════════════════════════════════════════════════════
+let _attrSortCol = null;
+let _attrSortDir = 'asc'; // 'asc' | 'desc'
+let _attrFilterExpr = null;
+let _attrRawRows = []; // store raw row data for re-sorting
+
+function renderSortedTable(layerId, rows, keys) {
+  const thead = document.querySelector('#attr-table thead tr');
+  const tbody = document.querySelector('#attr-table tbody');
+  thead.innerHTML = keys.map(k => {
+    const cls = _attrSortCol === k ? (_attrSortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+    return `<th class="${cls}" onclick="sortAttrTable('${layerId}','${k}')">${escapeHtml(k)}</th>`;
+  }).join('');
+  tbody.innerHTML = '';
+  rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.index = row._origIndex;
+    tr.innerHTML = keys.map(k => `<td title="${escapeHtml(row[k] !== undefined ? row[k] : '')}">${escapeHtml(row[k] !== undefined ? row[k] : '')}</td>`).join('');
+    tr.addEventListener('click', () => {
+      tbody.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+      tr.classList.add('selected');
+      const info = uploadedLayers.find(l => l.id === layerId);
+      if (info) {
+        const layers = [];
+        info.layer.eachLayer(l => layers.push(l));
+        const sub = layers[row._origIndex];
+        showFeatureInfo(info.properties[row._origIndex], info.id, sub, row._origIndex);
+        zoomToFeature(info, row._origIndex);
+      }
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function sortAttrTable(layerId, col) {
+  if (_attrSortCol === col) {
+    _attrSortDir = _attrSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _attrSortCol = col;
+    _attrSortDir = 'asc';
+  }
+  let rows = [..._attrRawRows];
+  rows.sort((a, b) => {
+    let va = a[col], vb = b[col];
+    // Try numeric compare
+    const na = parseFloat(va), nb = parseFloat(vb);
+    if (!isNaN(na) && !isNaN(nb) && isFinite(na) && isFinite(nb)) {
+      return _attrSortDir === 'asc' ? na - nb : nb - na;
+    }
+    // String compare
+    const sa = String(va || '').toLowerCase();
+    const sb = String(vb || '').toLowerCase();
+    if (sa < sb) return _attrSortDir === 'asc' ? -1 : 1;
+    if (sa > sb) return _attrSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  const info = uploadedLayers.find(l => l.id === layerId);
+  if (!info) return;
+  const keys = [...new Set(info.properties.flatMap(Object.keys))];
+  renderSortedTable(layerId, rows, keys);
+}
+
+function applyAttrFilter() {
+  const input = document.getElementById('attr-filter-expr');
+  const expr = input?.value.trim();
+  if (!expr) { clearAttrFilter(); return; }
+  const tbody = document.querySelector('#attr-table tbody');
+  const rows = tbody.querySelectorAll('tr');
+  rows.forEach(tr => {
+    const idx = parseInt(tr.dataset.index);
+    const props = _attrRawRows.find(r => r._origIndex === idx);
+    if (!props) return;
+    tr.classList.remove('filtered-out');
+    // Parse simple expression: column op value
+    // Supports: col > 5, col >= 5, col < 5, col <= 5, col = 5, col == 5, col != 5
+    const m = expr.match(/^(.+?)\s*(>=|<=|!=|==|=|>|<)\s*(.+)$/);
+    if (!m) { tr.classList.toggle('filtered-out', false); return; }
+    let col = m[1].trim();
+    let op = m[2].trim();
+    let val = m[3].trim();
+    if (op === '=') op = '==';
+    const cellVal = props[col];
+    const numCell = parseFloat(cellVal);
+    const numVal = parseFloat(val);
+    let result = false;
+    if (!isNaN(numCell) && !isNaN(numVal) && isFinite(numCell) && isFinite(numVal)) {
+      switch (op) {
+        case '>': result = numCell > numVal; break;
+        case '<': result = numCell < numVal; break;
+        case '>=': result = numCell >= numVal; break;
+        case '<=': result = numCell <= numVal; break;
+        case '==': result = numCell == numVal; break;
+        case '!=': result = numCell != numVal; break;
+      }
+    } else {
+      const sv = String(cellVal || '').toLowerCase();
+      const tv = val.toLowerCase();
+      switch (op) {
+        case '>': result = sv > tv; break;
+        case '<': result = sv < tv; break;
+        case '>=': result = sv >= tv; break;
+        case '<=': result = sv <= tv; break;
+        case '==': result = sv === tv; break;
+        case '!=': result = sv !== tv; break;
+      }
+    }
+    tr.classList.toggle('filtered-out', !result);
+  });
+  _attrFilterExpr = expr;
+  const visible = tbody.querySelectorAll('tr:not(.filtered-out)').length;
+  const info = uploadedLayers.find(l => l.id === document.getElementById('attr-layer-select').value);
+  document.getElementById('attr-count').textContent = `${visible} of ${info?.properties?.length || 0} rows`;
+}
+
+function clearAttrFilter() {
+  const input = document.getElementById('attr-filter-expr');
+  if (input) input.value = '';
+  _attrFilterExpr = null;
+  document.querySelectorAll('#attr-table tbody tr.filtered-out').forEach(tr => tr.classList.remove('filtered-out'));
+  const info = uploadedLayers.find(l => l.id === document.getElementById('attr-layer-select').value);
+  if (info) document.getElementById('attr-count').textContent = `${info.properties.length} rows`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -4419,6 +5185,7 @@ updateOverview();
 refreshAnalysisLayerSelect();
 refreshAttrLayerSelect();
 refreshExportLayerSelect();
+renderBookmarks();
 function _hideLoading() { document.getElementById('loading').style.display='none'; }
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
