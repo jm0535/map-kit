@@ -4726,6 +4726,7 @@ function closeExport() { document.getElementById('export-overlay').classList.rem
 let layoutMap = null;
 let layoutOverviewMap = null;
 let layoutLayers = [];
+let layoutBuildToken = 0;
 
 function closeLayoutModal() {
   document.getElementById('layout-modal').classList.remove('show');
@@ -4736,6 +4737,8 @@ function closeLayoutModal() {
 }
 
 async function buildLayout() {
+  const myToken = ++layoutBuildToken;
+  const stale = () => myToken !== layoutBuildToken || !layoutMap;
   const fitToLayers = document.getElementById('exp-extent').value === 'fit';
   const inclLeg = document.getElementById('exp-include-legend').checked;
   const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
@@ -4897,6 +4900,7 @@ async function buildLayout() {
   // ── Wait for basemap tiles to actually load (longer at high zoom) ──
   const tileTimeout = layoutMap.getZoom() >= 14 ? 10000 : 5000;
   await _waitForTiles(basemap, tileTimeout);
+  if (stale()) return; // modal was closed or a newer build started
 
   // ── Render harvested permanent labels as DOM overlays on the paper ──
   pendingLayoutLabels.forEach(({ text, latlng }) => {
@@ -4998,9 +5002,10 @@ async function buildLayout() {
   L.rectangle(mainBounds, {color:'#e53e3e', weight:1.5, fillOpacity:0.15}).addTo(layoutOverviewMap);
 
   await _waitForTiles(ovBasemap, 5000);
+  if (stale()) return;
 
   // Final size/redraw pass in case container dimensions just became real.
-  layoutMap.invalidateSize(false);
+  if (layoutMap) layoutMap.invalidateSize(false);
   if (layoutOverviewMap) layoutOverviewMap.invalidateSize(false);
 
   document.getElementById('layout-loading').classList.remove('show');
