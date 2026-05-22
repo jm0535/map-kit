@@ -627,9 +627,17 @@
   #layout-scale {
     position: absolute; bottom: 12px; right: 12px;
     background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
-    border-radius: 3px; padding: 3px 8px;
+    border-radius: 3px; padding: 4px 8px 6px;
     font-size: 10px; color: #e2e8f0; pointer-events: none; z-index: 1000;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    font-family: Arial, Helvetica, sans-serif;
   }
+  #layout-scale .sb-bar {
+    height: 6px; background: #fff; border: 1px solid #1a202c;
+    box-shadow: inset 50% 0 0 0 #1a202c;
+  }
+  #layout-scale .sb-row { display: flex; justify-content: space-between; width: 100%; }
+  #layout-scale .sb-rf { opacity: 0.85; font-size: 9px; }
   #layout-overview-wrap {
     position: absolute; top: 50px; right: 12px;
     width: 160px; height: 110px;
@@ -4893,8 +4901,29 @@ async function buildLayout() {
 
   // Scale
   const scaleEl = document.getElementById('layout-scale');
-  const scaleM = _getScaleFromMap(layoutMap);
-  scaleEl.textContent = scaleM ? `Scale 1:${scaleM.toLocaleString()}` : 'Scale';
+  scaleEl.innerHTML = '';
+  const bar = _niceScaleBar(layoutMap, 160);
+  const rf = _representativeFraction(layoutMap);
+  if (bar) {
+    const barDiv = document.createElement('div');
+    barDiv.className = 'sb-bar';
+    barDiv.style.width = bar.px + 'px';
+    const row = document.createElement('div');
+    row.className = 'sb-row';
+    const left = document.createElement('span');
+    left.textContent = '0';
+    const right = document.createElement('span');
+    right.textContent = bar.label;
+    row.appendChild(left); row.appendChild(right);
+    scaleEl.appendChild(barDiv);
+    scaleEl.appendChild(row);
+  }
+  if (rf) {
+    const rfDiv = document.createElement('div');
+    rfDiv.className = 'sb-rf';
+    rfDiv.textContent = `1 : ${rf.toLocaleString()}`;
+    scaleEl.appendChild(rfDiv);
+  }
 
   // ── Overview inset map ──
   const ovEl = document.getElementById('layout-overview');
@@ -4967,18 +4996,43 @@ function _waitForTiles(tileLayer, timeoutMs) {
   });
 }
 
-function _getScaleFromMap(lmap) {
+// Compute meters per screen pixel at the map's center latitude.
+function _metersPerPixel(lmap) {
   const center = lmap.getCenter();
-  const pointC = lmap.latLngToContainerPoint(center);
-  const pointR = lmap.latLngToContainerPoint([center.lat, center.lng + 0.001]);
-  const pxPerMeter = Math.abs(pointR.x - pointC.x) / (0.001 * 111320);
-  const pxWidth = lmap.getContainer().offsetWidth;
-  const realMeters = pxWidth / pxPerMeter;
-  // Round to nice scale denominator
-  const scale = Math.round(realMeters / 0.00026458); // 1 pixel at 96 DPI ~= 0.00026458m
-  if (!isFinite(scale)) return null;
-  const digits = Math.pow(10, Math.floor(Math.log10(scale)));
-  return Math.round(scale / digits) * digits;
+  // Geodesic distance for a 1° lon step at this latitude (Leaflet built-in).
+  const a = lmap.latLngToContainerPoint(center);
+  const b = lmap.latLngToContainerPoint([center.lat, center.lng + 0.01]);
+  const pxDist = Math.abs(b.x - a.x);
+  if (pxDist === 0) return null;
+  const realMeters = lmap.distance(center, L.latLng(center.lat, center.lng + 0.01));
+  return realMeters / pxDist;
+}
+
+// Representative fraction (unitless ratio: 1 map unit = N real units).
+// Assumes 96 DPI screen → 1 CSS pixel = 0.0002645 m.
+function _representativeFraction(lmap) {
+  const mpp = _metersPerPixel(lmap);
+  if (!mpp || !isFinite(mpp)) return null;
+  const rf = Math.round(mpp / 0.0002645);
+  const digits = Math.pow(10, Math.max(0, Math.floor(Math.log10(rf)) - 1));
+  return Math.round(rf / digits) * digits;
+}
+
+// Pick a "nice" round distance for the scale bar (1, 2, 5 × 10^n) that
+// fits comfortably within the map container.
+function _niceScaleBar(lmap, targetPx = 160) {
+  const mpp = _metersPerPixel(lmap);
+  if (!mpp || !isFinite(mpp)) return null;
+  const targetMeters = targetPx * mpp;
+  const pow = Math.pow(10, Math.floor(Math.log10(targetMeters)));
+  const candidates = [1, 2, 5, 10].map(m => m * pow);
+  let best = candidates[0];
+  for (const c of candidates) if (c <= targetMeters) best = c;
+  const px = best / mpp;
+  const label = best >= 1000
+    ? `${(best / 1000).toLocaleString()} km`
+    : `${best.toLocaleString()} m`;
+  return { meters: best, px, label };
 }
 
 async function previewExport() {
