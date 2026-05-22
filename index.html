@@ -683,17 +683,6 @@
     border-radius: 4px; padding: 8px; font-size: 10px; color: #e2e8f0;
     pointer-events: none; z-index: 1000;
   }
-  #layout-profile {
-    position: absolute; bottom: 12px;
-    left: 50%; transform: translateX(-50%);
-    width: 360px; height: 110px;
-    background: rgba(255,255,255,0.96); border: 1px solid #2d3748;
-    border-radius: 4px; padding: 6px 8px 4px;
-    pointer-events: none; z-index: 1000;
-    display: none;
-  }
-  #layout-profile.show { display: block; }
-  #layout-profile canvas { width: 100% !important; height: 100% !important; }
   .layout-actions {
     display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
   }
@@ -1246,7 +1235,6 @@
       </select>
     </div>
     <div class="exp-row">
-      <label><input type="checkbox" id="exp-include-profile" checked> Include elevation profile</label>
       <label><input type="checkbox" id="exp-include-legend" checked> Include legend</label>
     </div>
     <div class="exp-actions">
@@ -1273,7 +1261,6 @@
         <div id="layout-overview-label">Overview</div>
       </div>
       <div id="layout-legend"></div>
-      <div id="layout-profile"><canvas id="layout-profile-canvas"></canvas></div>
       <div id="layout-loading"><span class="spinner"></span>Loading tiles…</div>
     </div>
     <div class="layout-actions">
@@ -4726,13 +4713,11 @@ function closeExport() { document.getElementById('export-overlay').classList.rem
 let layoutMap = null;
 let layoutOverviewMap = null;
 let layoutLayers = [];
-let layoutProfileChart = null;
 
 function closeLayoutModal() {
   document.getElementById('layout-modal').classList.remove('show');
   if (layoutMap) { layoutMap.remove(); layoutMap = null; }
   if (layoutOverviewMap) { layoutOverviewMap.remove(); layoutOverviewMap = null; }
-  if (layoutProfileChart) { layoutProfileChart.destroy(); layoutProfileChart = null; }
   layoutLayers.forEach(l => { if (l.remove) l.remove(); });
   layoutLayers = [];
 }
@@ -4999,63 +4984,6 @@ async function buildLayout() {
   L.rectangle(mainBounds, {color:'#e53e3e', weight:1.5, fillOpacity:0.15}).addTo(layoutOverviewMap);
 
   await _waitForTiles(ovBasemap, 2000);
-
-  // ── Elevation profile inset (publication-friendly, print colors) ──
-  const profileEl = document.getElementById('layout-profile');
-  const inclProfile = document.getElementById('exp-include-profile').checked;
-  if (layoutProfileChart) { layoutProfileChart.destroy(); layoutProfileChart = null; }
-  const activeProfiles = (typeof profileRegistry !== 'undefined' && Array.isArray(profileRegistry))
-    ? profileRegistry.filter(p => {
-        const cb = document.querySelector(`#profile-tabs input[type=checkbox][data-profile="${p.id}"]`);
-        return cb ? cb.checked : true;
-      })
-    : [];
-  if (inclProfile && activeProfiles.length > 0) {
-    profileEl.classList.add('show');
-    const ctx = document.getElementById('layout-profile-canvas').getContext('2d');
-    // Clean series label: strip common file extensions and replace _ with space.
-    const cleanLabel = s => String(s || '').replace(/\.(csv|geojson|json|kml|gpx|zip|shp|tif|tiff)$/i, '').replace(/_/g, ' ');
-    // Find overall elevation range to set sensible y-axis ticks.
-    let elevMin = Infinity, elevMax = -Infinity;
-    activeProfiles.forEach(p => p.points.forEach(pt => {
-      if (isFinite(pt.elev)) { if (pt.elev < elevMin) elevMin = pt.elev; if (pt.elev > elevMax) elevMax = pt.elev; }
-    }));
-    if (!isFinite(elevMin)) { elevMin = 0; elevMax = 100; }
-    const pad = Math.max(50, (elevMax - elevMin) * 0.08);
-    const ySuggMin = Math.floor((elevMin - pad) / 100) * 100;
-    const ySuggMax = Math.ceil((elevMax + pad) / 100) * 100;
-    const datasets = activeProfiles.map(p => ({
-      label: cleanLabel(p.label),
-      data: p.points.map(pt => ({ x: pt.dist, y: pt.elev })),
-      borderColor: p.color, backgroundColor: hexToRgba(p.color, 0.18),
-      fill: true, tension: 0.25, pointRadius: 2, borderWidth: 1.5,
-      pointBackgroundColor: p.color, pointBorderColor: '#1a202c', pointBorderWidth: 0.5
-    }));
-    layoutProfileChart = new Chart(ctx, {
-      type: 'line', data: { datasets },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: false,
-        devicePixelRatio: 4,
-        plugins: {
-          legend: { display: activeProfiles.length > 1,
-                    labels: { color: '#1a202c', font: { size: 9, family: 'Arial' }, boxWidth: 10 } },
-          tooltip: { enabled: false },
-          title: { display: true, text: 'Elevation profile', color: '#1a202c', font: { size: 11, weight: 'bold', family: 'Arial' } }
-        },
-        scales: {
-          x: { type: 'linear', title: { display: true, text: 'Distance (km)', color: '#1a202c', font: { size: 9, family: 'Arial' } },
-               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' }, maxTicksLimit: 6 },
-               grid: { color: '#cbd5e0' } },
-          y: { suggestedMin: ySuggMin, suggestedMax: ySuggMax,
-               title: { display: true, text: 'Elevation (m a.s.l.)', color: '#1a202c', font: { size: 9, family: 'Arial' } },
-               ticks: { color: '#1a202c', font: { size: 8, family: 'Arial' }, maxTicksLimit: 5 },
-               grid: { color: '#cbd5e0' } }
-        }
-      }
-    });
-  } else {
-    profileEl.classList.remove('show');
-  }
 
   // Final size/redraw pass in case container dimensions just became real.
   layoutMap.invalidateSize(false);
