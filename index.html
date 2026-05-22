@@ -4266,6 +4266,19 @@ function toggleSection(header) {
   header.classList.toggle('collapsed');
   const body = header.nextElementSibling;
   if (body) body.classList.toggle('hidden');
+  // If the section itself was set to flex-grow (e.g. Attribute Table fills
+  // the remaining panel space), don't let it keep grabbing space when
+  // collapsed — that creates a big empty gap before the next section.
+  const section = header.parentElement;
+  if (section && section.classList.contains('panel-section')) {
+    const collapsed = header.classList.contains('collapsed');
+    if (section.dataset._origFlex == null && section.style.flex) {
+      section.dataset._origFlex = section.style.flex;
+    }
+    if (section.dataset._origFlex) {
+      section.style.flex = collapsed ? '0 0 auto' : section.dataset._origFlex;
+    }
+  }
   if (body && body.querySelector('#minimap') && !header.classList.contains('collapsed')) {
     setTimeout(() => { minimap.invalidateSize(); updateOverview(); }, 200);
   }
