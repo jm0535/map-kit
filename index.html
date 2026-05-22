@@ -4762,7 +4762,7 @@ async function buildLayout() {
   const currentMaxNative = basemapLayer.options.maxNativeZoom;
   const basemap = L.tileLayer(currentBasemapUrl, {
     attribution: currentAttribution,
-    maxZoom: 20, maxNativeZoom: currentMaxNative || 18,
+    maxZoom: 22, maxNativeZoom: currentMaxNative || 19,
     crossOrigin: 'anonymous',
     detectRetina: true
   }).addTo(layoutMap);
@@ -4881,8 +4881,9 @@ async function buildLayout() {
     layoutMap.setView(map.getCenter(), map.getZoom(), {animate: false});
   }
 
-  // ── Wait for basemap tiles to actually load (not fixed timeout) ──
-  await _waitForTiles(basemap, 3000);
+  // ── Wait for basemap tiles to actually load (longer at high zoom) ──
+  const tileTimeout = layoutMap.getZoom() >= 14 ? 10000 : 5000;
+  await _waitForTiles(basemap, tileTimeout);
 
   // ── Render harvested permanent labels as DOM overlays on the paper ──
   pendingLayoutLabels.forEach(({ text, latlng }) => {
@@ -4983,7 +4984,7 @@ async function buildLayout() {
   layoutOverviewMap.fitBounds(ovBounds, {animate: false, padding: [4, 4]});
   L.rectangle(mainBounds, {color:'#e53e3e', weight:1.5, fillOpacity:0.15}).addTo(layoutOverviewMap);
 
-  await _waitForTiles(ovBasemap, 2000);
+  await _waitForTiles(ovBasemap, 5000);
 
   // Final size/redraw pass in case container dimensions just became real.
   layoutMap.invalidateSize(false);
@@ -4996,34 +4997,39 @@ async function buildLayout() {
 function _waitForTiles(tileLayer, timeoutMs) {
   return new Promise(resolve => {
     let resolved = false;
-    const done = () => {
+    const cleanup = () => {
+      tileLayer.off('load', onLoad);
+      tileLayer.off('tileerror', onLoad);
+      tileLayer.off('loading', onLoading);
+    };
+    const finish = () => {
       if (resolved) return;
       resolved = true;
-      tileLayer.off('load', done);
-      tileLayer.off('tileerror', done);
+      cleanup();
       resolve();
     };
-    // If already loaded (cached tiles), resolve quickly
-    const check = () => {
-      if (tileLayer._loading === 0 || tileLayer._loading == null) {
-        done();
-        return true;
-      }
-      return false;
+    let hasStarted = false;
+    const onLoading = () => { hasStarted = true; };
+    const onLoad = () => {
+      // 'load' fires when all queued tiles finished. If loading hasn't
+      // started yet, ignore — we'll wait for the next batch.
+      if (hasStarted) finish();
     };
-    if (!check()) {
-      tileLayer.on('load', done);
-      tileLayer.on('tileerror', done);
-    }
-    // Hard timeout fallback
+    tileLayer.on('loading', onLoading);
+    tileLayer.on('load', onLoad);
+    tileLayer.on('tileerror', onLoad);
+    // Give Leaflet a tick to start fetching tiles. If after the tick
+    // the layer reports no in-flight requests AND none started, it's
+    // genuinely idle (all tiles already cached) — resolve.
     setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        tileLayer.off('load', done);
-        tileLayer.off('tileerror', done);
-        resolve();
+      if (resolved) return;
+      const loading = tileLayer._loading;
+      if (!hasStarted && (loading === 0 || loading == null)) {
+        finish();
       }
-    }, timeoutMs);
+    }, 120);
+    // Hard timeout fallback
+    setTimeout(finish, timeoutMs);
   });
 }
 
