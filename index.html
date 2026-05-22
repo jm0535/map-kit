@@ -631,6 +631,42 @@
     margin-bottom: 10px; flex-shrink: 0;
   }
   .layout-header h3 { color: #63b3ed; font-size: 13px; margin: 0; }
+  .layout-controls {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .lock-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    background: #1a202c; color: #cbd5e0;
+    border: 1px solid #2d3748; border-radius: 4px;
+    cursor: pointer; user-select: none;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .lock-btn:hover { border-color: #63b3ed; color: #fff; }
+  .lock-btn.locked {
+    background: #2c5282; border-color: #63b3ed; color: #fff;
+  }
+  .lock-btn .lock-icon { font-size: 12px; line-height: 1; }
+  #layout-basemap-select {
+    padding: 5px 8px; font-size: 11px;
+    background: #1a202c; color: #cbd5e0;
+    border: 1px solid #2d3748; border-radius: 4px;
+    cursor: pointer;
+  }
+  #layout-basemap-select:hover { border-color: #63b3ed; }
+  body.light .lock-btn { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
+  body.light .lock-btn:hover { border-color: #2b6cb0; color: #2d3748; }
+  body.light .lock-btn.locked { background: #bee3f8; border-color: #2b6cb0; color: #2d3748; }
+  body.light #layout-basemap-select { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
+  .layout-lock-badge {
+    position: absolute; top: 8px; left: 8px; z-index: 1000;
+    padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    background: rgba(44, 82, 130, 0.95); color: #fff;
+    border: 1px solid #63b3ed; border-radius: 3px;
+    pointer-events: none;
+    text-transform: uppercase;
+  }
+  .layout-lock-badge.overview { top: auto; bottom: 8px; left: auto; right: 8px; font-size: 9px; padding: 2px 6px; }
   #layout-paper {
     position: relative;
     flex-shrink: 0;
@@ -1250,7 +1286,18 @@
   <div id="layout-box">
     <div class="layout-header">
       <h3>Map Layout Composer</h3>
-      <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
+      <div class="layout-controls">
+        <button class="lock-btn" id="lock-main-btn" type="button" onclick="toggleLayoutLock('main')" title="Lock main map: edit pan/zoom independently of the source map">
+          <span class="lock-icon">🔓</span> <span class="lock-label">Main map</span>
+        </button>
+        <button class="lock-btn" id="lock-overview-btn" type="button" onclick="toggleLayoutLock('overview')" title="Lock overview map: edit pan/zoom of the inset independently">
+          <span class="lock-icon">🔓</span> <span class="lock-label">Overview</span>
+        </button>
+        <select id="layout-basemap-select" onchange="setLayoutBasemap(this.value)" title="Change layout basemap without affecting the main map">
+          <option value="">Basemap: (from main)</option>
+        </select>
+        <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
+      </div>
     </div>
     <div id="layout-paper">
       <div id="layout-map"></div>
@@ -4727,6 +4774,121 @@ let layoutMap = null;
 let layoutOverviewMap = null;
 let layoutLayers = [];
 let layoutBuildToken = 0;
+let mainLocked = false;
+let overviewLocked = false;
+let layoutBasemapOverride = null; // {url, attr, maxz} when user picks one
+let lockedMainState = null;       // {center, zoom} preserved across rebuilds
+let lockedOverviewState = null;   // {center, zoom}
+
+const LAYOUT_BASEMAPS = [
+  { value: 'topo', label: 'Topo', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', attr: 'Esri World Topo', maxz: 18 },
+  { value: 'satellite', label: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: 'Esri Imagery', maxz: 18 },
+  { value: 'streets', label: 'Streets', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: 'OSM', maxz: 19 },
+  { value: 'relief', label: 'Relief', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', attr: 'Esri Relief', maxz: 13 },
+  { value: 'voyager', label: 'Voyager', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: 'CartoDB', maxz: 20 },
+  { value: 'dark', label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: 'CartoDB Dark Matter', maxz: 20 },
+];
+
+function _populateLayoutBasemapSelect() {
+  const sel = document.getElementById('layout-basemap-select');
+  if (!sel) return;
+  // Preserve placeholder, append options once
+  if (sel.dataset.populated === '1') return;
+  LAYOUT_BASEMAPS.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.value;
+    opt.textContent = `Basemap: ${b.label}`;
+    sel.appendChild(opt);
+  });
+  sel.dataset.populated = '1';
+}
+
+function _setLockHandlers(lmap, locked) {
+  if (!lmap) return;
+  const fns = ['dragging','scrollWheelZoom','doubleClickZoom','boxZoom','touchZoom','keyboard'];
+  fns.forEach(f => {
+    if (lmap[f]) locked ? lmap[f].enable() : lmap[f].disable();
+  });
+}
+
+function _updateLockBadge(target, locked) {
+  const paper = document.getElementById('layout-paper');
+  if (!paper) return;
+  const cls = target === 'main' ? 'layout-lock-badge main' : 'layout-lock-badge overview';
+  const id = target === 'main' ? 'layout-lock-badge-main' : 'layout-lock-badge-overview';
+  let badge = document.getElementById(id);
+  if (locked) {
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = id;
+      badge.className = cls;
+      badge.textContent = target === 'main' ? '🔒 Main map editable' : '🔒 Overview editable';
+      (target === 'overview' ? document.getElementById('layout-overview-wrap') : paper).appendChild(badge);
+    }
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
+function toggleLayoutLock(target) {
+  if (target === 'main') {
+    mainLocked = !mainLocked;
+    const btn = document.getElementById('lock-main-btn');
+    btn.classList.toggle('locked', mainLocked);
+    btn.querySelector('.lock-icon').textContent = mainLocked ? '🔒' : '🔓';
+    _setLockHandlers(layoutMap, mainLocked);
+    _updateLockBadge('main', mainLocked);
+    if (!mainLocked && layoutMap) {
+      lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
+    }
+    if (mainLocked && layoutMap) {
+      // Capture user's edits when re-locking after editing
+      lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
+      L.control.zoom({ position: 'topright' }).addTo(layoutMap);
+      layoutMap._layoutZoomCtl = true;
+    }
+  } else if (target === 'overview') {
+    overviewLocked = !overviewLocked;
+    const btn = document.getElementById('lock-overview-btn');
+    btn.classList.toggle('locked', overviewLocked);
+    btn.querySelector('.lock-icon').textContent = overviewLocked ? '🔒' : '🔓';
+    _setLockHandlers(layoutOverviewMap, overviewLocked);
+    _updateLockBadge('overview', overviewLocked);
+    if (overviewLocked && layoutOverviewMap) {
+      lockedOverviewState = { center: layoutOverviewMap.getCenter(), zoom: layoutOverviewMap.getZoom() };
+    }
+  }
+}
+
+function setLayoutBasemap(value) {
+  if (!value) {
+    layoutBasemapOverride = null;
+  } else {
+    const b = LAYOUT_BASEMAPS.find(x => x.value === value);
+    if (b) layoutBasemapOverride = { url: b.url, attr: b.attr, maxz: b.maxz };
+  }
+  // Re-render layout to apply new basemap
+  if (document.getElementById('layout-modal').classList.contains('show')) {
+    buildLayout();
+  }
+}
+
+function _resetLayoutLockState() {
+  mainLocked = false;
+  overviewLocked = false;
+  layoutBasemapOverride = null;
+  lockedMainState = null;
+  lockedOverviewState = null;
+  const mb = document.getElementById('lock-main-btn');
+  const ob = document.getElementById('lock-overview-btn');
+  if (mb) { mb.classList.remove('locked'); mb.querySelector('.lock-icon').textContent = '🔓'; }
+  if (ob) { ob.classList.remove('locked'); ob.querySelector('.lock-icon').textContent = '🔓'; }
+  const sel = document.getElementById('layout-basemap-select');
+  if (sel) sel.value = '';
+  ['layout-lock-badge-main','layout-lock-badge-overview'].forEach(id => {
+    const n = document.getElementById(id); if (n) n.remove();
+  });
+}
 
 function closeLayoutModal() {
   document.getElementById('layout-modal').classList.remove('show');
@@ -4734,6 +4896,7 @@ function closeLayoutModal() {
   if (layoutOverviewMap) { layoutOverviewMap.remove(); layoutOverviewMap = null; }
   layoutLayers.forEach(l => { if (l.remove) l.remove(); });
   layoutLayers = [];
+  _resetLayoutLockState();
 }
 
 async function buildLayout() {
@@ -4756,26 +4919,38 @@ async function buildLayout() {
   // Callers (previewExport / doExport) must add `.show` to #layout-modal
   // before calling buildLayout so the Leaflet container has real dimensions.
 
+  // Capture current locked state BEFORE disposing maps
+  if (mainLocked && layoutMap) {
+    lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
+  }
+  if (overviewLocked && layoutOverviewMap) {
+    lockedOverviewState = { center: layoutOverviewMap.getCenter(), zoom: layoutOverviewMap.getZoom() };
+  }
+
   if (layoutMap) { layoutMap.remove(); layoutMap = null; }
   layoutLayers.forEach(l => { if (l.remove) l.remove(); });
   layoutLayers = [];
+
+  // Ensure basemap select is populated (one-time)
+  _populateLayoutBasemapSelect();
 
   const mapEl = document.getElementById('layout-map');
   mapEl.style.width = paperW + 'px';
   mapEl.style.height = paperH + 'px';
   layoutMap = L.map('layout-map', {
-    zoomControl: false, attributionControl: false,
-    dragging: false, scrollWheelZoom: false,
-    doubleClickZoom: false, boxZoom: false,
+    zoomControl: !!mainLocked, attributionControl: false,
+    dragging: !!mainLocked, scrollWheelZoom: !!mainLocked,
+    doubleClickZoom: !!mainLocked, boxZoom: !!mainLocked,
+    touchZoom: !!mainLocked, keyboard: !!mainLocked,
     zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false,
     preferCanvas: true,
     renderer: L.canvas({ padding: 0 })
   });
   layoutMap.invalidateSize(false);
 
-  const currentBasemapUrl = basemapLayer._url;
-  const currentAttribution = basemapLayer.options.attribution;
-  const currentMaxNative = basemapLayer.options.maxNativeZoom;
+  const currentBasemapUrl = layoutBasemapOverride ? layoutBasemapOverride.url : basemapLayer._url;
+  const currentAttribution = layoutBasemapOverride ? layoutBasemapOverride.attr : basemapLayer.options.attribution;
+  const currentMaxNative = layoutBasemapOverride ? layoutBasemapOverride.maxz : basemapLayer.options.maxNativeZoom;
   const basemap = L.tileLayer(currentBasemapUrl, {
     attribution: currentAttribution,
     maxZoom: 22, maxNativeZoom: currentMaxNative || 19,
@@ -4890,8 +5065,10 @@ async function buildLayout() {
   // ── Show loading spinner ──
   document.getElementById('layout-loading').classList.add('show');
 
-  // ── Set view ──
-  if (fitToLayers && layerBounds && layerBounds.isValid && layerBounds.isValid()) {
+  // ── Set view ── (honor lock: restore user's edits to the layout map)
+  if (mainLocked && lockedMainState) {
+    layoutMap.setView(lockedMainState.center, lockedMainState.zoom, {animate: false});
+  } else if (fitToLayers && layerBounds && layerBounds.isValid && layerBounds.isValid()) {
     layoutMap.fitBounds(layerBounds, {animate: false, padding: [60, 60]});
   } else {
     layoutMap.setView(map.getCenter(), map.getZoom(), {animate: false});
@@ -4979,9 +5156,10 @@ async function buildLayout() {
   ovEl.innerHTML = '';
   if (layoutOverviewMap) { layoutOverviewMap.remove(); layoutOverviewMap = null; }
   layoutOverviewMap = L.map('layout-overview', {
-    zoomControl: false, attributionControl: false,
-    dragging: false, scrollWheelZoom: false,
-    doubleClickZoom: false, boxZoom: false,
+    zoomControl: !!overviewLocked, attributionControl: false,
+    dragging: !!overviewLocked, scrollWheelZoom: !!overviewLocked,
+    doubleClickZoom: !!overviewLocked, boxZoom: !!overviewLocked,
+    touchZoom: !!overviewLocked, keyboard: !!overviewLocked,
     zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false,
     preferCanvas: true
   });
@@ -4991,15 +5169,22 @@ async function buildLayout() {
   // Fit overview to a wide buffer around the study area so country-level
   // context is visible regardless of where on the globe the user is.
   const mainBounds = layoutMap.getBounds();
-  const bufferFactor = 8; // expand each side by 8× the main extent
-  const dLat = (mainBounds.getNorth() - mainBounds.getSouth()) * bufferFactor;
-  const dLon = (mainBounds.getEast() - mainBounds.getWest()) * bufferFactor;
-  const ovBounds = L.latLngBounds(
-    [Math.max(-85, mainBounds.getSouth() - dLat), mainBounds.getWest() - dLon],
-    [Math.min(85, mainBounds.getNorth() + dLat), mainBounds.getEast() + dLon]
-  );
-  layoutOverviewMap.fitBounds(ovBounds, {animate: false, padding: [4, 4]});
+  if (overviewLocked && lockedOverviewState) {
+    layoutOverviewMap.setView(lockedOverviewState.center, lockedOverviewState.zoom, {animate: false});
+  } else {
+    const bufferFactor = 8; // expand each side by 8× the main extent
+    const dLat = (mainBounds.getNorth() - mainBounds.getSouth()) * bufferFactor;
+    const dLon = (mainBounds.getEast() - mainBounds.getWest()) * bufferFactor;
+    const ovBounds = L.latLngBounds(
+      [Math.max(-85, mainBounds.getSouth() - dLat), mainBounds.getWest() - dLon],
+      [Math.min(85, mainBounds.getNorth() + dLat), mainBounds.getEast() + dLon]
+    );
+    layoutOverviewMap.fitBounds(ovBounds, {animate: false, padding: [4, 4]});
+  }
   L.rectangle(mainBounds, {color:'#e53e3e', weight:1.5, fillOpacity:0.15}).addTo(layoutOverviewMap);
+  // Restore badges after rebuild
+  _updateLockBadge('main', mainLocked);
+  _updateLockBadge('overview', overviewLocked);
 
   await _waitForTiles(ovBasemap, 5000);
   if (stale()) return;
