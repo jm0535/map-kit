@@ -622,19 +622,19 @@
     background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: bold; color: #e53e3e;
-    pointer-events: none; z-index: 10;
+    pointer-events: none; z-index: 1000;
   }
   #layout-scale {
     position: absolute; bottom: 12px; right: 12px;
     background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
     border-radius: 3px; padding: 3px 8px;
-    font-size: 10px; color: #e2e8f0; pointer-events: none; z-index: 10;
+    font-size: 10px; color: #e2e8f0; pointer-events: none; z-index: 1000;
   }
   #layout-overview-wrap {
     position: absolute; top: 50px; right: 12px;
     width: 160px; height: 110px;
     background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
-    border-radius: 4px; padding: 3px; pointer-events: none; z-index: 10;
+    border-radius: 4px; padding: 3px; pointer-events: none; z-index: 1000;
   }
   #layout-overview {
     width: 100%; height: calc(100% - 14px);
@@ -649,7 +649,7 @@
     max-width: 180px; max-height: 200px; overflow: auto;
     background: rgba(15,17,23,0.88); border: 1px solid #2d3748;
     border-radius: 4px; padding: 8px; font-size: 10px; color: #e2e8f0;
-    pointer-events: none; z-index: 10;
+    pointer-events: none; z-index: 1000;
   }
   #layout-title {
     position: absolute; top: 12px; left: 12px;
@@ -657,7 +657,7 @@
     background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
     border-radius: 4px; padding: 6px 12px;
     font-size: 12px; font-weight: bold; color: #63b3ed;
-    pointer-events: none; z-index: 10;
+    pointer-events: none; z-index: 1000;
   }
   .layout-actions {
     display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
@@ -4730,7 +4730,10 @@ async function buildLayout() {
   layoutMap = L.map('layout-map', {
     zoomControl: false, attributionControl: false,
     dragging: false, scrollWheelZoom: false,
-    doubleClickZoom: false, boxZoom: false
+    doubleClickZoom: false, boxZoom: false,
+    zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false,
+    preferCanvas: true,
+    renderer: L.canvas({ padding: 0 })
   });
   layoutMap.invalidateSize(false);
 
@@ -4900,7 +4903,9 @@ async function buildLayout() {
   layoutOverviewMap = L.map('layout-overview', {
     zoomControl: false, attributionControl: false,
     dragging: false, scrollWheelZoom: false,
-    doubleClickZoom: false, boxZoom: false
+    doubleClickZoom: false, boxZoom: false,
+    zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false,
+    preferCanvas: true
   });
   const ovBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 13, crossOrigin: true
