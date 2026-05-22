@@ -1548,6 +1548,7 @@ let _digLatLngs = [];      // collected vertices
 let _digTempLayer = null;  // temporary polyline/polygon on map
 let _digVertexMarkers = []; // vertex marker icons
 let _digDrawnLayerId = null; // ID of the "Drawn Features" layer group
+let _digClickTimer = null;   // debounce so dblclick doesn't add stray vertex
 
 function _getDrawnLayer() {
   if (_digDrawnLayerId) {
@@ -1610,6 +1611,7 @@ function cancelDigitize() {
   const prev = _digMode;
   _digMode = null;
   _digLatLngs = [];
+  if (_digClickTimer) { clearTimeout(_digClickTimer); _digClickTimer = null; }
 
   // Remove temp layer and vertex markers
   if (_digTempLayer) { map.removeLayer(_digTempLayer); _digTempLayer = null; }
@@ -1635,45 +1637,50 @@ function cancelDigitize() {
 
 function _onDigClick(e) {
   if (!_digMode) return;
-  _digLatLngs.push(e.latlng);
-
-  // Add vertex marker
-  const vm = L.marker(e.latlng, {
-    icon: L.divIcon({ className: 'vertex-marker', iconSize: [10, 10], iconAnchor: [5, 5] }),
-    interactive: false,
-  }).addTo(map);
-  _digVertexMarkers.push(vm);
-
   if (_digMode === 'point') {
-    // Single click = done for points
+    // Point: commit immediately on click
+    _digLatLngs.push(e.latlng);
+    const vm = L.marker(e.latlng, {
+      icon: L.divIcon({ className: 'vertex-marker', iconSize: [10, 10], iconAnchor: [5, 5] }),
+      interactive: false,
+    }).addTo(map);
+    _digVertexMarkers.push(vm);
     _finishDigitize();
     return;
   }
-
-  // Update temp line/polygon
-  if (_digTempLayer) map.removeLayer(_digTempLayer);
-  if (_digMode === 'line') {
-    if (_digLatLngs.length >= 2) {
+  // Line/polygon: debounce so the 2nd click of a dblclick is dropped
+  if (_digClickTimer) { clearTimeout(_digClickTimer); _digClickTimer = null; }
+  const latlng = e.latlng;
+  _digClickTimer = setTimeout(() => {
+    _digClickTimer = null;
+    if (!_digMode) return;
+    _digLatLngs.push(latlng);
+    const vm = L.marker(latlng, {
+      icon: L.divIcon({ className: 'vertex-marker', iconSize: [10, 10], iconAnchor: [5, 5] }),
+      interactive: false,
+    }).addTo(map);
+    _digVertexMarkers.push(vm);
+    if (_digTempLayer) { map.removeLayer(_digTempLayer); _digTempLayer = null; }
+    if (_digMode === 'line' && _digLatLngs.length >= 2) {
       _digTempLayer = L.polyline(_digLatLngs, { color: '#63b3ed', weight: 2.5, dashArray: '6 4', opacity: 0.8 }).addTo(map);
-    }
-  } else if (_digMode === 'polygon') {
-    if (_digLatLngs.length >= 2) {
+    } else if (_digMode === 'polygon' && _digLatLngs.length >= 2) {
       _digTempLayer = L.polygon(_digLatLngs, { color: '#63b3ed', weight: 2, fillColor: '#63b3ed', fillOpacity: 0.15, dashArray: '6 4' }).addTo(map);
     }
-  }
+  }, 260); // < browser dblclick threshold (typically 300-500ms)
 }
 
 function _onDigDblClick(e) {
   if (!_digMode || _digMode === 'point') return;
   e.originalEvent.preventDefault();
   e.originalEvent.stopPropagation();
-  // Remove the extra vertex added by the second click of dblclick
-  if (_digLatLngs.length > 1) _digLatLngs.pop();
-  if (_digVertexMarkers.length > 1) {
-    const last = _digVertexMarkers.pop();
-    map.removeLayer(last);
+  // Cancel any pending single-click so the 2nd click of dblclick doesn't add a vertex
+  if (_digClickTimer) { clearTimeout(_digClickTimer); _digClickTimer = null; }
+  const minVerts = _digMode === 'polygon' ? 3 : 2;
+  if (_digLatLngs.length < minVerts) {
+    showToast(`Need at least ${minVerts} vertices for a ${_digMode}`, 'error');
+    return;
   }
-  if (_digLatLngs.length >= 2) _finishDigitize();
+  _finishDigitize();
 }
 
 function _finishDigitize() {
