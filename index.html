@@ -1196,7 +1196,7 @@
     <h3>Export Map</h3>
     <div class="exp-row">
       <label>Title</label>
-      <input type="text" id="exp-title" value="Web GIS Export">
+      <input type="text" id="exp-title" value="Map-Kit · powered by In4Metrix">
     </div>
     <div class="exp-row">
       <label>Resolution (DPI)</label>
@@ -4910,8 +4910,17 @@ async function buildLayout() {
   const ovBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 13, crossOrigin: true
   }).addTo(layoutOverviewMap);
-  layoutOverviewMap.setView(layoutMap.getCenter(), Math.max(1, layoutMap.getZoom() - 4), {animate: false});
+  // Fit overview to a wide buffer around the study area so country-level
+  // context is visible regardless of where on the globe the user is.
   const mainBounds = layoutMap.getBounds();
+  const bufferFactor = 8; // expand each side by 8× the main extent
+  const dLat = (mainBounds.getNorth() - mainBounds.getSouth()) * bufferFactor;
+  const dLon = (mainBounds.getEast() - mainBounds.getWest()) * bufferFactor;
+  const ovBounds = L.latLngBounds(
+    [Math.max(-85, mainBounds.getSouth() - dLat), mainBounds.getWest() - dLon],
+    [Math.min(85, mainBounds.getNorth() + dLat), mainBounds.getEast() + dLon]
+  );
+  layoutOverviewMap.fitBounds(ovBounds, {animate: false, padding: [4, 4]});
   L.rectangle(mainBounds, {color:'#e53e3e', weight:1.5, fillOpacity:0.15}).addTo(layoutOverviewMap);
 
   await _waitForTiles(ovBasemap, 2000);
