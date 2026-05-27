@@ -677,48 +677,130 @@
   #layout-map {
     position: absolute; inset: 0;
   }
+  /* Professional north arrow built from pure HTML/CSS so html2canvas
+     captures it reliably (avoids known SVG/img rendering issues). */
   #layout-north {
     position: absolute; top: 12px; right: 12px;
-    width: 30px; height: 30px; border-radius: 50%;
-    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: bold; color: #e53e3e;
+    width: 40px; height: 56px;
     pointer-events: none; z-index: 1000;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+  }
+  #layout-north .na-disc {
+    position: absolute; left: 0; top: 8px; width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    border: 1.2px solid #1a202c;
+  }
+  #layout-north .na-arrow-up,
+  #layout-north .na-arrow-down {
+    position: absolute; left: 50%; width: 0; height: 0;
+    transform: translateX(-50%);
+  }
+  /* Upper (filled) half pointing N */
+  #layout-north .na-arrow-up {
+    top: 4px;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 24px solid #1a202c;
+  }
+  /* Lower (open/white) half pointing S */
+  #layout-north .na-arrow-down {
+    bottom: 4px;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 24px solid #ffffff;
+    /* Black outline by stacking a slightly larger black triangle behind */
+    filter: drop-shadow(0 0 0.6px #1a202c) drop-shadow(0 0 0.6px #1a202c);
+  }
+  #layout-north .na-label {
+    position: absolute; left: 0; right: 0; top: -2px;
+    text-align: center;
+    font: bold 9px Arial, Helvetica, sans-serif;
+    color: #1a202c;
+    text-shadow: 0 0 2px #ffffff, 0 0 2px #ffffff;
+    z-index: 2;
+  }
+  #layout-attribution {
+    position: absolute; bottom: 4px; right: 12px;
+    font-size: 8px; color: #2d3748;
+    background: rgba(255,255,255,0.78); padding: 2px 6px; border-radius: 2px;
+    pointer-events: none; z-index: 999;
+    font-family: Arial, Helvetica, sans-serif;
+    max-width: 60%; text-align: right;
+  }
+  .layout-toggle {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    background: #1a202c; color: #cbd5e0;
+    border: 1px solid #2d3748; border-radius: 4px;
+    cursor: pointer; user-select: none;
+  }
+  .layout-toggle input { margin: 0; cursor: pointer; }
+  body.light .layout-toggle { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
+  #layout-coord-format {
+    padding: 5px 8px; font-size: 11px;
+    background: #1a202c; color: #cbd5e0;
+    border: 1px solid #2d3748; border-radius: 4px;
+    cursor: pointer;
+  }
+  #layout-coord-format:disabled { opacity: 0.45; cursor: not-allowed; }
+  body.light #layout-coord-format { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
+  /* Hide ALL Leaflet UI controls (zoom buttons, attribution flag, etc.) inside the paper
+     so they never appear in PNG/PDF exports. The composer is for static map elements only. */
+  #layout-paper .leaflet-control-container,
+  #layout-paper .leaflet-control-zoom,
+  #layout-paper .leaflet-control-attribution,
+  #layout-paper .leaflet-bar { display: none !important; }
+  /* During html2canvas capture, hide editing-only chrome (lock badges, etc.) */
+  #layout-paper.exporting .layout-lock-badge,
+  #layout-paper.exporting #layout-overview-wrap .layout-lock-badge { display: none !important; }
+  /* Graticule labels rendered as plain divs along the paper edges */
+  .layout-grid-label {
+    position: absolute; z-index: 998; pointer-events: none;
+    font-family: Arial, Helvetica, sans-serif; font-size: 9px;
+    color: #2d3748; background: rgba(255,255,255,0.78);
+    padding: 1px 4px; border-radius: 2px; font-weight: 600;
+    white-space: nowrap;
   }
   #layout-scale {
     position: absolute; bottom: 12px; right: 12px;
-    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
+    background: rgba(255,255,255,0.92); border: 1px solid #1a202c;
     border-radius: 3px; padding: 4px 8px 6px;
-    font-size: 10px; color: #e2e8f0; pointer-events: none; z-index: 1000;
+    font-size: 10px; color: #1a202c; pointer-events: none; z-index: 1000;
     display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
     font-family: Arial, Helvetica, sans-serif;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
   #layout-scale .sb-bar {
-    height: 6px; background: #fff; border: 1px solid #1a202c;
+    height: 7px; background: #fff; border: 1px solid #1a202c;
     box-shadow: inset 50% 0 0 0 #1a202c;
   }
-  #layout-scale .sb-row { display: flex; justify-content: space-between; width: 100%; }
-  #layout-scale .sb-rf { opacity: 0.85; font-size: 9px; }
+  #layout-scale .sb-row { display: flex; justify-content: space-between; width: 100%; color: #1a202c; }
+  #layout-scale .sb-rf { opacity: 0.85; font-size: 9px; color: #1a202c; }
   #layout-overview-wrap {
-    position: absolute; top: 50px; right: 12px;
-    width: 160px; height: 110px;
-    background: rgba(15,17,23,0.85); border: 1px solid #2d3748;
-    border-radius: 4px; padding: 3px; pointer-events: none; z-index: 1000;
+    position: absolute; top: 70px; right: 12px;
+    width: 160px; height: 120px;
+    background: rgba(255,255,255,0.92); border: 1px solid #1a202c;
+    border-radius: 3px; padding: 3px; pointer-events: none; z-index: 1000;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
   #layout-overview {
     width: 100%; height: calc(100% - 14px);
     border-radius: 2px; overflow: hidden;
   }
   #layout-overview-label {
-    font-size: 8px; color: #a0aec0; text-align: center;
-    height: 14px; line-height: 14px;
+    font-size: 8px; color: #1a202c; text-align: center;
+    height: 14px; line-height: 14px; font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;
   }
   #layout-legend {
     position: absolute; bottom: 12px; left: 12px;
-    max-width: 180px; max-height: 200px; overflow: auto;
-    background: rgba(15,17,23,0.88); border: 1px solid #2d3748;
-    border-radius: 4px; padding: 8px; font-size: 10px; color: #e2e8f0;
+    max-width: 200px; max-height: 220px; overflow: auto;
+    background: rgba(255,255,255,0.95); border: 1px solid #1a202c;
+    border-radius: 3px; padding: 8px 10px; font-size: 10px; color: #1a202c;
     pointer-events: none; z-index: 1000;
+    font-family: Arial, Helvetica, sans-serif;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
   .layout-actions {
     display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
@@ -1324,13 +1406,29 @@
         <select id="layout-basemap-select" onchange="setLayoutBasemap(this.value)" title="Change layout basemap without affecting the main map">
           <option value="">Basemap: (from main)</option>
         </select>
+        <label class="layout-toggle" title="Show coordinate gridlines (graticule)">
+          <input type="checkbox" id="layout-show-grid" onchange="onLayoutGridChange()"> Gridlines
+        </label>
+        <select id="layout-coord-format" onchange="onLayoutGridChange()" title="Coordinate label format" disabled>
+          <option value="DD" selected>DD (decimal degrees)</option>
+          <option value="DMS">DMS (deg min sec)</option>
+          <option value="DM">DM (deg decimal min)</option>
+        </select>
         <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
       </div>
     </div>
     <div id="layout-paper">
       <div id="layout-map"></div>
-      <div id="layout-north">N</div>
+      <!-- Professional north arrow rendered with pure HTML/CSS so html2canvas
+           captures it reliably (inline SVG and SVG data-URIs are inconsistent). -->
+      <div id="layout-north">
+        <div class="na-label">N</div>
+        <div class="na-disc"></div>
+        <div class="na-arrow-up"></div>
+        <div class="na-arrow-down"></div>
+      </div>
       <div id="layout-scale">Scale</div>
+      <div id="layout-attribution"></div>
       <div id="layout-overview-wrap">
         <div id="layout-overview"></div>
         <div id="layout-overview-label">Overview</div>
@@ -5301,10 +5399,10 @@ function toggleLayoutLock(target) {
       lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
     }
     if (mainLocked && layoutMap) {
-      // Capture user's edits when re-locking after editing
+      // Capture user's edits when re-locking after editing.
+      // Note: no zoom buttons added — pan/scroll-zoom is enabled via
+      // _setLockHandlers, and a clean professional map should have no UI chrome.
       lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
-      L.control.zoom({ position: 'topright' }).addTo(layoutMap);
-      layoutMap._layoutZoomCtl = true;
     }
   } else if (target === 'overview') {
     overviewLocked = !overviewLocked;
@@ -5557,7 +5655,7 @@ async function buildLayout() {
     legendEl.style.display = 'block';
     legendEl.innerHTML = '';
     const head = document.createElement('div');
-    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:#63b3ed;';
+    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:#1a202c;border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;';
     head.textContent = 'Legend';
     legendEl.appendChild(head);
     visibleLayers.forEach(info => {
@@ -5565,7 +5663,7 @@ async function buildLayout() {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:4px 0;';
       const dot = document.createElement('span');
-      dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${info.color || '#63b3ed'};border:1px solid #e2e8f0;flex-shrink:0;`;
+      dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${info.color || '#63b3ed'};border:1px solid #1a202c;flex-shrink:0;`;
       if (sym && sym.mode === 'categorized') {
         dot.style.borderRadius = '2px';
         dot.style.width = '14px'; dot.style.height = '8px';
@@ -5652,6 +5750,28 @@ async function buildLayout() {
   if (layoutMap) layoutMap.invalidateSize(false);
   if (layoutOverviewMap) layoutOverviewMap.invalidateSize(false);
 
+  // ── Static attribution string in the bottom-right corner of the paper ──
+  // (the live Leaflet attribution control is hidden by CSS — we render a
+  // clean static copy so cartographic credit is preserved in PNG/PDF exports.)
+  const attrEl = document.getElementById('layout-attribution');
+  if (attrEl) {
+    // Strip HTML tags from the attribution string for the static label
+    const txt = String(currentAttribution || '').replace(/<[^>]+>/g, '').trim();
+    attrEl.textContent = txt;
+  }
+
+  // ── Optional graticule (coordinate grid) ──
+  const showGrid = document.getElementById('layout-show-grid');
+  if (showGrid && showGrid.checked) {
+    const fmt = document.getElementById('layout-coord-format').value || 'DD';
+    _renderGraticule(layoutMap, paper, fmt);
+  } else {
+    // ensure no stale graticule is left over
+    const oldG = paper.querySelector('#layout-graticule');
+    if (oldG) oldG.remove();
+    paper.querySelectorAll('.layout-grid-label').forEach(n => n.remove());
+  }
+
   document.getElementById('layout-loading').classList.remove('show');
 }
 
@@ -5734,6 +5854,134 @@ function _niceScaleBar(lmap, targetPx = 160) {
   return { meters: best, px, label };
 }
 
+// ── Coordinate formatting helpers ──────────────────────────────────────────
+// value: decimal degree (signed); isLat: true for latitude (N/S), false for lon (E/W).
+// format: 'DD' | 'DMS' | 'DM'
+function _formatCoord(value, isLat, format) {
+  if (!isFinite(value)) return '';
+  const hemi = isLat ? (value >= 0 ? 'N' : 'S') : (value >= 0 ? 'E' : 'W');
+  const abs = Math.abs(value);
+  if (format === 'DMS') {
+    const deg = Math.floor(abs);
+    const minFloat = (abs - deg) * 60;
+    const min = Math.floor(minFloat);
+    const sec = Math.round((minFloat - min) * 60);
+    // Handle rollover (e.g., 59.6" → 60")
+    let d = deg, m = min, s = sec;
+    if (s === 60) { s = 0; m += 1; }
+    if (m === 60) { m = 0; d += 1; }
+    return `${d}° ${String(m).padStart(2,'0')}′ ${String(s).padStart(2,'0')}″ ${hemi}`;
+  }
+  if (format === 'DM') {
+    const deg = Math.floor(abs);
+    const min = (abs - deg) * 60;
+    return `${deg}° ${min.toFixed(2).padStart(5,'0')}′ ${hemi}`;
+  }
+  // DD (default): show enough precision for ~10m resolution at equator (4 dp ≈ 11 m)
+  return `${value.toFixed(4)}°`;
+}
+
+// Pick a "nice" graticule step in degrees that gives ~4–8 lines across the span.
+function _niceGridStep(spanDeg) {
+  if (!spanDeg || !isFinite(spanDeg) || spanDeg <= 0) return null;
+  const target = spanDeg / 5;
+  const pow = Math.pow(10, Math.floor(Math.log10(target)));
+  const candidates = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10].map(m => m * pow);
+  // Pick the smallest candidate that gives at most ~8 grid lines
+  let best = candidates[0];
+  for (const c of candidates) {
+    if (spanDeg / c <= 8) { best = c; break; }
+  }
+  return best;
+}
+
+// Render a graticule (coordinate grid + edge labels) inside #layout-paper.
+// Removes any prior graticule first so this can be called on every buildLayout.
+function _renderGraticule(lmap, paperEl, format) {
+  // Clean up any previous graticule
+  const old = paperEl.querySelector('#layout-graticule');
+  if (old) old.remove();
+  paperEl.querySelectorAll('.layout-grid-label').forEach(n => n.remove());
+  if (!lmap) return;
+
+  const bounds = lmap.getBounds();
+  const south = bounds.getSouth(), north = bounds.getNorth();
+  const west = bounds.getWest(), east = bounds.getEast();
+  const latStep = _niceGridStep(north - south);
+  const lonStep = _niceGridStep(east - west);
+  if (!latStep || !lonStep) return;
+
+  const size = lmap.getSize();
+  const W = size.x, H = size.y;
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.id = 'layout-graticule';
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:400;`;
+  // Round start values to nearest multiple of step
+  const latStart = Math.ceil(south / latStep) * latStep;
+  const lonStart = Math.ceil(west / lonStep) * lonStep;
+
+  const lineStyle = 'stroke:rgba(45,55,72,0.55);stroke-width:0.6;stroke-dasharray:3,3;fill:none;';
+
+  // Horizontal lines (parallels) + left/right edge labels
+  for (let lat = latStart; lat <= north + 1e-9; lat += latStep) {
+    const pt = lmap.latLngToContainerPoint([lat, (west + east) / 2]);
+    if (pt.y < 0 || pt.y > H) continue;
+    const line = document.createElementNS(svgNS, 'line');
+    line.setAttribute('x1', 0); line.setAttribute('x2', W);
+    line.setAttribute('y1', pt.y); line.setAttribute('y2', pt.y);
+    line.setAttribute('style', lineStyle);
+    svg.appendChild(line);
+    // Left edge label
+    const lblL = document.createElement('div');
+    lblL.className = 'layout-grid-label';
+    lblL.textContent = _formatCoord(lat, true, format);
+    lblL.style.left = '2px';
+    lblL.style.top = (pt.y - 8) + 'px';
+    paperEl.appendChild(lblL);
+  }
+
+  // Vertical lines (meridians) + top/bottom edge labels
+  for (let lon = lonStart; lon <= east + 1e-9; lon += lonStep) {
+    const pt = lmap.latLngToContainerPoint([(south + north) / 2, lon]);
+    if (pt.x < 0 || pt.x > W) continue;
+    const line = document.createElementNS(svgNS, 'line');
+    line.setAttribute('y1', 0); line.setAttribute('y2', H);
+    line.setAttribute('x1', pt.x); line.setAttribute('x2', pt.x);
+    line.setAttribute('style', lineStyle);
+    svg.appendChild(line);
+    // Bottom edge label
+    const lblB = document.createElement('div');
+    lblB.className = 'layout-grid-label';
+    lblB.textContent = _formatCoord(lon, false, format);
+    lblB.style.left = (pt.x + 3) + 'px';
+    lblB.style.bottom = '2px';
+    lblB.style.top = 'auto';
+    paperEl.appendChild(lblB);
+  }
+
+  paperEl.appendChild(svg);
+}
+
+// Called when the user toggles the Gridlines checkbox or changes coord format.
+function onLayoutGridChange() {
+  const showGrid = document.getElementById('layout-show-grid').checked;
+  const fmtSel = document.getElementById('layout-coord-format');
+  fmtSel.disabled = !showGrid;
+  const paper = document.getElementById('layout-paper');
+  if (!paper) return;
+  if (showGrid && layoutMap) {
+    _renderGraticule(layoutMap, paper, fmtSel.value);
+  } else {
+    const old = paper.querySelector('#layout-graticule');
+    if (old) old.remove();
+    paper.querySelectorAll('.layout-grid-label').forEach(n => n.remove());
+  }
+}
+
 async function previewExport() {
   closeExport();
   showToast('Building layout... please wait');
@@ -5749,8 +5997,10 @@ async function previewExport() {
 
 async function layoutExport(fmt) {
   showToast('Rendering export... please wait');
+  const paper = document.getElementById('layout-paper');
+  // Toggle `exporting` class to hide editing-only chrome (lock badges) during capture.
+  paper.classList.add('exporting');
   try {
-    const paper = document.getElementById('layout-paper');
     const targetDpi = parseInt(document.getElementById('exp-dpi').value) || 300;
     // html2canvas `scale` oversamples relative to 96 CSS DPI baseline.
     const dpiScale = targetDpi / 96;
@@ -5761,7 +6011,15 @@ async function layoutExport(fmt) {
       scale: dpiScale, // true DPI oversampling vs 96 CSS DPI
       scrollX: 0, scrollY: 0, x: 0, y: 0,
       backgroundColor: document.body.classList.contains('light') ? '#ffffff' : '#1a1d23',
-      logging: false
+      logging: false,
+      // Belt-and-braces: also strip any Leaflet UI controls in the cloned DOM.
+      ignoreElements: (el) => {
+        if (!el || !el.classList) return false;
+        return el.classList.contains('leaflet-control-zoom')
+            || el.classList.contains('leaflet-control-attribution')
+            || el.classList.contains('leaflet-control-container')
+            || el.classList.contains('layout-lock-badge');
+      }
     });
 
     let imgData;
@@ -5794,6 +6052,8 @@ async function layoutExport(fmt) {
   } catch (e) {
     console.error('Export failed:', e);
     showToast('Export failed: ' + e.message, 'error');
+  } finally {
+    paper.classList.remove('exporting');
   }
 }
 
