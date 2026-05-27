@@ -3583,23 +3583,55 @@ function guessCol(cols, candidates) {
   return '';
 }
 
-function parseTabular(csvText, fileName, type) {
-  const lines = csvText.trim().split('\n');
-  if (lines.length < 2) { showToast('File has no data rows', 'error'); return; }
-
-  // Detect delimiter
-  const firstLine = lines[0];
-  const delim = firstLine.includes('\t') ? '\t' : ',';
-  const headers = firstLine.split(delim).map(h => h.replace(/^["']|["']$/g, '').trim());
-
+// RFC 4180-style CSV/TSV line parser — respects quoted fields containing the delimiter,
+// embedded newlines (within a single quoted field), and escaped quotes ("").
+function parseDelimitedText(text, delim) {
   const rows = [];
-  for (let i=1; i<lines.length; i++) {
-    const vals = lines[i].split(delim).map(v => v.replace(/^["']|["']$/g, '').trim());
-    if (vals.length >= headers.length) {
-      const row = {};
-      headers.forEach((h,j) => row[h] = vals[j]);
-      rows.push(row);
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i++; }   // escaped quote
+        else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else {
+      if (c === '"') { inQuotes = true; }
+      else if (c === delim) { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r') { /* swallow \r before \n */ }
+      else { field += c; }
     }
+  }
+  // flush last field/row
+  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function parseTabular(csvText, fileName, type) {
+  if (!csvText || !csvText.trim()) { showToast('File has no data', 'error'); return; }
+
+  // Detect delimiter from the first line (outside any quotes)
+  const firstNewline = csvText.indexOf('\n');
+  const firstLine = firstNewline === -1 ? csvText : csvText.substring(0, firstNewline);
+  const delim = firstLine.includes('\t') ? '\t' : ',';
+
+  const parsed = parseDelimitedText(csvText, delim);
+  if (parsed.length < 2) { showToast('File has no data rows', 'error'); return; }
+
+  const headers = parsed[0].map(h => h.trim());
+  const rows = [];
+  for (let i = 1; i < parsed.length; i++) {
+    const vals = parsed[i];
+    // Skip totally empty trailing rows
+    if (vals.length === 1 && vals[0].trim() === '') continue;
+    const row = {};
+    headers.forEach((h, j) => { row[h] = (vals[j] !== undefined ? String(vals[j]).trim() : ''); });
+    rows.push(row);
   }
 
   if (rows.length === 0) { showToast('No valid rows found', 'error'); return; }
