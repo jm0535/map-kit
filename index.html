@@ -1148,6 +1148,19 @@
           <button class="bottom-tab" data-tab="analysis" onclick="switchBottomTab('analysis')">Analysis Results</button>
         </div>
         <div class="profile-tabs" id="profile-tabs"></div>
+        <label id="profile-sort-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:#a0aec0;font-weight:400;letter-spacing:0;text-transform:none;">
+          Sort:
+          <select id="profile-sort" onchange="rebuildProfileFromCheckboxes()" style="font-size:10px;padding:1px 4px;background:#1a202c;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;cursor:pointer;">
+            <option value="elevation" selected>Elevation (low→high)</option>
+            <option value="west_east">West→East</option>
+            <option value="south_north">South→North</option>
+            <option value="survey">Survey order</option>
+          </select>
+        </label>
+        <label id="profile-zero-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:#a0aec0;font-weight:400;letter-spacing:0;text-transform:none;cursor:pointer;">
+          <input type="checkbox" id="profile-y-zero" checked onchange="rebuildProfileFromCheckboxes()" style="accent-color:#63b3ed;">
+          Y from 0
+        </label>
         <div style="flex:1"></div>
         <span id="profile-hint" style="font-size:10px;color:#4a5568;font-weight:400;letter-spacing:0">Click a point on the profile to pan the map</span>
       </div>
@@ -4061,13 +4074,33 @@ function hexToRgba(hex, a) {
 }
 
 function registerProfile(id, label, color, latLonElevArray) {
-  const dists = haversineKm(latLonElevArray);
-  const points = latLonElevArray.map((p, i) => ({ dist: +dists[i].toFixed(3), elev: p.elev }));
+  // Store raw points; sort + distance computed at render time so the user
+  // can switch sort modes (elevation / W→E / S→N / survey) without re-importing.
   const idx = profileRegistry.findIndex(p => p.id === id);
   if (idx !== -1) profileRegistry.splice(idx, 1);
-  profileRegistry.push({ id, label, color, points, _latLonElev: latLonElevArray });
+  profileRegistry.push({ id, label, color, _latLonElev: latLonElevArray });
   rebuildProfileCheckboxes();
   rebuildProfileFromCheckboxes();
+}
+
+// Build a render-ready { points, latLonElev } for a profile given the
+// currently selected sort mode. Always returns points in the order they
+// should appear left-to-right on the X axis, with cumulative distance recomputed.
+function _buildProfilePoints(profile, sortMode) {
+  const raw = profile._latLonElev.slice();
+  let ordered;
+  if (sortMode === 'elevation') {
+    ordered = raw.slice().sort((a, b) => a.elev - b.elev);
+  } else if (sortMode === 'west_east') {
+    ordered = raw.slice().sort((a, b) => a.lon - b.lon);
+  } else if (sortMode === 'south_north') {
+    ordered = raw.slice().sort((a, b) => a.lat - b.lat);
+  } else {
+    ordered = raw; // survey order
+  }
+  const dists = haversineKm(ordered);
+  const points = ordered.map((p, i) => ({ dist: +dists[i].toFixed(3), elev: p.elev }));
+  return { points, latLonElev: ordered };
 }
 
 function unregisterProfile(id) {
@@ -4103,17 +4136,31 @@ function rebuildProfileFromCheckboxes() {
   const ctx2 = document.getElementById('profile-chart').getContext('2d');
   if (profileChart) profileChart.destroy();
 
+  // Read sort mode + Y-axis baseline from the UI; default to elevation/from-zero.
+  const sortEl = document.getElementById('profile-sort');
+  const sortMode = sortEl ? sortEl.value : 'elevation';
+  const zeroEl = document.getElementById('profile-y-zero');
+  const yFromZero = zeroEl ? zeroEl.checked : true;
+
+  // Cache the rendered (sorted) lat/lon arrays per profile so click→pan picks
+  // the correct map location for the clicked point.
+  const renderCache = new Map();
+
   const datasets = [];
   profileRegistry.forEach(p => {
     if (!activeIds.has(p.id)) return;
+    const built = _buildProfilePoints(p, sortMode);
+    renderCache.set(p.id, built);
     datasets.push({
       label: p.label,
-      data: p.points.map(pt => ({ x: pt.dist, y: pt.elev })),
+      _profileId: p.id,
+      data: built.points.map(pt => ({ x: pt.dist, y: pt.elev })),
       borderColor: p.color,
-      backgroundColor: hexToRgba(p.color, 0.15),
-      fill: true, tension: 0.3, pointRadius: 5,
+      backgroundColor: hexToRgba(p.color, 0.25),
+      fill: 'origin',          // fill all the way to Y=0 (terrain silhouette)
+      tension: 0.3, pointRadius: 3,
       pointBackgroundColor: p.color,
-      pointBorderColor: 'white', pointBorderWidth: 1.5,
+      pointBorderColor: 'white', pointBorderWidth: 1,
     });
   });
 
@@ -4141,16 +4188,15 @@ function rebuildProfileFromCheckboxes() {
       },
       scales:{
         x:{type:'linear',title:{display:true,text:'Distance (km)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
-        y:{beginAtZero:false,title:{display:true,text:'Elevation (m a.s.l.)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
+        y:{beginAtZero:yFromZero,title:{display:true,text:'Elevation (m a.s.l.)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
       },
       onClick:(evt, elements) => {
         if (elements.length > 0) {
           const el = elements[0];
           const ds = profileChart.data.datasets[el.datasetIndex];
-          const pt = ds.data[el.index];
-          const profile = profileRegistry.find(p => p.label === ds.label);
-          if (profile && profile._latLonElev) {
-            const loc = profile._latLonElev[el.index];
+          const built = renderCache.get(ds._profileId);
+          if (built && built.latLonElev[el.index]) {
+            const loc = built.latLonElev[el.index];
             map.setView([loc.lat, loc.lon], map.getZoom(), {animate:true});
           }
         }
