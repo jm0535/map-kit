@@ -1103,6 +1103,10 @@
         <button class="export-btn" onclick="openExport('pdf')"><span class="icon">&#x1f4c4;</span> Export as PDF</button>
         <button class="export-btn" onclick="exportAllCSV()"><span class="icon">&#x1f4ca;</span> Export all points as CSV</button>
         <button class="export-btn" onclick="exportAllGeoJSON()"><span class="icon">&#x1f5c3;</span> Export all as GeoJSON</button>
+        <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Elevation Profile</div>
+        <button class="export-btn" onclick="exportProfile('png')"><span class="icon">&#x1f5bc;</span> Profile as PNG</button>
+        <button class="export-btn" onclick="exportProfile('pdf')"><span class="icon">&#x1f4c4;</span> Profile as PDF</button>
+        <button class="export-btn" onclick="exportProfile('svg')"><span class="icon">&#x1f5fe;</span> Profile as SVG</button>
         <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Per-Layer Export</div>
         <select id="export-layer-select" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
         <button class="export-btn" onclick="exportLayerGeoJSON()"><span class="icon">&#x1f5c3;</span> Export layer as GeoJSON</button>
@@ -6175,6 +6179,194 @@ function _downloadBlob(blob, filename) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ELEVATION PROFILE EXPORT (PNG / PDF / SVG)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Build metadata strings shown in the export caption.
+function _profileExportMeta() {
+  const sortEl = document.getElementById('profile-sort');
+  const sortLabel = sortEl ? sortEl.options[sortEl.selectedIndex].text : 'Elevation (low→high)';
+  const layers = (profileChart && profileChart.data && profileChart.data.datasets)
+    ? profileChart.data.datasets.map(d => d.label).join(', ')
+    : '';
+  const date = new Date().toISOString().slice(0, 10);
+  return { sortLabel, layers, date };
+}
+
+// Render the live profile chart into a high-DPI canvas with title + caption
+// strips. Returns the offscreen canvas (caller decides PNG vs PDF).
+function _renderProfileToCanvas(scale) {
+  if (!profileChart) throw new Error('No elevation profile is currently displayed.');
+  const meta = _profileExportMeta();
+
+  const live = profileChart.canvas;
+  const W = 1600, H = 900;                  // logical output size at scale=1
+  const titleH = 56, captionH = 42;
+  const chartH = H - titleH - captionH;
+  const out = document.createElement('canvas');
+  out.width = W * scale; out.height = H * scale;
+  const ctx = out.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Title strip
+  ctx.fillStyle = '#0f1117';
+  ctx.font = '600 22px system-ui, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Elevation Profile', 24, titleH / 2);
+  ctx.font = '400 13px system-ui, sans-serif';
+  ctx.fillStyle = '#4a5568';
+  ctx.textAlign = 'right';
+  ctx.fillText(meta.date, W - 24, titleH / 2);
+  ctx.textAlign = 'left';
+
+  // Render the chart at higher resolution by temporarily resizing it.
+  // Chart.js handles devicePixelRatio internally, so we draw the existing
+  // canvas onto our output canvas scaled to fill the body area.
+  const aspect = live.width / live.height;
+  let drawW = W - 48, drawH = drawW / aspect;
+  if (drawH > chartH - 24) { drawH = chartH - 24; drawW = drawH * aspect; }
+  const drawX = (W - drawW) / 2, drawY = titleH + (chartH - drawH) / 2;
+  ctx.drawImage(live, drawX, drawY, drawW, drawH);
+
+  // Caption strip
+  ctx.fillStyle = '#f7fafc';
+  ctx.fillRect(0, H - captionH, W, captionH);
+  ctx.fillStyle = '#4a5568';
+  ctx.font = '400 12px system-ui, sans-serif';
+  ctx.textBaseline = 'middle';
+  const captionY = H - captionH / 2;
+  const captionTxt = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  Map-Kit`;
+  ctx.fillText(captionTxt, 24, captionY);
+
+  return { canvas: out, W, H };
+}
+
+// Build an editable SVG by reading the live chart's scales + datasets.
+function _renderProfileToSVG() {
+  if (!profileChart) throw new Error('No elevation profile is currently displayed.');
+  const meta = _profileExportMeta();
+  const W = 1600, H = 900;
+  const margin = { top: 80, right: 40, bottom: 110, left: 80 };
+  const plotW = W - margin.left - margin.right;
+  const plotH = H - margin.top - margin.bottom;
+
+  const xScale = profileChart.scales.x;
+  const yScale = profileChart.scales.y;
+  const xMin = xScale.min, xMax = xScale.max;
+  const yMin = yScale.min, yMax = yScale.max;
+  const sx = v => margin.left + ((v - xMin) / (xMax - xMin)) * plotW;
+  const sy = v => margin.top + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+  // Build axis ticks (~6 each)
+  function ticks(min, max, n) {
+    const step = (max - min) / n;
+    const arr = [];
+    for (let i = 0; i <= n; i++) arr.push(min + step * i);
+    return arr;
+  }
+  const xt = ticks(xMin, xMax, 8);
+  const yt = ticks(yMin, yMax, 6);
+
+  let svg = '';
+  svg += `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  svg += `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="system-ui, sans-serif">\n`;
+  svg += `<rect width="${W}" height="${H}" fill="#ffffff"/>\n`;
+
+  // Title
+  svg += `<text x="24" y="36" font-size="22" font-weight="600" fill="#0f1117">Elevation Profile</text>\n`;
+  svg += `<text x="${W - 24}" y="36" font-size="13" fill="#4a5568" text-anchor="end">${meta.date}</text>\n`;
+
+  // Plot frame
+  svg += `<rect x="${margin.left}" y="${margin.top}" width="${plotW}" height="${plotH}" fill="#fafbfc" stroke="#cbd5e0"/>\n`;
+
+  // Gridlines + axis labels
+  yt.forEach(t => {
+    const y = sy(t);
+    svg += `<line x1="${margin.left}" y1="${y}" x2="${margin.left + plotW}" y2="${y}" stroke="#e2e8f0"/>\n`;
+    svg += `<text x="${margin.left - 8}" y="${y + 4}" font-size="11" fill="#4a5568" text-anchor="end">${Math.round(t)}</text>\n`;
+  });
+  xt.forEach(t => {
+    const x = sx(t);
+    svg += `<line x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top + plotH}" stroke="#e2e8f0"/>\n`;
+    svg += `<text x="${x}" y="${margin.top + plotH + 16}" font-size="11" fill="#4a5568" text-anchor="middle">${t.toFixed(1)}</text>\n`;
+  });
+  // Axis titles
+  svg += `<text x="${margin.left + plotW / 2}" y="${margin.top + plotH + 42}" font-size="12" fill="#2d3748" text-anchor="middle">Distance (km)</text>\n`;
+  svg += `<text transform="translate(${margin.left - 50},${margin.top + plotH / 2}) rotate(-90)" font-size="12" fill="#2d3748" text-anchor="middle">Elevation (m a.s.l.)</text>\n`;
+
+  // Series
+  profileChart.data.datasets.forEach(ds => {
+    const pts = ds.data;
+    if (!pts.length) return;
+    // Filled area path (back to Y=0 baseline, clipped to plot)
+    const baselineY = sy(Math.max(yMin, 0));
+    let path = `M ${sx(pts[0].x)} ${baselineY} `;
+    pts.forEach(p => { path += `L ${sx(p.x)} ${sy(p.y)} `; });
+    path += `L ${sx(pts[pts.length - 1].x)} ${baselineY} Z`;
+    const fillCol = (ds.backgroundColor || '').toString();
+    svg += `<path d="${path}" fill="${fillCol || 'rgba(99,179,237,0.25)'}" stroke="none"/>\n`;
+    // Line on top
+    let line = `M ${sx(pts[0].x)} ${sy(pts[0].y)} `;
+    pts.forEach((p, i) => { if (i > 0) line += `L ${sx(p.x)} ${sy(p.y)} `; });
+    svg += `<path d="${line}" fill="none" stroke="${ds.borderColor}" stroke-width="1.6"/>\n`;
+    // Points
+    pts.forEach(p => {
+      svg += `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="2.5" fill="${ds.borderColor}" stroke="#ffffff" stroke-width="1"/>\n`;
+    });
+  });
+
+  // Legend (top-left of plot area)
+  let lx = margin.left + 12, ly = margin.top + 18;
+  profileChart.data.datasets.forEach(ds => {
+    svg += `<rect x="${lx}" y="${ly - 8}" width="12" height="12" fill="${ds.borderColor}"/>\n`;
+    svg += `<text x="${lx + 18}" y="${ly + 2}" font-size="11" fill="#2d3748">${(ds.label || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</text>\n`;
+    ly += 18;
+  });
+
+  // Caption strip
+  svg += `<rect x="0" y="${H - 42}" width="${W}" height="42" fill="#f7fafc"/>\n`;
+  const cap = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  Map-Kit`
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  svg += `<text x="24" y="${H - 16}" font-size="12" fill="#4a5568">${cap}</text>\n`;
+
+  svg += `</svg>\n`;
+  return svg;
+}
+
+function exportProfile(fmt) {
+  if (!profileChart) {
+    showToast('No elevation profile to export — import a point layer with elevations first.', 'error');
+    return;
+  }
+  try {
+    const stamp = new Date().toISOString().slice(0, 10);
+    if (fmt === 'png') {
+      const { canvas } = _renderProfileToCanvas(2);
+      canvas.toBlob(blob => _downloadBlob(blob, `elevation_profile_${stamp}.png`), 'image/png');
+      showToast('Profile PNG exported', 'success');
+    } else if (fmt === 'pdf') {
+      const { canvas, W, H } = _renderProfileToCanvas(2);
+      const dataUrl = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [W, H] });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, W, H, undefined, 'FAST');
+      pdf.save(`elevation_profile_${stamp}.pdf`);
+      showToast('Profile PDF exported', 'success');
+    } else if (fmt === 'svg') {
+      const svg = _renderProfileToSVG();
+      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      _downloadBlob(blob, `elevation_profile_${stamp}.svg`);
+      showToast('Profile SVG exported', 'success');
+    }
+  } catch (e) {
+    console.error('Profile export failed:', e);
+    showToast('Export failed: ' + e.message, 'error');
+  }
 }
 
 function exportAllCSV() {
