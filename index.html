@@ -784,6 +784,11 @@
     border-radius: 3px; padding: 3px; pointer-events: none; z-index: 1000;
     box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
+  /* When the overview is locked for editing, re-enable pointer events so the
+     user can pan/zoom it inside the layout composer. */
+  #layout-overview-wrap.editable { pointer-events: auto; }
+  #layout-overview-wrap.editable #layout-overview { cursor: grab; }
+  #layout-overview-wrap.editable #layout-overview:active { cursor: grabbing; }
   #layout-overview {
     width: 100%; height: calc(100% - 14px);
     border-radius: 2px; overflow: hidden;
@@ -2797,13 +2802,28 @@ function addUploadedGeoJSON(geojson, name, color) {
   refreshExportLayerSelect();
   showToast(`Imported "${name}" — ${featureCount} features (${[...geomTypes].join(', ')})`, 'success');
 
-  // Register elevation profile if points have elevation data
+  // Register elevation profile if points have elevation data.
+  // Priority: `_elevation` (set by importTabularData using the user-picked
+  // mapper column), then any common case-insensitive variant of
+  // elevation/altitude/height/z found in feature properties.
   if (geomTypes.has('Point')) {
     const elevData = [];
     geojson.features.forEach(f => {
       if (f.geometry.type !== 'Point') return;
       const p = f.properties || {};
-      const elev = parseFloat(p.elevation || p.elevation_m || p.elev || p.Elevation || p.ELEVATION || p.alt || p.altitude || p.z || p.Z);
+      let elev = parseFloat(p._elevation);
+      if (!isFinite(elev)) {
+        // Fallback: case-insensitive scan over property keys
+        for (const k of Object.keys(p)) {
+          const kl = k.toLowerCase();
+          if (kl === 'elevation' || kl === 'elev' || kl === 'elevation_m' ||
+              kl === 'elev_m' || kl === 'altitude' || kl === 'alt' ||
+              kl === 'height' || kl === 'z') {
+            const v = parseFloat(p[k]);
+            if (isFinite(v)) { elev = v; break; }
+          }
+        }
+      }
       if (!isFinite(elev)) return;
       const [lon, lat] = f.geometry.coordinates;
       elevData.push({lat, lon, elev});
@@ -3970,6 +3990,14 @@ function importTabularData(rows, headers, latCol, lonCol, labelCol, elevCol, fil
     const props = {};
     headers.forEach(h => { if (row[h] !== undefined && row[h] !== '') props[h] = row[h]; });
     props._source_crs = srcCode;
+
+    // Standardize the user-picked elevation column into a `_elevation` prop
+    // so the elevation profile registration can find it regardless of the
+    // original column name (e.g., 'Elevation_m', 'altitude_ft', 'Z_dem').
+    if (elevCol) {
+      const ev = parseFloat(row[elevCol]);
+      if (isFinite(ev)) props._elevation = ev;
+    }
 
     features.push({
       type: 'Feature',
@@ -5411,8 +5439,15 @@ function toggleLayoutLock(target) {
     btn.querySelector('.lock-icon').textContent = overviewLocked ? '🔒' : '🔓';
     _setLockHandlers(layoutOverviewMap, overviewLocked);
     _updateLockBadge('overview', overviewLocked);
+    // Toggle pointer-events on the wrap so the user can actually click/drag
+    // the overview inset when it's unlocked for editing.
+    const wrap = document.getElementById('layout-overview-wrap');
+    if (wrap) wrap.classList.toggle('editable', overviewLocked);
     if (overviewLocked && layoutOverviewMap) {
       lockedOverviewState = { center: layoutOverviewMap.getCenter(), zoom: layoutOverviewMap.getZoom() };
+      // Leaflet needs a size refresh after pointer-events flips, otherwise
+      // the first drag attempt can be ignored.
+      setTimeout(() => layoutOverviewMap && layoutOverviewMap.invalidateSize(false), 30);
     }
   }
 }
@@ -5445,6 +5480,8 @@ function _resetLayoutLockState() {
   ['layout-lock-badge-main','layout-lock-badge-overview'].forEach(id => {
     const n = document.getElementById(id); if (n) n.remove();
   });
+  const ovWrap = document.getElementById('layout-overview-wrap');
+  if (ovWrap) ovWrap.classList.remove('editable');
 }
 
 function closeLayoutModal() {
@@ -5742,6 +5779,9 @@ async function buildLayout() {
   // Restore badges after rebuild
   _updateLockBadge('main', mainLocked);
   _updateLockBadge('overview', overviewLocked);
+  // Restore overview pointer-events state (the wrap is rebuilt with default CSS).
+  const ovWrap = document.getElementById('layout-overview-wrap');
+  if (ovWrap) ovWrap.classList.toggle('editable', !!overviewLocked);
 
   await _waitForTiles(ovBasemap, 5000);
   if (stale()) return;
