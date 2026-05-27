@@ -1210,6 +1210,19 @@
   <span id="status-zoom">Zoom: --</span>
 </div>
 
+<!-- Sheet picker modal (XLSX with multiple sheets) -->
+<div id="sheet-picker-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+  <div id="sheet-picker-box" style="background:#13161c;border:1px solid #2d3748;border-radius:8px;padding:20px 24px;width:440px;max-height:80vh;overflow-y:auto;">
+    <h3 style="color:#63b3ed;font-size:13px;margin:0 0 4px;">Choose Sheet to Import</h3>
+    <div class="subtitle" id="sp-filename" style="color:#718096;font-size:11px;margin-bottom:14px;"></div>
+    <div id="sp-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
+    <div class="cm-actions" style="display:flex;gap:8px;">
+      <button class="btn-primary" onclick="confirmSheetPick()">Continue</button>
+      <button class="btn-secondary" onclick="cancelSheetPick()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Column mapper modal -->
 <div id="col-mapper-overlay">
   <div id="col-mapper-box">
@@ -3473,9 +3486,7 @@ async function processFile(file) {
   else if (ext === 'xlsx' || ext === 'xls') {
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, {type:'array'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const csv = XLSX.utils.sheet_to_csv(ws);
-    parseTabular(csv, name, 'xlsx');
+    handleXlsxWorkbook(wb, name);
   }
   else if (ext === 'tif' || ext === 'tiff') {
     const buf = await file.arrayBuffer();
@@ -3515,6 +3526,99 @@ async function processFile(file) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 let pendingTabular = null;
+let pendingWorkbook = null;  // {wb, fileName} while sheet picker is open
+
+// ─── Sheet picker (XLSX) ───────────────────────────────────────────────────
+// Scores a sheet to estimate how likely it is the user's data table.
+// Higher score = better candidate. Used to auto-pick the default selection.
+function scoreSheet(wb, name) {
+  const ws = wb.Sheets[name];
+  if (!ws || !ws['!ref']) return { rows: 0, cols: 0, score: -1, hasCoords: false };
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  const rows = range.e.r - range.s.r;  // exclusive of header
+  const cols = range.e.c - range.s.c + 1;
+
+  // Read just the header row to detect lat/lon columns
+  const headerRow = [];
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: range.s.r, c })];
+    headerRow.push(cell ? String(cell.v || '').trim().toLowerCase() : '');
+  }
+  const hasLat = headerRow.some(h => LAT_NAMES.includes(h));
+  const hasLon = headerRow.some(h => LON_NAMES.includes(h));
+  const hasCoords = hasLat && hasLon;
+
+  // Score: prioritize sheets with lat/lon headers, then by row count, lightly by col count.
+  // Penalize sheets that look like readme/schema/notes (very few rows or sheet names that hint).
+  let score = rows * 10 + cols;
+  if (hasCoords) score += 100000;
+  const nameLc = name.toLowerCase();
+  if (/readme|notes|legend|metadata|info/.test(nameLc)) score -= 50000;
+  if (/schema|dictionary|fields/.test(nameLc)) score -= 30000;
+  if (rows < 2) score -= 20000;
+  return { rows, cols, score, hasCoords };
+}
+
+function handleXlsxWorkbook(wb, fileName) {
+  const names = wb.SheetNames || [];
+  if (names.length === 0) { showToast('Workbook has no sheets', 'error'); return; }
+
+  // Score every sheet and pick the best default
+  const scored = names.map(n => ({ name: n, ...scoreSheet(wb, n) }));
+  const best = scored.reduce((a, b) => (b.score > a.score ? b : a));
+
+  // Single sheet → import directly, no picker
+  if (names.length === 1) {
+    importXlsxSheet(wb, names[0], fileName);
+    return;
+  }
+
+  // Multiple sheets → show picker
+  pendingWorkbook = { wb, fileName, sheets: scored, selected: best.name };
+  const list = document.getElementById('sp-list');
+  list.innerHTML = scored.map(s => {
+    const checked = s.name === best.name ? 'checked' : '';
+    const cellsLabel = s.rows < 0 ? 'empty' : `${s.rows.toLocaleString()} rows × ${s.cols} cols`;
+    const tag = s.hasCoords ? '<span style="color:#48bb78;font-size:10px;margin-left:6px;">lat/lon detected</span>' : '';
+    const tagWeak = s.rows < 2 ? '<span style="color:#a0aec0;font-size:10px;margin-left:6px;">likely notes</span>' : '';
+    const safe = String(s.name).replace(/"/g, '&quot;');
+    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;cursor:pointer;">
+      <input type="radio" name="sp-sheet" value="${safe}" ${checked} style="margin:0;">
+      <div style="flex:1;font-size:12px;color:#e2e8f0;">
+        <div style="font-weight:600;">${s.name}${tag}${tagWeak}</div>
+        <div style="font-size:10px;color:#718096;margin-top:2px;">${cellsLabel}</div>
+      </div>
+    </label>`;
+  }).join('');
+  document.getElementById('sp-filename').textContent =
+    `${fileName} — ${names.length} sheets. Pre-selected the most data-like sheet.`;
+  document.getElementById('sheet-picker-overlay').style.display = 'flex';
+}
+
+function confirmSheetPick() {
+  if (!pendingWorkbook) return;
+  const checked = document.querySelector('input[name="sp-sheet"]:checked');
+  if (!checked) { showToast('Select a sheet', 'error'); return; }
+  const { wb, fileName } = pendingWorkbook;
+  const sheetName = checked.value;
+  document.getElementById('sheet-picker-overlay').style.display = 'none';
+  pendingWorkbook = null;
+  importXlsxSheet(wb, sheetName, fileName);
+}
+
+function cancelSheetPick() {
+  document.getElementById('sheet-picker-overlay').style.display = 'none';
+  pendingWorkbook = null;
+}
+
+function importXlsxSheet(wb, sheetName, fileName) {
+  const ws = wb.Sheets[sheetName];
+  if (!ws) { showToast(`Sheet "${sheetName}" not found`, 'error'); return; }
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  // Include sheet name in display so the user sees which sheet was loaded
+  const displayName = wb.SheetNames.length > 1 ? `${fileName} [${sheetName}]` : fileName;
+  parseTabular(csv, displayName, 'xlsx');
+}
 
 const LAT_NAMES = ['lat','latitude','y','lat_dd','decimallatitude','lat_decimal','northing','ycoord','y_coord'];
 const LON_NAMES = ['lon','lng','long','longitude','x','lon_dd','decimallongitude','lon_decimal','easting','xcoord','x_coord'];
