@@ -20,6 +20,7 @@
 
 <!-- File parsing libs -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
 <script src="https://unpkg.com/shpjs@4.0.4/dist/shp.min.js"></script>
 <script src="https://unpkg.com/togeojson@0.16.0/togeojson.js"></script>
 
@@ -1230,6 +1231,17 @@
     <div class="cm-row">
       <label>Elevation column (optional)</label>
       <select id="cm-elev"></select>
+    </div>
+    <div class="cm-row">
+      <label>Source Coordinate Reference System (CRS)</label>
+      <select id="cm-crs" onchange="onCrsPresetChange()"></select>
+    </div>
+    <div class="cm-row" id="cm-crs-custom-row" style="display:none;">
+      <label>Custom EPSG code (e.g. 32755) or full proj4 string</label>
+      <input type="text" id="cm-crs-custom" placeholder="32755 or +proj=utm +zone=55 +south ..." style="width:100%;padding:6px 8px;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:12px;">
+    </div>
+    <div class="cm-row" id="cm-crs-hint" style="font-size:10px;color:#718096;margin-top:-2px;">
+      Tip: use WGS 84 (EPSG:4326) for raw GPS latitude/longitude. For projected coordinates (eastings/northings), pick the matching UTM zone or enter a custom EPSG.
     </div>
     <div class="cm-actions">
       <button class="btn-primary" onclick="confirmColumnMapping()">Import</button>
@@ -3509,6 +3521,59 @@ const LON_NAMES = ['lon','lng','long','longitude','x','lon_dd','decimallongitude
 const LABEL_NAMES = ['name','site','label','id','station','location','place','site_name','point'];
 const ELEV_NAMES  = ['elev','elevation','alt','altitude','elevation_m','elev_m','height','z'];
 
+// ─── CRS presets ───────────────────────────────────────────────────────────
+// proj4js ships EPSG:4326 and EPSG:4269 by default; everything else is registered here.
+// Each preset: { code, label, def, kind: 'geographic' | 'projected' }
+const CRS_PRESETS = [
+  { code: 'EPSG:4326', label: 'WGS 84 — lat/lon (raw GPS, EPSG:4326)', def: '+proj=longlat +datum=WGS84 +no_defs', kind: 'geographic' },
+  { code: 'EPSG:3857', label: 'Web Mercator (EPSG:3857)', def: '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +no_defs', kind: 'projected' },
+  // Papua New Guinea — UTM zones (Southern hemisphere)
+  { code: 'EPSG:32754', label: 'UTM Zone 54S / WGS 84 (PNG west — EPSG:32754)', def: '+proj=utm +zone=54 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
+  { code: 'EPSG:32755', label: 'UTM Zone 55S / WGS 84 (PNG central — EPSG:32755)', def: '+proj=utm +zone=55 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
+  { code: 'EPSG:32756', label: 'UTM Zone 56S / WGS 84 (PNG east — EPSG:32756)', def: '+proj=utm +zone=56 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
+  // AGD66 / PNGMG94 (legacy PNG datums sometimes seen on old maps)
+  { code: 'EPSG:5825', label: 'PNG94 / PNGMG94 Lambert (EPSG:5825)', def: '+proj=lcc +lat_1=-7 +lat_2=-5 +lat_0=-6 +lon_0=144 +x_0=500000 +y_0=10000000 +datum=WGS84 +units=m +no_defs', kind: 'projected' },
+  // Common worldwide projected
+  { code: 'EPSG:4269', label: 'NAD83 — lat/lon (EPSG:4269)', def: '+proj=longlat +datum=NAD83 +no_defs', kind: 'geographic' },
+  { code: '__custom__', label: 'Custom EPSG code / proj4 string…', def: null, kind: 'custom' },
+];
+
+// Register all preset defs with proj4
+if (typeof proj4 !== 'undefined') {
+  CRS_PRESETS.forEach(p => { if (p.def && p.code !== 'EPSG:4326') { try { proj4.defs(p.code, p.def); } catch(_) {} } });
+}
+
+// Light cache for ad-hoc EPSG lookups via epsg.io
+const _epsgCache = {};
+async function fetchEpsgDef(code) {
+  const key = String(code).toUpperCase().replace(/^EPSG:/, '');
+  if (_epsgCache[key]) return _epsgCache[key];
+  try {
+    const res = await fetch(`https://epsg.io/${key}.proj4`);
+    if (!res.ok) throw new Error('lookup failed');
+    const def = (await res.text()).trim();
+    if (!def || !def.startsWith('+')) throw new Error('invalid def');
+    _epsgCache[key] = def;
+    return def;
+  } catch (e) {
+    return null;
+  }
+}
+
+function onCrsPresetChange() {
+  const sel = document.getElementById('cm-crs');
+  const customRow = document.getElementById('cm-crs-custom-row');
+  customRow.style.display = sel.value === '__custom__' ? '' : 'none';
+}
+
+function populateCrsSelect() {
+  const sel = document.getElementById('cm-crs');
+  if (!sel) return;
+  sel.innerHTML = CRS_PRESETS.map(p => `<option value="${p.code}">${p.label}</option>`).join('');
+  sel.value = 'EPSG:4326';
+  onCrsPresetChange();
+}
+
 function guessCol(cols, candidates) {
   const lower = cols.map(c=>c.toLowerCase().trim());
   for (const c of candidates) {
@@ -3545,17 +3610,8 @@ function parseTabular(csvText, fileName, type) {
   const guessedLabel = guessCol(headers, LABEL_NAMES);
   const guessedElev = guessCol(headers, ELEV_NAMES);
 
-  // If both lat/lon auto-detected and look valid, import directly
-  if (guessedLat && guessedLon) {
-    const testLat = parseFloat(rows[0][guessedLat]);
-    const testLon = parseFloat(rows[0][guessedLon]);
-    if (isFinite(testLat) && isFinite(testLon) && Math.abs(testLat) <= 90 && Math.abs(testLon) <= 180) {
-      importTabularData(rows, headers, guessedLat, guessedLon, guessedLabel, guessedElev, fileName);
-      return;
-    }
-  }
-
-  // Otherwise show column mapper
+  // Always show the column mapper so the user can confirm the CRS.
+  // Pre-fill the column guesses; defaults to EPSG:4326 if values look like lat/lon.
   pendingTabular = { rows, headers, fileName };
   showColumnMapper(headers, guessedLat, guessedLon, guessedLabel, guessedElev, fileName, rows);
 }
@@ -3577,19 +3633,65 @@ function showColumnMapper(headers, latGuess, lonGuess, labelGuess, elevGuess, fi
   if (labelGuess) document.getElementById('cm-label').value = labelGuess;
   if (elevGuess) document.getElementById('cm-elev').value = elevGuess;
 
+  // Populate CRS dropdown and guess a sensible default
+  populateCrsSelect();
+  if (latGuess && lonGuess) {
+    const tLat = parseFloat(rows[0][latGuess]);
+    const tLon = parseFloat(rows[0][lonGuess]);
+    if (isFinite(tLat) && isFinite(tLon) && Math.abs(tLat) <= 90 && Math.abs(tLon) <= 180) {
+      document.getElementById('cm-crs').value = 'EPSG:4326';
+    } else if (isFinite(tLat) && isFinite(tLon)) {
+      // Large magnitudes → likely projected; default to a custom prompt
+      document.getElementById('cm-crs').value = '__custom__';
+    }
+    onCrsPresetChange();
+  }
+
   document.getElementById('col-mapper-overlay').classList.add('show');
 }
 
-function confirmColumnMapping() {
+async function confirmColumnMapping() {
   const latCol = document.getElementById('cm-lat').value;
   const lonCol = document.getElementById('cm-lon').value;
   const labelCol = document.getElementById('cm-label').value;
   const elevCol = document.getElementById('cm-elev').value;
+  const crsChoice = document.getElementById('cm-crs').value;
+  const customCrs = (document.getElementById('cm-crs-custom').value || '').trim();
 
-  if (!latCol || !lonCol) { showToast('Latitude and longitude columns are required', 'error'); return; }
+  if (!latCol || !lonCol) { showToast('Latitude/Y and Longitude/X columns are required', 'error'); return; }
+
+  // Resolve the CRS → a proj4 source string and a label
+  let srcCode = crsChoice;
+  let srcKind = 'geographic';
+  if (crsChoice === '__custom__') {
+    if (!customCrs) { showToast('Enter an EPSG code or proj4 string', 'error'); return; }
+    if (customCrs.startsWith('+')) {
+      // Full proj4 string
+      try {
+        proj4.defs('CUSTOM:USER', customCrs);
+        srcCode = 'CUSTOM:USER';
+        srcKind = customCrs.includes('longlat') ? 'geographic' : 'projected';
+      } catch (e) { showToast('Invalid proj4 string', 'error'); return; }
+    } else {
+      // EPSG code
+      const epsg = customCrs.replace(/^EPSG:/i, '');
+      if (!/^\d+$/.test(epsg)) { showToast('Enter a numeric EPSG code (e.g. 32755) or a +proj=… string', 'error'); return; }
+      srcCode = 'EPSG:' + epsg;
+      if (!proj4.defs(srcCode)) {
+        showToast(`Looking up ${srcCode} on epsg.io…`, 'info');
+        const def = await fetchEpsgDef(epsg);
+        if (!def) { showToast(`Could not resolve ${srcCode}. Paste a proj4 string instead.`, 'error'); return; }
+        try { proj4.defs(srcCode, def); } catch (e) { showToast('Could not register CRS', 'error'); return; }
+      }
+      srcKind = (proj4.defs(srcCode).projName === 'longlat') ? 'geographic' : 'projected';
+    }
+  } else {
+    const preset = CRS_PRESETS.find(p => p.code === crsChoice);
+    srcKind = preset ? preset.kind : 'geographic';
+  }
 
   document.getElementById('col-mapper-overlay').classList.remove('show');
-  importTabularData(pendingTabular.rows, pendingTabular.headers, latCol, lonCol, labelCol, elevCol, pendingTabular.fileName);
+  importTabularData(pendingTabular.rows, pendingTabular.headers, latCol, lonCol, labelCol, elevCol, pendingTabular.fileName, { srcCode, srcKind });
   pendingTabular = null;
 }
 
@@ -3598,17 +3700,42 @@ function cancelColumnMapping() {
   pendingTabular = null;
 }
 
-function importTabularData(rows, headers, latCol, lonCol, labelCol, elevCol, fileName) {
+function importTabularData(rows, headers, latCol, lonCol, labelCol, elevCol, fileName, crsOpts) {
   const features = [];
   let skipped = 0;
 
+  const srcCode = (crsOpts && crsOpts.srcCode) || 'EPSG:4326';
+  const srcKind = (crsOpts && crsOpts.srcKind) || 'geographic';
+  const needsReproj = srcCode !== 'EPSG:4326';
+
+  // For projected CRS, the 'lat' column is actually Y/Northing and 'lon' is X/Easting.
   rows.forEach(row => {
-    const lat = parseFloat(row[latCol]);
-    const lon = parseFloat(row[lonCol]);
+    const a = parseFloat(row[latCol]);  // lat OR northing/Y
+    const b = parseFloat(row[lonCol]);  // lon OR easting/X
+    if (!isFinite(a) || !isFinite(b)) { skipped++; return; }
+
+    let lon, lat;
+    if (srcKind === 'projected' || needsReproj && srcKind !== 'geographic') {
+      // proj4 expects [x, y] = [easting, northing]
+      try {
+        const [outLon, outLat] = proj4(srcCode, 'EPSG:4326', [b, a]);
+        lon = outLon; lat = outLat;
+      } catch (e) { skipped++; return; }
+    } else if (needsReproj) {
+      // Geographic but not WGS84 (e.g. NAD83) — reproject lat/lon
+      try {
+        const [outLon, outLat] = proj4(srcCode, 'EPSG:4326', [b, a]);
+        lon = outLon; lat = outLat;
+      } catch (e) { skipped++; return; }
+    } else {
+      lat = a; lon = b;
+    }
+
     if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) { skipped++; return; }
 
     const props = {};
     headers.forEach(h => { if (row[h] !== undefined && row[h] !== '') props[h] = row[h]; });
+    props._source_crs = srcCode;
 
     features.push({
       type: 'Feature',
@@ -3618,13 +3745,15 @@ function importTabularData(rows, headers, latCol, lonCol, labelCol, elevCol, fil
   });
 
   if (features.length === 0) {
-    showToast('No valid coordinates found in data', 'error');
+    showToast('No valid coordinates found in data (check CRS selection)', 'error');
     return;
   }
 
   const gj = { type: 'FeatureCollection', features };
   addUploadedGeoJSON(gj, fileName);
 
+  const crsLabel = srcCode === 'EPSG:4326' ? 'WGS 84' : srcCode;
+  showToast(`Imported ${features.length} point(s) from ${crsLabel}${needsReproj ? ' (reprojected to WGS 84)' : ''}`, 'success');
   if (skipped > 0) showToast(`${skipped} rows skipped (invalid coordinates)`, 'error');
 }
 
