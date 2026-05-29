@@ -504,34 +504,93 @@
     background: var(--accent);
   }
   #profile-header {
-    padding: 5px 12px; font-size: 11px; font-weight: 600;
+    padding: 8px 14px; font-size: 11px; font-weight: 600;
     color: var(--text-muted); background: var(--surface-1);
-    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;
   }
   #profile-header .profile-tabs { display: flex; gap: 6px; margin-left: 8px; }
   .ptab {
-    font-size: 10px; padding: 2px 10px; border-radius: 10px;
-    border: 1px solid var(--border); cursor: pointer; color: var(--text-muted);
-    transition: all 0.15s; font-weight: 600; text-transform: none; letter-spacing: 0;
+    font-size: 10px; padding: 3px 10px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; color: var(--text-muted);
+    transition: all 0.15s; font-weight: 500; text-transform: none; letter-spacing: 0;
   }
+  .ptab:hover { color: var(--text); border-color: var(--border-strong); }
   .ptab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
   .bottom-tab {
-    font-size: 10px; padding: 4px 12px; border: 1px solid var(--border); border-bottom: none;
-    background: transparent; color: var(--text-muted); cursor: pointer; font-weight: 600;
-    text-transform: none; letter-spacing: 0; transition: all 0.15s;
-    border-radius: 4px 4px 0 0; margin-right: -1px;
+    font-size: 11px;
+    padding: 6px 0;
+    margin-right: 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: color .15s, border-color .15s;
+    border-radius: 0;
   }
-  .bottom-tab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
-  .bottom-tab:hover:not(.active) { color: var(--text-muted); background: var(--surface-2); }
+  .bottom-tab:hover:not(.active) { color: var(--text); }
+  .bottom-tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+    background: transparent;
+  }
   .bottom-tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .bottom-tab-content:not(.active) { display: none !important; }
-  #profile-canvas-wrap { flex: 1; padding: 6px 12px; position: relative; }
+  #profile-canvas-wrap { flex: 1; padding: 10px 16px 12px; position: relative; }
   #profile-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
-  #analysis-results-panel { flex: 1; }
+  #analysis-results-panel { padding: 12px 16px; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .ar-clear-btn {
+    font-size: 11px; font-weight: 500;
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .ar-clear-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+  .profile-ctl {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text-muted);
+    font-weight: 500;
+  }
+  .profile-ctl select,
+  .profile-ctl input[type="text"] {
+    font-size: 11px; padding: 3px 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .profile-ctl select:hover,
+  .profile-ctl select:focus,
+  .profile-ctl input[type="text"]:focus { border-color: var(--accent); outline: none; }
+  .profile-ctl input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+  #profile-hint {
+    font-size: 10px;
+    color: var(--text-faint);
+    font-weight: 500;
+    padding: 2px 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
   #analysis-results-panel table { width:100%; border-collapse:collapse; margin:8px 0; }
-  #analysis-results-panel th, #analysis-results-panel td { padding:4px 8px; border:1px solid var(--border); font-size:11px; text-align:left; }
-  #analysis-results-panel th { background:var(--surface-2); color:var(--accent); }
-  #analysis-results-panel td { color:var(--text-muted); }
+  #analysis-results-panel th, #analysis-results-panel td {
+    padding: 6px 10px; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-align: left;
+  }
+  #analysis-results-panel th {
+    background: var(--surface-2); color: var(--text); font-weight: 600;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  #analysis-results-panel td { color: var(--text); }
 
   /* ── Right panel ── */
   #right-panel {
@@ -1116,37 +1175,37 @@
     <div id="profile-panel">
       <div id="profile-resize-handle"></div>
       <div id="profile-header">
-        <div id="bottom-tabs" style="display:flex;gap:0;">
+        <div id="bottom-tabs" style="display:flex; gap:0; align-items:center;">
           <button class="bottom-tab active" data-tab="elevation" onclick="switchBottomTab('elevation')">Elevation Profile</button>
           <button class="bottom-tab" data-tab="analysis" onclick="switchBottomTab('analysis')">Analysis Results</button>
         </div>
+        <span style="width:1px;height:16px;background:var(--border);margin:0 8px 0 4px;"></span>
         <div class="profile-tabs" id="profile-tabs"></div>
-        <label id="profile-sort-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:var(--text-muted);font-weight:400;letter-spacing:0;text-transform:none;">
+        <label id="profile-sort-wrap" class="profile-ctl">
           Sort:
-          <select id="profile-sort" onchange="rebuildProfileFromCheckboxes()" style="font-size:10px;padding:1px 4px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);cursor:pointer;">
+          <select id="profile-sort" onchange="rebuildProfileFromCheckboxes()">
             <option value="elevation" selected>Elevation (low→high)</option>
             <option value="west_east">West→East</option>
             <option value="south_north">South→North</option>
             <option value="survey">Survey order</option>
           </select>
         </label>
-        <label id="profile-zero-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:var(--text-muted);font-weight:400;letter-spacing:0;text-transform:none;cursor:pointer;">
-          <input type="checkbox" id="profile-y-zero" checked onchange="rebuildProfileFromCheckboxes()" style="accent-color:var(--accent);">
+        <label id="profile-zero-wrap" class="profile-ctl" style="cursor:pointer;">
+          <input type="checkbox" id="profile-y-zero" checked onchange="rebuildProfileFromCheckboxes()">
           Y from 0
         </label>
         <div style="flex:1"></div>
-        <span id="profile-hint" style="font-size:10px;color:var(--text-faint);font-weight:400;letter-spacing:0">Click a point on the profile to pan the map</span>
+        <span id="profile-hint">Click a point on the profile to pan the map</span>
       </div>
       <div id="bottom-tab-elevation" class="bottom-tab-content active">
         <div id="profile-canvas-wrap"><canvas id="profile-chart"></canvas></div>
       </div>
       <div id="bottom-tab-analysis" class="bottom-tab-content" style="display:none;">
-        <div id="analysis-results-panel" style="flex:1;padding:10px 14px;overflow-y:auto;font-size:11px;color:var(--text-muted);line-height:1.7;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Results</span>
-            <button onclick="clearAnalysisResults()" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Clear</button>
+        <div id="analysis-results-panel" style="flex:1;overflow-y:auto;">
+          <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
+            <button onclick="clearAnalysisResults()" class="ar-clear-btn" title="Clear results">Clear</button>
           </div>
-          <div id="analysis-results-empty" style="color:var(--text-faint);text-align:center;padding:20px 0;">Run a spatial analysis tool from the left panel to see results here.</div>
+          <div id="analysis-results-empty" style="color:var(--text-faint); text-align:center; padding:32px 12px; font-size:12px;">Run a spatial analysis tool from the left panel to see results here.</div>
           <div id="analysis-results-content" style="display:none;"></div>
         </div>
       </div>
