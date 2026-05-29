@@ -727,17 +727,37 @@
     white-space: nowrap;
   }
   .leaflet-tooltip.layout-label::before { display: none !important; }
-  /* DOM-overlay labels rendered inside #layout-paper (bypasses Leaflet tooltip pane) */
+  /* DOM-overlay labels rendered inside #layout-paper (bypasses Leaflet tooltip pane).
+     `.feature` = new enterprise halo-text style (matches in-app .feature-label).
+     `.chip`    = cluster/mean-center/centroid labels (matches in-app .site-tooltip). */
   #layout-paper .layout-feature-label {
     position: absolute; z-index: 900;
     transform: translate(-50%, -100%);
-    background: rgba(255,255,255,0.94);
-    border: 1px solid #1a202c; color: #1a202c;
-    font: bold 10px Arial, Helvetica, sans-serif;
-    padding: 2px 6px; border-radius: 3px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.35);
     pointer-events: none; white-space: nowrap;
+    font-family: Inter, system-ui, sans-serif;
   }
+  #layout-paper .layout-feature-label.feature {
+    background: transparent; border: none; box-shadow: none; padding: 0;
+    color: #1a1a1a; font-size: 11px; font-weight: 600;
+    --halo-w: 2px; --halo-c: #ffffff;
+    text-shadow:
+      calc(-1 * var(--halo-w)) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       var(--halo-w) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+      calc(-1 * var(--halo-w))  var(--halo-w) 0 var(--halo-c),
+       var(--halo-w)  var(--halo-w) 0 var(--halo-c),
+       0 calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       0  var(--halo-w) 0 var(--halo-c),
+      calc(-1 * var(--halo-w)) 0 0 var(--halo-c),
+       var(--halo-w) 0 0 var(--halo-c);
+  }
+  #layout-paper .layout-feature-label.chip {
+    background: rgba(255,255,255,0.92); color: #1a202c;
+    border: 1px solid rgba(26,32,44,0.55);
+    font-size: 10px; font-weight: 600;
+    padding: 2px 6px; border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+  #layout-paper .layout-feature-label.hidden-by-declutter { display: none !important; }
 
   /* Leaflet overrides */
   .leaflet-control-zoom a, .leaflet-control-fullscreen a {
@@ -5796,6 +5816,70 @@ function closeExport() { document.getElementById('export-overlay').classList.rem
 let layoutMap = null;
 let layoutOverviewMap = null;
 let layoutLayers = [];
+// Tracks DOM-overlay labels rendered onto #layout-paper so they can be
+// re-projected on pan/zoom and decluttered against each other.
+let _layoutLabelsState = [];
+
+// Re-project every DOM-overlay label to its feature's current container point.
+// Runs on every layoutMap `move`/`zoomend`/`moveend`/`viewreset` so labels
+// stay glued to features when the user pans an unlocked composer map.
+// Also runs a simple greedy declutter so dense areas don't overlap.
+function _repositionLayoutLabels() {
+  if (!layoutMap || !_layoutLabelsState || !_layoutLabelsState.length) return;
+  const paper = document.getElementById('layout-paper');
+  if (!paper) return;
+  const paperW = paper.clientWidth || 1000;
+  const paperH = paper.clientHeight || 562;
+  // First pass: position every label by re-projecting its latlng.
+  // Apply per-layer Y offset for `feature` kind so the user's offsetX/offsetY
+  // from the in-app popover carries through to the export.
+  _layoutLabelsState.forEach(item => {
+    const pt = layoutMap.latLngToContainerPoint(item.latlng);
+    let dx = 0, dy = -16;
+    if (item.kind === 'feature' && item.layerId && typeof getLabelStyle === 'function') {
+      try {
+        const s = getLabelStyle(item.layerId);
+        dx = s.offsetX || 0;
+        // In the in-app map negative Y = above the point; same convention here.
+        dy = (s.offsetY != null ? s.offsetY : -12);
+      } catch (_) { /* default offsets */ }
+    }
+    item.el.style.left = (pt.x + dx) + 'px';
+    item.el.style.top  = (pt.y + dy) + 'px';
+    item.el.classList.remove('hidden-by-declutter');
+  });
+  // Second pass: greedy overlap suppression. Iterate in DOM order, hide any
+  // label whose bounding box overlaps an already-shown one. Off-paper labels
+  // are hidden too so they don't appear cropped at the edges.
+  const taken = [];
+  _layoutLabelsState.forEach(item => {
+    const el = item.el;
+    const w = el.offsetWidth || 0;
+    const h = el.offsetHeight || 0;
+    // .layout-feature-label uses translate(-50%, -100%); compute on-screen box.
+    const left = parseFloat(el.style.left) - w / 2;
+    const top  = parseFloat(el.style.top)  - h;
+    const right = left + w;
+    const bottom = top + h;
+    // Off-paper? Hide.
+    if (right < 0 || left > paperW || bottom < 0 || top > paperH) {
+      el.classList.add('hidden-by-declutter');
+      return;
+    }
+    // Overlap check against already-shown labels (skip chip vs chip: clusters
+    // and centroids are already few in number and shouldn't be hidden).
+    if (item.kind === 'feature') {
+      for (const box of taken) {
+        if (left < box.right && right > box.left && top < box.bottom && bottom > box.top) {
+          el.classList.add('hidden-by-declutter');
+          return;
+        }
+      }
+    }
+    taken.push({ left, top, right, bottom });
+  });
+}
+
 let layoutBuildToken = 0;
 let mainLocked = false;
 let overviewLocked = false;
@@ -5925,10 +6009,16 @@ function _resetLayoutLockState() {
 
 function closeLayoutModal() {
   document.getElementById('layout-modal').classList.remove('show');
-  if (layoutMap) { layoutMap.remove(); layoutMap = null; }
+  if (layoutMap) {
+    if (layoutMap.off) layoutMap.off('move zoomend moveend viewreset', _repositionLayoutLabels);
+    layoutMap.remove(); layoutMap = null;
+  }
   if (layoutOverviewMap) { layoutOverviewMap.remove(); layoutOverviewMap = null; }
   layoutLayers.forEach(l => { if (l.remove) l.remove(); });
   layoutLayers = [];
+  _layoutLabelsState = [];
+  const paper = document.getElementById('layout-paper');
+  if (paper) paper.querySelectorAll('.layout-feature-label').forEach(n => n.remove());
   _resetLayoutLockState();
 }
 
@@ -5944,8 +6034,10 @@ async function buildLayout() {
   const paperW = 1000;
   const paperH = 562; // 16:9
   const pendingLayoutLabels = [];
-  // Wipe any previous label overlays
+  // Wipe any previous label overlays and detach prior move/zoom handlers
   paper.querySelectorAll('.layout-feature-label').forEach(n => n.remove());
+  _layoutLabelsState = [];
+  if (layoutMap && layoutMap.off) layoutMap.off('move zoomend moveend viewreset', _repositionLayoutLabels);
   paper.style.width = paperW + 'px';
   paper.style.height = paperH + 'px';
 
@@ -6054,7 +6146,9 @@ async function buildLayout() {
     }
     layoutLayers.push(newLayer);
 
-    // ── Harvest permanent labels (text + latlng) for DOM-overlay rendering ──
+    // ── Harvest permanent labels (text + latlng + kind + style) for DOM overlay ──
+    // `feature` = user-toggled enterprise labels (.feature-label class) — use halo style + per-layer state.
+    // `chip`    = cluster/mean-center/centroid labels (.site-tooltip class) — keep boxed look.
     info.layer.eachLayer(sub => {
       const tt = sub.getTooltip && sub.getTooltip();
       if (!tt || !tt.options || !tt.options.permanent) return;
@@ -6063,7 +6157,10 @@ async function buildLayout() {
       let latlng = null;
       if (sub.getLatLng) latlng = sub.getLatLng();
       else if (sub.getBounds) latlng = sub.getBounds().getCenter();
-      if (latlng) pendingLayoutLabels.push({ text, latlng });
+      if (!latlng) return;
+      const cls = (tt.options.className || '');
+      const kind = cls === 'feature-label' ? 'feature' : 'chip';
+      pendingLayoutLabels.push({ text, latlng, kind, layerId: info.id });
     });
 
     // Compute bounds
@@ -6112,17 +6209,32 @@ async function buildLayout() {
   await _waitForTiles(basemap, tileTimeout);
   if (stale()) return; // modal was closed or a newer build started
 
-  // ── Render harvested permanent labels as DOM overlays on the paper ──
-  pendingLayoutLabels.forEach(({ text, latlng }) => {
-    const pt = layoutMap.latLngToContainerPoint(latlng);
+  // ── Render harvested labels as DOM overlays + bind to map move/zoom ──
+  // Labels are positioned once, then `_repositionLayoutLabels` re-projects them
+  // on every Leaflet `move`/`zoomend` event so they track when the user pans
+  // an unlocked map (fixes the "labels detach from features" bug).
+  _layoutLabelsState = pendingLayoutLabels.map(item => {
     const el = document.createElement('div');
-    el.className = 'layout-feature-label';
-    el.textContent = text;
-    // Position with translate so center-x aligns over the marker, sit above it
-    el.style.left = pt.x + 'px';
-    el.style.top = (pt.y - 16) + 'px';
+    el.className = 'layout-feature-label ' + item.kind;
+    el.textContent = item.text;
+    // Per-layer style for enterprise feature labels (font, color, halo, size)
+    if (item.kind === 'feature' && item.layerId && typeof getLabelStyle === 'function') {
+      try {
+        const s = getLabelStyle(item.layerId);
+        el.style.color = s.color;
+        el.style.fontSize = s.size + 'px';
+        el.style.fontWeight = String(s.weight);
+        el.style.fontFamily = s.font;
+        el.style.setProperty('--halo-w', s.haloWidth + 'px');
+        el.style.setProperty('--halo-c', s.halo);
+      } catch (_) { /* fall back to CSS defaults */ }
+    }
     paper.appendChild(el);
+    return { el, latlng: item.latlng, kind: item.kind, layerId: item.layerId };
   });
+  _repositionLayoutLabels();
+  // Bind once per map instance so panning/zooming keeps labels glued to features
+  layoutMap.on('move zoomend moveend viewreset', _repositionLayoutLabels);
 
   // ── Build overlays in parallel with overview ──
   // Legend
