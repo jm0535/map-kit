@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Map-Kit</title>
 
+<!-- Inter font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -39,11 +44,49 @@
 <script src="https://unpkg.com/shp-write@0.3.2/shpwrite.js"></script>
 
 <style>
+  /* ── Design tokens ── */
+  :root {
+    --bg:           #13151a;
+    --surface-1:    #1a1d24;
+    --surface-2:    #21252e;
+    --surface-3:    #2a2f3a;
+    --border:       #2d3340;
+    --border-strong:#3a4150;
+    --text:         #e5e7eb;
+    --text-muted:   #9ca3af;
+    --text-faint:   #6b7280;
+    --accent:       #4f98a3;
+    --accent-hover: #5fb3c0;
+    --accent-bg:    rgba(79,152,163,0.12);
+    --success:      #6daa45;
+    --warning:      #d97706;
+    --error:        #d163a7;
+    --shadow:       0 1px 2px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
+  }
+  body.light {
+    --bg:           #f7f6f2;
+    --surface-1:    #ffffff;
+    --surface-2:    #f9f8f5;
+    --surface-3:    #eeece6;
+    --border:       #d4d1ca;
+    --border-strong:#bab8b0;
+    --text:         #28251d;
+    --text-muted:   #6b6961;
+    --text-faint:   #9a9892;
+    --accent:       #01696f;
+    --accent-hover: #0c4e54;
+    --accent-bg:    rgba(1,105,111,0.10);
+    --success:      #437a22;
+    --warning:      #964219;
+    --error:        #a12c7b;
+    --shadow:       0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06);
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #1a1d23;
-    color: #e2e8f0;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -52,8 +95,8 @@
 
   /* ── Top bar ── */
   #topbar {
-    background: #0f1117;
-    border-bottom: 1px solid #2d3748;
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border);
     padding: 0 16px;
     height: 44px;
     display: flex;
@@ -62,18 +105,18 @@
     flex-shrink: 0;
     z-index: 1000;
   }
-  #topbar .logo { font-size: 13px; font-weight: 700; color: #63b3ed; letter-spacing: 0.5px; white-space: nowrap; }
-  #topbar .sep { width: 1px; height: 20px; background: #2d3748; }
-  #topbar .subtitle { font-size: 11px; color: #718096; }
+  #topbar .logo { font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 0; white-space: nowrap; }
+  #topbar .sep { width: 1px; height: 20px; background: var(--border); }
+  #topbar .subtitle { font-size: 11px; color: var(--text-muted); }
   #topbar .spacer { flex: 1; }
   #topbar .coord-display {
-    font-size: 11px; font-family: 'Courier New', monospace; color: #a0aec0;
-    background: #1a1d23; padding: 3px 8px; border-radius: 4px; border: 1px solid #2d3748;
+    font-size: 11px; font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--text-muted);
+    background: var(--surface-2); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
     min-width: 220px; text-align: center;
   }
   #topbar .scale-display {
-    font-size: 11px; color: #a0aec0; background: #1a1d23; padding: 3px 8px;
-    border-radius: 4px; border: 1px solid #2d3748;
+    font-size: 11px; color: var(--text-muted); background: var(--surface-2); padding: 3px 8px;
+    border-radius: 4px; border: 1px solid var(--border);
   }
 
   /* ── Main layout ── */
@@ -81,7 +124,7 @@
 
   /* ── Left panel ── */
   #left-panel {
-    width: 270px; min-width: 200px; max-width: 500px; background: #13161c; border-right: 1px solid #2d3748;
+    width: 270px; min-width: 200px; max-width: 500px; background: var(--surface-1); border-right: 1px solid var(--border);
     display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
     position: relative; transition: width 0.2s, min-width 0.2s, padding 0.2s, border 0.2s;
   }
@@ -89,69 +132,81 @@
   .panel-resize-handle {
     position: absolute; top: 0; width: 5px; height: 100%; cursor: ew-resize; z-index: 20;
   }
-  .panel-resize-handle:hover, .panel-resize-handle.dragging { background: rgba(99,179,237,0.3); }
+  .panel-resize-handle:hover, .panel-resize-handle.dragging { background: var(--accent-bg); }
   #left-resize { right: -3px; }
   #right-resize { left: -3px; }
-  .panel-section { border-bottom: 1px solid #2d3748; }
+  .panel-section { border-bottom: 1px solid var(--border); }
   .panel-header {
-    padding: 8px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1px; color: #63b3ed; background: #0f1117; cursor: pointer;
-    display: flex; align-items: center; justify-content: space-between; -webkit-user-select: none; user-select: none;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-muted);
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: color .15s, background .15s;
+    -webkit-user-select: none; user-select: none;
   }
-  .panel-header:hover { background: #1a202c; }
-  .panel-header .arrow { transition: transform 0.2s; }
+  .panel-header:hover { color: var(--text); background: var(--surface-2); }
+  .panel-section.open > .panel-header { color: var(--text); }
+  .panel-header .arrow { color: var(--text-faint); font-size: 10px; transition: transform 0.2s; }
   .panel-header.collapsed .arrow { transform: rotate(-90deg); }
   .panel-body { padding: 10px 12px; }
   .panel-body.hidden { display: none !important; }
 
   /* Layer item */
   .layer-item { display: flex; align-items: center; gap: 6px; padding: 5px 4px; font-size: 12px; border-radius: 4px; transition: background 0.15s; }
-  .layer-item:hover { background: rgba(99,179,237,0.06); }
+  .layer-item:hover { background: var(--accent-bg); }
   .layer-item input[type=checkbox] { display: none; }
-  .layer-eye { cursor: pointer; font-size: 14px; width: 18px; text-align: center; color: #63b3ed; opacity: 1; transition: opacity 0.15s; -webkit-user-select: none; user-select: none; }
-  .layer-eye.off { color: #4a5568; opacity: 0.5; }
-  .layer-item.active-layer { background: rgba(99,179,237,0.08); border-radius: 4px; padding: 5px 4px; margin: 0 -4px; }
+  .layer-eye { cursor: pointer; font-size: 14px; width: 18px; text-align: center; color: var(--accent); opacity: 1; transition: opacity 0.15s; -webkit-user-select: none; user-select: none; }
+  .layer-eye.off { color: var(--text-faint); opacity: 0.5; }
+  .layer-item.active-layer { background: var(--accent-bg); border-radius: 4px; padding: 5px 4px; margin: 0 -4px; }
   .layer-color-swatch {
     width: 14px; height: 14px; border-radius: 3px;
     border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
   }
   .layer-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .layer-label.editing { background: #1a1d23; border: 1px solid #63b3ed; border-radius: 3px; padding: 0 4px; outline: none; cursor: text; min-width: 40px; }
-  .layer-action-btn { font-size: 11px; cursor: pointer; opacity: 0.35; background: none; border: none; padding: 0 2px; color: #a0aec0; line-height: 1; }
-  .layer-action-btn:hover { opacity: 1; color: #63b3ed; }
+  .layer-label.editing { background: var(--surface-2); border: 1px solid var(--accent); border-radius: 3px; padding: 0 4px; outline: none; cursor: text; min-width: 40px; }
+  .layer-action-btn { font-size: 11px; cursor: pointer; opacity: 0.35; background: none; border: none; padding: 0 2px; color: var(--text-muted); line-height: 1; }
+  .layer-action-btn:hover { opacity: 1; color: var(--accent); }
   /* Map legend control */
-  .map-legend { background: rgba(15,17,23,0.92); border: 1px solid #2d3748; border-radius: 6px; padding: 0; font-size: 11px; color: #e2e8f0; max-width: 260px; max-height: 50vh; overflow-y: auto; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
-  .map-legend-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(26,29,35,0.95); border-bottom: 1px solid #2d3748; border-radius: 6px 6px 0 0; font-weight: 600; font-size: 11px; color: #63b3ed; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; -webkit-user-select: none; user-select: none; }
-  .map-legend-header:hover { background: rgba(45,55,72,0.6); }
+  .map-legend { background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px; padding: 0; font-size: 11px; color: var(--text); max-width: 260px; max-height: 50vh; overflow-y: auto; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: var(--shadow); }
+  .map-legend-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--surface-2); border-bottom: 1px solid var(--border); border-radius: 6px 6px 0 0; font-weight: 600; font-size: 11px; color: var(--accent); letter-spacing: 0; cursor: pointer; -webkit-user-select: none; user-select: none; }
+  .map-legend-header:hover { background: var(--surface-3); }
   .map-legend-header .arrow { transition: transform 0.2s; font-size: 10px; }
   .map-legend-header.collapsed .arrow { transform: rotate(-90deg); }
   .map-legend-body { padding: 6px 10px 8px; }
   .map-legend-body.hidden { display: none; }
   .map-legend-layer { margin-bottom: 6px; }
   .map-legend-layer:last-child { margin-bottom: 0; }
-  .map-legend-layer-title { font-weight: 600; font-size: 11px; color: #e2e8f0; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+  .map-legend-layer-title { font-weight: 600; font-size: 11px; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
   .map-legend-layer-title .leg-swatch { width: 10px; height: 10px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
-  .map-legend-row { display: flex; align-items: center; gap: 6px; padding: 1px 0; font-size: 10px; color: #a0aec0; }
+  .map-legend-row { display: flex; align-items: center; gap: 6px; padding: 1px 0; font-size: 10px; color: var(--text-muted); }
   .map-legend-symbol { flex-shrink: 0; }
   .map-legend-symbol.point { width: 10px; height: 10px; border-radius: 50%; border: 1.2px solid rgba(255,255,255,0.6); }
   .map-legend-symbol.line { width: 18px; height: 3px; border-radius: 1px; }
   .map-legend-symbol.polygon { width: 14px; height: 10px; border-radius: 2px; border: 1.5px solid; opacity: 0.85; }
   .map-legend-symbol.shape { width: 12px; height: 12px; }
   .map-legend-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
-  .map-legend-label[contenteditable] { cursor: text; border-bottom: 1px dashed #4a5568; outline: none; }
-  .map-legend-label[contenteditable]:focus { border-bottom-color: #63b3ed; color: #e2e8f0; }
+  .map-legend-label[contenteditable] { cursor: text; border-bottom: 1px dashed var(--text-faint); outline: none; }
+  .map-legend-label[contenteditable]:focus { border-bottom-color: var(--accent); color: var(--text); }
   .map-legend-ramp { display: flex; align-items: stretch; gap: 0; margin: 2px 0 2px 0; }
   .map-legend-ramp-bar { width: 14px; height: 60px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); }
-  .map-legend-ramp-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: #718096; padding: 0 4px; }
-  .map-legend-empty { color: #4a5568; text-align: center; padding: 8px 0; font-size: 10px; }
+  .map-legend-ramp-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: var(--text-muted); padding: 0 4px; }
+  .map-legend-empty { color: var(--text-faint); text-align: center; padding: 8px 0; font-size: 10px; }
 
   /* Digitizing toolbar */
   .digitize-toolbar { position: absolute; top: 52px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 4px; }
-  .digitize-btn { width: 34px; height: 34px; border-radius: 6px; border: 1px solid #2d3748; background: rgba(15,17,23,0.92); color: #a0aec0; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.15s; }
-  .digitize-btn:hover { background: rgba(45,55,72,0.9); color: #e2e8f0; border-color: #4a5568; }
-  .digitize-btn.active { background: rgba(99,179,237,0.15); color: #63b3ed; border-color: #63b3ed; box-shadow: 0 0 8px rgba(99,179,237,0.3); }
+  .digitize-btn { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.15s; }
+  .digitize-btn:hover { background: var(--surface-3); color: var(--text); border-color: var(--border-strong); }
+  .digitize-btn.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent-bg); }
   .digitize-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
-  .digitize-sep { width: 24px; height: 1px; background: #2d3748; margin: 2px auto; }
+  .digitize-sep { width: 24px; height: 1px; background: var(--border); margin: 2px auto; }
 
   /* Digitize cursor styles */
   .leaflet-container.digitize-point { cursor: crosshair; }
@@ -159,207 +214,227 @@
   .leaflet-container.digitize-polygon { cursor: crosshair; }
 
   /* Vertex markers */
-  .vertex-marker { width: 10px; height: 10px; border-radius: 50%; background: #63b3ed; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4); }
+  .vertex-marker { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4); }
 
   /* Attribute form overlay */
   .attr-form-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-  .attr-form-box { background: #1a1d23; border: 1px solid #2d3748; border-radius: 8px; padding: 16px 20px; min-width: 300px; max-width: 400px; max-height: 80vh; overflow-y: auto; }
-  .attr-form-box h3 { font-size: 13px; color: #63b3ed; margin-bottom: 12px; }
+  .attr-form-box { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; min-width: 300px; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+  .attr-form-box h3 { font-size: 13px; color: var(--accent); margin-bottom: 12px; }
   .attr-form-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .attr-form-row label { font-size: 11px; color: #a0aec0; width: 80px; flex-shrink: 0; }
-  .attr-form-row input { flex: 1; font-size: 11px; padding: 4px 8px; background: #0f1117; border: 1px solid #2d3748; border-radius: 4px; color: #e2e8f0; }
-  .attr-form-row input:focus { border-color: #63b3ed; outline: none; }
+  .attr-form-row label { font-size: 11px; color: var(--text-muted); width: 80px; flex-shrink: 0; }
+  .attr-form-row input { flex: 1; font-size: 11px; padding: 4px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); }
+  .attr-form-row input:focus { border-color: var(--accent); outline: none; }
   .attr-form-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
-  .attr-form-actions button { font-size: 11px; padding: 4px 12px; border-radius: 4px; cursor: pointer; border: 1px solid #2d3748; }
-  .attr-form-actions .btn-ok { background: #2b6cb0; color: white; border-color: #2b6cb0; }
-  .attr-form-actions .btn-ok:hover { background: #3182ce; }
-  .attr-form-actions .btn-cancel { background: #2d3748; color: #a0aec0; }
-  .attr-form-actions .btn-cancel:hover { background: #4a5568; }
+  .attr-form-actions button { font-size: 11px; padding: 4px 12px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); }
+  .attr-form-actions .btn-ok { background: var(--accent); color: white; border-color: var(--accent); }
+  .attr-form-actions .btn-ok:hover { background: var(--accent-hover); }
+  .attr-form-actions .btn-cancel { background: var(--surface-2); color: var(--text-muted); }
+  .attr-form-actions .btn-cancel:hover { background: var(--surface-3); }
 
   .layer-count {
-    font-size: 10px; color: #718096; background: #1a1d23;
+    font-size: 10px; color: var(--text-muted); background: var(--surface-2);
     padding: 1px 5px; border-radius: 8px; white-space: nowrap;
   }
   .layer-remove {
-    font-size: 13px; color: #e53e3e; cursor: pointer; opacity: 0.5;
+    font-size: 13px; color: var(--error); cursor: pointer; opacity: 0.5;
     background: none; border: none; padding: 0 2px; line-height: 1;
   }
   .layer-remove:hover { opacity: 1; }
   .layer-label-btn {
     font-size: 12px; cursor: pointer; opacity: 0.4;
-    background: none; border: none; padding: 0 2px; line-height: 1; color: #a0aec0;
+    background: none; border: none; padding: 0 2px; line-height: 1; color: var(--text-muted);
   }
   .layer-label-btn:hover { opacity: 0.8; }
-  .layer-label-btn.active { opacity: 1; color: #63b3ed; }
+  .layer-label-btn.active { opacity: 1; color: var(--accent); }
   .label-popover {
     position: absolute; z-index: 100; left: 0; top: 100%;
-    background: #1a1d23; border: 1px solid #2d3748; border-radius: 6px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5); padding: 6px 0; min-width: 200px; max-width: 280px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: var(--shadow); padding: 6px 0; min-width: 200px; max-width: 280px;
     max-height: 260px; overflow-y: auto; display: none;
   }
   .label-popover.show { display: block; }
   .label-popover .lp-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 4px 10px 6px; border-bottom: 1px solid #2d3748; font-size: 10px;
-    font-weight: 600; color: #63b3ed; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 4px 10px 6px; border-bottom: 1px solid var(--border); font-size: 10px;
+    font-weight: 600; color: var(--accent); letter-spacing: 0;
   }
   .label-popover .lp-header button {
-    background: none; border: none; color: #a0aec0; font-size: 10px; cursor: pointer; padding: 0;
+    background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 0;
   }
-  .label-popover .lp-header button:hover { color: #63b3ed; }
+  .label-popover .lp-header button:hover { color: var(--accent); }
   .label-popover .lp-item {
-    display: flex; align-items: center; gap: 6px; padding: 3px 10px; font-size: 11px; color: #e2e8f0; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; padding: 3px 10px; font-size: 11px; color: var(--text); cursor: pointer;
   }
-  .label-popover .lp-item:hover { background: rgba(99,179,237,0.08); }
-  .label-popover .lp-item input { accent-color: #63b3ed; cursor: pointer; }
+  .label-popover .lp-item:hover { background: var(--accent-bg); }
+  .label-popover .lp-item input { accent-color: var(--accent); cursor: pointer; }
   .label-popover .lp-attr-row {
-    padding: 4px 10px 6px; border-bottom: 1px solid #2d3748;
-    display: flex; align-items: center; gap: 6px; font-size: 10px; color: #a0aec0;
+    padding: 4px 10px 6px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-muted);
   }
   .label-popover .lp-attr-row select {
-    flex: 1; background: #0f1117; border: 1px solid #2d3748; border-radius: 3px;
-    color: #e2e8f0; font-size: 10px; padding: 2px 4px;
+    flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text); font-size: 10px; padding: 2px 4px;
   }
 
   /* Search box */
   .search-box { display: flex; align-items: center; gap: 4px; }
   .search-box input {
-    background: #1a1d23; border: 1px solid #2d3748; border-radius: 4px;
-    color: #e2e8f0; font-size: 11px; padding: 3px 8px; width: 180px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-size: 11px; padding: 3px 8px; width: 180px;
     outline: none;
   }
-  .search-box input:focus { border-color: #63b3ed; }
+  .search-box input:focus { border-color: var(--accent); }
   .search-box button {
-    background: #2d3748; border: 1px solid #4a5568; border-radius: 4px;
-    color: #e2e8f0; font-size: 12px; cursor: pointer; padding: 3px 8px;
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 4px;
+    color: var(--text); font-size: 12px; cursor: pointer; padding: 3px 8px;
   }
-  .search-box button:hover { background: #4a5568; }
+  .search-box button:hover { background: var(--surface-3); }
 
   /* Layer drag handle */
   .layer-drag-handle {
-    cursor: grab; font-size: 10px; color: #4a5568; padding: 0 2px;
+    cursor: grab; font-size: 10px; color: var(--text-faint); padding: 0 2px;
     -webkit-user-select: none; user-select: none;
   }
   .layer-item.dragging { opacity: 0.5; }
-  .layer-item.drag-over { border-top: 2px solid #63b3ed; }
+  .layer-item.drag-over { border-top: 2px solid var(--accent); }
 
   /* Bookmarks */
   .bookmark-item {
     display: flex; align-items: center; justify-content: space-between;
     padding: 4px 6px; border-radius: 4px; cursor: pointer;
-    font-size: 11px; color: #e2e8f0;
+    font-size: 11px; color: var(--text);
   }
-  .bookmark-item:hover { background: rgba(99,179,237,0.08); }
+  .bookmark-item:hover { background: var(--accent-bg); }
   .bookmark-item button {
-    background: none; border: none; color: #e53e3e; cursor: pointer;
+    background: none; border: none; color: var(--error); cursor: pointer;
     font-size: 11px; opacity: 0; padding: 0 2px;
   }
   .bookmark-item:hover button { opacity: 0.6; }
   .bookmark-item:hover button:hover { opacity: 1; }
 
   /* Feature selection highlight */
-  .feature-selected { filter: drop-shadow(0 0 4px #63b3ed); }
+  .feature-selected { filter: drop-shadow(0 0 4px var(--accent)); }
 
   /* Edit vertex markers */
   .edit-vertex {
     width: 10px; height: 10px; border-radius: 50%;
-    background: #e53e3e; border: 2px solid white;
+    background: var(--error); border: 2px solid white;
     box-shadow: 0 0 4px rgba(0,0,0,0.4); cursor: move;
   }
   .edit-midpoint {
     width: 8px; height: 8px; border-radius: 50%;
-    background: #f6ad55; border: 2px solid white;
+    background: var(--warning); border: 2px solid white;
     box-shadow: 0 0 4px rgba(0,0,0,0.3); cursor: pointer;
   }
 
   /* Select box (leaflet-draw-style) */
-  .select-box { border: 2px dashed #63b3ed; background: rgba(99,179,237,0.1); }
+  .select-box { border: 2px dashed var(--accent); background: var(--accent-bg); }
 
   /* Attribute table sorting */
   #attr-table th { cursor: pointer; position: relative; }
-  #attr-table th.sort-asc::after { content: " ▲"; color: #63b3ed; font-size: 9px; }
-  #attr-table th.sort-desc::after { content: " ▼"; color: #63b3ed; font-size: 9px; }
+  #attr-table th.sort-asc::after { content: " ▲"; color: var(--accent); font-size: 9px; }
+  #attr-table th.sort-desc::after { content: " ▼"; color: var(--accent); font-size: 9px; }
   #attr-table tr.filtered-out { display: none; }
-  #attr-table tr.selected { background: rgba(99,179,237,0.15); }
+  #attr-table tr.selected { background: var(--accent-bg); }
 
   /* Slider */
   .slider-row { margin: 6px 0; }
-  .slider-row label { font-size: 11px; color: #a0aec0; display: flex; justify-content: space-between; }
-  .slider-row input[type=range] { width: 100%; accent-color: #63b3ed; margin-top: 4px; }
+  .slider-row label { font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
+  .slider-row input[type=range] { width: 100%; accent-color: var(--accent); margin-top: 4px; }
 
-  /* Basemap */
+  /* Basemap select */
+  #basemap-select {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px;
+    padding: 6px 8px; font-size: 12px; color: var(--text); cursor: pointer;
+    margin-bottom: 4px; font-family: inherit;
+  }
+  #basemap-select:hover { border-color: var(--accent); }
+  #basemap-select:focus { border-color: var(--accent); outline: none; }
+  /* Legacy basemap buttons (kept for compatibility) */
   .basemap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
   .basemap-btn {
-    background: #1a1d23; border: 1px solid #2d3748; border-radius: 5px;
-    padding: 6px 4px; font-size: 10px; color: #a0aec0; cursor: pointer; text-align: center;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px;
+    padding: 6px 4px; font-size: 10px; color: var(--text-muted); cursor: pointer; text-align: center;
     transition: all 0.15s;
   }
-  .basemap-btn:hover { border-color: #63b3ed; color: #e2e8f0; }
-  .basemap-btn.active { border-color: #63b3ed; background: #1a3a5c; color: #fff; }
+  .basemap-btn:hover { border-color: var(--accent); color: var(--text); }
+  .basemap-btn.active { border-color: var(--accent); background: var(--accent-bg); color: var(--text); }
 
   /* Toggle */
   .toggle-row {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 5px 0; font-size: 11px; color: #a0aec0;
+    margin: 5px 0; font-size: 11px; color: var(--text-muted);
   }
   .toggle { position: relative; display: inline-block; width: 32px; height: 16px; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-slider {
-    position: absolute; inset: 0; background: #2d3748; border-radius: 16px;
+    position: absolute; inset: 0; background: var(--border); border-radius: 16px;
     cursor: pointer; transition: 0.2s;
   }
   .toggle-slider:before {
     content: ""; position: absolute; width: 12px; height: 12px; left: 2px; top: 2px;
     background: white; border-radius: 50%; transition: 0.2s;
   }
-  .toggle input:checked + .toggle-slider { background: #63b3ed; }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
   .toggle input:checked + .toggle-slider:before { transform: translateX(16px); }
 
   /* Symbol */
   .symbol-row {
     display: flex; align-items: center; gap: 8px; margin: 4px 0;
-    font-size: 11px; color: #a0aec0;
+    font-size: 11px; color: var(--text-muted);
   }
   .symbol-row input[type=color] {
-    width: 28px; height: 22px; border: 1px solid #2d3748; border-radius: 3px;
+    width: 28px; height: 22px; border: 1px solid var(--border); border-radius: 3px;
     background: none; cursor: pointer; padding: 0;
   }
   .symbol-row input[type=number] {
-    width: 52px; background: #1a1d23; border: 1px solid #2d3748; border-radius: 3px;
-    color: #e2e8f0; font-size: 11px; padding: 2px 4px;
+    width: 52px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text); font-size: 11px; padding: 2px 4px;
   }
 
   /* Export / action buttons */
   .export-btn {
-    display: flex; align-items: center; gap: 6px; width: 100%;
-    background: #1a1d23; border: 1px solid #2d3748; border-radius: 5px;
-    padding: 7px 10px; font-size: 11px; color: #e2e8f0; cursor: pointer; margin: 4px 0;
-    transition: all 0.15s;
+    display: flex; align-items: center; gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    margin: 2px 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: left;
+    transition: all .15s;
   }
-  .export-btn:hover { border-color: #63b3ed; background: #1a3a5c; }
-  .export-btn .icon { font-size: 14px; }
+  .export-btn:hover { background: var(--surface-3); border-color: var(--accent); color: var(--accent); }
+  .export-btn:active { transform: translateY(1px); }
+  .export-btn .icon { font-size: 14px; flex-shrink: 0; opacity: .85; }
+  .export-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .export-btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: white; }
 
   /* ── Upload zone ── */
   #upload-zone {
-    margin: 6px 0; padding: 16px 10px; border: 2px dashed #2d3748; border-radius: 6px;
-    text-align: center; cursor: pointer; transition: all 0.2s; font-size: 11px; color: #718096;
+    margin: 6px 0; padding: 16px 10px; border: 2px dashed var(--border); border-radius: 6px;
+    text-align: center; cursor: pointer; transition: all 0.2s; font-size: 11px; color: var(--text-muted);
   }
   #upload-zone:hover, #upload-zone.dragover {
-    border-color: #63b3ed; background: rgba(99,179,237,0.05); color: #e2e8f0;
+    border-color: var(--accent); background: var(--accent-bg); color: var(--text);
   }
   #upload-zone .upload-icon { font-size: 28px; margin-bottom: 6px; }
-  #upload-zone .formats { font-size: 9px; color: #4a5568; margin-top: 6px; }
+  #upload-zone .formats { font-size: 9px; color: var(--text-faint); margin-top: 6px; }
   #upload-file { display: none; }
 
   /* Processing indicator */
   .processing {
     display: none; align-items: center; gap: 8px; padding: 8px 10px;
-    font-size: 11px; color: #63b3ed;
+    font-size: 11px; color: var(--accent);
   }
   .processing.show { display: flex; }
   .processing .spinner {
-    width: 14px; height: 14px; border: 2px solid #2d3748;
-    border-top-color: #63b3ed; border-radius: 50%; animation: spin 0.7s linear infinite;
+    width: 14px; height: 14px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -370,40 +445,40 @@
   }
   #col-mapper-overlay.show { display: flex; }
   #col-mapper-box {
-    background: #13161c; border: 1px solid #2d3748; border-radius: 8px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
     padding: 20px 24px; width: 380px; max-height: 80vh; overflow-y: auto;
   }
-  #col-mapper-box h3 { color: #63b3ed; font-size: 13px; margin-bottom: 4px; }
-  #col-mapper-box .subtitle { color: #718096; font-size: 11px; margin-bottom: 14px; }
-  .cm-row { margin: 8px 0; font-size: 11px; color: #a0aec0; }
+  #col-mapper-box h3 { color: var(--accent); font-size: 13px; margin-bottom: 4px; }
+  #col-mapper-box .subtitle { color: var(--text-muted); font-size: 11px; margin-bottom: 14px; }
+  .cm-row { margin: 8px 0; font-size: 11px; color: var(--text-muted); }
   .cm-row label { display: block; margin-bottom: 3px; font-weight: 600; }
   .cm-row select {
-    width: 100%; background: #1a1d23; border: 1px solid #2d3748; border-radius: 4px;
-    color: #e2e8f0; padding: 5px 8px; font-size: 11px;
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); padding: 5px 8px; font-size: 11px;
   }
-  .cm-preview { background: #0f1117; border: 1px solid #2d3748; border-radius: 4px;
-    padding: 8px; margin: 10px 0; font-size: 10px; color: #718096;
+  .cm-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+    padding: 8px; margin: 10px 0; font-size: 10px; color: var(--text-muted);
     max-height: 120px; overflow-y: auto; font-family: monospace;
   }
   .cm-actions { display: flex; gap: 8px; margin-top: 14px; }
   .btn-primary {
-    flex: 1; background: #2b6cb0; border: none; border-radius: 5px; color: white;
+    flex: 1; background: var(--accent); border: none; border-radius: 5px; color: white;
     padding: 8px; font-size: 12px; cursor: pointer; font-weight: 600;
   }
-  .btn-primary:hover { background: #3182ce; }
+  .btn-primary:hover { background: var(--accent-hover); }
   .btn-secondary {
-    background: #1a1d23; border: 1px solid #2d3748; border-radius: 5px;
-    color: #a0aec0; padding: 8px 14px; font-size: 12px; cursor: pointer;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text-muted); padding: 8px 14px; font-size: 12px; cursor: pointer;
   }
-  .btn-secondary:hover { border-color: #63b3ed; color: #e2e8f0; }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--text); }
 
   /* Stats */
   .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
   .stat-card {
-    background: #1a1d23; border: 1px solid #2d3748; border-radius: 5px; padding: 6px 8px; font-size: 10px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px; font-size: 10px;
   }
-  .stat-card .val { font-size: 14px; font-weight: 700; color: #63b3ed; }
-  .stat-card .lbl { color: #718096; margin-top: 1px; }
+  .stat-card .val { font-size: 14px; font-weight: 700; color: var(--accent); }
+  .stat-card .lbl { color: var(--text-muted); margin-top: 1px; }
 
   /* ── Map container ── */
   #map-wrap { flex: 1; position: relative; display: flex; flex-direction: column; }
@@ -412,7 +487,7 @@
   /* ── Bottom profile panel ── */
   #profile-panel {
     height: 280px; min-height: 120px; max-height: 70vh;
-    background: #13161c; border-top: 1px solid #2d3748;
+    background: var(--surface-1); border-top: 1px solid var(--border);
     display: flex; flex-direction: column; flex-shrink: 0;
     position: relative;
   }
@@ -423,76 +498,76 @@
   }
   #profile-resize-handle::after {
     content: ''; width: 40px; height: 3px; border-radius: 2px;
-    background: #2d3748; transition: background 0.15s;
+    background: var(--border); transition: background 0.15s;
   }
   #profile-resize-handle:hover::after, #profile-resize-handle.dragging::after {
-    background: #63b3ed;
+    background: var(--accent);
   }
   #profile-header {
-    padding: 5px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1px; color: #63b3ed; background: #0f1117;
-    border-bottom: 1px solid #2d3748; display: flex; align-items: center; gap: 10px;
+    padding: 5px 12px; font-size: 11px; font-weight: 600;
+    color: var(--text-muted); background: var(--surface-1);
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
   }
   #profile-header .profile-tabs { display: flex; gap: 6px; margin-left: 8px; }
   .ptab {
     font-size: 10px; padding: 2px 10px; border-radius: 10px;
-    border: 1px solid #2d3748; cursor: pointer; color: #a0aec0;
+    border: 1px solid var(--border); cursor: pointer; color: var(--text-muted);
     transition: all 0.15s; font-weight: 600; text-transform: none; letter-spacing: 0;
   }
-  .ptab.active { background: #1a3a5c; border-color: #63b3ed; color: #fff; }
+  .ptab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
   .bottom-tab {
-    font-size: 10px; padding: 4px 12px; border: 1px solid #2d3748; border-bottom: none;
-    background: transparent; color: #718096; cursor: pointer; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.15s;
+    font-size: 10px; padding: 4px 12px; border: 1px solid var(--border); border-bottom: none;
+    background: transparent; color: var(--text-muted); cursor: pointer; font-weight: 600;
+    text-transform: none; letter-spacing: 0; transition: all 0.15s;
     border-radius: 4px 4px 0 0; margin-right: -1px;
   }
-  .bottom-tab.active { background: #1a3a5c; border-color: #63b3ed; color: #fff; }
-  .bottom-tab:hover:not(.active) { color: #a0aec0; background: #1a1d23; }
+  .bottom-tab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+  .bottom-tab:hover:not(.active) { color: var(--text-muted); background: var(--surface-2); }
   .bottom-tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .bottom-tab-content:not(.active) { display: none !important; }
   #profile-canvas-wrap { flex: 1; padding: 6px 12px; position: relative; }
   #profile-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
   #analysis-results-panel { flex: 1; }
   #analysis-results-panel table { width:100%; border-collapse:collapse; margin:8px 0; }
-  #analysis-results-panel th, #analysis-results-panel td { padding:4px 8px; border:1px solid #2d3748; font-size:11px; text-align:left; }
-  #analysis-results-panel th { background:#1a1d23; color:#63b3ed; }
-  #analysis-results-panel td { color:#a0aec0; }
+  #analysis-results-panel th, #analysis-results-panel td { padding:4px 8px; border:1px solid var(--border); font-size:11px; text-align:left; }
+  #analysis-results-panel th { background:var(--surface-2); color:var(--accent); }
+  #analysis-results-panel td { color:var(--text-muted); }
 
   /* ── Right panel ── */
   #right-panel {
-    width: 280px; min-width: 200px; max-width: 500px; background: #13161c; border-left: 1px solid #2d3748;
-    display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+    width: 280px; min-width: 200px; max-width: 500px; background: var(--surface-1); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
     position: relative; transition: width 0.2s, min-width 0.2s, padding 0.2s, border 0.2s;
   }
   #right-panel.collapsed { width: 0 !important; min-width: 0 !important; padding: 0 !important; overflow: hidden; border-left: none; }
   #feature-info { padding: 10px 12px; font-size: 11px; }
   #feature-info .fi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  #feature-info .fi-title { font-weight: 700; color: #63b3ed; font-size: 12px; }
-  #feature-info .fi-layer-name { font-size: 10px; color: #718096; margin-bottom: 4px; }
+  #feature-info .fi-title { font-weight: 700; color: var(--accent); font-size: 12px; }
+  #feature-info .fi-layer-name { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
   #feature-info .fi-layer-name span { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
-  #feature-info .fi-geom-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: #2d3748; color: #a0aec0; margin-left: 6px; }
+  #feature-info .fi-geom-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: var(--surface-2); color: var(--text-muted); margin-left: 6px; }
   #feature-info .fi-nav { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
-  #feature-info .fi-nav button { background: #2d3748; border: 1px solid #4a5568; border-radius: 3px; color: #e2e8f0; cursor: pointer; font-size: 10px; padding: 1px 6px; }
-  #feature-info .fi-nav button:hover { background: #4a5568; }
-  #feature-info .fi-nav span { font-size: 10px; color: #718096; }
+  #feature-info .fi-nav button { background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 3px; color: var(--text); cursor: pointer; font-size: 10px; padding: 1px 6px; }
+  #feature-info .fi-nav button:hover { background: var(--surface-3); }
+  #feature-info .fi-nav span { font-size: 10px; color: var(--text-muted); }
   #feature-info .fi-actions { display: flex; gap: 4px; margin-bottom: 6px; }
-  #feature-info .fi-actions button { font-size: 10px; padding: 2px 8px; background: #2d3748; border: 1px solid #4a5568; border-radius: 3px; color: #e2e8f0; cursor: pointer; }
-  #feature-info .fi-actions button:hover { background: #4a5568; }
-  #feature-info .fi-coords { font-size: 10px; color: #718096; margin-bottom: 6px; font-family: monospace; }
+  #feature-info .fi-actions button { font-size: 10px; padding: 2px 8px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 3px; color: var(--text); cursor: pointer; }
+  #feature-info .fi-actions button:hover { background: var(--surface-3); }
+  #feature-info .fi-coords { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
   #feature-info .fi-props { max-height: 260px; overflow-y: auto; }
   #feature-info table { width: 100%; border-collapse: collapse; }
   #feature-info td { padding: 3px 0; vertical-align: top; }
-  #feature-info td:first-child { color: #718096; padding-right: 6px; white-space: nowrap; }
-  #feature-info td:last-child { color: #e2e8f0; font-weight: 500; word-break: break-word; }
-  .fi-empty { color: #4a5648; font-style: italic; font-size: 11px; margin-top: 6px; }
+  #feature-info td:first-child { color: var(--text-muted); padding-right: 6px; white-space: nowrap; }
+  #feature-info td:last-child { color: var(--text); font-weight: 500; word-break: break-word; }
+  .fi-empty { color: var(--text-faint); font-style: italic; font-size: 11px; margin-top: 6px; }
   .fi-highlight { animation: fi-flash 0.6s ease-out; }
-  @keyframes fi-flash { 0% { box-shadow: 0 0 0 2px #63b3ed; } 100% { box-shadow: none; } }
+  @keyframes fi-flash { 0% { box-shadow: 0 0 0 2px var(--accent); } 100% { box-shadow: none; } }
 
   /* Attribute table */
-  #attr-table-section { border-top: 1px solid #2d3748; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  #attr-table-section { border-top: 1px solid var(--border); flex: 1; overflow: hidden; display: flex; flex-direction: column; }
   #attr-table-header {
-    padding: 6px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1px; color: #63b3ed; background: #0f1117; cursor: pointer;
+    padding: 6px 12px; font-size: 12px; font-weight: 600;
+    color: var(--text-muted); background: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: space-between;
   }
   #attr-table-wrap {
@@ -502,18 +577,18 @@
     width: 100%; border-collapse: collapse; font-size: 10px;
   }
   #attr-table th {
-    background: #0f1117; color: #63b3ed; padding: 4px 6px; text-align: left;
-    position: sticky; top: 0; font-weight: 600; border-bottom: 1px solid #2d3748;
+    background: var(--surface-2); color: var(--accent); padding: 4px 6px; text-align: left;
+    position: sticky; top: 0; font-weight: 600; border-bottom: 1px solid var(--border);
   }
   #attr-table td {
-    padding: 3px 6px; border-bottom: 1px solid #1e2430; color: #a0aec0;
+    padding: 3px 6px; border-bottom: 1px solid var(--border); color: var(--text-muted);
     white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis;
   }
-  #attr-table tr:hover td { background: #1a202c; }
-  #attr-table tr.selected td { background: #1a3a5c; color: #fff; }
+  #attr-table tr:hover td { background: var(--surface-2); }
+  #attr-table tr.selected td { background: var(--accent-bg); color: var(--text); }
 
   /* Minimap */
-  #minimap { width: 100%; height: 100px; border-radius: 5px; border: 1px solid #2d3748; overflow: hidden; }
+  #minimap { width: 100%; height: 100px; border-radius: 5px; border: 1px solid var(--border); overflow: hidden; }
 
   /* North arrow */
   #north-arrow {
@@ -523,15 +598,15 @@
 
   /* Scale bar */
   .leaflet-control-scale-line {
-    background: rgba(19,22,28,0.85) !important; border-color: #63b3ed !important;
-    color: #e2e8f0 !important; font-size: 10px !important;
+    background: var(--surface-1) !important; border-color: var(--accent) !important;
+    color: var(--text) !important; font-size: 10px !important;
   }
 
   /* Tooltip */
   .site-tooltip {
-    background: #0f1117 !important; border: 1px solid #2d3748 !important;
-    color: #e2e8f0 !important; border-radius: 4px !important; font-size: 11px !important;
-    padding: 4px 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+    background: var(--surface-1) !important; border: 1px solid var(--border) !important;
+    color: var(--text) !important; border-radius: 4px !important; font-size: 11px !important;
+    padding: 4px 8px !important; box-shadow: var(--shadow) !important;
   }
   .site-tooltip::before { display: none !important; }
   /* Layout/export labels: smaller, white halo for legibility over any basemap */
@@ -561,26 +636,33 @@
 
   /* Leaflet overrides */
   .leaflet-control-zoom a, .leaflet-control-fullscreen a {
-    background: #13161c !important; color: #e2e8f0 !important; border-color: #2d3748 !important;
+    background: var(--surface-1) !important; color: var(--text) !important; border-color: var(--border) !important;
   }
-  .leaflet-control-zoom a:hover, .leaflet-control-fullscreen a:hover { background: #1a3a5c !important; }
-  .leaflet-bar { border: 1px solid #2d3748 !important; box-shadow: none !important; }
+  .leaflet-control-zoom a:hover, .leaflet-control-fullscreen a:hover { background: var(--accent-bg) !important; }
+  .leaflet-bar { border: 1px solid var(--border) !important; box-shadow: none !important; }
 
   /* Loading */
   #loading {
-    position: absolute; inset: 0; background: rgba(19,22,28,0.7);
+    position: absolute; inset: 0; background: rgba(0,0,0,0.5);
     display: flex; align-items: center; justify-content: center;
-    z-index: 9999; font-size: 13px; color: #63b3ed; gap: 10px;
+    z-index: 9999; font-size: 13px; color: var(--accent); gap: 10px;
   }
 
   /* Status bar */
   #statusbar {
-    background: #0f1117; border-top: 1px solid #2d3748; height: 22px;
-    display: flex; align-items: center; padding: 0 12px; gap: 16px;
-    font-size: 10px; color: #718096; flex-shrink: 0;
+    background: var(--surface-1); border-top: 1px solid var(--border); height: 28px;
+    display: flex; align-items: center; padding: 0 12px; gap: 6px;
+    font-size: 11px; color: var(--text-muted); flex-shrink: 0;
   }
-  #statusbar span { display: flex; align-items: center; gap: 4px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: #48bb78; }
+  .status-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 10px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    font-size: 11px; font-family: 'JetBrains Mono', ui-monospace, monospace;
+    white-space: nowrap;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .dot.loading { background: var(--warning); }
 
   /* Export overlay */
   #export-overlay {
@@ -589,29 +671,29 @@
   }
   #export-overlay.show { display: flex; }
   #export-box {
-    background: #13161c; border: 1px solid #2d3748; border-radius: 8px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
     padding: 20px 24px; width: 380px;
   }
-  #export-box h3 { color: #63b3ed; font-size: 13px; margin-bottom: 14px; }
-  .exp-row { margin: 8px 0; font-size: 11px; color: #a0aec0; }
+  #export-box h3 { color: var(--accent); font-size: 13px; margin-bottom: 14px; }
+  .exp-row { margin: 8px 0; font-size: 11px; color: var(--text-muted); }
   .exp-row label { display: block; margin-bottom: 4px; }
   .exp-row select, .exp-row input[type=text] {
-    width: 100%; background: #1a1d23; border: 1px solid #2d3748; border-radius: 4px;
-    color: #e2e8f0; padding: 5px 8px; font-size: 11px;
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); padding: 5px 8px; font-size: 11px;
   }
-  .exp-row input[type=checkbox] { accent-color: #63b3ed; margin-right: 6px; }
+  .exp-row input[type=checkbox] { accent-color: var(--accent); margin-right: 6px; }
   .exp-actions { display: flex; gap: 8px; margin-top: 14px; }
 
   /* Notification toast */
   #toast {
     position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-    background: #0f1117; border: 1px solid #2d3748; border-radius: 6px;
-    padding: 8px 16px; font-size: 12px; color: #63b3ed; z-index: 9999;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5); display: none; white-space: nowrap;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 16px; font-size: 12px; color: var(--accent); z-index: 9999;
+    box-shadow: var(--shadow); display: none; white-space: nowrap;
   }
   #toast.show { display: block; animation: fadeInUp 0.3s; }
-  #toast.success { border-color: #48bb78; color: #48bb78; }
-  #toast.error { border-color: #e53e3e; color: #e53e3e; }
+  #toast.success { border-color: var(--success); color: var(--success); }
+  #toast.error { border-color: var(--error); color: var(--error); }
   @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
   /* Layout Composer */
@@ -622,7 +704,7 @@
   }
   #layout-modal.show { display: flex; }
   #layout-box {
-    background: #13161c; border: 1px solid #2d3748; border-radius: 8px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
     padding: 12px; max-width: 95vw;
     display: flex; flex-direction: column;
     margin: auto;
@@ -631,39 +713,35 @@
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 10px; flex-shrink: 0;
   }
-  .layout-header h3 { color: #63b3ed; font-size: 13px; margin: 0; }
+  .layout-header h3 { color: var(--accent); font-size: 13px; margin: 0; }
   .layout-controls {
     display: flex; align-items: center; gap: 8px;
   }
   .lock-btn {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 5px 10px; font-size: 11px; font-weight: 600;
-    background: #1a202c; color: #cbd5e0;
-    border: 1px solid #2d3748; border-radius: 4px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
     cursor: pointer; user-select: none;
     transition: background .15s, border-color .15s, color .15s;
   }
-  .lock-btn:hover { border-color: #63b3ed; color: #fff; }
+  .lock-btn:hover { border-color: var(--accent); color: var(--text); }
   .lock-btn.locked {
-    background: #2c5282; border-color: #63b3ed; color: #fff;
+    background: var(--accent-bg); border-color: var(--accent); color: var(--accent);
   }
   .lock-btn .lock-icon { font-size: 12px; line-height: 1; }
   #layout-basemap-select {
     padding: 5px 8px; font-size: 11px;
-    background: #1a202c; color: #cbd5e0;
-    border: 1px solid #2d3748; border-radius: 4px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
     cursor: pointer;
   }
-  #layout-basemap-select:hover { border-color: #63b3ed; }
-  body.light .lock-btn { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
-  body.light .lock-btn:hover { border-color: #2b6cb0; color: #2d3748; }
-  body.light .lock-btn.locked { background: #bee3f8; border-color: #2b6cb0; color: #2d3748; }
-  body.light #layout-basemap-select { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
+  #layout-basemap-select:hover { border-color: var(--accent); }
   .layout-lock-badge {
     position: absolute; top: 8px; left: 8px; z-index: 1000;
     padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: .5px;
-    background: rgba(44, 82, 130, 0.95); color: #fff;
-    border: 1px solid #63b3ed; border-radius: 3px;
+    background: var(--accent-bg); color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 3px;
     pointer-events: none;
     text-transform: uppercase;
   }
@@ -671,8 +749,8 @@
   #layout-paper {
     position: relative;
     flex-shrink: 0;
-    border: 2px solid #2d3748; border-radius: 4px;
-    background: #0f1117;
+    border: 2px solid var(--border); border-radius: 4px;
+    background: var(--bg);
   }
   #layout-map {
     position: absolute; inset: 0;
@@ -731,20 +809,18 @@
   .layout-toggle {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 5px 10px; font-size: 11px; font-weight: 600;
-    background: #1a202c; color: #cbd5e0;
-    border: 1px solid #2d3748; border-radius: 4px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
     cursor: pointer; user-select: none;
   }
   .layout-toggle input { margin: 0; cursor: pointer; }
-  body.light .layout-toggle { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
   #layout-coord-format {
     padding: 5px 8px; font-size: 11px;
-    background: #1a202c; color: #cbd5e0;
-    border: 1px solid #2d3748; border-radius: 4px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
     cursor: pointer;
   }
   #layout-coord-format:disabled { opacity: 0.45; cursor: not-allowed; }
-  body.light #layout-coord-format { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
   /* Hide ALL Leaflet UI controls (zoom buttons, attribution flag, etc.) inside the paper
      so they never appear in PNG/PDF exports. The composer is for static map elements only. */
   #layout-paper .leaflet-control-container,
@@ -813,133 +889,17 @@
   #layout-loading {
     position: absolute; inset: 0; z-index: 20;
     display: none; align-items: center; justify-content: center;
-    gap: 8px; background: rgba(15,17,23,0.7);
-    font-size: 13px; color: #63b3ed;
+    gap: 8px; background: rgba(0,0,0,0.5);
+    font-size: 13px; color: var(--accent);
   }
   #layout-loading.show { display: flex; }
   #layout-loading .spinner {
     display: inline-block; width: 18px; height: 18px;
-    border: 2px solid #2d3748; border-top-color: #63b3ed; border-radius: 50%;
+    border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Light theme ── */
-  body.light { background: #f7fafc; color: #1a202c; }
-  body.light #topbar { background: #fff; border-bottom-color: #e2e8f0; }
-  body.light #topbar .logo { color: #2b6cb0; }
-  body.light #topbar .subtitle { color: #718096; }
-  body.light #topbar .coord-display, body.light #topbar .scale-display { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
-  body.light #theme-toggle, body.light #collapse-left-btn, body.light #collapse-right-btn { border-color: #e2e8f0; color: #4a5568; }
-  body.light #left-panel, body.light #right-panel { background: #fff; border-color: #e2e8f0; }
-  body.light .panel-header { background: #f7fafc; color: #2b6cb0; }
-  body.light .panel-header:hover { background: #edf2f7; }
-  body.light .panel-body { color: #4a5568; }
-  body.light .layer-label.editing { background: #fff; border-color: #2b6cb0; color: #2d3748; }
-  body.light .layer-action-btn { color: #4a5568; }
-  body.light .layer-action-btn:hover { color: #2b6cb0; }
-  body.light .layer-item { color: #2d3748; }
-  body.light .layer-item:hover { background: rgba(43,108,176,0.06); }
-  body.light .layer-eye { color: #2b6cb0; }
-  body.light .layer-eye.off { color: #a0aec0; }
-  body.light .layer-item.active-layer { background: rgba(43,108,176,0.08); }
-  body.light .map-legend { background: rgba(255,255,255,0.95); border-color: #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
-  body.light .map-legend-header { background: rgba(247,250,252,0.95); border-bottom-color: #e2e8f0; color: #2b6cb0; }
-  body.light .map-legend-header:hover { background: rgba(237,242,247,0.95); }
-  body.light .map-legend-body { color: #4a5568; }
-  body.light .map-legend-layer-title { color: #2d3748; }
-  body.light .map-legend-label[contenteditable] { border-bottom-color: #cbd5e0; }
-  body.light .map-legend-label[contenteditable]:focus { border-bottom-color: #2b6cb0; color: #2d3748; }
-  body.light .map-legend-row { color: #4a5568; }
-  body.light .map-legend-symbol.point { border-color: rgba(0,0,0,0.3); }
-  body.light .map-legend-symbol.polygon { border-color: rgba(0,0,0,0.4); }
-  body.light .map-legend-ramp-labels { color: #718096; }
-  body.light .digitize-btn { background: rgba(255,255,255,0.95); border-color: #e2e8f0; color: #4a5568; }
-  body.light .digitize-btn:hover { background: rgba(237,242,247,0.95); color: #2d3748; border-color: #cbd5e0; }
-  body.light .digitize-btn.active { background: rgba(43,108,176,0.12); color: #2b6cb0; border-color: #2b6cb0; }
-  body.light .digitize-sep { background: #e2e8f0; }
-  body.light .attr-form-box { background: #fff; border-color: #e2e8f0; }
-  body.light .attr-form-box h3 { color: #2b6cb0; }
-  body.light .attr-form-row label { color: #4a5568; }
-  body.light .attr-form-row input { background: #f7fafc; border-color: #e2e8f0; color: #2d3748; }
-  body.light .attr-form-row input:focus { border-color: #2b6cb0; }
-  body.light .attr-form-actions .btn-ok { background: #2b6cb0; border-color: #2b6cb0; }
-  body.light .attr-form-actions .btn-cancel { background: #edf2f7; color: #4a5568; border-color: #e2e8f0; }
-  body.light .map-legend-empty { color: #a0aec0; }
-  body.light .layer-count { background: #edf2f7; color: #718096; }
-  body.light .basemap-btn { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
-  body.light .basemap-btn:hover { border-color: #2b6cb0; color: #2d3748; }
-  body.light .basemap-btn.active { background: #bee3f8; border-color: #2b6cb0; color: #2d3748; }
-  body.light .export-btn { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
-  body.light .export-btn:hover { border-color: #2b6cb0; background: #bee3f8; }
-  body.light #upload-zone { border-color: #cbd5e0; color: #718096; }
-  body.light #upload-zone:hover, body.light #upload-zone.dragover { border-color: #2b6cb0; background: rgba(43,108,176,0.05); }
-  body.light #profile-panel { background: #fff; border-top-color: #e2e8f0; }
-  body.light #profile-header { background: #f7fafc; border-bottom-color: #e2e8f0; color: #2b6cb0; }
-  body.light .bottom-tab { border-color: #e2e8f0; color: #718096; }
-  body.light .bottom-tab.active { background: #bee3f8; border-color: #2b6cb0; color: #2d3748; }
-  body.light #statusbar { background: #fff; border-top-color: #e2e8f0; color: #718096; }
-  body.light #feature-info td:first-child { color: #718096; }
-  body.light #feature-info td:last-child { color: #2d3748; }
-  body.light #feature-info .fi-title { color: #2b6cb0; }
-  body.light #feature-info .fi-layer-name { color: #718096; }
-  body.light #feature-info .fi-geom-badge { background: #edf2f7; color: #4a5568; }
-  body.light #feature-info .fi-nav button { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
-  body.light #feature-info .fi-nav button:hover { background: #e2e8f0; }
-  body.light #feature-info .fi-nav span { color: #718096; }
-  body.light #feature-info .fi-actions button { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
-  body.light #feature-info .fi-actions button:hover { background: #e2e8f0; }
-  body.light #feature-info .fi-coords { color: #718096; }
-  body.light .fi-empty { color: #a0aec0; }
-  body.light #attr-table th { background: #f7fafc; color: #2b6cb0; border-bottom-color: #e2e8f0; }
-  body.light #attr-table td { color: #4a5568; border-bottom-color: #edf2f7; }
-  body.light #attr-table tr:hover td { background: #edf2f7; }
-  body.light .stat-card { background: #edf2f7; border-color: #e2e8f0; }
-  body.light .stat-card .val { color: #2b6cb0; }
-  body.light .site-tooltip { background: #fff !important; border-color: #e2e8f0 !important; color: #2d3748 !important; }
-  body.light #toast { background: #fff; border-color: #e2e8f0; color: #2b6cb0; }
-  body.light #toast.success { border-color: #48bb78; color: #276749; }
-  body.light #toast.error { border-color: #e53e3e; color: #c53030; }
-  body.light #export-box, body.light #col-mapper-box { background: #fff; border-color: #e2e8f0; }
-  body.light #export-box h3, body.light #col-mapper-box h3 { color: #2b6cb0; }
-  body.light #layout-box { background: #fff; border-color: #e2e8f0; }
-  body.light .layout-header h3 { color: #2b6cb0; }
-  body.light #layout-paper { background: #fff; border-color: #e2e8f0; }
-  body.light #layout-north, body.light #layout-scale, body.light #layout-overview-wrap,
-  body.light #layout-legend {
-    background: rgba(255,255,255,0.9); border-color: #e2e8f0; color: #2d3748;
-  }
-  body.light #layout-north { color: #e53e3e; }
-  body.light #layout-overview-label { color: #718096; }
-  body.light #layout-scale { color: #4a5568; }
-  body.light #layout-loading { background: rgba(255,255,255,0.7); color: #2b6cb0; }
-  body.light #layout-loading .spinner { border-color: #e2e8f0; border-top-color: #2b6cb0; }
-  body.light .exp-row select, body.light .exp-row input[type=text], body.light .cm-row select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
-  body.light .symbol-row input[type=number] { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
-  body.light #analysis-layer-select { background: #edf2f7; border-color: #e2e8f0; color: #2d3748; }
-  body.light #analysis-results-panel { color: #4a5568; }
-  body.light #analysis-results-panel th { background: #f7fafc; color: #2b6cb0; }
-  body.light #analysis-results-panel td { color: #4a5568; border-color: #e2e8f0; }
-  body.light #profile-resize-handle::after { background: #cbd5e0; }
-  body.light .panel-resize-handle:hover, body.light .panel-resize-handle.dragging { background: rgba(43,108,176,0.2); }
-  body.light .panel-section { border-bottom-color: #e2e8f0; }
-  body.light #attr-table-header { background: #f7fafc; color: #2b6cb0; }
-  body.light #attr-table-section { border-top-color: #e2e8f0; }
-  body.light .search-box input { background: #f7fafc; border-color: #e2e8f0; color: #2d3748; }
-  body.light .search-box input:focus { border-color: #2b6cb0; }
-  body.light .search-box button { background: #edf2f7; border-color: #e2e8f0; color: #4a5568; }
-  body.light .search-box button:hover { background: #e2e8f0; }
-  body.light .layer-drag-handle { color: #a0aec0; }
-  body.light .layer-item.drag-over { border-top-color: #2b6cb0; }
-  body.light .bookmark-item { color: #2d3748; }
-  body.light .bookmark-item:hover { background: rgba(43,108,176,0.08); }
-  body.light .bookmark-item button { color: #e53e3e; }
-  body.light #attr-table th.sort-asc::after, body.light #attr-table th.sort-desc::after { color: #2b6cb0; }
-  body.light #attr-table tr.selected { background: rgba(43,108,176,0.12); }
-  body.light .select-box { border-color: #2b6cb0; background: rgba(43,108,176,0.1); }
-  body.light #loading { background: rgba(247,250,252,0.8); color: #2b6cb0; }
-  body.light .leaflet-control-zoom a, body.light .leaflet-control-fullscreen a { background: #fff !important; color: #2d3748 !important; border-color: #e2e8f0 !important; }
-  body.light .leaflet-bar { border-color: #e2e8f0 !important; }
 </style>
 </head>
 <body>
@@ -954,9 +914,9 @@
   </div>
   <div class="coord-display" id="coord-display">Move cursor over map</div>
   <div class="scale-display" id="zoom-display">Zoom: --</div>
-  <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode" style="background:none;border:1px solid #2d3748;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:14px;color:#e2e8f0;">&#x1f319;</button>
-  <button id="collapse-left-btn" onclick="toggleLeftPanel()" title="Toggle left panel" style="background:none;border:1px solid #2d3748;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:#a0aec0;">&#x25c0;</button>
-  <button id="collapse-right-btn" onclick="toggleRightPanel()" title="Toggle right panel" style="background:none;border:1px solid #2d3748;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:#a0aec0;">&#x25b6;</button>
+  <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light theme" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:14px;color:var(--text);">&#x1f319;</button>
+  <button id="collapse-left-btn" onclick="toggleLeftPanel()" title="Toggle left panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25c0;</button>
+  <button id="collapse-right-btn" onclick="toggleRightPanel()" title="Toggle right panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25b6;</button>
 </div>
 
 <!-- Main -->
@@ -969,7 +929,7 @@
     <!-- Upload -->
     <div class="panel-section">
       <div class="panel-header" onclick="toggleSection(this)">
-        <span>Import Data</span><span class="arrow">&#x25BC;</span>
+        <span>Data Sources</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body">
         <div id="upload-zone" onclick="document.getElementById('upload-file').click()"
@@ -988,27 +948,6 @@
       </div>
     </div>
 
-    <!-- Basemaps -->
-    <div class="panel-section">
-      <div class="panel-header" onclick="toggleSection(this)">
-        <span>Basemap</span><span class="arrow">&#x25BC;</span>
-      </div>
-      <div class="panel-body">
-        <div class="basemap-grid" id="basemap-grid">
-          <div class="basemap-btn active" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Esri World Topo" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Topo</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Imagery" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Satellite</div>
-          <div class="basemap-btn" data-url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" data-attr="OSM" data-subdomains="abc" data-maxz="19" onclick="switchBasemap(this)">Streets</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Relief" data-subdomains="" data-maxz="13" onclick="switchBasemap(this)">Relief</div>
-          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" data-attr="CartoDB" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Voyager</div>
-          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="CartoDB Dark Matter" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Dark</div>
-        </div>
-        <div class="slider-row" style="margin-top:8px">
-          <label>Opacity <span id="bm-opacity-val">100%</span></label>
-          <input type="range" min="0" max="100" value="100" oninput="setBasemapOpacity(this.value)">
-        </div>
-      </div>
-    </div>
-
     <!-- Layers -->
     <div class="panel-section">
       <div class="panel-header" onclick="toggleSection(this)">
@@ -1016,7 +955,37 @@
       </div>
       <div class="panel-body" id="layers-panel">
         <div id="uploaded-layers-list"></div>
-        <div id="layers-empty" style="font-size:11px;color:#4a5568;text-align:center;padding:12px 0;">Import data to add layers</div>
+        <div id="layers-empty" style="font-size:11px;color:var(--text-faint);text-align:center;padding:12px 0;">Import data to add layers</div>
+      </div>
+    </div>
+
+    <!-- Basemaps -->
+    <div class="panel-section">
+      <div class="panel-header" onclick="toggleSection(this)">
+        <span>Basemap</span><span class="arrow">&#x25BC;</span>
+      </div>
+      <div class="panel-body">
+        <!-- Hidden grid kept for switchBasemap() compatibility -->
+        <div class="basemap-grid" id="basemap-grid" style="display:none">
+          <div class="basemap-btn active" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Esri World Topo" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Topo</div>
+          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Imagery" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Satellite</div>
+          <div class="basemap-btn" data-url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" data-attr="OSM" data-subdomains="abc" data-maxz="19" onclick="switchBasemap(this)">Streets</div>
+          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Relief" data-subdomains="" data-maxz="13" onclick="switchBasemap(this)">Relief</div>
+          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" data-attr="CartoDB" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Voyager</div>
+          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="CartoDB Dark Matter" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Dark</div>
+        </div>
+        <select id="basemap-select" onchange="setBasemapFromSelect(this.value)">
+          <option value="Topo" selected>Topo</option>
+          <option value="Satellite">Satellite</option>
+          <option value="Streets">Streets</option>
+          <option value="Relief">Relief</option>
+          <option value="Voyager">Voyager</option>
+          <option value="Dark">Dark</option>
+        </select>
+        <div class="slider-row" style="margin-top:8px">
+          <label>Opacity <span id="bm-opacity-val">100%</span></label>
+          <input type="range" min="0" max="100" value="100" oninput="setBasemapOpacity(this.value)">
+        </div>
       </div>
     </div>
 
@@ -1026,29 +995,29 @@
         <span>Spatial Analysis</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" id="analysis-panel">
-        <div style="font-size:10px;color:#718096;margin-bottom:8px;">Select a layer, then run an analysis tool.</div>
-        <select id="analysis-layer-select" onchange="refreshAnalysisAttrSelect()" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:5px;margin-bottom:8px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">Select a layer, then run an analysis tool.</div>
+        <select id="analysis-layer-select" onchange="refreshAnalysisAttrSelect()" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:5px;margin-bottom:8px;">
           <option value="">— Select layer —</option>
         </select>
 
-        <div style="font-size:10px;color:#63b3ed;margin:6px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Descriptive</div>
+        <div style="font-size:10px;color:var(--accent);margin:6px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Descriptive</div>
         <button class="export-btn" onclick="runAnalysis('center')">Mean Center &amp; Std Distance</button>
         <button class="export-btn" onclick="runAnalysis('extent')">Bounding Box &amp; Area</button>
         <button class="export-btn" onclick="runAnalysis('nni')">Nearest Neighbor Index</button>
 
-        <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Autocorrelation</div>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Autocorrelation</div>
         <button class="export-btn" onclick="runAnalysis('moranI')">Moran's I (spatial autocorrelation)</button>
 
-        <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Interpolation &amp; Density</div>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Interpolation &amp; Density</div>
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="font-size:10px;color:#a0aec0;white-space:nowrap;">Weight attr:</span>
-          <select id="analysis-attr-select" style="flex:1;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:10px;padding:3px 4px;">
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Weight attr:</span>
+          <select id="analysis-attr-select" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:10px;padding:3px 4px;">
             <option value="">Auto-detect</option>
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="font-size:10px;color:#a0aec0;white-space:nowrap;">Palette:</span>
-          <select id="heat-palette-select" onchange="onPaletteChange()" style="flex:1;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:10px;padding:3px 4px;">
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Palette:</span>
+          <select id="heat-palette-select" onchange="onPaletteChange()" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:10px;padding:3px 4px;">
             <option value="thermal">Thermal (blue→red)</option>
             <option value="viridis">Viridis (purple→yellow)</option>
             <option value="inferno">Inferno (black→yellow)</option>
@@ -1059,33 +1028,33 @@
           </select>
         </div>
         <div class="slider-row" style="margin:2px 0 4px">
-          <label style="font-size:10px;color:#a0aec0;">Opacity <span id="heat-opacity-val">70%</span></label>
+          <label style="font-size:10px;color:var(--text-muted);">Opacity <span id="heat-opacity-val">70%</span></label>
           <input type="range" id="heat-opacity-slider" min="10" max="100" value="70" oninput="updateHeatOpacity(this.value)">
         </div>
         <div class="slider-row" style="margin:2px 0 4px">
-          <label style="font-size:10px;color:#a0aec0;">Radius <span id="heat-radius-val">35</span></label>
+          <label style="font-size:10px;color:var(--text-muted);">Radius <span id="heat-radius-val">35</span></label>
           <input type="range" id="heat-radius-slider" min="10" max="80" value="35" oninput="updateHeatRadius(this.value)">
         </div>
         <div class="slider-row" style="margin:2px 0 6px">
-          <label style="font-size:10px;color:#a0aec0;">Blur <span id="heat-blur-val">25</span></label>
+          <label style="font-size:10px;color:var(--text-muted);">Blur <span id="heat-blur-val">25</span></label>
           <input type="range" id="heat-blur-slider" min="5" max="60" value="25" oninput="updateHeatBlur(this.value)">
         </div>
         <button class="export-btn" onclick="runAnalysis('idw')">IDW Interpolation</button>
         <button class="export-btn" onclick="runAnalysis('density')">Point Density</button>
         <button class="export-btn" onclick="runAnalysis('hotspot')">Weighted Density Map</button>
 
-        <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Clustering</div>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Clustering</div>
         <button class="export-btn" onclick="runAnalysis('dbscan')">DBSCAN Clustering</button>
         <button class="export-btn" onclick="runAnalysis('convexHull')">Convex Hull</button>
 
-        <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Line &amp; Polygon</div>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Line &amp; Polygon</div>
         <button class="export-btn" onclick="runAnalysis('lengths')">Line Lengths</button>
         <button class="export-btn" onclick="runAnalysis('areas')">Polygon Areas</button>
         <button class="export-btn" onclick="runAnalysis('centroid')">Centroids</button>
         <button class="export-btn" onclick="runAnalysis('simplify')">Simplify Geometries</button>
         <div style="display:flex;align-items:center;gap:6px;margin:4px 0;">
-          <label style="font-size:10px;color:#a0aec0;">Simplify tolerance</label>
-          <input type="number" id="simplify-tol" value="0.002" min="0.0001" max="0.1" step="0.0005" style="width:60px;font-size:10px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;padding:2px 4px;">
+          <label style="font-size:10px;color:var(--text-muted);">Simplify tolerance</label>
+          <input type="number" id="simplify-tol" value="0.002" min="0.0001" max="0.1" step="0.0005" style="width:60px;font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;">
         </div>
         <button class="export-btn" onclick="runAnalysis('buffer')">Buffer</button>
         <button class="export-btn" onclick="runAnalysis('voronoi')">Voronoi / Thiessen Polygons</button>
@@ -1103,12 +1072,12 @@
         <button class="export-btn" onclick="openExport('pdf')"><span class="icon">&#x1f4c4;</span> Export as PDF</button>
         <button class="export-btn" onclick="exportAllCSV()"><span class="icon">&#x1f4ca;</span> Export all points as CSV</button>
         <button class="export-btn" onclick="exportAllGeoJSON()"><span class="icon">&#x1f5c3;</span> Export all as GeoJSON</button>
-        <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Elevation Profile</div>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Elevation Profile</div>
         <button class="export-btn" onclick="exportProfile('png')"><span class="icon">&#x1f5bc;</span> Profile as PNG</button>
         <button class="export-btn" onclick="exportProfile('pdf')"><span class="icon">&#x1f4c4;</span> Profile as PDF</button>
         <button class="export-btn" onclick="exportProfile('svg')"><span class="icon">&#x1f5fe;</span> Profile as SVG</button>
-        <div style="font-size:10px;color:#63b3ed;margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Per-Layer Export</div>
-        <select id="export-layer-select" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Per-Layer Export</div>
+        <select id="export-layer-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
         <button class="export-btn" onclick="exportLayerGeoJSON()"><span class="icon">&#x1f5c3;</span> Export layer as GeoJSON</button>
         <button class="export-btn" onclick="exportLayerCSV()"><span class="icon">&#x1f4ca;</span> Export layer as CSV</button>
         <button class="export-btn" onclick="exportLayerShapefile()"><span class="icon">&#x1f4e6;</span> Export layer as Shapefile (.zip)</button>
@@ -1119,7 +1088,7 @@
 
   <!-- Map + profile -->
   <div id="map-wrap">
-    <div id="loading"><div class="spinner" style="width:18px;height:18px;border:2px solid #2d3748;border-top-color:#63b3ed;border-radius:50%;animation:spin 0.7s linear infinite"></div> Loading...</div>
+    <div id="loading"><div class="spinner" style="width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite"></div> Loading...</div>
     <div id="map"></div>
     <!-- Digitizing toolbar -->
     <div class="digitize-toolbar" id="digitize-toolbar">
@@ -1152,32 +1121,32 @@
           <button class="bottom-tab" data-tab="analysis" onclick="switchBottomTab('analysis')">Analysis Results</button>
         </div>
         <div class="profile-tabs" id="profile-tabs"></div>
-        <label id="profile-sort-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:#a0aec0;font-weight:400;letter-spacing:0;text-transform:none;">
+        <label id="profile-sort-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:var(--text-muted);font-weight:400;letter-spacing:0;text-transform:none;">
           Sort:
-          <select id="profile-sort" onchange="rebuildProfileFromCheckboxes()" style="font-size:10px;padding:1px 4px;background:#1a202c;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;cursor:pointer;">
+          <select id="profile-sort" onchange="rebuildProfileFromCheckboxes()" style="font-size:10px;padding:1px 4px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);cursor:pointer;">
             <option value="elevation" selected>Elevation (low→high)</option>
             <option value="west_east">West→East</option>
             <option value="south_north">South→North</option>
             <option value="survey">Survey order</option>
           </select>
         </label>
-        <label id="profile-zero-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:#a0aec0;font-weight:400;letter-spacing:0;text-transform:none;cursor:pointer;">
-          <input type="checkbox" id="profile-y-zero" checked onchange="rebuildProfileFromCheckboxes()" style="accent-color:#63b3ed;">
+        <label id="profile-zero-wrap" style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:10px;color:var(--text-muted);font-weight:400;letter-spacing:0;text-transform:none;cursor:pointer;">
+          <input type="checkbox" id="profile-y-zero" checked onchange="rebuildProfileFromCheckboxes()" style="accent-color:var(--accent);">
           Y from 0
         </label>
         <div style="flex:1"></div>
-        <span id="profile-hint" style="font-size:10px;color:#4a5568;font-weight:400;letter-spacing:0">Click a point on the profile to pan the map</span>
+        <span id="profile-hint" style="font-size:10px;color:var(--text-faint);font-weight:400;letter-spacing:0">Click a point on the profile to pan the map</span>
       </div>
       <div id="bottom-tab-elevation" class="bottom-tab-content active">
         <div id="profile-canvas-wrap"><canvas id="profile-chart"></canvas></div>
       </div>
       <div id="bottom-tab-analysis" class="bottom-tab-content" style="display:none;">
-        <div id="analysis-results-panel" style="flex:1;padding:10px 14px;overflow-y:auto;font-size:11px;color:#a0aec0;line-height:1.7;">
+        <div id="analysis-results-panel" style="flex:1;padding:10px 14px;overflow-y:auto;font-size:11px;color:var(--text-muted);line-height:1.7;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:10px;color:#63b3ed;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Results</span>
-            <button onclick="clearAnalysisResults()" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Clear</button>
+            <span style="font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Results</span>
+            <button onclick="clearAnalysisResults()" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Clear</button>
           </div>
-          <div id="analysis-results-empty" style="color:#4a5568;text-align:center;padding:20px 0;">Run a spatial analysis tool from the left panel to see results here.</div>
+          <div id="analysis-results-empty" style="color:var(--text-faint);text-align:center;padding:20px 0;">Run a spatial analysis tool from the left panel to see results here.</div>
           <div id="analysis-results-content" style="display:none;"></div>
         </div>
       </div>
@@ -1197,20 +1166,20 @@
       </div>
     </div>
 
-    <div class="panel-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="panel-section">
       <div class="panel-header" onclick="toggleSection(this)">
         <span>Attribute Table</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:6px 8px;">
-        <select id="attr-layer-select" onchange="loadAttrTable(this.value)" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px;margin-bottom:6px;">
+      <div class="panel-body" style="padding:6px 8px;">
+        <select id="attr-layer-select" onchange="loadAttrTable(this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px;margin-bottom:6px;">
           <option value="">— Select layer —</option>
         </select>
-        <div style="font-size:10px;color:#718096;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:6px;">
           <span id="attr-count"></span>
-          <input type="text" id="attr-filter-expr" placeholder="Filter: col > 5" onkeydown="if(event.key==='Enter')applyAttrFilter()" style="flex:1;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;font-size:10px;padding:2px 6px;">
-          <button onclick="applyAttrFilter()" style="font-size:10px;padding:2px 6px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Filter</button>
-          <button onclick="clearAttrFilter()" style="font-size:10px;padding:2px 6px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Clear</button>
-          <input type="text" id="attr-search" placeholder="Search..." oninput="filterAttrTable(this.value)" style="background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;font-size:10px;padding:2px 6px;width:100px;">
+          <input type="text" id="attr-filter-expr" placeholder="Filter: col > 5" onkeydown="if(event.key==='Enter')applyAttrFilter()" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:2px 6px;">
+          <button onclick="applyAttrFilter()" style="font-size:10px;padding:2px 6px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Filter</button>
+          <button onclick="clearAttrFilter()" style="font-size:10px;padding:2px 6px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Clear</button>
+          <input type="text" id="attr-search" placeholder="Search..." oninput="filterAttrTable(this.value)" style="background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:2px 6px;width:100px;">
         </div>
         <div id="attr-table-wrap" style="flex:1;overflow:auto;">
           <table id="attr-table"><thead><tr></tr></thead><tbody></tbody></table>
@@ -1224,8 +1193,8 @@
         <span>Symbology</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" id="symbology-panel">
-        <div id="symbology-empty" style="font-size:11px;color:#4a5568;text-align:center;padding:12px 0;">Import data to configure symbology</div>
-        <select id="symbology-layer-select" onchange="selectSymbologyLayer(this.value)" style="width:100%;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px;margin-bottom:6px;display:none;">
+        <div id="symbology-empty" style="font-size:11px;color:var(--text-faint);text-align:center;padding:12px 0;">Import data to configure symbology</div>
+        <select id="symbology-layer-select" onchange="selectSymbologyLayer(this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px;margin-bottom:6px;display:none;">
           <option value="">— Select layer —</option>
         </select>
         <div id="symbology-controls"></div>
@@ -1248,7 +1217,7 @@
       </div>
       <div class="panel-body hidden" id="bookmarks-panel">
         <div style="display:flex;gap:6px;margin-bottom:8px;">
-          <input type="text" id="bookmark-name" placeholder="Bookmark name" style="flex:1;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:11px;padding:4px 6px;">
+          <input type="text" id="bookmark-name" placeholder="Bookmark name" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;">
           <button class="btn-ok" onclick="addBookmark()" style="font-size:11px;padding:4px 8px;">Save</button>
         </div>
         <div id="bookmarks-list" style="font-size:11px;"></div>
@@ -1259,23 +1228,23 @@
       <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>User Guide</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body hidden" style="font-size:10px;color:#a0aec0;line-height:1.6;max-height:400px;overflow-y:auto;">
-        <b style="color:#63b3ed;">Getting Started</b><br>
+      <div class="panel-body hidden" style="font-size:10px;color:var(--text-muted);line-height:1.6;max-height:400px;overflow-y:auto;">
+        <b style="color:var(--accent);">Getting Started</b><br>
         Drag &amp; drop or use the upload button to import GeoJSON, KML, GPX, Shapefile (.zip), CSV, XLSX, or GeoTIFF files.<br><br>
-        <b style="color:#63b3ed;">Navigation</b><br>
+        <b style="color:var(--accent);">Navigation</b><br>
         Scroll to zoom, drag to pan. Use the zoom buttons (top-left) or double-click to zoom in. Toggle fullscreen with the button top-left.<br><br>
-        <b style="color:#63b3ed;">Basemaps</b><br>
+        <b style="color:var(--accent);">Basemaps</b><br>
         Switch between Topo, Satellite, Streets, Relief, Terrain, and Dark basemaps. Adjust basemap opacity with the slider.<br><br>
-        <b style="color:#63b3ed;">Layers</b><br>
+        <b style="color:var(--accent);">Layers</b><br>
         Toggle layer visibility with checkboxes. Remove layers with the &times; button. The &#x1f3f7; button opens label controls &mdash; choose which attribute to display as map labels.<br><br>
-        <b style="color:#63b3ed;">Symbology</b><br>
+        <b style="color:var(--accent);">Symbology</b><br>
         <b>Simple Symbol</b> &mdash; Change fill color, size, opacity, stroke color/width/style, and marker shape (circle, square, triangle, diamond, star, cross).<br>
         <b>Categorized</b> &mdash; Color features by unique values of a selected attribute column.<br>
         <b>Graduated</b> &mdash; Color features along a color ramp based on numeric values. Choose column, number of classes, and color ramp (Viridis, Heat, Cool, Terrain).<br>
         Click <b>Reset</b> to return to the default single-color symbol.<br><br>
-        <b style="color:#63b3ed;">Elevation Profile</b><br>
+        <b style="color:var(--accent);">Elevation Profile</b><br>
         Layers with elevation data automatically generate a profile chart in the bottom panel. Toggle layers on/off with checkboxes. <b>Click a point on the profile</b> to pan the map to that location. Drag the top edge of the panel to resize.<br><br>
-        <b style="color:#63b3ed;">Spatial Analysis</b><br>
+        <b style="color:var(--accent);">Spatial Analysis</b><br>
         Select a layer, then choose a tool:<br>
         &bull; <b>Mean Center</b> &mdash; Geographic center with standard distance circle<br>
         &bull; <b>Bounding Box</b> &mdash; Minimum bounding rectangle with area<br>
@@ -1292,11 +1261,11 @@
         &bull; <b>Simplify</b> &mdash; Douglas-Peucker simplification (adjustable tolerance)<br>
         &bull; <b>Buffer</b> &mdash; Circular buffer zones around features<br>
         &bull; <b>Voronoi</b> &mdash; Thiessen polygon tessellation<br><br>
-        <b style="color:#63b3ed;">Attribute Table</b><br>
+        <b style="color:var(--accent);">Attribute Table</b><br>
         Select a layer to view its attribute table. Click a row to zoom to that feature and inspect its properties. Use the search box to filter rows.<br><br>
-        <b style="color:#63b3ed;">Export</b><br>
+        <b style="color:var(--accent);">Export</b><br>
         Export the map as PNG or PDF with configurable DPI. Export layer data as CSV or GeoJSON. The "Shapefile" option exports GeoJSON (convert with ogr2ogr/QGIS).<br><br>
-        <b style="color:#63b3ed;">Keyboard Shortcuts</b><br>
+        <b style="color:var(--accent);">Keyboard Shortcuts</b><br>
         &bull; <b>+/-</b> &mdash; Zoom in/out<br>
         &bull; <b>F</b> &mdash; Toggle fullscreen<br>
         &bull; <b>L</b> &mdash; Toggle layer panel<br>
@@ -1308,17 +1277,18 @@
 
 <!-- Status bar -->
 <div id="statusbar">
-  <span><div class="dot"></div> Ready</span>
-  <span>CRS: EPSG:4326</span>
-  <span id="visible-count">0 features</span>
-  <span id="status-zoom">Zoom: --</span>
+  <span class="status-chip" id="status-ready"><div class="dot"></div> Ready</span>
+  <span class="status-chip">EPSG:4326</span>
+  <span class="status-chip" id="status-zoom">Zoom: --</span>
+  <span class="status-chip" id="visible-count">0 features</span>
+  <span class="status-chip" id="status-latlon">--°, --°</span>
 </div>
 
 <!-- Sheet picker modal (XLSX with multiple sheets) -->
 <div id="sheet-picker-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
-  <div id="sheet-picker-box" style="background:#13161c;border:1px solid #2d3748;border-radius:8px;padding:20px 24px;width:440px;max-height:80vh;overflow-y:auto;">
-    <h3 style="color:#63b3ed;font-size:13px;margin:0 0 4px;">Choose Sheet to Import</h3>
-    <div class="subtitle" id="sp-filename" style="color:#718096;font-size:11px;margin-bottom:14px;"></div>
+  <div id="sheet-picker-box" style="background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:20px 24px;width:440px;max-height:80vh;overflow-y:auto;">
+    <h3 style="color:var(--accent);font-size:13px;margin:0 0 4px;">Choose Sheet to Import</h3>
+    <div class="subtitle" id="sp-filename" style="color:var(--text-muted);font-size:11px;margin-bottom:14px;"></div>
     <div id="sp-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
     <div class="cm-actions" style="display:flex;gap:8px;">
       <button class="btn-primary" onclick="confirmSheetPick()">Continue</button>
@@ -1355,9 +1325,9 @@
     </div>
     <div class="cm-row" id="cm-crs-custom-row" style="display:none;">
       <label>Custom EPSG code (e.g. 32755) or full proj4 string</label>
-      <input type="text" id="cm-crs-custom" placeholder="32755 or +proj=utm +zone=55 +south ..." style="width:100%;padding:6px 8px;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:12px;">
+      <input type="text" id="cm-crs-custom" placeholder="32755 or +proj=utm +zone=55 +south ..." style="width:100%;padding:6px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;">
     </div>
-    <div class="cm-row" id="cm-crs-hint" style="font-size:10px;color:#718096;margin-top:-2px;">
+    <div class="cm-row" id="cm-crs-hint" style="font-size:10px;color:var(--text-muted);margin-top:-2px;">
       Tip: use WGS 84 (EPSG:4326) for raw GPS latitude/longitude. For projected coordinates (eastings/northings), pick the matching UTM zone or enter a custom EPSG.
     </div>
     <div class="cm-actions">
@@ -1369,11 +1339,11 @@
 
 <!-- Buffer distance modal -->
 <div id="buffer-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;">
-  <div style="background:#13161c;border:1px solid #2d3748;border-radius:8px;padding:20px 24px;width:320px;">
-    <h3 style="margin:0 0 12px;font-size:14px;color:#e2e8f0;">Buffer Distance</h3>
+  <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:20px 24px;width:320px;">
+    <h3 style="margin:0 0 12px;font-size:14px;color:var(--text);">Buffer Distance</h3>
     <div style="margin-bottom:12px;">
-      <label style="font-size:11px;color:#a0aec0;">Distance (km)</label>
-      <input type="number" id="buf-dist-input" value="5" min="0.01" max="1000" step="0.5" style="width:100%;margin-top:4px;padding:6px 8px;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;color:#e2e8f0;font-size:13px;">
+      <label style="font-size:11px;color:var(--text-muted);">Distance (km)</label>
+      <input type="number" id="buf-dist-input" value="5" min="0.01" max="1000" step="0.5" style="width:100%;margin-top:4px;padding:6px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px;">
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn-secondary" onclick="cancelBuffer()">Cancel</button>
@@ -2020,7 +1990,7 @@ function _showAttrForm(feature, geomType) {
         <label>Category</label><input type="text" id="af-cat" placeholder="Optional category">
       </div>
       <div class="attr-form-row">
-        <label>Coordinates</label><input type="text" value="${coordStr}" readonly style="color:#718096;">
+        <label>Coordinates</label><input type="text" value="${coordStr}" readonly style="color:var(--text-muted);">
       </div>
       <div class="attr-form-actions">
         <button class="btn-cancel" onclick="this.closest('.attr-form-overlay').remove();window._pendingDigFeature=null;">Cancel</button>
@@ -3188,7 +3158,7 @@ function buildSymbologyControls(info) {
   div.innerHTML = `
     <!-- Simple Symbol -->
     <div class="sym-group" style="margin-bottom:6px;">
-      <div class="sym-group-title" style="font-size:10px;color:#63b3ed;font-weight:600;margin-bottom:3px;">Simple Symbol</div>
+      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;">Simple Symbol</div>
       <div class="symbol-row">
         <span>Fill</span><input type="color" value="${info.color}" onchange="recolorLayer('${info.id}',this.value)">
         ${hasPoints ? `<span>Size</span><input type="number" value="7" min="3" max="30" style="width:40px" onchange="resizeLayer('${info.id}',this.value)">` : ''}
@@ -3197,7 +3167,7 @@ function buildSymbologyControls(info) {
       <div class="symbol-row" style="margin-top:4px;">
         <span>Stroke</span><input type="color" value="#ffffff" onchange="strokeColorLayer('${info.id}',this.value)">
         <span>Width</span><input type="number" value="1.2" min="0" max="10" step="0.5" style="width:45px" onchange="strokeWidthLayer('${info.id}',this.value)">
-        <span>Style</span><select onchange="strokeStyleLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">
+        <span>Style</span><select onchange="strokeStyleLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">
           <option value="solid">Solid</option>
           <option value="dash">Dashed</option>
           <option value="dot">Dotted</option>
@@ -3206,7 +3176,7 @@ function buildSymbologyControls(info) {
       </div>
       ${hasPoints ? `
       <div class="symbol-row" style="margin-top:4px;">
-        <span>Shape</span><select onchange="markerShapeLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">
+        <span>Shape</span><select onchange="markerShapeLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">
           <option value="circle">Circle</option>
           <option value="square">Square</option>
           <option value="triangle">Triangle</option>
@@ -3223,28 +3193,28 @@ function buildSymbologyControls(info) {
 
     <!-- Categorized -->
     <div class="sym-group" style="margin-bottom:6px;">
-      <div class="sym-group-title" style="font-size:10px;color:#63b3ed;font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Categorized &#x25BC;</div>
+      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Categorized &#x25BC;</div>
       <div class="hidden" style="padding-top:3px;">
         <div class="symbol-row">
-          <span>Column</span><select id="cat-attr-${info.id}" style="font-size:10px;max-width:120px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">${attrOpts}</select>
+          <span>Column</span><select id="cat-attr-${info.id}" style="font-size:10px;max-width:120px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">${attrOpts}</select>
         </div>
         <div class="symbol-row" style="margin-top:3px;">
-          <button onclick="applyCategorized('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Apply</button>
-          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Reset</button>
+          <button onclick="applyCategorized('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Apply</button>
+          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
         </div>
       </div>
     </div>
 
     <!-- Graduated -->
     <div class="sym-group" style="margin-bottom:6px;">
-      <div class="sym-group-title" style="font-size:10px;color:#63b3ed;font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Graduated &#x25BC;</div>
+      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Graduated &#x25BC;</div>
       <div class="hidden" style="padding-top:3px;">
         <div class="symbol-row">
-          <span>Column</span><select id="grad-attr-${info.id}" style="font-size:10px;max-width:120px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">${attrOpts}</select>
+          <span>Column</span><select id="grad-attr-${info.id}" style="font-size:10px;max-width:120px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">${attrOpts}</select>
         </div>
         <div class="symbol-row" style="margin-top:3px;">
           <span>Classes</span><input type="number" id="grad-classes-${info.id}" value="5" min="2" max="10" style="width:35px">
-          <span>Ramp</span><select id="grad-ramp-${info.id}" style="font-size:10px;background:#1a1d23;border:1px solid #2d3748;border-radius:3px;color:#e2e8f0;">
+          <span>Ramp</span><select id="grad-ramp-${info.id}" style="font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">
             <option value="viridis">Viridis</option>
             <option value="heat">Heat</option>
             <option value="cool">Cool</option>
@@ -3252,8 +3222,8 @@ function buildSymbologyControls(info) {
           </select>
         </div>
         <div class="symbol-row" style="margin-top:3px;">
-          <button onclick="applyGraduated('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Apply</button>
-          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:#2d3748;border:1px solid #4a5568;border-radius:3px;color:#e2e8f0;cursor:pointer;">Reset</button>
+          <button onclick="applyGraduated('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Apply</button>
+          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
         </div>
       </div>
     </div>
@@ -3715,13 +3685,13 @@ function handleXlsxWorkbook(wb, fileName) {
     const checked = s.name === best.name ? 'checked' : '';
     const cellsLabel = s.rows < 0 ? 'empty' : `${s.rows.toLocaleString()} rows × ${s.cols} cols`;
     const tag = s.hasCoords ? '<span style="color:#48bb78;font-size:10px;margin-left:6px;">lat/lon detected</span>' : '';
-    const tagWeak = s.rows < 2 ? '<span style="color:#a0aec0;font-size:10px;margin-left:6px;">likely notes</span>' : '';
+    const tagWeak = s.rows < 2 ? '<span style="color:var(--text-muted);font-size:10px;margin-left:6px;">likely notes</span>' : '';
     const safe = String(s.name).replace(/"/g, '&quot;');
-    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#1a1d23;border:1px solid #2d3748;border-radius:4px;cursor:pointer;">
+    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;cursor:pointer;">
       <input type="radio" name="sp-sheet" value="${safe}" ${checked} style="margin:0;">
-      <div style="flex:1;font-size:12px;color:#e2e8f0;">
+      <div style="flex:1;font-size:12px;color:var(--text);">
         <div style="font-weight:600;">${s.name}${tag}${tagWeak}</div>
-        <div style="font-size:10px;color:#718096;margin-top:2px;">${cellsLabel}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${cellsLabel}</div>
       </div>
     </label>`;
   }).join('');
@@ -4119,7 +4089,7 @@ function rebuildProfileCheckboxes() {
   container.innerHTML = '';
   profileRegistry.forEach(p => {
     const lbl = document.createElement('label');
-    lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px;color:#a0aec0;cursor:pointer;font-weight:400;letter-spacing:0;text-transform:none';
+    lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);cursor:pointer;font-weight:400;letter-spacing:0;text-transform:none';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = true;
@@ -4335,7 +4305,7 @@ function confirmBuffer() {
     });
   });
   addAnalysisLayer(`Buffer ${distKm}km`, bufferCircles, null);
-  showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features — added as layer<br><span style="color:#718096">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
+  showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features — added as layer<br><span style="color:var(--text-muted)">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
 }
 
 function switchBottomTab(tab) {
@@ -4527,7 +4497,7 @@ function runAnalysis(tool) {
     analysisOverlays.push(marker, circle);
     const gj = {type:'FeatureCollection',features:[{type:'Feature',geometry:{type:'Point',coordinates:[mLon,mLat]},properties:{type:'Mean Center',std_distance_km:+(stdDist/1000).toFixed(2)}}]};
     addAnalysisLayer('Mean Center', [marker, circle], gj);
-    showResult(`<b>Mean Center</b><br>Lat: ${mLat.toFixed(5)}, Lon: ${mLon.toFixed(5)}<br><b>Standard Distance:</b> ${(stdDist/1000).toFixed(2)} km<br><span style="color:#718096">Yellow circle = 1 std distance</span>`);
+    showResult(`<b>Mean Center</b><br>Lat: ${mLat.toFixed(5)}, Lon: ${mLon.toFixed(5)}<br><b>Standard Distance:</b> ${(stdDist/1000).toFixed(2)} km<br><span style="color:var(--text-muted)">Yellow circle = 1 std distance</span>`);
     break;
   }
 
@@ -4573,7 +4543,7 @@ function runAnalysis(tool) {
     let pattern = 'Random';
     if (nni < 0.8) pattern = 'Clustered';
     else if (nni > 1.2) pattern = 'Dispersed';
-    showResult(`<b>Nearest Neighbor Index</b><br><b>NNI:</b> ${nni.toFixed(3)}<br><b>Mean NN dist:</b> ${(meanNN/1000).toFixed(3)} km<br><b>Expected NN dist:</b> ${(expectedNN/1000).toFixed(3)} km<br><b>Pattern:</b> <span style="color:${nni<0.8?'#fc8181':nni>1.2?'#68d391':'#f6e05e'}">${pattern}</span><br><span style="color:#718096">&lt;1 = clustered, 1 = random, &gt;1 = dispersed</span>`);
+    showResult(`<b>Nearest Neighbor Index</b><br><b>NNI:</b> ${nni.toFixed(3)}<br><b>Mean NN dist:</b> ${(meanNN/1000).toFixed(3)} km<br><b>Expected NN dist:</b> ${(expectedNN/1000).toFixed(3)} km<br><b>Pattern:</b> <span style="color:${nni<0.8?'#fc8181':nni>1.2?'#68d391':'#f6e05e'}">${pattern}</span><br><span style="color:var(--text-muted)">&lt;1 = clustered, 1 = random, &gt;1 = dispersed</span>`);
     break;
   }
 
@@ -4605,7 +4575,7 @@ function runAnalysis(tool) {
     let interp = 'No significant autocorrelation';
     if (I > expected + 0.2) interp = 'Positive spatial autocorrelation (similar values cluster)';
     else if (I < expected - 0.2) interp = 'Negative spatial autocorrelation (dissimilar values cluster)';
-    showResult(`<b>Moran's I</b> (attribute: ${escapeHtml(attr)})<br><b>I:</b> ${I.toFixed(4)}<br><b>Expected:</b> ${expected.toFixed(4)}<br><b>Interpretation:</b> ${interp}<br><span style="color:#718096">Inverse-distance weights used</span>`);
+    showResult(`<b>Moran's I</b> (attribute: ${escapeHtml(attr)})<br><b>I:</b> ${I.toFixed(4)}<br><b>Expected:</b> ${expected.toFixed(4)}<br><b>Interpretation:</b> ${interp}<br><span style="color:var(--text-muted)">Inverse-distance weights used</span>`);
     break;
   }
 
@@ -4645,7 +4615,7 @@ function runAnalysis(tool) {
     storeHeatData(heat, normalized);
     const idwFeatures = heatData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{value: +d[2].toFixed(4), latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
     addAnalysisLayer(`IDW (${escapeHtml(attr)})`, [heat], {type:'FeatureCollection', features:idwFeatures});
-    showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:#718096">Blue=low, Red=high</span>`);
+    showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:var(--text-muted)">Blue=low, Red=high</span>`);
     break;
   }
 
@@ -4658,7 +4628,7 @@ function runAnalysis(tool) {
     storeHeatData(heat, heatData);
     const densityFeatures = heatData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{count: d[2], latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
     addAnalysisLayer('Point Density', [heat], {type:'FeatureCollection', features:densityFeatures});
-    showResult(`<b>Point Density</b><br>${pts.length} points<br><span style="color:#718096">Bright=high concentration, Dark=low concentration</span>`);
+    showResult(`<b>Point Density</b><br>${pts.length} points<br><span style="color:var(--text-muted)">Bright=high concentration, Dark=low concentration</span>`);
     break;
   }
 
@@ -4678,7 +4648,7 @@ function runAnalysis(tool) {
     const weightedFeatures = hotData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{weight: +d[2].toFixed(4), attribute: escapeHtml(hotAttr), latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
     addAnalysisLayer(`Weighted Density (${escapeHtml(hotAttr)})`, [hotHeat], {type:'FeatureCollection', features:weightedFeatures});
     const sum = hotVals.reduce((a,b)=>a+b,0);
-    showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:#718096">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
+    showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:var(--text-muted)">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
     break;
   }
 
@@ -4889,7 +4859,7 @@ function runAnalysis(tool) {
     });
     const pct = beforeVerts > 0 ? ((1 - afterVerts/beforeVerts)*100).toFixed(1) : 0;
     addAnalysisLayer('Simplified', analysisOverlays.slice(), null);
-    showResult(`<b>Simplified Geometries</b><br>Before: ${beforeVerts} vertices<br>After: ${afterVerts} vertices<br>Reduction: ${pct}%<br><span style="color:#718096">Yellow dashed = simplified. Added as layer.</span>`);
+    showResult(`<b>Simplified Geometries</b><br>Before: ${beforeVerts} vertices<br>After: ${afterVerts} vertices<br>Reduction: ${pct}%<br><span style="color:var(--text-muted)">Yellow dashed = simplified. Added as layer.</span>`);
     break;
   }
 
@@ -4931,7 +4901,7 @@ function runAnalysis(tool) {
       });
     });
     addAnalysisLayer('Voronoi', analysisOverlays.slice(), null);
-    showResult(`<b>Voronoi / Thiessen Polygons</b><br>${pts.length} regions created<br><span style="color:#718096">Each color = nearest-point territory. Added as layer.</span>`);
+    showResult(`<b>Voronoi / Thiessen Polygons</b><br>${pts.length} regions created<br><span style="color:var(--text-muted)">Each color = nearest-point territory. Added as layer.</span>`);
     break;
   }
 
@@ -4976,6 +4946,13 @@ function switchBasemap(btn) {
   _hideLoading();
 }
 
+function setBasemapFromSelect(name) {
+  // Find the hidden button with matching text and trigger switchBasemap
+  const btn = Array.from(document.querySelectorAll('.basemap-btn'))
+    .find(b => b.textContent.trim() === name);
+  if (btn) switchBasemap(btn);
+}
+
 function setBasemapOpacity(v) {
   document.getElementById('bm-opacity-val').textContent = v+'%';
   basemapLayer.setOpacity(v/100);
@@ -5001,11 +4978,17 @@ function showToast(msg, type) {
 
 function toggleTheme() {
   document.body.classList.toggle('light');
-  const isLight = document.body.classList.contains('light');
-  document.getElementById('theme-toggle').textContent = isLight ? '\u2600' : '\uD83C\uDF19';
-  localStorage.setItem('map-kit-theme', isLight ? 'light' : 'dark');
+  const light = document.body.classList.contains('light');
+  document.getElementById('theme-toggle').textContent = light ? '\u2600' : '\uD83C\uDF19';
+  try { localStorage.setItem('mapkit_theme', light ? 'light' : 'dark'); } catch(e){}
 }
-if (localStorage.getItem('map-kit-theme') === 'light') toggleTheme();
+// Restore theme on load
+try {
+  if (localStorage.getItem('mapkit_theme') === 'light') {
+    document.body.classList.add('light');
+    document.getElementById('theme-toggle').textContent = '\u2600';
+  }
+} catch(e){}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PANEL COLLAPSE / RESIZE
@@ -5182,7 +5165,7 @@ function renderBookmarks() {
   const container = document.getElementById('bookmarks-list');
   if (!container) return;
   if (bookmarks.length === 0) {
-    container.innerHTML = '<div style="color:#4a5568;text-align:center;padding:8px 0;">No bookmarks saved</div>';
+    container.innerHTML = '<div style="color:var(--text-faint);text-align:center;padding:8px 0;">No bookmarks saved</div>';
     return;
   }
   container.innerHTML = bookmarks.map((b, i) => `
@@ -5742,7 +5725,7 @@ async function buildLayout() {
     legendEl.style.display = 'block';
     legendEl.innerHTML = '';
     const head = document.createElement('div');
-    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:#1a202c;border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;';
+    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:var(--text);border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;';
     head.textContent = 'Legend';
     legendEl.appendChild(head);
     visibleLayers.forEach(info => {
