@@ -1666,9 +1666,10 @@ const MapLegend = L.Control.extend({
       html += this._renderRamp(st.ramp, st.minVal, st.maxVal, st.breaks, st.geomType, st.shape);
     } else if (st.mode === 'raster' && st.ramp) {
       // Continuous raster surface (heat / IDW / weighted density).
-      // Show name on its own line, then a horizontal gradient bar with min/mid/max labels.
+      // Show name on its own line, then a classified (stepped) gradient bar
+      // with one tick label per break edge.
       html += `<div class="map-legend-layer-title" style="font-weight:600;">${name}</div>`;
-      html += this._renderRaster(st.ramp, st.minVal, st.maxVal, st.attrName, st.units);
+      html += this._renderRaster(st.ramp, st.minVal, st.maxVal, st.attrName, st.units, st.classification);
     } else {
       // Simple: inline symbol in title — no redundant "Point" row
       html += `<div class="map-legend-layer-title">${this._inlineSymbol(st.geomType, color, st.shape)}${name}</div>`;
@@ -1702,16 +1703,46 @@ const MapLegend = L.Control.extend({
     }
     return `<div class="map-legend-row">${sym}<span class="map-legend-label" ${editable ? 'contenteditable="true"' : ''} data-layer-id="${layerId}" data-legend-key="${label}">${escapeHtml(label)}</span></div>`;
   },
-  _renderRaster(ramp, minVal, maxVal, attrName, units) {
+  _renderRaster(ramp, minVal, maxVal, attrName, units, classification) {
+    const u = units ? ` ${escapeHtml(units)}` : '';
+    const attrLine = attrName
+      ? `<div class="map-legend-raster-attr">${escapeHtml(attrName)}</div>` : '';
+
+    // If we have classification breaks, render a stepped gradient with one
+    // tick per break edge. Otherwise fall back to the original 3-tick view.
+    if (classification && Array.isArray(classification.breaks) && classification.breaks.length >= 2) {
+      const { gradient } = buildClassifiedGradientCss(classification.breaks, ramp, 'to right');
+      let html = `<div class="map-legend-raster">`;
+      html += attrLine;
+      html += `<div class="map-legend-raster-bar" style="background:${gradient}"></div>`;
+      // Position one tick per break edge using percentage offsets so the
+      // ticks line up with the band boundaries on the gradient bar.
+      const breaks = classification.breaks;
+      const mn = breaks[0], mx = breaks[breaks.length - 1];
+      const span = (mx - mn) || 1;
+      let ticks = `<div class="map-legend-raster-ticks" style="position:relative;height:10px;font-size:9px;color:var(--text-muted);font-variant-numeric:tabular-nums;">`;
+      breaks.forEach((b, i) => {
+        const pct = ((b - mn) / span) * 100;
+        // Edges: anchor left of first label to 0, right of last to 100.
+        let transform = 'translateX(-50%)';
+        if (i === 0) transform = 'translateX(0)';
+        else if (i === breaks.length - 1) transform = 'translateX(-100%)';
+        ticks += `<span style="position:absolute;left:${pct.toFixed(2)}%;transform:${transform};white-space:nowrap;">${_formatRasterTick(b)}${i === 0 || i === breaks.length - 1 ? u : ''}</span>`;
+      });
+      ticks += `</div>`;
+      html += ticks;
+      html += `</div>`;
+      return html;
+    }
+
+    // Legacy fallback (no classification info — shouldn't happen for new
+    // raster layers, kept for safety).
     const colors = ramp.join(',');
     const gradient = `linear-gradient(to right, ${colors})`;
     const lo = (minVal != null && isFinite(minVal)) ? _formatRasterTick(minVal) : 'low';
     const hi = (maxVal != null && isFinite(maxVal)) ? _formatRasterTick(maxVal) : 'high';
     const mid = (minVal != null && maxVal != null && isFinite(minVal) && isFinite(maxVal))
       ? _formatRasterTick((Number(minVal) + Number(maxVal)) / 2) : '';
-    const u = units ? ` ${escapeHtml(units)}` : '';
-    const attrLine = attrName
-      ? `<div class="map-legend-raster-attr">${escapeHtml(attrName)}</div>` : '';
     let html = `<div class="map-legend-raster">`;
     html += attrLine;
     html += `<div class="map-legend-raster-bar" style="background:${gradient}"></div>`;
@@ -1822,6 +1853,178 @@ function _paletteToRamp(paletteObj) {
     .map(k => parseFloat(k))
     .sort((a, b) => a - b)
     .map(k => paletteObj[k] || paletteObj[String(k)]);
+}
+
+// ── Classification break algorithms ──────────────────────────────────────
+// All three accept `values` (array of numbers) and `n` (number of classes,
+// 2–10) and return an ascending array of n+1 break edges: [min, b1, ..., max].
+//
+// Equal Interval: divides the value range into n equal-width bins.
+function _classifyEqualInterval(values, n) {
+  if (!values || values.length === 0 || n < 2) return null;
+  const mn = Math.min(...values), mx = Math.max(...values);
+  if (mn === mx) return [mn, mx];
+  const step = (mx - mn) / n;
+  const breaks = [mn];
+  for (let i = 1; i < n; i++) breaks.push(mn + step * i);
+  breaks.push(mx);
+  return breaks;
+}
+
+// Quantile: each bin holds approximately the same count of values.
+function _classifyQuantile(values, n) {
+  if (!values || values.length === 0 || n < 2) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mn = sorted[0], mx = sorted[sorted.length - 1];
+  if (mn === mx) return [mn, mx];
+  const breaks = [mn];
+  for (let i = 1; i < n; i++) {
+    const idx = Math.floor((sorted.length - 1) * i / n);
+    breaks.push(sorted[idx]);
+  }
+  breaks.push(mx);
+  return breaks;
+}
+
+// Natural Breaks (Jenks-Fisher). Classical iterative DP minimising sum of
+// squared deviations within each class. Sample-capped to 1000 values for
+// O(n²*k) cost; that's plenty for legend purposes.
+function _classifyJenks(values, n) {
+  if (!values || values.length === 0 || n < 2) return null;
+  let data = [...values].sort((a, b) => a - b);
+  const mn = data[0], mx = data[data.length - 1];
+  if (mn === mx) return [mn, mx];
+  // Subsample for cost control without breaking the algorithm.
+  if (data.length > 1000) {
+    const stride = data.length / 1000;
+    const sampled = [];
+    for (let i = 0; i < 1000; i++) sampled.push(data[Math.floor(i * stride)]);
+    sampled[0] = mn; sampled[sampled.length - 1] = mx;
+    data = sampled;
+  }
+  const N = data.length;
+  // Init matrices (1-indexed for readability).
+  const mat1 = Array.from({ length: N + 1 }, () => new Array(n + 1).fill(0));
+  const mat2 = Array.from({ length: N + 1 }, () => new Array(n + 1).fill(Infinity));
+  for (let j = 1; j <= n; j++) { mat1[1][j] = 1; mat2[1][j] = 0; for (let i = 2; i <= N; i++) mat2[i][j] = Infinity; }
+  for (let l = 2; l <= N; l++) {
+    let s1 = 0, s2 = 0, w = 0;
+    for (let m = 1; m <= l; m++) {
+      const i3 = l - m + 1;
+      const v = data[i3 - 1];
+      s2 += v * v; s1 += v; w += 1;
+      const v2 = s2 - (s1 * s1) / w;
+      const i4 = i3 - 1;
+      if (i4 !== 0) {
+        for (let j = 2; j <= n; j++) {
+          if (mat2[l][j] >= v2 + mat2[i4][j - 1]) {
+            mat1[l][j] = i3;
+            mat2[l][j] = v2 + mat2[i4][j - 1];
+          }
+        }
+      }
+    }
+    mat1[l][1] = 1; mat2[l][1] = s2 - (s1 * s1) / w;
+  }
+  // Backtrack class lower bounds.
+  const kclass = new Array(n + 1).fill(0);
+  kclass[n] = data[N - 1];
+  kclass[0] = data[0];
+  let k = N;
+  for (let j = n; j >= 2; j--) {
+    const id = mat1[k][j] - 1;
+    kclass[j - 1] = data[id];
+    k = mat1[k][j] - 1;
+  }
+  // kclass is already ascending breaks [min, b1, ..., max].
+  // Guard against duplicates from heavy ties.
+  for (let i = 1; i < kclass.length; i++) {
+    if (kclass[i] <= kclass[i - 1]) kclass[i] = kclass[i - 1] + (mx - mn) * 1e-6;
+  }
+  kclass[kclass.length - 1] = mx;
+  return kclass;
+}
+
+// Dispatch by method name. `manualBreaks` is required for method === 'manual'.
+function computeClassificationBreaks(method, values, n, manualBreaks) {
+  if (method === 'manual' && Array.isArray(manualBreaks) && manualBreaks.length >= 2) {
+    const sorted = manualBreaks.map(Number).filter(v => isFinite(v)).sort((a, b) => a - b);
+    return sorted.length >= 2 ? sorted : null;
+  }
+  if (method === 'quantile') return _classifyQuantile(values, n);
+  if (method === 'jenks')    return _classifyJenks(values, n);
+  return _classifyEqualInterval(values, n);
+}
+
+// Build a CSS linear-gradient that paints discrete colour bands defined by
+// classification breaks. `breaks` has n+1 edges; `ramp` is interpolated to
+// produce n band colours. Returns { gradient, bandColors, stopsPercent }.
+function buildClassifiedGradientCss(breaks, ramp, direction = 'to right') {
+  if (!breaks || breaks.length < 2 || !ramp || ramp.length === 0) {
+    return { gradient: `linear-gradient(${direction}, ${(ramp||['#888']).join(',')})`, bandColors: ramp || ['#888'] };
+  }
+  const n = breaks.length - 1;
+  const bandColors = [];
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0 : i / (n - 1);
+    bandColors.push(_sampleRamp(ramp, t));
+  }
+  const mn = breaks[0], mx = breaks[breaks.length - 1], span = (mx - mn) || 1;
+  const stops = [];
+  for (let i = 0; i < n; i++) {
+    const startPct = ((breaks[i] - mn) / span) * 100;
+    const endPct   = ((breaks[i + 1] - mn) / span) * 100;
+    stops.push(`${bandColors[i]} ${startPct.toFixed(2)}%`);
+    stops.push(`${bandColors[i]} ${endPct.toFixed(2)}%`);
+  }
+  return { gradient: `linear-gradient(${direction}, ${stops.join(',')})`, bandColors };
+}
+
+// Interpolate a color from a discrete ramp array using parameter t ∈ [0,1].
+// Linearly blends between the two surrounding stops in RGB space.
+function _sampleRamp(ramp, t) {
+  if (!ramp || ramp.length === 0) return '#888';
+  if (ramp.length === 1) return ramp[0];
+  const clampedT = Math.max(0, Math.min(1, t));
+  const pos = clampedT * (ramp.length - 1);
+  const i = Math.floor(pos);
+  const f = pos - i;
+  if (i >= ramp.length - 1) return ramp[ramp.length - 1];
+  return _mixRgb(ramp[i], ramp[i + 1], f);
+}
+
+function _toRgb(c) {
+  // Accept '#rrggbb', '#rgb' or CSS names. Use a 1px canvas to resolve names.
+  if (typeof c !== 'string') return [128, 128, 128];
+  let s = c.trim();
+  if (s[0] === '#') {
+    if (s.length === 4) s = '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+    const num = parseInt(s.slice(1), 16);
+    if (!isFinite(num)) return [128, 128, 128];
+    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+  }
+  // Resolve named colors lazily via cached canvas.
+  if (!_toRgb._cache) _toRgb._cache = {};
+  if (_toRgb._cache[s]) return _toRgb._cache[s];
+  if (!_toRgb._ctx) {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 1;
+    _toRgb._ctx = cv.getContext('2d');
+  }
+  _toRgb._ctx.fillStyle = '#000000';
+  _toRgb._ctx.fillStyle = s;
+  const resolved = _toRgb._ctx.fillStyle; // browser-normalised to #rrggbb
+  const out = _toRgb(resolved);
+  _toRgb._cache[s] = out;
+  return out;
+}
+
+function _mixRgb(a, b, t) {
+  const [r1, g1, b1] = _toRgb(a);
+  const [r2, g2, b2] = _toRgb(b);
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const bl = Math.round(b1 + (b2 - b1) * t);
+  return `rgb(${r},${g},${bl})`;
 }
 
 // Format a numeric tick for the raster legend so it stays compact.
@@ -3706,8 +3909,207 @@ function buildSymbologyControls(info) {
         </div>
       </div>
     </div>
+
+    ${info.isRaster ? buildRasterClassificationGroup(info) : ''}
   `;
   container.appendChild(div);
+}
+
+// ── Raster classification controls ──────────────────────────────────────
+// Renders a collapsible Classification sym-group for raster (heat / IDW /
+// weighted density) layers, with method dropdown, class count, manual stops
+// textarea, and an Apply button. Reads current state from legendState.
+function buildRasterClassificationGroup(info) {
+  const st = legendState[info.id];
+  const cls = (st && st.classification) || { method: 'equal', classes: 5, manualBreaks: null, breaks: [] };
+  const method = cls.method || 'equal';
+  const classes = cls.classes || 5;
+  const manualStr = Array.isArray(cls.manualBreaks)
+    ? cls.manualBreaks.join(', ')
+    : (Array.isArray(cls.breaks) ? cls.breaks.map(b => _formatRasterTick(b)).join(', ') : '');
+  const opt = (val, label) => `<option value="${val}"${method === val ? ' selected' : ''}>${label}</option>`;
+  const manualHidden = method === 'manual' ? '' : 'display:none;';
+  const classesDisabled = method === 'manual' ? 'disabled' : '';
+  return `
+    <!-- Classification (raster only) -->
+    <div class="sym-group" style="margin-bottom:6px;">
+      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Classification &#x25BC;</div>
+      <div style="padding-top:3px;">
+        <div class="symbol-row">
+          <span>Method</span>
+          <select id="raster-class-method-${info.id}" onchange="setRasterClassMethod('${info.id}', this.value)" style="font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);flex:1;max-width:140px;">
+            ${opt('equal', 'Equal Interval')}
+            ${opt('quantile', 'Quantile')}
+            ${opt('jenks', 'Natural Breaks (Jenks)')}
+            ${opt('manual', 'Manual')}
+          </select>
+        </div>
+        <div class="symbol-row" style="margin-top:3px;">
+          <span>Classes</span>
+          <input type="number" id="raster-class-count-${info.id}" value="${classes}" min="2" max="10" ${classesDisabled} onchange="setRasterClassCount('${info.id}', this.value)" style="width:45px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
+        </div>
+        <div id="raster-manual-row-${info.id}" class="symbol-row" style="margin-top:3px;flex-direction:column;align-items:stretch;${manualHidden}">
+          <span style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">Manual breaks (comma-separated, ascending)</span>
+          <textarea id="raster-manual-breaks-${info.id}" rows="2" placeholder="e.g. 0, 5, 10, 25, 50" onchange="setRasterManualBreaks('${info.id}', this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:3px 4px;font-family:inherit;resize:vertical;">${escapeHtml(manualStr)}</textarea>
+        </div>
+        <div class="symbol-row" style="margin-top:3px;">
+          <button onclick="applyRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:3px;color:#fff;cursor:pointer;font-weight:600;">Apply</button>
+          <button onclick="resetRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Handlers for the Classification controls. All update legendState and
+// (when needed) recompute breaks + refresh the legend & heat layers.
+function setRasterClassMethod(id, method) {
+  const st = legendState[id];
+  if (!st || !st.classification) return;
+  st.classification.method = method;
+  // Show/hide manual row + enable/disable Classes input.
+  const manualRow = document.getElementById(`raster-manual-row-${id}`);
+  const classesInp = document.getElementById(`raster-class-count-${id}`);
+  if (manualRow) manualRow.style.display = method === 'manual' ? '' : 'none';
+  if (classesInp) classesInp.disabled = (method === 'manual');
+  // Recompute breaks immediately so the legend updates live.
+  _recomputeAndApplyClassification(id);
+}
+
+function setRasterClassCount(id, n) {
+  const st = legendState[id];
+  if (!st || !st.classification) return;
+  const v = Math.max(2, Math.min(10, parseInt(n, 10) || 5));
+  st.classification.classes = v;
+  _recomputeAndApplyClassification(id);
+}
+
+function setRasterManualBreaks(id, text) {
+  const st = legendState[id];
+  if (!st || !st.classification) return;
+  const parsed = String(text || '')
+    .split(/[,\s]+/)
+    .map(s => parseFloat(s))
+    .filter(v => isFinite(v))
+    .sort((a, b) => a - b);
+  st.classification.manualBreaks = parsed.length >= 2 ? parsed : null;
+  // Don't auto-apply here — user may still be typing. Apply on Apply button.
+}
+
+function applyRasterClassification(id) {
+  // Force re-read of UI state (in case manual textarea hasn't blurred) then apply.
+  const methodEl = document.getElementById(`raster-class-method-${id}`);
+  const countEl  = document.getElementById(`raster-class-count-${id}`);
+  const manualEl = document.getElementById(`raster-manual-breaks-${id}`);
+  const st = legendState[id];
+  if (!st || !st.classification) return;
+  if (methodEl) st.classification.method = methodEl.value;
+  if (countEl)  st.classification.classes = Math.max(2, Math.min(10, parseInt(countEl.value, 10) || 5));
+  if (manualEl) {
+    const parsed = String(manualEl.value || '')
+      .split(/[,\s]+/)
+      .map(s => parseFloat(s))
+      .filter(v => isFinite(v))
+      .sort((a, b) => a - b);
+    st.classification.manualBreaks = parsed.length >= 2 ? parsed : null;
+  }
+  _recomputeAndApplyClassification(id);
+}
+
+function resetRasterClassification(id) {
+  const st = legendState[id];
+  if (!st || !st.classification) return;
+  st.classification.method = 'equal';
+  st.classification.classes = 5;
+  st.classification.manualBreaks = null;
+  // Refresh UI controls.
+  const methodEl = document.getElementById(`raster-class-method-${id}`);
+  const countEl  = document.getElementById(`raster-class-count-${id}`);
+  const manualEl = document.getElementById(`raster-manual-breaks-${id}`);
+  const manualRow = document.getElementById(`raster-manual-row-${id}`);
+  if (methodEl) methodEl.value = 'equal';
+  if (countEl)  { countEl.value = 5; countEl.disabled = false; }
+  if (manualEl) manualEl.value = '';
+  if (manualRow) manualRow.style.display = 'none';
+  _recomputeAndApplyClassification(id);
+}
+
+// Recompute breaks for one layer, sync legend + heat surface, and update the
+// manual-breaks textarea (handy when the user switches from Equal/Quantile/
+// Jenks to Manual — the textarea is pre-filled with the current breaks).
+function _recomputeAndApplyClassification(id) {
+  const st = legendState[id];
+  if (!st || !st.classification) return;
+  const cls = st.classification;
+  // Special-case: user just switched to Manual but hasn't entered breaks yet.
+  // Pre-seed manualBreaks with the current breaks so the textarea shows them,
+  // and the legend keeps rendering instead of going blank.
+  if (cls.method === 'manual'
+      && (!Array.isArray(cls.manualBreaks) || cls.manualBreaks.length < 2)
+      && Array.isArray(cls.breaks) && cls.breaks.length >= 2) {
+    cls.manualBreaks = cls.breaks.slice();
+    const manualEl = document.getElementById(`raster-manual-breaks-${id}`);
+    if (manualEl) manualEl.value = cls.manualBreaks.map(b => _formatRasterTick(b)).join(', ');
+  }
+  const values = Array.isArray(cls.rawValues) && cls.rawValues.length > 0
+    ? cls.rawValues
+    : [st.minVal, st.maxVal];
+  const breaks = computeClassificationBreaks(cls.method, values, cls.classes, cls.manualBreaks);
+  if (!breaks || breaks.length < 2) {
+    showToast('Could not compute breaks — check inputs', 'error');
+    return;
+  }
+  cls.breaks = breaks;
+  // Reflect computed breaks in the manual textarea when on non-manual methods.
+  if (cls.method !== 'manual') {
+    const manualEl = document.getElementById(`raster-manual-breaks-${id}`);
+    if (manualEl) manualEl.value = breaks.map(b => _formatRasterTick(b)).join(', ');
+  }
+  // Sync the heat-layer gradient so the actual map surface reflects the new classes.
+  _applyClassificationToHeatLayer(id);
+  refreshMapLegend();
+}
+
+// Apply the current classification breaks to the L.heatLayer's gradient so
+// the actual heat surface on the map reflects the chosen classes (not just
+// the legend bar). L.heatLayer.gradient expects an object keyed by normalised
+// [0,1] stops, e.g. {0.0:'blue', 0.25:'cyan', ...}. We compute one stop per
+// band edge so adjacent stops with the same colour produce visible steps.
+function _applyClassificationToHeatLayer(id) {
+  const st = legendState[id];
+  if (!st || !st.classification || !Array.isArray(st.classification.breaks)) return;
+  const info = uploadedLayers.find(l => l.id === id);
+  if (!info || !info.isRaster) return;
+  const breaks = st.classification.breaks;
+  if (breaks.length < 2) return;
+  const ramp = st.ramp || _paletteToRamp(HEAT_PALETTES[st.paletteKey] || HEAT_PALETTES.thermal);
+  const { bandColors } = buildClassifiedGradientCss(breaks, ramp, 'to right');
+  // Map break edges → normalised [0,1] using the layer's overall min/max so
+  // the heat surface aligns with the legend (which is labeled in raw units).
+  const mn = (st.minVal != null) ? Number(st.minVal) : breaks[0];
+  const mx = (st.maxVal != null) ? Number(st.maxVal) : breaks[breaks.length - 1];
+  const span = (mx - mn) || 1;
+  const grad = {};
+  for (let i = 0; i < bandColors.length; i++) {
+    const startT = Math.max(0, Math.min(1, (breaks[i]     - mn) / span));
+    const endT   = Math.max(0, Math.min(1, (breaks[i + 1] - mn) / span));
+    // Two stops per band — start and (just before) end — produce hard steps.
+    grad[startT.toFixed(4)] = bandColors[i];
+    // Nudge the inner stop slightly inside the next break so adjacent bands
+    // don't blend. Use endT directly for the final band so 1.0 maps to top colour.
+    const innerT = (i === bandColors.length - 1) ? endT : Math.max(startT, endT - 1e-4);
+    grad[innerT.toFixed(4)] = bandColors[i];
+  }
+  // Heat layer requires keys 0 and 1 to be present; clamp ours.
+  if (!('0.0000' in grad) && !(0 in grad)) grad['0.0000'] = bandColors[0];
+  if (!('1.0000' in grad)) grad['1.0000'] = bandColors[bandColors.length - 1];
+  // Find the active heat layer(s) for this info and update its gradient.
+  info.layer.eachLayer(sub => {
+    if (sub && sub.options && typeof sub.options.gradient !== 'undefined' && typeof sub.setOptions === 'function') {
+      sub.setOptions({ gradient: grad });
+      if (typeof sub.redraw === 'function') sub.redraw();
+    }
+  });
 }
 
 function recolorLayer(id, color) {
@@ -4888,19 +5290,50 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
   // Seed legendState BEFORE refresh so the raster gradient shows on first render.
   if (rasterMeta && rasterMeta.isHeat) {
     const paletteObj = HEAT_PALETTES[rasterMeta.paletteKey] || HEAT_PALETTES.thermal;
+    const ramp = _paletteToRamp(paletteObj);
+    // Default to Equal Interval with 5 classes — same as QGIS' default.
+    const DEFAULT_METHOD = 'equal';
+    const DEFAULT_CLASSES = 5;
+    const rawValues = Array.isArray(rasterMeta.rawValues) ? rasterMeta.rawValues : null;
+    const breaks = computeClassificationBreaks(
+      DEFAULT_METHOD,
+      rawValues || [rasterMeta.minVal, rasterMeta.maxVal],
+      DEFAULT_CLASSES,
+      null
+    );
+    info.rasterMeta.rawValues = rawValues;
     legendState[id] = {
       mode: 'raster',
       color: info.color,
       geomType: 'Raster',
       shape: null,
-      ramp: _paletteToRamp(paletteObj),
+      ramp,
       paletteKey: rasterMeta.paletteKey,
       minVal: rasterMeta.minVal,
       maxVal: rasterMeta.maxVal,
       attrName: rasterMeta.attrName || null,
       units: rasterMeta.units || null,
+      // Classification state (saved per-layer for the life of the session).
+      classification: {
+        method: DEFAULT_METHOD,
+        classes: DEFAULT_CLASSES,
+        breaks,
+        manualBreaks: null,
+        rawValues, // kept on legendState too for fast re-classification
+      },
     };
+    // Push the classified gradient onto the heat surface so the map matches
+    // the legend from first paint.
+    _applyClassificationToHeatLayer(id);
     refreshMapLegend();
+    // Rebuild symbology so the Classification controls appear now that
+    // legendState.classification exists.
+    const container = document.getElementById('symbology-controls');
+    if (container) {
+      const existing = container.querySelector(`[data-sym-id="${id}"]`);
+      if (existing) existing.remove();
+      buildSymbologyControls(info);
+    }
   }
   updateStats();
   updateFeatureCount();
@@ -4940,15 +5373,24 @@ function rebuildHeatLayers() {
   const op = getHeatOpacity();
   const newActive = [];
   const newDataMap = new Map();
+  // Track which layer info each new heat sub-layer belongs to so we can
+  // reapply classification gradients after rebuild.
+  const affectedLayerIds = new Set();
   activeHeatLayers.forEach(h => {
     const data = heatLayerData.get(h);
     if (!data) return;
     const parent = h._map || null;
     const groups = [];
-    uploadedLayers.forEach(l => { l.layer.eachLayer(sub => { if (sub === h) groups.push(l.layer); }); });
+    let ownerInfo = null;
+    uploadedLayers.forEach(l => {
+      l.layer.eachLayer(sub => {
+        if (sub === h) { groups.push(l.layer); ownerInfo = l; }
+      });
+    });
     if (parent) parent.removeLayer(h);
     groups.forEach(g => g.removeLayer(h));
     const newH = L.heatLayer(data, {radius:r, blur:b, maxZoom:17, minOpacity:op, gradient:grad});
+    if (ownerInfo) { newH._mapkitLayerId = ownerInfo.id; affectedLayerIds.add(ownerInfo.id); }
     if (parent) newH.addTo(parent);
     groups.forEach(g => g.addLayer(newH));
     newActive.push(newH);
@@ -4959,6 +5401,11 @@ function rebuildHeatLayers() {
   });
   activeHeatLayers = newActive;
   newDataMap.forEach((v, k) => heatLayerData.set(k, v));
+  // Re-apply classification gradient to each affected layer so opacity / radius
+  // changes don't wipe out the user's chosen breaks.
+  affectedLayerIds.forEach(id => {
+    if (legendState[id] && legendState[id].classification) _applyClassificationToHeatLayer(id);
+  });
 }
 
 function onPaletteChange() {
@@ -4971,6 +5418,10 @@ function onPaletteChange() {
     if (legendState[id] && legendState[id].mode === 'raster') {
       legendState[id].ramp = newRamp;
       legendState[id].paletteKey = paletteKey;
+      // Keep classification breaks; only band colours change with the ramp.
+      // Re-apply to the heat surface so it stays stepped (rebuildHeatLayers
+      // resets to the linear palette object).
+      _applyClassificationToHeatLayer(id);
     }
   });
   uploadedLayers.forEach(l => {
@@ -5145,6 +5596,7 @@ function runAnalysis(tool) {
       maxVal: Math.max(...vals),
       attrName: attr,
       units: null,
+      rawValues: vals.slice(),
     });
     showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:var(--text-muted)">Blue=low, Red=high</span>`);
     break;
@@ -5165,6 +5617,10 @@ function runAnalysis(tool) {
       maxVal: pts.length,
       attrName: 'Point count',
       units: 'pts',
+      // Density is implicitly per-point; the legend value range is 0..N.
+      // For classification purposes, treat every point as contributing weight 1,
+      // so quantile / Jenks fall back to Equal Interval (degenerate case).
+      rawValues: pts.map(() => 1),
     });
     showResult(`<b>Point Density</b><br>${pts.length} points<br><span style="color:var(--text-muted)">Bright=high concentration, Dark=low concentration</span>`);
     break;
@@ -5191,6 +5647,7 @@ function runAnalysis(tool) {
       maxVal: Math.max(...hotVals),
       attrName: hotAttr,
       units: null,
+      rawValues: hotVals.slice(),
     });
     const sum = hotVals.reduce((a,b)=>a+b,0);
     showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:var(--text-muted)">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
@@ -6374,6 +6831,7 @@ async function buildLayout() {
       const sym = legendState[info.id];
 
       // RASTER (heat / IDW / weighted density): stacked layout with a wide gradient bar.
+      // When classification breaks exist, paint stepped bands and one tick per break edge.
       if (sym && sym.mode === 'raster' && sym.ramp) {
         const block = document.createElement('div');
         block.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin:6px 0 4px 0;';
@@ -6387,20 +6845,44 @@ async function buildLayout() {
           attrEl.textContent = sym.attrName;
           block.appendChild(attrEl);
         }
-        const bar = document.createElement('div');
-        bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
-        block.appendChild(bar);
-        const labels = document.createElement('div');
-        labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
-        const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
-        const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
-        const mid = (sym.minVal != null && sym.maxVal != null)
-          ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
         const u = sym.units ? ' ' + sym.units : '';
-        const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
-        if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
-        const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
-        block.appendChild(labels);
+        const cls = sym.classification;
+        if (cls && Array.isArray(cls.breaks) && cls.breaks.length >= 2) {
+          const { gradient } = buildClassifiedGradientCss(cls.breaks, sym.ramp, 'to right');
+          const bar = document.createElement('div');
+          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:${gradient};`;
+          block.appendChild(bar);
+          const ticks = document.createElement('div');
+          ticks.style.cssText = 'position:relative;height:11px;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const mn = cls.breaks[0], mx = cls.breaks[cls.breaks.length - 1];
+          const span = (mx - mn) || 1;
+          cls.breaks.forEach((b, i) => {
+            const pct = ((b - mn) / span) * 100;
+            let transform = 'translateX(-50%)';
+            if (i === 0) transform = 'translateX(0)';
+            else if (i === cls.breaks.length - 1) transform = 'translateX(-100%)';
+            const sp = document.createElement('span');
+            sp.style.cssText = `position:absolute;left:${pct.toFixed(2)}%;transform:${transform};white-space:nowrap;`;
+            sp.textContent = _formatRasterTick(b) + (i === 0 || i === cls.breaks.length - 1 ? u : '');
+            ticks.appendChild(sp);
+          });
+          block.appendChild(ticks);
+        } else {
+          // Fallback: smooth gradient + min/mid/max labels.
+          const bar = document.createElement('div');
+          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
+          block.appendChild(bar);
+          const labels = document.createElement('div');
+          labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
+          const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
+          const mid = (sym.minVal != null && sym.maxVal != null)
+            ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
+          const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
+          if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
+          const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
+          block.appendChild(labels);
+        }
         legendEl.appendChild(block);
         return;
       }
