@@ -417,6 +417,116 @@
     color: var(--text); font-size: 11px; padding: 2px 4px;
   }
 
+  /* ── Symbology Panel (QGIS Layer Styling style) ─────────────────────── */
+  /* Layer header card — always visible at the top of the symbology panel so
+     the user knows which layer they're editing. Clicking it cycles to the
+     next layer (a quick switch when only 2-3 layers exist). */
+  .sym-layer-card {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; margin-bottom: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 6px; cursor: default;
+  }
+  .sym-layer-card .sym-layer-icon {
+    width: 18px; height: 18px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 13px;
+  }
+  .sym-layer-card .sym-layer-meta { flex: 1; min-width: 0; }
+  .sym-layer-card .sym-layer-name {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sym-layer-card .sym-layer-type {
+    font-size: 10px; color: var(--text-muted); margin-top: 1px;
+  }
+  .sym-layer-card select.sym-layer-switch {
+    background: transparent; border: none; color: var(--text-muted);
+    font-size: 10px; cursor: pointer; padding: 2px 4px;
+    flex: 0 0 auto; max-width: 60px; width: 60px;
+  }
+  .sym-layer-card select.sym-layer-switch:hover { color: var(--accent); }
+
+  /* Renderer tabs — segmented control like QGIS's renderer dropdown.
+     Only one renderer is active at a time; the active tab's body shows. */
+  .sym-tabs {
+    display: flex; gap: 0; margin-bottom: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px; overflow: hidden;
+  }
+  .sym-tab {
+    flex: 1; min-width: 0;
+    padding: 5px 4px; font-size: 10px; font-weight: 500;
+    color: var(--text-muted); background: transparent; border: none;
+    border-radius: 4px; cursor: pointer; text-align: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: background .12s, color .12s;
+  }
+  .sym-tab:hover { color: var(--text); }
+  .sym-tab.active {
+    background: var(--accent); color: #fff; font-weight: 600;
+  }
+
+  /* Renderer body — only the active tab's body is shown. */
+  .sym-body { display: none; }
+  .sym-body.active { display: block; }
+  .sym-body .sym-section-label {
+    font-size: 10px; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.05em; margin: 0 0 6px 0;
+  }
+
+  /* Footer actions row — primary Apply + subdued Reset. */
+  .sym-actions {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 10px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .sym-btn-primary {
+    flex: 1; padding: 6px 10px; font-size: 11px; font-weight: 600;
+    background: var(--accent); color: #fff;
+    border: 1px solid var(--accent); border-radius: 4px; cursor: pointer;
+    transition: background .12s;
+  }
+  .sym-btn-primary:hover { background: var(--accent-hover, var(--accent)); filter: brightness(1.1); }
+  .sym-btn-reset {
+    padding: 6px 10px; font-size: 11px; color: var(--text-muted);
+    background: transparent; border: 1px solid transparent; border-radius: 4px;
+    cursor: pointer; transition: color .12s;
+  }
+  .sym-btn-reset:hover { color: var(--text); border-color: var(--border); }
+
+  /* Helper note shown under tabs (recommended hint for raster classes). */
+  .sym-hint {
+    font-size: 10px; color: var(--text-muted); font-style: italic;
+    margin-top: 6px; line-height: 1.4;
+  }
+  .sym-hint b { color: var(--accent); font-style: normal; font-weight: 600; }
+
+  /* Form rows inside renderer bodies — consistent label + input layout. */
+  .sym-field {
+    display: flex; align-items: center; gap: 8px; margin: 6px 0;
+    font-size: 11px; color: var(--text-muted);
+  }
+  .sym-field > label.sym-label {
+    flex: 0 0 64px; color: var(--text-muted); font-size: 11px;
+  }
+  .sym-field input[type=number],
+  .sym-field select,
+  .sym-field input[type=text] {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 3px; color: var(--text); font-size: 11px; padding: 3px 5px;
+  }
+  .sym-field input[type=color] {
+    width: 28px; height: 22px; border: 1px solid var(--border); border-radius: 3px;
+    background: none; cursor: pointer; padding: 0;
+  }
+  .sym-field input[type=range] { flex: 1; }
+  .sym-field textarea {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 3px; color: var(--text); font-size: 11px; padding: 4px 5px;
+    font-family: inherit; resize: vertical; min-height: 36px;
+  }
+
   /* Export / action buttons */
   .export-btn {
     display: flex; align-items: center; gap: 8px;
@@ -1390,9 +1500,20 @@
       </div>
       <div class="panel-body hidden" id="symbology-panel">
         <div id="symbology-empty" style="font-size:11px;color:var(--text-faint);text-align:center;padding:12px 0;">Import data to configure symbology</div>
-        <select id="symbology-layer-select" onchange="selectSymbologyLayer(this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px;margin-bottom:6px;display:none;">
-          <option value="">— Select layer —</option>
-        </select>
+        <!-- Header card — always-visible reminder of which layer is active.
+             The hidden select below stays in the DOM so existing code paths
+             that call refreshSymbologyLayerSelect()/selectSymbologyLayer()
+             keep working unchanged. -->
+        <div id="symbology-header" class="sym-layer-card" style="display:none;">
+          <div class="sym-layer-icon" id="sym-layer-icon">●</div>
+          <div class="sym-layer-meta">
+            <div class="sym-layer-name" id="sym-layer-name">—</div>
+            <div class="sym-layer-type" id="sym-layer-type">—</div>
+          </div>
+          <select id="symbology-layer-select" class="sym-layer-switch" onchange="selectSymbologyLayer(this.value)" title="Switch layer">
+            <option value="">Switch ▾</option>
+          </select>
+        </div>
         <div id="symbology-controls"></div>
       </div>
     </div>
@@ -3350,13 +3471,20 @@ function addLayerToPanel(info) {
     <input type="checkbox" checked>
     <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}')" title="Toggle visibility">&#x1F441;</span>
     <div class="layer-color-swatch" style="background:${info.color}"></div>
-    <span class="layer-label" title="${safeName}&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this)" oncontextmenu="zoomToLayer('${info.id}');event.preventDefault();">${safeName}</span>
-    <button class="layer-action-btn" onclick="zoomToLayer('${info.id}')" title="Zoom to layer">&#x1f50d;</button>
+    <span class="layer-label" title="${safeName}&#10;Click to edit symbology&#10;Double-click to rename&#10;Right-click to zoom" ondblclick="renameLayer('${info.id}', this); event.stopPropagation();" oncontextmenu="zoomToLayer('${info.id}');event.preventDefault();">${safeName}</span>
+    <button class="layer-action-btn" onclick="zoomToLayer('${info.id}'); event.stopPropagation();" title="Zoom to layer">&#x1f50d;</button>
     <span class="layer-count">${info.featureCount}</span>
-    <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this)" title="Show/hide labels">&#x1f3f7;</button>
-    <button class="layer-remove" onclick="removeUploadedLayer('${info.id}')" title="Remove layer">&times;</button>
+    <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this); event.stopPropagation();" title="Show/hide labels">&#x1f3f7;</button>
+    <button class="layer-remove" onclick="removeUploadedLayer('${info.id}'); event.stopPropagation();" title="Remove layer">&times;</button>
     <div class="label-popover" id="lp-${info.id}"></div>
   `;
+  // Clicking anywhere on the row (not on a control button/checkbox) selects
+  // this layer in the symbology panel — so users can pick which layer to
+  // style without hunting for the dropdown.
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('button, input, .layer-eye, .layer-drag-handle, .label-popover')) return;
+    selectSymbologyLayer(info.id);
+  });
   initLayerDrag(el);
   document.getElementById('uploaded-layers-list').appendChild(el);
   initLegendState(info);
@@ -3933,56 +4061,147 @@ function removeUploadedLayer(id) {
   refreshMapLegend();
 }
 
+// Populate the header-card layer-switch dropdown with all loaded layers, and
+// hide the empty-state placeholder. Auto-selects the most recent layer if no
+// selection is current, so the symbology panel never lands on a blank state.
 function refreshSymbologyLayerSelect() {
   const sel = document.getElementById('symbology-layer-select');
+  const header = document.getElementById('symbology-header');
+  const empty = document.getElementById('symbology-empty');
   const prev = sel.value;
-  sel.innerHTML = '<option value="">— Select layer —</option>';
+  sel.innerHTML = '<option value="">Switch ▾</option>';
   uploadedLayers.forEach(l => {
     sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
   });
   if (uploadedLayers.length > 0) {
-    sel.style.display = '';
+    if (header) header.style.display = '';
+    if (empty) empty.style.display = 'none';
+  } else {
+    if (header) header.style.display = 'none';
+    if (empty) empty.style.display = '';
   }
-  if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
-  else if (uploadedLayers.length > 0) {
-    sel.value = uploadedLayers[uploadedLayers.length - 1].id;
-    selectSymbologyLayer(sel.value);
+  // Try to keep the previous selection; otherwise jump to the newest layer.
+  if (prev && sel.querySelector(`option[value="${prev}"]`)) {
+    sel.value = prev;
+    selectSymbologyLayer(prev);
+  } else if (uploadedLayers.length > 0) {
+    const newest = uploadedLayers[uploadedLayers.length - 1].id;
+    sel.value = newest;
+    selectSymbologyLayer(newest);
   }
 }
 
+// Show ONLY the selected layer's symbology block, sync the header card name +
+// type label, and highlight the corresponding row in the Layers list. Returning
+// to a layer via the layer-list click also routes through here.
 function selectSymbologyLayer(layerId) {
+  // Toggle which symbology block is visible.
   document.querySelectorAll('#symbology-controls [data-sym-id]').forEach(el => {
     el.style.display = el.dataset.symId === layerId ? '' : 'none';
   });
+  // Highlight the active layer row in the Layers panel.
   document.querySelectorAll('.layer-item').forEach(el => {
     el.classList.toggle('active-layer', el.dataset.layerId === layerId);
   });
+  // Sync the header card (name + type icon + type label).
+  const info = uploadedLayers.find(l => l.id === layerId);
+  const nameEl = document.getElementById('sym-layer-name');
+  const typeEl = document.getElementById('sym-layer-type');
+  const iconEl = document.getElementById('sym-layer-icon');
+  if (info && nameEl && typeEl && iconEl) {
+    nameEl.textContent = info.name;
+    nameEl.title = info.name;
+    const { icon, label } = _symbologyTypeBadge(info);
+    iconEl.textContent = icon;
+    typeEl.textContent = label;
+  }
+  // Keep the switcher dropdown synced when called from outside (e.g. layer click).
+  const sel = document.getElementById('symbology-layer-select');
+  if (sel && sel.value !== layerId) sel.value = layerId;
 }
 
+// Map a layer's geom/raster type to a glyph + human label used in the header.
+function _symbologyTypeBadge(info) {
+  if (info.isRaster) return { icon: '▦', label: 'Raster surface' };
+  const types = info.geomTypes || [];
+  const hasPt = types.some(t => /Point/i.test(t));
+  const hasLn = types.some(t => /Line/i.test(t));
+  const hasPg = types.some(t => /Polygon/i.test(t));
+  if (hasPt && !hasLn && !hasPg) return { icon: '●', label: `Point layer · ${info.featureCount || 0} features` };
+  if (hasLn && !hasPt && !hasPg) return { icon: '╱', label: `Line layer · ${info.featureCount || 0} features` };
+  if (hasPg && !hasPt && !hasLn) return { icon: '■', label: `Polygon layer · ${info.featureCount || 0} features` };
+  return { icon: '◆', label: `Mixed geometry · ${info.featureCount || 0} features` };
+}
+
+// Build the QGIS-style tabbed symbology block for one layer. Vector layers get
+// Simple / Categorized / Graduated tabs; raster layers get Continuous /
+// Classified tabs (driven by the existing raster classification helpers).
+// Only one tab body is visible at a time — switching tabs is local DOM only,
+// no JS state changes, so this is safe to call repeatedly when layers update.
 function buildSymbologyControls(info) {
   const container = document.getElementById('symbology-controls');
   const div = document.createElement('div');
   div.dataset.symId = info.id;
-  div.style.cssText = 'margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1a1d23;';
-  const safeName = escapeHtml(info.name);
+  div.className = 'sym-block';
+
+  if (info.isRaster) {
+    div.innerHTML = _buildRasterSymbologyBody(info);
+  } else {
+    div.innerHTML = _buildVectorSymbologyBody(info);
+  }
+  container.appendChild(div);
+}
+
+// Switch which renderer tab is active inside a layer's symbology block.
+// CSS-only — we just toggle .active on the tab buttons and bodies.
+function setSymbologyTab(layerId, tabName) {
+  const block = document.querySelector(`#symbology-controls [data-sym-id="${layerId}"]`);
+  if (!block) return;
+  block.querySelectorAll('.sym-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  block.querySelectorAll('.sym-body').forEach(body => {
+    body.classList.toggle('active', body.dataset.tab === tabName);
+  });
+}
+
+// Vector-layer tabbed body — Simple / Categorized / Graduated.
+function _buildVectorSymbologyBody(info) {
   const hasPoints = info.geomTypes.some(g => g.includes('Point'));
   const hasLines = info.geomTypes.some(g => g.includes('Line'));
   const attrs = [...new Set(info.properties.flatMap(Object.keys))];
   const attrOpts = attrs.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+  const id = info.id;
 
-  div.innerHTML = `
-    <!-- Simple Symbol -->
-    <div class="sym-group" style="margin-bottom:6px;">
-      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;">Simple Symbol</div>
-      <div class="symbol-row">
-        <span>Fill</span><input type="color" value="${info.color}" onchange="recolorLayer('${info.id}',this.value)">
-        ${hasPoints ? `<span>Size</span><input type="number" value="7" min="3" max="30" style="width:40px" onchange="resizeLayer('${info.id}',this.value)">` : ''}
-        <span>Opacity</span><input type="range" min="10" max="100" value="90" style="width:60px" onchange="opacityLayer('${info.id}',this.value)">
+  return `
+    <!-- Renderer tabs (segmented control) -->
+    <div class="sym-tabs" role="tablist">
+      <button class="sym-tab active" data-tab="simple" onclick="setSymbologyTab('${id}','simple')">Single Symbol</button>
+      <button class="sym-tab" data-tab="categorized" onclick="setSymbologyTab('${id}','categorized')">Categorized</button>
+      <button class="sym-tab" data-tab="graduated" onclick="setSymbologyTab('${id}','graduated')">Graduated</button>
+    </div>
+
+    <!-- Simple Symbol body -->
+    <div class="sym-body active" data-tab="simple">
+      <div class="sym-field">
+        <label class="sym-label">Fill</label>
+        <input type="color" value="${info.color}" onchange="recolorLayer('${id}',this.value)">
+        ${hasPoints ? `<label class="sym-label" style="flex:0 0 auto;margin-left:8px;">Size</label>
+          <input type="number" value="7" min="3" max="30" style="width:52px" onchange="resizeLayer('${id}',this.value)">` : ''}
       </div>
-      <div class="symbol-row" style="margin-top:4px;">
-        <span>Stroke</span><input type="color" value="#ffffff" onchange="strokeColorLayer('${info.id}',this.value)">
-        <span>Width</span><input type="number" value="1.2" min="0" max="10" step="0.5" style="width:45px" onchange="strokeWidthLayer('${info.id}',this.value)">
-        <span>Style</span><select onchange="strokeStyleLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">
+      <div class="sym-field">
+        <label class="sym-label">Opacity</label>
+        <input type="range" min="10" max="100" value="90" onchange="opacityLayer('${id}',this.value)">
+      </div>
+      <div class="sym-field">
+        <label class="sym-label">Stroke</label>
+        <input type="color" value="#ffffff" onchange="strokeColorLayer('${id}',this.value)">
+        <label class="sym-label" style="flex:0 0 auto;margin-left:8px;">Width</label>
+        <input type="number" value="1.2" min="0" max="10" step="0.5" style="width:52px" onchange="strokeWidthLayer('${id}',this.value)">
+      </div>
+      <div class="sym-field">
+        <label class="sym-label">Style</label>
+        <select onchange="strokeStyleLayer('${id}',this.value)">
           <option value="solid">Solid</option>
           <option value="dash">Dashed</option>
           <option value="dot">Dotted</option>
@@ -3990,8 +4209,9 @@ function buildSymbologyControls(info) {
         </select>
       </div>
       ${hasPoints ? `
-      <div class="symbol-row" style="margin-top:4px;">
-        <span>Shape</span><select onchange="markerShapeLayer('${info.id}',this.value)" style="font-size:10px;padding:1px 3px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">
+      <div class="sym-field">
+        <label class="sym-label">Shape</label>
+        <select onchange="markerShapeLayer('${id}',this.value)">
           <option value="circle">Circle</option>
           <option value="square">Square</option>
           <option value="triangle">Triangle</option>
@@ -4001,51 +4221,50 @@ function buildSymbologyControls(info) {
         </select>
       </div>` : ''}
       ${hasLines ? `
-      <div class="symbol-row" style="margin-top:4px;">
-        <span>Line W</span><input type="number" value="2.5" min="0.5" max="15" step="0.5" style="width:45px" onchange="lineWidthLayer('${info.id}',this.value)">
+      <div class="sym-field">
+        <label class="sym-label">Line width</label>
+        <input type="number" value="2.5" min="0.5" max="15" step="0.5" style="width:52px" onchange="lineWidthLayer('${id}',this.value)">
       </div>` : ''}
+      <p class="sym-hint">A single uniform style for every feature.</p>
     </div>
 
-    <!-- Categorized -->
-    <div class="sym-group" style="margin-bottom:6px;">
-      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Categorized &#x25BC;</div>
-      <div class="hidden" style="padding-top:3px;">
-        <div class="symbol-row">
-          <span>Column</span><select id="cat-attr-${info.id}" style="font-size:10px;max-width:120px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">${attrOpts}</select>
-        </div>
-        <div class="symbol-row" style="margin-top:3px;">
-          <button onclick="applyCategorized('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Apply</button>
-          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
-        </div>
+    <!-- Categorized body -->
+    <div class="sym-body" data-tab="categorized">
+      <div class="sym-field">
+        <label class="sym-label">Column</label>
+        <select id="cat-attr-${id}" style="flex:1;">${attrOpts}</select>
+      </div>
+      <p class="sym-hint">Color each feature by a <b>unique value</b> of the chosen column — best for categorical attributes (species, type, region).</p>
+      <div class="sym-actions">
+        <button class="sym-btn-primary" onclick="applyCategorized('${id}')">Apply</button>
+        <button class="sym-btn-reset" onclick="resetSymbology('${id}')">Reset</button>
       </div>
     </div>
 
-    <!-- Graduated -->
-    <div class="sym-group" style="margin-bottom:6px;">
-      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Graduated &#x25BC;</div>
-      <div class="hidden" style="padding-top:3px;">
-        <div class="symbol-row">
-          <span>Column</span><select id="grad-attr-${info.id}" style="font-size:10px;max-width:120px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">${attrOpts}</select>
-        </div>
-        <div class="symbol-row" style="margin-top:3px;">
-          <span>Classes</span><input type="number" id="grad-classes-${info.id}" value="5" min="2" max="10" style="width:35px">
-          <span>Ramp</span><select id="grad-ramp-${info.id}" style="font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);">
-            <option value="viridis">Viridis</option>
-            <option value="heat">Heat</option>
-            <option value="cool">Cool</option>
-            <option value="terrain">Terrain</option>
-          </select>
-        </div>
-        <div class="symbol-row" style="margin-top:3px;">
-          <button onclick="applyGraduated('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Apply</button>
-          <button onclick="resetSymbology('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
-        </div>
+    <!-- Graduated body -->
+    <div class="sym-body" data-tab="graduated">
+      <div class="sym-field">
+        <label class="sym-label">Column</label>
+        <select id="grad-attr-${id}" style="flex:1;">${attrOpts}</select>
+      </div>
+      <div class="sym-field">
+        <label class="sym-label">Classes</label>
+        <input type="number" id="grad-classes-${id}" value="5" min="2" max="10" style="width:52px">
+        <label class="sym-label" style="flex:0 0 auto;margin-left:8px;">Ramp</label>
+        <select id="grad-ramp-${id}" style="flex:1;">
+          <option value="viridis">Viridis</option>
+          <option value="heat">Heat</option>
+          <option value="cool">Cool</option>
+          <option value="terrain">Terrain</option>
+        </select>
+      </div>
+      <p class="sym-hint">Color features along a ramp using <b>numeric value bands</b> — best for ordinal data (richness, abundance, elevation).</p>
+      <div class="sym-actions">
+        <button class="sym-btn-primary" onclick="applyGraduated('${id}')">Apply</button>
+        <button class="sym-btn-reset" onclick="resetSymbology('${id}')">Reset</button>
       </div>
     </div>
-
-    ${info.isRaster ? buildRasterClassificationGroup(info) : ''}
   `;
-  container.appendChild(div);
 }
 
 // ── Raster classification controls ──────────────────────────────────────
@@ -4053,6 +4272,13 @@ function buildSymbologyControls(info) {
 // weighted density) layers, with method dropdown, class count, manual stops
 // textarea, and an Apply button. Reads current state from legendState.
 function buildRasterClassificationGroup(info) {
+  return _buildRasterSymbologyBody(info);
+}
+
+// Tabbed renderer body for raster (heat / IDW / weighted density) layers.
+// Tabs are the render modes: Continuous (smooth gradient) vs Classified
+// (stepped bands). Each tab body contains the controls for that mode only.
+function _buildRasterSymbologyBody(info) {
   const st = legendState[info.id];
   const cls = (st && st.classification) || { method: 'equal', classes: 5, manualBreaks: null, breaks: [] };
   const method = cls.method || 'equal';
@@ -4061,8 +4287,6 @@ function buildRasterClassificationGroup(info) {
   const manualStr = Array.isArray(cls.manualBreaks)
     ? cls.manualBreaks.join(', ')
     : (Array.isArray(cls.breaks) ? cls.breaks.map(b => _formatRasterTick(b)).join(', ') : '');
-  // Compute the recommended method from this layer's actual values so we can
-  // tag the dropdown option with "(recommended)". Falls back to Equal Interval.
   const rec = _recommendClassificationMethod(cls.rawValues || []);
   const recMethod = rec.method;
   const recReason = rec.reason;
@@ -4074,54 +4298,50 @@ function buildRasterClassificationGroup(info) {
     return m === recMethod ? `${base} — recommended` : base;
   };
   const opt = m => `<option value="${m}"${method === m ? ' selected' : ''}>${labelFor(m)}</option>`;
-  // When continuous mode is active, hide Method/Classes/Manual controls entirely.
-  const detailsHidden = isContinuous ? 'display:none;' : '';
   const manualHidden = method === 'manual' ? '' : 'display:none;';
   const classesDisabled = method === 'manual' ? 'disabled' : '';
-  const renderModeContinuous = isContinuous;
+  // Active tab follows the current render mode.
+  const contActive = isContinuous ? 'active' : '';
+  const classActive = isContinuous ? '' : 'active';
+  const id = info.id;
   return `
-    <!-- Classification (raster only) -->
-    <div class="sym-group" style="margin-bottom:6px;">
-      <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Classification &#x25BC;</div>
-      <div style="padding-top:3px;">
-        <!-- Render mode toggle (Continuous vs Classified, QGIS-style) -->
-        <div class="symbol-row" style="flex-direction:column;align-items:stretch;gap:2px;">
-          <span style="font-size:9px;color:var(--text-muted);">Render mode</span>
-          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:3px 4px;cursor:pointer;font-size:10px;background:${renderModeContinuous ? 'var(--accent)' : 'var(--surface-2)'};color:${renderModeContinuous ? '#fff' : 'var(--text)'};font-weight:${renderModeContinuous ? '600' : '500'};">
-              <input type="radio" name="raster-render-mode-${info.id}" value="continuous" ${renderModeContinuous ? 'checked' : ''} onchange="setRasterRenderMode('${info.id}', 'continuous')" style="margin:0;accent-color:#fff;">
-              Continuous
-            </label>
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:3px 4px;cursor:pointer;font-size:10px;background:${!renderModeContinuous ? 'var(--accent)' : 'var(--surface-2)'};color:${!renderModeContinuous ? '#fff' : 'var(--text)'};font-weight:${!renderModeContinuous ? '600' : '500'};border-left:1px solid var(--border);">
-              <input type="radio" name="raster-render-mode-${info.id}" value="classified" ${!renderModeContinuous ? 'checked' : ''} onchange="setRasterRenderMode('${info.id}', 'classified')" style="margin:0;accent-color:#fff;">
-              Classified
-            </label>
-          </div>
-          <span style="font-size:9px;color:var(--text-muted);font-style:italic;">${isContinuous ? 'Smooth gradient — best for ordinal numeric (richness, abundance).' : `Stepped bands — ${escapeHtml(recReason)}.`}</span>
-        </div>
-        <div id="raster-class-details-${info.id}" style="${detailsHidden}">
-          <div class="symbol-row" style="margin-top:3px;">
-            <span>Method</span>
-            <select id="raster-class-method-${info.id}" onchange="setRasterClassMethod('${info.id}', this.value)" style="font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);flex:1;max-width:160px;">
-              ${opt('equal')}
-              ${opt('quantile')}
-              ${opt('jenks')}
-              ${opt('manual')}
-            </select>
-          </div>
-          <div class="symbol-row" style="margin-top:3px;">
-            <span>Classes</span>
-            <input type="number" id="raster-class-count-${info.id}" value="${classes}" min="2" max="10" ${classesDisabled} onchange="setRasterClassCount('${info.id}', this.value)" style="width:45px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
-          </div>
-          <div id="raster-manual-row-${info.id}" class="symbol-row" style="margin-top:3px;flex-direction:column;align-items:stretch;${manualHidden}">
-            <span style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">Manual breaks (comma-separated, ascending)</span>
-            <textarea id="raster-manual-breaks-${info.id}" rows="2" placeholder="e.g. 0, 5, 10, 25, 50" onchange="setRasterManualBreaks('${info.id}', this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:3px 4px;font-family:inherit;resize:vertical;">${escapeHtml(manualStr)}</textarea>
-          </div>
-          <div class="symbol-row" style="margin-top:3px;">
-            <button onclick="applyRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:3px;color:#fff;cursor:pointer;font-weight:600;">Apply</button>
-            <button onclick="resetRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
-          </div>
-        </div>
+    <!-- Renderer tabs: Continuous vs Classified (raster render modes) -->
+    <div class="sym-tabs" role="tablist">
+      <button class="sym-tab ${contActive}" data-tab="continuous" onclick="setRasterRenderMode('${id}','continuous')">Continuous</button>
+      <button class="sym-tab ${classActive}" data-tab="classified" onclick="setRasterRenderMode('${id}','classified')">Classified</button>
+    </div>
+
+    <!-- Continuous body — smooth gradient, no break controls. -->
+    <div class="sym-body ${contActive}" data-tab="continuous">
+      <p class="sym-hint"><b>Smooth gradient.</b> Every value maps to its own colour along the palette — best for ordinal numeric data (species richness, abundance, density).</p>
+      <div class="sym-actions">
+        <button class="sym-btn-reset" onclick="resetRasterClassification('${id}')">Reset to recommended</button>
+      </div>
+    </div>
+
+    <!-- Classified body — method / classes / manual breaks + Apply. -->
+    <div class="sym-body ${classActive}" data-tab="classified">
+      <div class="sym-field">
+        <label class="sym-label">Method</label>
+        <select id="raster-class-method-${id}" onchange="setRasterClassMethod('${id}', this.value)" style="flex:1;">
+          ${opt('equal')}
+          ${opt('quantile')}
+          ${opt('jenks')}
+          ${opt('manual')}
+        </select>
+      </div>
+      <div class="sym-field">
+        <label class="sym-label">Classes</label>
+        <input type="number" id="raster-class-count-${id}" value="${classes}" min="2" max="10" ${classesDisabled} onchange="setRasterClassCount('${id}', this.value)" style="width:52px;">
+      </div>
+      <div id="raster-manual-row-${id}" class="sym-field" style="flex-direction:column;align-items:stretch;${manualHidden}">
+        <label class="sym-label" style="flex:0 0 auto;margin-bottom:4px;">Manual breaks (comma-separated, ascending)</label>
+        <textarea id="raster-manual-breaks-${id}" rows="2" placeholder="e.g. 0, 5, 10, 25, 50" onchange="setRasterManualBreaks('${id}', this.value)">${escapeHtml(manualStr)}</textarea>
+      </div>
+      <p class="sym-hint"><b>Stepped bands.</b> ${escapeHtml(recReason)}.</p>
+      <div class="sym-actions">
+        <button class="sym-btn-primary" onclick="applyRasterClassification('${id}')">Apply</button>
+        <button class="sym-btn-reset" onclick="resetRasterClassification('${id}')">Reset</button>
       </div>
     </div>
   `;
