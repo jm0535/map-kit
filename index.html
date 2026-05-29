@@ -249,32 +249,52 @@
   .label-popover {
     position: absolute; z-index: 100; left: 0; top: 100%;
     background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px;
-    box-shadow: var(--shadow); padding: 6px 0; min-width: 200px; max-width: 280px;
-    max-height: 260px; overflow-y: auto; display: none;
+    box-shadow: var(--shadow); min-width: 280px; max-width: 320px; max-height: 380px;
+    display: none; overflow: hidden; flex-direction: column;
   }
-  .label-popover.show { display: block; }
-  .label-popover .lp-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 4px 10px 6px; border-bottom: 1px solid var(--border); font-size: 10px;
-    font-weight: 600; color: var(--accent); letter-spacing: 0;
+  .label-popover.show { display: flex; }
+  .label-popover .lp-tabs {
+    display: flex; border-bottom: 1px solid var(--border); background: var(--surface-2);
   }
-  .label-popover .lp-header button {
-    background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 0;
+  .label-popover .lp-tab {
+    flex: 1; padding: 6px 8px; background: transparent; border: none;
+    border-bottom: 2px solid transparent; color: var(--text-muted);
+    font-size: 11px; font-weight: 500; cursor: pointer; transition: color .15s, border-color .15s;
   }
-  .label-popover .lp-header button:hover { color: var(--accent); }
+  .label-popover .lp-tab:hover { color: var(--text); }
+  .label-popover .lp-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .label-popover .lp-body { padding: 8px 10px; overflow-y: auto; flex: 1; }
+  .label-popover .lp-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 11px;
+  }
+  .label-popover .lp-row label { color: var(--text-muted); width: 78px; flex-shrink: 0; }
+  .label-popover .lp-row select,
+  .label-popover .lp-row input[type="number"] {
+    flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text); font-size: 11px; padding: 3px 6px;
+  }
+  .label-popover .lp-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .label-popover .lp-row input[type="color"] {
+    width: 32px; height: 22px; padding: 0; border: 1px solid var(--border); border-radius: 3px; background: var(--surface-2); cursor: pointer;
+  }
+  .label-popover .lp-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+  .label-popover .lp-val { font-size: 10px; color: var(--text-faint); width: 40px; text-align: right; flex-shrink: 0; }
+  .label-popover .lp-row-flex { display: flex; gap: 6px; margin-bottom: 8px; }
+  .label-popover .lp-mini-btn {
+    flex: 1; font-size: 10px; padding: 4px 8px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); cursor: pointer;
+  }
+  .label-popover .lp-mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .label-popover .lp-features-list {
+    max-height: 180px; overflow-y: auto;
+    border-top: 1px solid var(--border); padding-top: 6px;
+  }
   .label-popover .lp-item {
-    display: flex; align-items: center; gap: 6px; padding: 3px 10px; font-size: 11px; color: var(--text); cursor: pointer;
+    display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 11px; color: var(--text); cursor: pointer;
   }
   .label-popover .lp-item:hover { background: var(--accent-bg); }
   .label-popover .lp-item input { accent-color: var(--accent); cursor: pointer; }
-  .label-popover .lp-attr-row {
-    padding: 4px 10px 6px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-muted);
-  }
-  .label-popover .lp-attr-row select {
-    flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
-    color: var(--text); font-size: 10px; padding: 2px 4px;
-  }
+  .label-popover .lp-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Search box */
   .search-box { display: flex; align-items: center; gap: 4px; }
@@ -668,6 +688,32 @@
     padding: 4px 8px !important; box-shadow: var(--shadow) !important;
   }
   .site-tooltip::before { display: none !important; }
+
+  /* Professional feature labels - halo text, no opaque box */
+  .feature-label {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-family: Inter, system-ui, sans-serif !important;
+    white-space: nowrap;
+    pointer-events: none;
+    /* Halo via text-shadow stack — 8 directions for clean outline */
+    --halo-w: 2px;
+    --halo-c: #ffffff;
+    text-shadow:
+      calc(-1 * var(--halo-w)) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       var(--halo-w) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+      calc(-1 * var(--halo-w))  var(--halo-w) 0 var(--halo-c),
+       var(--halo-w)  var(--halo-w) 0 var(--halo-c),
+       0 calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       0  var(--halo-w) 0 var(--halo-c),
+      calc(-1 * var(--halo-w)) 0 0 var(--halo-c),
+       var(--halo-w) 0 0 var(--halo-c);
+  }
+  .feature-label::before { display: none !important; }
+  .feature-label.hidden-by-declutter { display: none !important; }
+
   /* Layout/export labels: smaller, white halo for legibility over any basemap */
   .leaflet-tooltip.layout-label {
     background: rgba(255,255,255,0.92) !important;
@@ -3001,6 +3047,80 @@ function toggleUploadedLayer(id, on) {
 
 const labelAttrState = {};
 
+// Per-layer label style. Defaults inspired by ArcGIS Pro / QGIS labels.
+const labelStyleState = {};
+function getLabelStyle(layerId) {
+  if (!labelStyleState[layerId]) {
+    labelStyleState[layerId] = {
+      font: 'Inter, system-ui, sans-serif',
+      size: 11,             // px
+      weight: 600,
+      color: '#1a1a1a',     // label text colour
+      halo: '#ffffff',      // halo / outline colour
+      haloWidth: 2,         // px
+      offsetY: -12,         // px (negative = above point)
+      offsetX: 0,
+      placement: 'top',     // 'top' | 'right' | 'bottom' | 'left' | 'center'
+      minZoom: 0,           // hide below this zoom
+      maxZoom: 22,          // hide above this zoom
+      declutter: true,      // hide overlapping labels
+      topN: 0,              // 0 = all features; >0 = only top N (sorted by topNAttr desc, or featureIdx asc)
+      topNAttr: '',         // attribute to sort by (empty = use feature order)
+    };
+  }
+  return labelStyleState[layerId];
+}
+
+function _buildFeatureLabelOptions(layerId, props) {
+  const style = getLabelStyle(layerId);
+  // Direction → offset translation
+  let direction = style.placement === 'center' ? 'center' : style.placement;
+  // Compute final offset (we add the user-specified extra offset to direction-default)
+  let offset = [style.offsetX, style.offsetY];
+  return {
+    permanent: true,
+    className: 'feature-label',
+    direction: direction,
+    offset: offset,
+    opacity: 1,
+  };
+}
+
+function _applyLabelInlineStyle(tooltipEl, layerId) {
+  if (!tooltipEl) return;
+  const style = getLabelStyle(layerId);
+  tooltipEl.style.color = style.color;
+  tooltipEl.style.fontSize = style.size + 'px';
+  tooltipEl.style.fontWeight = String(style.weight);
+  tooltipEl.style.fontFamily = style.font;
+  tooltipEl.style.setProperty('--halo-w', style.haloWidth + 'px');
+  tooltipEl.style.setProperty('--halo-c', style.halo);
+}
+
+function detectBestLabelAttr(info) {
+  const candidates = ['site', 'Site', 'SITE', 'name', 'Name', 'NAME',
+                       'label', 'Label', 'LABEL', 'transect', 'Transect', 'TRANSECT',
+                       'id', 'ID', 'Id', 'feature_id', 'FID'];
+  // Build set of available keys
+  const keys = new Set();
+  info.layer.eachLayer(sub => {
+    if (sub.feature && sub.feature.properties) {
+      Object.keys(sub.feature.properties).forEach(k => keys.add(k));
+    }
+  });
+  for (const c of candidates) if (keys.has(c)) return c;
+  // Fall back to first non-numeric-looking key
+  for (const k of keys) {
+    let sample;
+    info.layer.eachLayer(sub => {
+      if (sample !== undefined) return;
+      if (sub.feature && sub.feature.properties) sample = sub.feature.properties[k];
+    });
+    if (sample !== undefined && sample !== null && String(sample).trim()) return k;
+  }
+  return '';
+}
+
 function getLayerAttributes(info) {
   const attrs = new Set();
   info.layer.eachLayer(sub => {
@@ -3015,8 +3135,13 @@ function getLabelAttr(layerId) {
 }
 
 function getFeatureLabelText(props, attr) {
-  if (attr && props[attr] !== undefined && props[attr] !== null) return String(props[attr]);
-  return props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || props.ID || '';
+  if (attr && props[attr] !== undefined && props[attr] !== null) {
+    const v = String(props[attr]).trim();
+    return v; // empty string is allowed — empty values get NO label
+  }
+  // No attribute specified — try common fallbacks but DO NOT use "Feature N"
+  const fallback = props.site || props.Site || props.name || props.Name || props.label || props.id || props.ID;
+  return fallback ? String(fallback).trim() : '';
 }
 
 function openLabelPopover(id, btn) {
@@ -3029,7 +3154,13 @@ function openLabelPopover(id, btn) {
   if (!info) return;
 
   const attrs = getLayerAttributes(info);
+  // Auto-detect on first open
+  if (!labelAttrState[id]) {
+    const detected = detectBestLabelAttr(info);
+    if (detected) labelAttrState[id] = detected;
+  }
   const currentAttr = getLabelAttr(id);
+  const style = getLabelStyle(id);
 
   const features = [];
   let idx = 0;
@@ -3042,24 +3173,75 @@ function openLabelPopover(id, btn) {
 
   if (features.length === 0) { popover.classList.remove('show'); return; }
 
-  let html = `<div class="lp-header"><span>Labels</span><div>
-    <button onclick="toggleAllLabels('${id}', true)">All</button> |
-    <button onclick="toggleAllLabels('${id}', false)">None</button></div></div>`;
+  const tab = popover.dataset.tab || 'content';
 
-  html += `<div class="lp-attr-row"><span>Attribute:</span>
-    <select id="lp-attr-${id}" onchange="changeLabelAttribute('${id}', this.value)">
-    <option value=""${!currentAttr ? ' selected' : ''}>Auto-detect</option>`;
-  attrs.forEach(a => {
-    html += `<option value="${a}"${a === currentAttr ? ' selected' : ''}>${a}</option>`;
-  });
-  html += `</select></div>`;
+  let html = `
+    <div class="lp-tabs">
+      <button class="lp-tab ${tab==='content'?'active':''}" data-tab="content" onclick="switchLpTab('${id}','content')">Content</button>
+      <button class="lp-tab ${tab==='style'?'active':''}" data-tab="style" onclick="switchLpTab('${id}','style')">Style</button>
+      <button class="lp-tab ${tab==='visibility'?'active':''}" data-tab="visibility" onclick="switchLpTab('${id}','visibility')">Visibility</button>
+    </div>
+    <div class="lp-body">`;
 
-  const attr = currentAttr;
-  features.forEach((f, i) => {
-    const label = getFeatureLabelText(f.props, attr) || `Feature ${i}`;
-    html += `<label class="lp-item"><input type="checkbox" ${f.hasLabel ? 'checked' : ''}
-      onchange="toggleFeatureLabel('${id}', ${i}, this.checked)"><span>${label}</span></label>`;
-  });
+  if (tab === 'content') {
+    html += `<div class="lp-row"><label>Attribute</label>
+      <select onchange="changeLabelAttribute('${id}', this.value)">
+        <option value="">— Auto-detect —</option>
+        ${attrs.map(a => `<option value="${a}"${a===currentAttr?' selected':''}>${a}</option>`).join('')}
+      </select></div>`;
+    html += `<div class="lp-row-flex">
+      <button class="lp-mini-btn" onclick="toggleAllLabels('${id}', true)">Show all</button>
+      <button class="lp-mini-btn" onclick="toggleAllLabels('${id}', false)">Hide all</button>
+    </div>`;
+    html += `<div class="lp-features-list">`;
+    features.forEach((f, i) => {
+      const t = getFeatureLabelText(f.props, currentAttr);
+      const display = t || '<em style="color:var(--text-faint);">empty</em>';
+      html += `<label class="lp-item"><input type="checkbox" ${f.hasLabel ? 'checked' : ''} ${!t?'disabled':''}
+        onchange="toggleFeatureLabel('${id}', ${i}, this.checked)"><span>${display}</span></label>`;
+    });
+    html += `</div>`;
+  } else if (tab === 'style') {
+    html += `
+      <div class="lp-row"><label>Font size</label><input type="range" min="8" max="20" value="${style.size}" oninput="updateLabelStyle('${id}','size',+this.value)"><span class="lp-val">${style.size}px</span></div>
+      <div class="lp-row"><label>Weight</label>
+        <select onchange="updateLabelStyle('${id}','weight',+this.value)">
+          <option value="400" ${style.weight==400?'selected':''}>Regular</option>
+          <option value="500" ${style.weight==500?'selected':''}>Medium</option>
+          <option value="600" ${style.weight==600?'selected':''}>Semibold</option>
+          <option value="700" ${style.weight==700?'selected':''}>Bold</option>
+        </select></div>
+      <div class="lp-row"><label>Text color</label><input type="color" value="${style.color}" oninput="updateLabelStyle('${id}','color',this.value)"></div>
+      <div class="lp-row"><label>Halo color</label><input type="color" value="${style.halo}" oninput="updateLabelStyle('${id}','halo',this.value)"></div>
+      <div class="lp-row"><label>Halo width</label><input type="range" min="0" max="4" step="0.5" value="${style.haloWidth}" oninput="updateLabelStyle('${id}','haloWidth',+this.value)"><span class="lp-val">${style.haloWidth}px</span></div>
+      <div class="lp-row"><label>Placement</label>
+        <select onchange="updateLabelStyle('${id}','placement',this.value)">
+          <option value="top" ${style.placement==='top'?'selected':''}>Above point</option>
+          <option value="right" ${style.placement==='right'?'selected':''}>Right of point</option>
+          <option value="bottom" ${style.placement==='bottom'?'selected':''}>Below point</option>
+          <option value="left" ${style.placement==='left'?'selected':''}>Left of point</option>
+          <option value="center" ${style.placement==='center'?'selected':''}>Center (on point)</option>
+        </select></div>
+      <div class="lp-row"><label>Offset Y</label><input type="range" min="-30" max="30" value="${style.offsetY}" oninput="updateLabelStyle('${id}','offsetY',+this.value)"><span class="lp-val">${style.offsetY}px</span></div>
+      <div class="lp-row"><label>Offset X</label><input type="range" min="-30" max="30" value="${style.offsetX}" oninput="updateLabelStyle('${id}','offsetX',+this.value)"><span class="lp-val">${style.offsetX}px</span></div>
+      <div class="lp-row-flex"><button class="lp-mini-btn" onclick="resetLabelStyle('${id}')">Reset to defaults</button></div>
+    `;
+  } else if (tab === 'visibility') {
+    html += `
+      <div class="lp-row"><label>Min zoom</label><input type="range" min="0" max="22" value="${style.minZoom}" oninput="updateLabelStyle('${id}','minZoom',+this.value)"><span class="lp-val">${style.minZoom}</span></div>
+      <div class="lp-row"><label>Max zoom</label><input type="range" min="0" max="22" value="${style.maxZoom}" oninput="updateLabelStyle('${id}','maxZoom',+this.value)"><span class="lp-val">${style.maxZoom}</span></div>
+      <div class="lp-row"><label>Declutter</label><input type="checkbox" ${style.declutter?'checked':''} onchange="updateLabelStyle('${id}','declutter',this.checked)"></div>
+      <div class="lp-row"><label>Show top N</label><input type="number" min="0" max="9999" value="${style.topN}" oninput="updateLabelStyle('${id}','topN',+this.value)" style="width:60px;"><span class="lp-val">0 = all</span></div>
+      <div class="lp-row"><label>Top N by</label>
+        <select onchange="updateLabelStyle('${id}','topNAttr',this.value)">
+          <option value="">— Feature order —</option>
+          ${attrs.map(a => `<option value="${a}"${a===style.topNAttr?' selected':''}>${a}</option>`).join('')}
+        </select></div>
+      <div class="lp-row" style="color:var(--text-muted);font-size:10px;">Hint: current zoom is <span id="lp-currzoom-${id}">${map.getZoom()}</span></div>
+    `;
+  }
+
+  html += `</div>`;
   popover.innerHTML = html;
   popover.classList.add('show');
 
@@ -3072,31 +3254,100 @@ function openLabelPopover(id, btn) {
   setTimeout(() => document.addEventListener('mousedown', closeHandler), 0);
 }
 
+function switchLpTab(id, tab) {
+  const popover = document.getElementById('lp-' + id);
+  if (!popover) return;
+  popover.dataset.tab = tab;
+  const btn = document.querySelector(`[data-layer-id="${id}"] .layer-label-btn`);
+  // Re-render
+  popover.classList.remove('show');
+  openLabelPopover(id, btn);
+}
+
+function updateLabelStyle(layerId, key, value) {
+  const style = getLabelStyle(layerId);
+  style[key] = value;
+  // Re-apply to all currently labeled features
+  const info = uploadedLayers.find(l => l.id === layerId);
+  if (!info) return;
+  info.layer.eachLayer(sub => {
+    const tt = sub.getTooltip && sub.getTooltip();
+    if (!tt || tt.options.className !== 'feature-label') return;
+    // For offset/placement changes, must rebind
+    if (key === 'placement' || key === 'offsetX' || key === 'offsetY') {
+      const text = tt._content;
+      sub.unbindTooltip();
+      sub.bindTooltip(text, _buildFeatureLabelOptions(layerId, sub.feature ? sub.feature.properties || {} : {}));
+      if (sub._map) sub.openTooltip();
+      const newTT = sub.getTooltip();
+      if (newTT && newTT._container) _applyLabelInlineStyle(newTT._container, layerId);
+    } else if (tt._container) {
+      _applyLabelInlineStyle(tt._container, layerId);
+    }
+  });
+  // If topN or topNAttr changed and labels currently shown, re-evaluate
+  if (key === 'topN' || key === 'topNAttr') {
+    const anyLabeled = (function(){
+      let r = false;
+      info.layer.eachLayer(sub => { const tt = sub.getTooltip && sub.getTooltip(); if (tt && tt.options.className === 'feature-label') r = true; });
+      return r;
+    })();
+    if (anyLabeled) toggleAllLabels(layerId, true);
+  }
+  // Update val display
+  const popover = document.getElementById('lp-' + layerId);
+  if (popover) {
+    const rows = popover.querySelectorAll('.lp-row');
+    rows.forEach(row => {
+      const label = row.querySelector('label');
+      if (!label) return;
+      const valSpan = row.querySelector('.lp-val');
+      if (!valSpan) return;
+      const t = label.textContent.trim();
+      if (t === 'Font size' && key === 'size') valSpan.textContent = value + 'px';
+      else if (t === 'Halo width' && key === 'haloWidth') valSpan.textContent = value + 'px';
+      else if (t === 'Offset Y' && key === 'offsetY') valSpan.textContent = value + 'px';
+      else if (t === 'Offset X' && key === 'offsetX') valSpan.textContent = value + 'px';
+      else if (t === 'Min zoom' && key === 'minZoom') valSpan.textContent = value;
+      else if (t === 'Max zoom' && key === 'maxZoom') valSpan.textContent = value;
+    });
+  }
+  _runDeclutter(layerId);
+}
+
+function resetLabelStyle(layerId) {
+  delete labelStyleState[layerId];
+  const btn = document.querySelector(`[data-layer-id="${layerId}"] .layer-label-btn`);
+  const popover = document.getElementById('lp-' + layerId);
+  if (popover) { popover.classList.remove('show'); }
+  // Re-bind all currently-labeled features with new defaults
+  toggleAllLabels(layerId, true);
+  if (btn) openLabelPopover(layerId, btn);
+}
+
 function changeLabelAttribute(layerId, attr) {
   labelAttrState[layerId] = attr;
   const info = uploadedLayers.find(l => l.id === layerId);
   if (!info) return;
 
-  // Update labels on currently-labeled features and refresh popover item text
-  const popover = document.getElementById('lp-' + layerId);
-  const checkboxes = popover ? popover.querySelectorAll('.lp-item input') : [];
+  // Update labels on currently-labeled features
   let idx = 0;
   info.layer.eachLayer(sub => {
     if (!sub.feature) return;
     const props = sub.feature.properties || {};
-    const label = getFeatureLabelText(props, attr) || `Feature ${idx}`;
     const hasLabel = sub.getTooltip() && sub.getTooltip().options.permanent;
     if (hasLabel) {
+      const text = getFeatureLabelText(props, attr);
       sub.unbindTooltip();
-      sub.bindTooltip(String(label), {permanent: true, className: 'site-tooltip', direction: 'top', offset: [0, -8]});
-      if (sub._map) sub.openTooltip();
-    }
-    if (checkboxes[idx]) {
-      const span = checkboxes[idx].parentElement.querySelector('span');
-      if (span) span.textContent = label;
+      if (text) {
+        sub.bindTooltip(text, _buildFeatureLabelOptions(layerId, props));
+        if (sub._map) sub.openTooltip();
+        const tt = sub.getTooltip(); if (tt && tt._container) _applyLabelInlineStyle(tt._container, layerId);
+      }
     }
     idx++;
   });
+  _runDeclutter(layerId);
 }
 
 function toggleFeatureLabel(layerId, featureIdx, show) {
@@ -3108,10 +3359,14 @@ function toggleFeatureLabel(layerId, featureIdx, show) {
     if (!sub.feature) return;
     if (idx === featureIdx) {
       if (show) {
-        const label = getFeatureLabelText(sub.feature.properties || {}, attr) || `Feature ${idx}`;
-        sub.unbindTooltip();
-        sub.bindTooltip(String(label), {permanent: true, className: 'site-tooltip', direction: 'top', offset: [0, -8]});
-        if (sub._map) sub.openTooltip();
+        const text = getFeatureLabelText(sub.feature.properties || {}, attr);
+        if (!text) { sub.unbindTooltip(); }
+        else {
+          sub.unbindTooltip();
+          sub.bindTooltip(text, _buildFeatureLabelOptions(layerId, sub.feature.properties || {}));
+          if (sub._map) sub.openTooltip();
+          const tt = sub.getTooltip(); if (tt && tt._container) _applyLabelInlineStyle(tt._container, layerId);
+        }
       } else {
         sub.unbindTooltip();
       }
@@ -3119,28 +3374,70 @@ function toggleFeatureLabel(layerId, featureIdx, show) {
     idx++;
   });
   updateLabelBtnState(layerId);
+  _runDeclutter(layerId);
 }
 
 function toggleAllLabels(layerId, show) {
   const info = uploadedLayers.find(l => l.id === layerId);
   if (!info) return;
+
+  // First-time auto-detect
+  if (show && !labelAttrState[layerId]) {
+    const detected = detectBestLabelAttr(info);
+    if (detected) labelAttrState[layerId] = detected;
+  }
   const attr = getLabelAttr(layerId);
+
+  // Apply topN if configured
+  const style = getLabelStyle(layerId);
+  const features = [];
   let idx = 0;
   info.layer.eachLayer(sub => {
     if (!sub.feature) return;
-    if (show) {
-      const label = getFeatureLabelText(sub.feature.properties || {}, attr) || `Feature ${idx}`;
+    features.push({ sub, idx, props: sub.feature.properties || {} });
+    idx++;
+  });
+
+  let labeled = new Set(features.map(f => f.idx));
+  if (show && style.topN > 0 && features.length > style.topN) {
+    if (style.topNAttr) {
+      // Sort descending by numeric value of topNAttr; fall back to feature order
+      const ranked = features.slice().sort((a,b) => {
+        const va = parseFloat(a.props[style.topNAttr]);
+        const vb = parseFloat(b.props[style.topNAttr]);
+        if (isNaN(va) && isNaN(vb)) return 0;
+        if (isNaN(va)) return 1;
+        if (isNaN(vb)) return -1;
+        return vb - va;
+      });
+      labeled = new Set(ranked.slice(0, style.topN).map(f => f.idx));
+    } else {
+      labeled = new Set(features.slice(0, style.topN).map(f => f.idx));
+    }
+  }
+
+  features.forEach(({sub, idx, props}) => {
+    if (show && labeled.has(idx)) {
+      const text = getFeatureLabelText(props, attr);
+      if (!text) { sub.unbindTooltip(); return; } // empty = no label
       sub.unbindTooltip();
-      sub.bindTooltip(String(label), {permanent: true, className: 'site-tooltip', direction: 'top', offset: [0, -8]});
+      sub.bindTooltip(text, _buildFeatureLabelOptions(layerId, props));
       if (sub._map) sub.openTooltip();
+      const tt = sub.getTooltip(); if (tt && tt._container) _applyLabelInlineStyle(tt._container, layerId);
     } else {
       sub.unbindTooltip();
     }
-    idx++;
   });
+
   const popover = document.getElementById('lp-' + layerId);
-  if (popover) popover.querySelectorAll('.lp-item input').forEach(cb => cb.checked = show);
+  if (popover) {
+    popover.querySelectorAll('.lp-item input').forEach((cb, i) => { cb.checked = show && labeled.has(i); });
+    // Refresh attribute select if it exists
+    const attrSel = document.getElementById('lp-attr-' + layerId);
+    if (attrSel && attrSel.value !== attr) attrSel.value = attr;
+  }
   updateLabelBtnState(layerId);
+  _runDeclutter(layerId);
 }
 
 function updateLabelBtnState(layerId) {
@@ -3153,6 +3450,53 @@ function updateLabelBtnState(layerId) {
   const btn = document.querySelector(`[data-layer-id="${layerId}"] .layer-label-btn`);
   if (btn) btn.classList.toggle('active', anyLabel);
 }
+
+function _runDeclutter(layerId) {
+  const info = uploadedLayers.find(l => l.id === layerId);
+  if (!info) return;
+  const style = getLabelStyle(layerId);
+  const z = map.getZoom();
+
+  // Zoom threshold: hide ALL labels for this layer outside range
+  const outOfZoomRange = (z < style.minZoom || z > style.maxZoom);
+
+  // Collect visible labels with their screen rects
+  const items = [];
+  info.layer.eachLayer(sub => {
+    const tt = sub.getTooltip && sub.getTooltip();
+    if (!tt || !tt.options || tt.options.className !== 'feature-label') return;
+    const el = tt._container;
+    if (!el) return;
+    if (outOfZoomRange) {
+      el.classList.add('hidden-by-declutter');
+      return;
+    }
+    el.classList.remove('hidden-by-declutter');
+    if (!style.declutter) return;
+    const r = el.getBoundingClientRect();
+    items.push({ el, r, sub });
+  });
+  if (outOfZoomRange || !style.declutter) return;
+
+  // Greedy declutter: keep first, hide any subsequent that overlap kept ones
+  const kept = [];
+  for (const it of items) {
+    let overlaps = false;
+    for (const k of kept) {
+      if (!(it.r.right < k.r.left || it.r.left > k.r.right ||
+            it.r.bottom < k.r.top || it.r.top > k.r.bottom)) {
+        overlaps = true; break;
+      }
+    }
+    if (overlaps) it.el.classList.add('hidden-by-declutter');
+    else { it.el.classList.remove('hidden-by-declutter'); kept.push(it); }
+  }
+}
+
+// Re-run on zoom and pan
+map.on('zoomend moveend', () => {
+  Object.keys(labelStyleState).forEach(layerId => _runDeclutter(layerId));
+});
 
 function removeUploadedLayer(id) {
   const idx = uploadedLayers.findIndex(l=>l.id===id);
