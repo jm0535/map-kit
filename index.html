@@ -198,6 +198,11 @@
   .map-legend-ramp { display: flex; align-items: stretch; gap: 0; margin: 2px 0 2px 0; }
   .map-legend-ramp-bar { width: 14px; height: 60px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); }
   .map-legend-ramp-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: var(--text-muted); padding: 0 4px; }
+  /* Continuous raster gradient (heat / IDW / weighted density) */
+  .map-legend-raster { display: flex; flex-direction: column; gap: 2px; margin: 3px 0 4px 0; }
+  .map-legend-raster-attr { font-size: 9px; color: var(--text-muted); font-style: italic; }
+  .map-legend-raster-bar { width: 100%; min-width: 100px; height: 8px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.18); }
+  .map-legend-raster-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .map-legend-empty { color: var(--text-faint); text-align: center; padding: 8px 0; font-size: 10px; }
 
   /* Digitizing toolbar */
@@ -1001,7 +1006,7 @@
   }
   #layout-legend {
     position: absolute; bottom: 12px; left: 12px;
-    max-width: 200px; max-height: 220px; overflow: auto;
+    max-width: 220px; min-width: 160px; max-height: 240px; overflow: auto;
     background: rgba(255,255,255,0.95); border: 1px solid #1a202c;
     border-radius: 3px; padding: 8px 10px; font-size: 10px; color: #1a202c;
     pointer-events: none; z-index: 1000;
@@ -1659,6 +1664,11 @@ const MapLegend = L.Control.extend({
     } else if (st.mode === 'graduated' && st.ramp) {
       html += `<div class="map-legend-layer-title"><div class="leg-swatch" style="background:${color}"></div>${name}</div>`;
       html += this._renderRamp(st.ramp, st.minVal, st.maxVal, st.breaks, st.geomType, st.shape);
+    } else if (st.mode === 'raster' && st.ramp) {
+      // Continuous raster surface (heat / IDW / weighted density).
+      // Show name on its own line, then a horizontal gradient bar with min/mid/max labels.
+      html += `<div class="map-legend-layer-title" style="font-weight:600;">${name}</div>`;
+      html += this._renderRaster(st.ramp, st.minVal, st.maxVal, st.attrName, st.units);
     } else {
       // Simple: inline symbol in title — no redundant "Point" row
       html += `<div class="map-legend-layer-title">${this._inlineSymbol(st.geomType, color, st.shape)}${name}</div>`;
@@ -1691,6 +1701,25 @@ const MapLegend = L.Control.extend({
       sym = `<div class="map-legend-symbol polygon" style="background:${color}40;border-color:${color}"></div>`;
     }
     return `<div class="map-legend-row">${sym}<span class="map-legend-label" ${editable ? 'contenteditable="true"' : ''} data-layer-id="${layerId}" data-legend-key="${label}">${escapeHtml(label)}</span></div>`;
+  },
+  _renderRaster(ramp, minVal, maxVal, attrName, units) {
+    const colors = ramp.join(',');
+    const gradient = `linear-gradient(to right, ${colors})`;
+    const lo = (minVal != null && isFinite(minVal)) ? _formatRasterTick(minVal) : 'low';
+    const hi = (maxVal != null && isFinite(maxVal)) ? _formatRasterTick(maxVal) : 'high';
+    const mid = (minVal != null && maxVal != null && isFinite(minVal) && isFinite(maxVal))
+      ? _formatRasterTick((Number(minVal) + Number(maxVal)) / 2) : '';
+    const u = units ? ` ${escapeHtml(units)}` : '';
+    const attrLine = attrName
+      ? `<div class="map-legend-raster-attr">${escapeHtml(attrName)}</div>` : '';
+    let html = `<div class="map-legend-raster">`;
+    html += attrLine;
+    html += `<div class="map-legend-raster-bar" style="background:${gradient}"></div>`;
+    html += `<div class="map-legend-raster-labels"><span>${lo}${u}</span>`;
+    if (mid !== '') html += `<span>${mid}</span>`;
+    html += `<span>${hi}${u}</span></div>`;
+    html += `</div>`;
+    return html;
   },
   _renderRamp(ramp, minVal, maxVal, breaks, geomType, shape) {
     const colors = ramp.join(',');
@@ -1783,6 +1812,31 @@ function initLegendState(info) {
     shape: null,
   };
   refreshMapLegend();
+}
+
+// Convert a HEAT_PALETTES object ({0.0:'blue', 0.25:'cyan', ...}) into
+// an ordered ramp of color stops suitable for a CSS linear-gradient.
+function _paletteToRamp(paletteObj) {
+  if (!paletteObj) return ['#888'];
+  return Object.keys(paletteObj)
+    .map(k => parseFloat(k))
+    .sort((a, b) => a - b)
+    .map(k => paletteObj[k] || paletteObj[String(k)]);
+}
+
+// Format a numeric tick for the raster legend so it stays compact.
+// Uses fewer decimals as the magnitude grows.
+function _formatRasterTick(v) {
+  if (v == null || !isFinite(v)) return '';
+  const n = Number(v);
+  const abs = Math.abs(n);
+  if (abs === 0) return '0';
+  if (abs >= 1000) return n.toFixed(0);
+  if (abs >= 100)  return n.toFixed(0);
+  if (abs >= 10)   return n.toFixed(1);
+  if (abs >= 1)    return n.toFixed(2);
+  if (abs >= 0.01) return n.toFixed(3);
+  return n.toExponential(1);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -4793,7 +4847,7 @@ function _leafletLayerToGeoJSON(sub) {
   return null;
 }
 
-function addAnalysisLayer(name, leafletLayers, geojsonFC) {
+function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
   const id = 'analysis-' + (++uploadCounter);
   const group = L.layerGroup(leafletLayers).addTo(map);
 
@@ -4816,9 +4870,38 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC) {
     geojsonFeatures: features,
     isAnalysis: true,
   };
+  // Tag heat layers so palette changes can find their owning layer info.
+  if (rasterMeta && rasterMeta.isHeat) {
+    info.isRaster = true;
+    info.rasterMeta = {
+      paletteKey: rasterMeta.paletteKey,
+      minVal: rasterMeta.minVal,
+      maxVal: rasterMeta.maxVal,
+      attrName: rasterMeta.attrName || null,
+      units: rasterMeta.units || null,
+    };
+    leafletLayers.forEach(l => { if (l && l.options && typeof l.options.gradient !== 'undefined') l._mapkitLayerId = id; });
+  }
   uploadedLayers.push(info);
   addLayerToPanel(info);
   buildSymbologyControls(info);
+  // Seed legendState BEFORE refresh so the raster gradient shows on first render.
+  if (rasterMeta && rasterMeta.isHeat) {
+    const paletteObj = HEAT_PALETTES[rasterMeta.paletteKey] || HEAT_PALETTES.thermal;
+    legendState[id] = {
+      mode: 'raster',
+      color: info.color,
+      geomType: 'Raster',
+      shape: null,
+      ramp: _paletteToRamp(paletteObj),
+      paletteKey: rasterMeta.paletteKey,
+      minVal: rasterMeta.minVal,
+      maxVal: rasterMeta.maxVal,
+      attrName: rasterMeta.attrName || null,
+      units: rasterMeta.units || null,
+    };
+    refreshMapLegend();
+  }
   updateStats();
   updateFeatureCount();
   refreshAnalysisLayerSelect();
@@ -4878,7 +4961,23 @@ function rebuildHeatLayers() {
   newDataMap.forEach((v, k) => heatLayerData.set(k, v));
 }
 
-function onPaletteChange() { rebuildHeatLayers(); }
+function onPaletteChange() {
+  const paletteKey = document.getElementById('heat-palette-select').value;
+  rebuildHeatLayers();
+  // Sync raster legend swatches with the newly chosen palette.
+  const paletteObj = HEAT_PALETTES[paletteKey] || HEAT_PALETTES.thermal;
+  const newRamp = _paletteToRamp(paletteObj);
+  Object.keys(legendState).forEach(id => {
+    if (legendState[id] && legendState[id].mode === 'raster') {
+      legendState[id].ramp = newRamp;
+      legendState[id].paletteKey = paletteKey;
+    }
+  });
+  uploadedLayers.forEach(l => {
+    if (l.isRaster && l.rasterMeta) l.rasterMeta.paletteKey = paletteKey;
+  });
+  refreshMapLegend();
+}
 function updateHeatOpacity(v) { document.getElementById('heat-opacity-val').textContent = v + '%'; rebuildHeatLayers(); }
 function updateHeatRadius(v) { document.getElementById('heat-radius-val').textContent = v; rebuildHeatLayers(); }
 function updateHeatBlur(v) { document.getElementById('heat-blur-val').textContent = v; rebuildHeatLayers(); }
@@ -5039,7 +5138,14 @@ function runAnalysis(tool) {
     activeHeatLayers.push(heat);
     storeHeatData(heat, normalized);
     const idwFeatures = heatData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{value: +d[2].toFixed(4), latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
-    addAnalysisLayer(`IDW (${escapeHtml(attr)})`, [heat], {type:'FeatureCollection', features:idwFeatures});
+    addAnalysisLayer(`IDW (${escapeHtml(attr)})`, [heat], {type:'FeatureCollection', features:idwFeatures}, {
+      isHeat: true,
+      paletteKey: document.getElementById('heat-palette-select').value,
+      minVal: Math.min(...vals),
+      maxVal: Math.max(...vals),
+      attrName: attr,
+      units: null,
+    });
     showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:var(--text-muted)">Blue=low, Red=high</span>`);
     break;
   }
@@ -5052,7 +5158,14 @@ function runAnalysis(tool) {
     activeHeatLayers.push(heat);
     storeHeatData(heat, heatData);
     const densityFeatures = heatData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{count: d[2], latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
-    addAnalysisLayer('Point Density', [heat], {type:'FeatureCollection', features:densityFeatures});
+    addAnalysisLayer('Point Density', [heat], {type:'FeatureCollection', features:densityFeatures}, {
+      isHeat: true,
+      paletteKey: document.getElementById('heat-palette-select').value,
+      minVal: 0,
+      maxVal: pts.length,
+      attrName: 'Point count',
+      units: 'pts',
+    });
     showResult(`<b>Point Density</b><br>${pts.length} points<br><span style="color:var(--text-muted)">Bright=high concentration, Dark=low concentration</span>`);
     break;
   }
@@ -5071,7 +5184,14 @@ function runAnalysis(tool) {
     activeHeatLayers.push(hotHeat);
     storeHeatData(hotHeat, hotData);
     const weightedFeatures = hotData.map(d => ({type:'Feature', geometry:{type:'Point', coordinates:[d[1],d[0]]}, properties:{weight: +d[2].toFixed(4), attribute: escapeHtml(hotAttr), latitude: +d[0].toFixed(6), longitude: +d[1].toFixed(6)}}));
-    addAnalysisLayer(`Weighted Density (${escapeHtml(hotAttr)})`, [hotHeat], {type:'FeatureCollection', features:weightedFeatures});
+    addAnalysisLayer(`Weighted Density (${escapeHtml(hotAttr)})`, [hotHeat], {type:'FeatureCollection', features:weightedFeatures}, {
+      isHeat: true,
+      paletteKey: document.getElementById('heat-palette-select').value,
+      minVal: Math.min(...hotVals),
+      maxVal: Math.max(...hotVals),
+      attrName: hotAttr,
+      units: null,
+    });
     const sum = hotVals.reduce((a,b)=>a+b,0);
     showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:var(--text-muted)">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
     break;
@@ -6252,6 +6372,64 @@ async function buildLayout() {
     legendEl.appendChild(head);
     visibleLayers.forEach(info => {
       const sym = legendState[info.id];
+
+      // RASTER (heat / IDW / weighted density): stacked layout with a wide gradient bar.
+      if (sym && sym.mode === 'raster' && sym.ramp) {
+        const block = document.createElement('div');
+        block.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin:6px 0 4px 0;';
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-weight:600;font-size:10px;color:#1a202c;';
+        nameEl.textContent = info.name;
+        block.appendChild(nameEl);
+        if (sym.attrName) {
+          const attrEl = document.createElement('div');
+          attrEl.style.cssText = 'font-size:9px;color:#4a5568;font-style:italic;';
+          attrEl.textContent = sym.attrName;
+          block.appendChild(attrEl);
+        }
+        const bar = document.createElement('div');
+        bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
+        block.appendChild(bar);
+        const labels = document.createElement('div');
+        labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+        const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
+        const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
+        const mid = (sym.minVal != null && sym.maxVal != null)
+          ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
+        const u = sym.units ? ' ' + sym.units : '';
+        const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
+        if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
+        const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
+        block.appendChild(labels);
+        legendEl.appendChild(block);
+        return;
+      }
+
+      // GRADUATED: small vertical ramp bar next to layer name.
+      if (sym && sym.mode === 'graduated' && sym.ramp) {
+        const block = document.createElement('div');
+        block.style.cssText = 'display:flex;align-items:stretch;gap:6px;margin:4px 0;';
+        const bar = document.createElement('div');
+        bar.style.cssText = `width:10px;height:36px;border-radius:2px;border:1px solid #1a202c;background:linear-gradient(${sym.ramp.join(',')});flex-shrink:0;`;
+        block.appendChild(bar);
+        const right = document.createElement('div');
+        right.style.cssText = 'display:flex;flex-direction:column;justify-content:space-between;';
+        const nameEl = document.createElement('div');
+        nameEl.textContent = info.name;
+        nameEl.style.cssText = 'font-size:10px;line-height:1.1;';
+        right.appendChild(nameEl);
+        const range = document.createElement('div');
+        range.style.cssText = 'font-size:9px;color:#4a5568;';
+        const lo = sym.minVal != null ? Number(sym.minVal).toFixed(1) : '';
+        const hi = sym.maxVal != null ? Number(sym.maxVal).toFixed(1) : '';
+        range.textContent = (lo || hi) ? `${lo} – ${hi}` : '';
+        right.appendChild(range);
+        block.appendChild(right);
+        legendEl.appendChild(block);
+        return;
+      }
+
+      // SIMPLE / CATEGORIZED title row.
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:4px 0;';
       const dot = document.createElement('span');
@@ -6260,15 +6438,27 @@ async function buildLayout() {
         dot.style.borderRadius = '2px';
         dot.style.width = '14px'; dot.style.height = '8px';
       }
-      if (sym && sym.mode === 'graduated') {
-        dot.style.borderRadius = '2px';
-        dot.style.width = '14px'; dot.style.height = '8px';
-      }
       row.appendChild(dot);
       const name = document.createElement('span');
       name.textContent = info.name;
       row.appendChild(name);
       legendEl.appendChild(row);
+
+      // For categorized, append category swatches under the title.
+      if (sym && sym.mode === 'categorized' && sym.colorMap) {
+        Object.entries(sym.colorMap).forEach(([val, c]) => {
+          const sub = document.createElement('div');
+          sub.style.cssText = 'display:flex;align-items:center;gap:6px;margin:2px 0 2px 6px;';
+          const sw = document.createElement('span');
+          sw.style.cssText = `display:inline-block;width:10px;height:10px;background:${c};border:1px solid #1a202c;flex-shrink:0;border-radius:2px;`;
+          sub.appendChild(sw);
+          const lbl = document.createElement('span');
+          lbl.textContent = String(val);
+          lbl.style.cssText = 'font-size:9px;';
+          sub.appendChild(lbl);
+          legendEl.appendChild(sub);
+        });
+      }
     });
   } else {
     legendEl.style.display = 'none';
