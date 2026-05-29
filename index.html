@@ -6196,54 +6196,124 @@ function _profileExportMeta() {
   return { sortLabel, layers, date };
 }
 
-// Render the live profile chart into a high-DPI canvas with title + caption
-// strips. Returns the offscreen canvas (caller decides PNG vs PDF).
-function _renderProfileToCanvas(scale) {
+// Render the profile to a print-quality canvas at the requested DPI.
+// IMPORTANT: we do NOT upscale the on-screen chart — that just blurs pixels.
+// Instead we rebuild a fresh Chart.js instance into a hidden offscreen DOM
+// sized at the full target pixel resolution so every line, dot, and label
+// is drawn natively at high res.
+//
+// Defaults: 300 DPI on a 10×5.5 inch figure → 3000×1650 px.
+async function _renderProfileToCanvas(opts) {
   if (!profileChart) throw new Error('No elevation profile is currently displayed.');
   const meta = _profileExportMeta();
+  const dpi = (opts && opts.dpi) || 300;
+  const widthInches  = (opts && opts.widthInches)  || 10;
+  const heightInches = (opts && opts.heightInches) || 5.5;
+  const W = Math.round(widthInches  * dpi);
+  const H = Math.round(heightInches * dpi);
+  const scale = dpi / 96;                    // CSS-px reference is 96 DPI
+  const titleH   = Math.round(40 * scale);
+  const captionH = Math.round(30 * scale);
+  const chartH   = H - titleH - captionH;
 
-  const live = profileChart.canvas;
-  const W = 1600, H = 900;                  // logical output size at scale=1
-  const titleH = 56, captionH = 42;
-  const chartH = H - titleH - captionH;
-  const out = document.createElement('canvas');
-  out.width = W * scale; out.height = H * scale;
-  const ctx = out.getContext('2d');
-  ctx.scale(scale, scale);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, W, H);
+  // Build a hidden offscreen container at the exact target pixel size and
+  // render a fresh Chart.js instance into it.
+  const host = document.createElement('div');
+  host.style.cssText = `position:fixed;left:-99999px;top:0;width:${W}px;height:${chartH}px;background:#ffffff;`;
+  const chartCanvas = document.createElement('canvas');
+  chartCanvas.width = W;
+  chartCanvas.height = chartH;
+  chartCanvas.style.width  = W + 'px';
+  chartCanvas.style.height = chartH + 'px';
+  host.appendChild(chartCanvas);
+  document.body.appendChild(host);
 
-  // Title strip
-  ctx.fillStyle = '#0f1117';
-  ctx.font = '600 22px system-ui, sans-serif';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Elevation Profile', 24, titleH / 2);
-  ctx.font = '400 13px system-ui, sans-serif';
-  ctx.fillStyle = '#4a5568';
-  ctx.textAlign = 'right';
-  ctx.fillText(meta.date, W - 24, titleH / 2);
-  ctx.textAlign = 'left';
+  // Deep-clone datasets and proportionally scale point/line/font sizes so the
+  // exported chart matches the screen look but at print quality.
+  const datasets = profileChart.data.datasets.map(ds => Object.assign({}, ds, {
+    pointRadius: 3 * scale,
+    pointBorderWidth: 1 * scale,
+    borderWidth: 1.6 * scale,
+  }));
 
-  // Render the chart at higher resolution by temporarily resizing it.
-  // Chart.js handles devicePixelRatio internally, so we draw the existing
-  // canvas onto our output canvas scaled to fill the body area.
-  const aspect = live.width / live.height;
-  let drawW = W - 48, drawH = drawW / aspect;
-  if (drawH > chartH - 24) { drawH = chartH - 24; drawW = drawH * aspect; }
-  const drawX = (W - drawW) / 2, drawY = titleH + (chartH - drawH) / 2;
-  ctx.drawImage(live, drawX, drawY, drawW, drawH);
+  const liveOpts = profileChart.options;
+  const yFromZero = (liveOpts.scales && liveOpts.scales.y && liveOpts.scales.y.beginAtZero) || false;
 
-  // Caption strip
-  ctx.fillStyle = '#f7fafc';
-  ctx.fillRect(0, H - captionH, W, captionH);
-  ctx.fillStyle = '#4a5568';
-  ctx.font = '400 12px system-ui, sans-serif';
-  ctx.textBaseline = 'middle';
-  const captionY = H - captionH / 2;
-  const captionTxt = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  Map-Kit`;
-  ctx.fillText(captionTxt, 24, captionY);
+  const fz = sz => Math.round(sz * scale);   // font-size helper
+  let exportChart;
+  try {
+    exportChart = new Chart(chartCanvas.getContext('2d'), {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: false,
+        maintainAspectRatio: false,
+        animation: false,
+        devicePixelRatio: 1,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: '#2d3748', font: { size: fz(11) }, boxWidth: fz(14) },
+          },
+          tooltip: { enabled: false },
+        },
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: 'Distance (km)', color: '#2d3748', font: { size: fz(12) } },
+            ticks: { color: '#4a5568', font: { size: fz(10) } },
+            grid:  { color: '#e2e8f0' },
+          },
+          y: {
+            beginAtZero: yFromZero,
+            title: { display: true, text: 'Elevation (m a.s.l.)', color: '#2d3748', font: { size: fz(12) } },
+            ticks: { color: '#4a5568', font: { size: fz(10) } },
+            grid:  { color: '#e2e8f0' },
+          },
+        },
+      },
+    });
+    // Force a synchronous draw before we read pixels.
+    exportChart.update('none');
+    exportChart.render();
+    await new Promise(r => requestAnimationFrame(() => r()));
 
-  return { canvas: out, W, H };
+    // Assemble the final composite canvas.
+    const out = document.createElement('canvas');
+    out.width = W; out.height = H;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title strip
+    ctx.fillStyle = '#0f1117';
+    ctx.font = `600 ${fz(18)}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Elevation Profile', Math.round(20 * scale), titleH / 2);
+    ctx.font = `400 ${fz(11)}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.fillStyle = '#4a5568';
+    ctx.textAlign = 'right';
+    ctx.fillText(meta.date, W - Math.round(20 * scale), titleH / 2);
+    ctx.textAlign = 'left';
+
+    // Chart body
+    ctx.drawImage(chartCanvas, 0, titleH, W, chartH);
+
+    // Caption strip
+    ctx.fillStyle = '#f7fafc';
+    ctx.fillRect(0, H - captionH, W, captionH);
+    ctx.fillStyle = '#4a5568';
+    ctx.font = `400 ${fz(10)}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textBaseline = 'middle';
+    const captionTxt = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  Map-Kit  ·  ${dpi} DPI`;
+    ctx.fillText(captionTxt, Math.round(20 * scale), H - captionH / 2);
+
+    return { canvas: out, W, H, dpi };
+  } finally {
+    if (exportChart) exportChart.destroy();
+    if (host && host.parentNode) host.parentNode.removeChild(host);
+  }
 }
 
 // Build an editable SVG by reading the live chart's scales + datasets.
@@ -6338,30 +6408,37 @@ function _renderProfileToSVG() {
   return svg;
 }
 
-function exportProfile(fmt) {
+async function exportProfile(fmt) {
   if (!profileChart) {
     showToast('No elevation profile to export — import a point layer with elevations first.', 'error');
     return;
   }
   try {
     const stamp = new Date().toISOString().slice(0, 10);
+    showToast('Rendering high-resolution profile...');
     if (fmt === 'png') {
-      const { canvas } = _renderProfileToCanvas(2);
-      canvas.toBlob(blob => _downloadBlob(blob, `elevation_profile_${stamp}.png`), 'image/png');
-      showToast('Profile PNG exported', 'success');
+      const { canvas, dpi } = await _renderProfileToCanvas({ dpi: 300 });
+      await new Promise(res => canvas.toBlob(blob => {
+        _downloadBlob(blob, `elevation_profile_${stamp}_${dpi}dpi.png`);
+        res();
+      }, 'image/png'));
+      showToast(`Profile PNG exported (${dpi} DPI)`, 'success');
     } else if (fmt === 'pdf') {
-      const { canvas, W, H } = _renderProfileToCanvas(2);
+      const { canvas, W, H, dpi } = await _renderProfileToCanvas({ dpi: 300 });
       const dataUrl = canvas.toDataURL('image/png');
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [W, H] });
-      pdf.addImage(dataUrl, 'PNG', 0, 0, W, H, undefined, 'FAST');
-      pdf.save(`elevation_profile_${stamp}.pdf`);
-      showToast('Profile PDF exported', 'success');
+      // Page size in points: 1 inch = 72 pt; chart is 10×5.5 inches
+      const pageW = (W / dpi) * 72;
+      const pageH = (H / dpi) * 72;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [pageW, pageH] });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pageW, pageH);
+      pdf.save(`elevation_profile_${stamp}_${dpi}dpi.pdf`);
+      showToast(`Profile PDF exported (${dpi} DPI)`, 'success');
     } else if (fmt === 'svg') {
       const svg = _renderProfileToSVG();
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
       _downloadBlob(blob, `elevation_profile_${stamp}.svg`);
-      showToast('Profile SVG exported', 'success');
+      showToast('Profile SVG exported (vector)', 'success');
     }
   } catch (e) {
     console.error('Profile export failed:', e);
