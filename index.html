@@ -1026,20 +1026,22 @@
       <div class="panel-body">
         <!-- Hidden grid kept for switchBasemap() compatibility -->
         <div class="basemap-grid" id="basemap-grid" style="display:none">
-          <div class="basemap-btn active" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Esri World Topo" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Topo</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Imagery" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Satellite</div>
-          <div class="basemap-btn" data-url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" data-attr="OSM" data-subdomains="abc" data-maxz="19" onclick="switchBasemap(this)">Streets</div>
-          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}" data-attr="Esri Relief" data-subdomains="" data-maxz="13" onclick="switchBasemap(this)">Relief</div>
-          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" data-attr="CartoDB" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Voyager</div>
-          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="CartoDB Dark Matter" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Dark</div>
+          <div class="basemap-btn active" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Tiles &copy; Esri" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Topo</div>
+          <div class="basemap-btn" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" data-attr="Tiles &copy; Esri" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Satellite</div>
+          <div class="basemap-btn" data-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" data-attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors" data-subdomains="" data-maxz="19" onclick="switchBasemap(this)">Streets</div>
+          <div class="basemap-btn" data-url="https://server.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}" data-attr="Tiles &copy; Esri &mdash; Sources: USGS, NGA, NASA, CGIAR" data-subdomains="" data-maxz="16" onclick="switchBasemap(this)">Hillshade</div>
+          <div class="basemap-btn" data-url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png" data-attr="Map data: &copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href='https://opentopomap.org'>OpenTopoMap</a> (CC-BY-SA)" data-subdomains="abc" data-maxz="17" onclick="switchBasemap(this)">OpenTopoMap</div>
+          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" data-attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/attributions'>CARTO</a>" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Positron</div>
+          <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/attributions'>CARTO</a>" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Dark</div>
         </div>
         <select id="basemap-select" onchange="setBasemapFromSelect(this.value)">
-          <option value="Topo" selected>Topo</option>
-          <option value="Satellite">Satellite</option>
-          <option value="Streets">Streets</option>
-          <option value="Relief">Relief</option>
-          <option value="Voyager">Voyager</option>
-          <option value="Dark">Dark</option>
+          <option value="Topo" selected>Topo (Esri)</option>
+          <option value="Satellite">Satellite (Esri)</option>
+          <option value="Streets">Streets (OSM)</option>
+          <option value="Hillshade">Hillshade (Esri)</option>
+          <option value="OpenTopoMap">OpenTopoMap</option>
+          <option value="Positron">Positron (light)</option>
+          <option value="Dark">Dark Matter</option>
         </select>
         <div class="slider-row" style="margin-top:8px">
           <label>Opacity <span id="bm-opacity-val">100%</span></label>
@@ -1293,7 +1295,7 @@
         <b style="color:var(--accent);">Navigation</b><br>
         Scroll to zoom, drag to pan. Use the zoom buttons (top-left) or double-click to zoom in. Toggle fullscreen with the button top-left.<br><br>
         <b style="color:var(--accent);">Basemaps</b><br>
-        Switch between Topo, Satellite, Streets, Relief, Terrain, and Dark basemaps. Adjust basemap opacity with the slider.<br><br>
+        Switch between Topo, Satellite, Streets, Hillshade, OpenTopoMap, Positron, and Dark basemaps. Adjust basemap opacity with the slider.<br><br>
         <b style="color:var(--accent);">Layers</b><br>
         Toggle layer visibility with checkboxes. Remove layers with the &times; button. The &#x1f3f7; button opens label controls &mdash; choose which attribute to display as map labels.<br><br>
         <b style="color:var(--accent);">Symbology</b><br>
@@ -2600,7 +2602,7 @@ function _getBasemapLayer(url, attr, subdomains, maxNativeZoom) {
 // Default: Esri World Topo Map (topographic, fast, reliable)
 let basemapLayer = _getBasemapLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-  'Esri World Topo', '', 18
+  'Tiles &copy; Esri', '', 18
 ).addTo(map);
 
 map.on('mousemove', e => {
@@ -5458,12 +5460,13 @@ let lockedMainState = null;       // {center, zoom} preserved across rebuilds
 let lockedOverviewState = null;   // {center, zoom}
 
 const LAYOUT_BASEMAPS = [
-  { value: 'topo', label: 'Topo', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', attr: 'Esri World Topo', maxz: 18 },
-  { value: 'satellite', label: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: 'Esri Imagery', maxz: 18 },
-  { value: 'streets', label: 'Streets', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: 'OSM', maxz: 19 },
-  { value: 'relief', label: 'Relief', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', attr: 'Esri Relief', maxz: 13 },
-  { value: 'voyager', label: 'Voyager', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: 'CartoDB', maxz: 20 },
-  { value: 'dark', label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: 'CartoDB Dark Matter', maxz: 20 },
+  { value: 'topo', label: 'Topo', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', attr: 'Tiles &copy; Esri', maxz: 18 },
+  { value: 'satellite', label: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: 'Tiles &copy; Esri', maxz: 18 },
+  { value: 'streets', label: 'Streets', url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '&copy; OpenStreetMap contributors', maxz: 19 },
+  { value: 'hillshade', label: 'Hillshade', url: 'https://server.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}', attr: 'Tiles &copy; Esri', maxz: 16 },
+  { value: 'opentopomap', label: 'OpenTopoMap', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attr: '&copy; OpenStreetMap contributors, SRTM | &copy; OpenTopoMap (CC-BY-SA)', maxz: 17 },
+  { value: 'positron', label: 'Positron', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '&copy; OpenStreetMap contributors &copy; CARTO', maxz: 20 },
+  { value: 'dark', label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '&copy; OpenStreetMap contributors &copy; CARTO', maxz: 20 },
 ];
 
 function _populateLayoutBasemapSelect() {
