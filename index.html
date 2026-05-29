@@ -1516,11 +1516,11 @@
     <div class="layout-header">
       <h3>Map Layout Composer</h3>
       <div class="layout-controls">
-        <button class="lock-btn" id="lock-main-btn" type="button" onclick="toggleLayoutLock('main')" title="Lock main map: edit pan/zoom independently of the source map">
-          <span class="lock-icon">🔓</span> <span class="lock-label">Main map</span>
+        <button class="lock-btn" id="lock-main-btn" type="button" onclick="toggleLayoutLock('main')" title="Unlock to edit the main map's pan/zoom independently of the source map. Locked = mirrors source map.">
+          <span class="lock-icon">🔒</span> <span class="lock-label">Main map</span>
         </button>
-        <button class="lock-btn" id="lock-overview-btn" type="button" onclick="toggleLayoutLock('overview')" title="Lock overview map: edit pan/zoom of the inset independently">
-          <span class="lock-icon">🔓</span> <span class="lock-label">Overview</span>
+        <button class="lock-btn" id="lock-overview-btn" type="button" onclick="toggleLayoutLock('overview')" title="Unlock to edit the overview inset's pan/zoom independently. Locked = automatic fit.">
+          <span class="lock-icon">🔒</span> <span class="lock-label">Overview</span>
         </button>
         <select id="layout-basemap-select" onchange="setLayoutBasemap(this.value)" title="Change layout basemap without affecting the main map">
           <option value="">Basemap: (from main)</option>
@@ -5930,7 +5930,7 @@ function _updateLockBadge(target, locked) {
       badge = document.createElement('div');
       badge.id = id;
       badge.className = cls;
-      badge.textContent = target === 'main' ? '🔒 Main map editable' : '🔒 Overview editable';
+      badge.textContent = target === 'main' ? '🔓 Main map editable' : '🔓 Overview editable';
       (target === 'overview' ? document.getElementById('layout-overview-wrap') : paper).appendChild(badge);
     }
   } else if (badge) {
@@ -5943,7 +5943,10 @@ function toggleLayoutLock(target) {
     mainLocked = !mainLocked;
     const btn = document.getElementById('lock-main-btn');
     btn.classList.toggle('locked', mainLocked);
-    btn.querySelector('.lock-icon').textContent = mainLocked ? '🔒' : '🔓';
+    // mainLocked === true means the map is UNLOCKED (editable) — the variable is
+    // legacy-named after the CSS class .locked which marks the "unlocked-for-editing"
+    // state. Show open-padlock when editable, closed-padlock when synced to source.
+    btn.querySelector('.lock-icon').textContent = mainLocked ? '🔓' : '🔒';
     _setLockHandlers(layoutMap, mainLocked);
     _updateLockBadge('main', mainLocked);
     if (!mainLocked && layoutMap) {
@@ -5959,7 +5962,8 @@ function toggleLayoutLock(target) {
     overviewLocked = !overviewLocked;
     const btn = document.getElementById('lock-overview-btn');
     btn.classList.toggle('locked', overviewLocked);
-    btn.querySelector('.lock-icon').textContent = overviewLocked ? '🔒' : '🔓';
+    // overviewLocked === true means the inset is UNLOCKED (editable).
+    btn.querySelector('.lock-icon').textContent = overviewLocked ? '🔓' : '🔒';
     _setLockHandlers(layoutOverviewMap, overviewLocked);
     _updateLockBadge('overview', overviewLocked);
     // Toggle pointer-events on the wrap so the user can actually click/drag
@@ -5996,8 +6000,8 @@ function _resetLayoutLockState() {
   lockedOverviewState = null;
   const mb = document.getElementById('lock-main-btn');
   const ob = document.getElementById('lock-overview-btn');
-  if (mb) { mb.classList.remove('locked'); mb.querySelector('.lock-icon').textContent = '🔓'; }
-  if (ob) { ob.classList.remove('locked'); ob.querySelector('.lock-icon').textContent = '🔓'; }
+  if (mb) { mb.classList.remove('locked'); mb.querySelector('.lock-icon').textContent = '🔒'; }
+  if (ob) { ob.classList.remove('locked'); ob.querySelector('.lock-icon').textContent = '🔒'; }
   const sel = document.getElementById('layout-basemap-select');
   if (sel) sel.value = '';
   ['layout-lock-badge-main','layout-lock-badge-overview'].forEach(id => {
@@ -6486,8 +6490,45 @@ function _niceGridStep(spanDeg) {
   return best;
 }
 
+// Collect bounding rects (relative to #layout-paper) of all map-furniture cards
+// so the graticule renderer can avoid placing edge labels behind them.
+function _collectFurnitureRects(paperEl) {
+  const paperRect = paperEl.getBoundingClientRect();
+  const ids = ['layout-legend', 'layout-scale', 'layout-attribution',
+               'layout-overview-wrap', 'layout-north'];
+  const rects = [];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.offsetWidth === 0 || el.offsetHeight === 0) return;
+    const cs = window.getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+    const r = el.getBoundingClientRect();
+    rects.push({
+      left:   r.left   - paperRect.left,
+      top:    r.top    - paperRect.top,
+      right:  r.right  - paperRect.left,
+      bottom: r.bottom - paperRect.top,
+      id
+    });
+  });
+  return rects;
+}
+
+// Returns true if the label rect (left, top, width, height) overlaps any
+// furniture rect with a small padding so labels don't sit flush against cards.
+function _labelHitsFurniture(rects, left, top, w, h, pad = 2) {
+  const right = left + w, bottom = top + h;
+  for (const r of rects) {
+    if (right + pad > r.left && left - pad < r.right &&
+        bottom + pad > r.top  && top  - pad < r.bottom) return true;
+  }
+  return false;
+}
+
 // Render a graticule (coordinate grid + edge labels) inside #layout-paper.
 // Removes any prior graticule first so this can be called on every buildLayout.
+// Graticule labels are placed at the map edges and shifted inward to avoid
+// overlapping the legend / scale bar / attribution / overview inset / north arrow.
 function _renderGraticule(lmap, paperEl, format) {
   // Clean up any previous graticule
   const old = paperEl.querySelector('#layout-graticule');
@@ -6517,7 +6558,49 @@ function _renderGraticule(lmap, paperEl, format) {
 
   const lineStyle = 'stroke:rgba(45,55,72,0.55);stroke-width:0.6;stroke-dasharray:3,3;fill:none;';
 
-  // Horizontal lines (parallels) + left/right edge labels
+  // Snapshot card rects so labels can dodge them.
+  const furniture = _collectFurnitureRects(paperEl);
+
+  // Helper: position a label, then nudge it along the axis away from any
+  // overlapping card. Labels that still collide are removed entirely so the
+  // export never shows half-hidden, partially-occluded coordinates.
+  // axis: 'h' (label sits at left edge, nudge DOWN/UP along Y) | 'v' (bottom edge, nudge LEFT/RIGHT along X).
+  function placeLabel(text, anchorX, anchorY, axis) {
+    const lbl = document.createElement('div');
+    lbl.className = 'layout-grid-label';
+    lbl.textContent = text;
+    lbl.style.visibility = 'hidden';
+    lbl.style.left = anchorX + 'px';
+    lbl.style.top  = anchorY + 'px';
+    paperEl.appendChild(lbl);
+    const w = lbl.offsetWidth, h = lbl.offsetHeight;
+    let x = anchorX, y = anchorY;
+    let placed = !_labelHitsFurniture(furniture, x, y, w, h);
+    if (!placed) {
+      // Try nudging in small steps along the perpendicular axis (max 60 px).
+      const STEP = 4, MAX = 60;
+      for (let d = STEP; d <= MAX && !placed; d += STEP) {
+        const candidates = axis === 'h' ? [[x, y + d], [x, y - d]] : [[x + d, y], [x - d, y]];
+        for (const [cx, cy] of candidates) {
+          // Keep within paper bounds (a 2 px breathing margin)
+          if (cx < 2 || cy < 2 || cx + w > W - 2 || cy + h > H - 2) continue;
+          if (!_labelHitsFurniture(furniture, cx, cy, w, h)) {
+            x = cx; y = cy; placed = true; break;
+          }
+        }
+      }
+    }
+    if (!placed) {
+      // Could not find a clear spot — drop the label rather than overlap.
+      lbl.remove();
+      return;
+    }
+    lbl.style.left = x + 'px';
+    lbl.style.top  = y + 'px';
+    lbl.style.visibility = 'visible';
+  }
+
+  // Horizontal lines (parallels) + left edge labels
   for (let lat = latStart; lat <= north + 1e-9; lat += latStep) {
     const pt = lmap.latLngToContainerPoint([lat, (west + east) / 2]);
     if (pt.y < 0 || pt.y > H) continue;
@@ -6526,16 +6609,10 @@ function _renderGraticule(lmap, paperEl, format) {
     line.setAttribute('y1', pt.y); line.setAttribute('y2', pt.y);
     line.setAttribute('style', lineStyle);
     svg.appendChild(line);
-    // Left edge label
-    const lblL = document.createElement('div');
-    lblL.className = 'layout-grid-label';
-    lblL.textContent = _formatCoord(lat, true, format);
-    lblL.style.left = '2px';
-    lblL.style.top = (pt.y - 8) + 'px';
-    paperEl.appendChild(lblL);
+    placeLabel(_formatCoord(lat, true, format), 2, pt.y - 8, 'h');
   }
 
-  // Vertical lines (meridians) + top/bottom edge labels
+  // Vertical lines (meridians) + bottom edge labels
   for (let lon = lonStart; lon <= east + 1e-9; lon += lonStep) {
     const pt = lmap.latLngToContainerPoint([(south + north) / 2, lon]);
     if (pt.x < 0 || pt.x > W) continue;
@@ -6544,14 +6621,8 @@ function _renderGraticule(lmap, paperEl, format) {
     line.setAttribute('x1', pt.x); line.setAttribute('x2', pt.x);
     line.setAttribute('style', lineStyle);
     svg.appendChild(line);
-    // Bottom edge label
-    const lblB = document.createElement('div');
-    lblB.className = 'layout-grid-label';
-    lblB.textContent = _formatCoord(lon, false, format);
-    lblB.style.left = (pt.x + 3) + 'px';
-    lblB.style.bottom = '2px';
-    lblB.style.top = 'auto';
-    paperEl.appendChild(lblB);
+    // Anchor at bottom edge: top = H - (label height ~14 + 2 px breathing)
+    placeLabel(_formatCoord(lon, false, format), pt.x + 3, H - 16, 'v');
   }
 
   paperEl.appendChild(svg);
