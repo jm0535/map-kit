@@ -7119,6 +7119,47 @@ async function buildLayout() {
   // ── Clone visible GeoJSON layers ──
   let layerBounds = null;
   visibleLayers.forEach(info => {
+    // ── Heat / raster layers: re-create L.heatLayer on the composer map ──
+    // Heat layers can't be cloned via GeoJSON — they're rendered from a
+    // [lat, lng, intensity] data array, not vector features. Walk the
+    // analysis group, find each heat sub-layer (identified by gradient
+    // option), look up its data from heatLayerData, and re-instantiate it
+    // on layoutMap so the density surface appears in the composer/export.
+    if (info.isRaster && info.layer && typeof info.layer.eachLayer === 'function') {
+      let cloned = false;
+      info.layer.eachLayer(sub => {
+        if (!sub || !sub.options || typeof sub.options.gradient === 'undefined') return;
+        const data = heatLayerData.get(sub);
+        if (!Array.isArray(data) || data.length === 0) return;
+        const cloneHeat = L.heatLayer(data, {
+          radius: sub.options.radius,
+          blur: sub.options.blur,
+          maxZoom: sub.options.maxZoom || 17,
+          minOpacity: sub.options.minOpacity,
+          max: sub.options.max,
+          gradient: sub.options.gradient,
+        }).addTo(layoutMap);
+        layoutLayers.push(cloneHeat);
+        cloned = true;
+      });
+      // Compute bounds from the heat data points so fitBounds works
+      if (cloned) {
+        info.layer.eachLayer(sub => {
+          const data = heatLayerData.get(sub);
+          if (!Array.isArray(data) || data.length === 0) return;
+          const b = L.latLngBounds(data.map(d => [d[0], d[1]]));
+          if (b.isValid()) {
+            if (layerBounds) layerBounds.extend(b);
+            else layerBounds = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+          }
+        });
+        return; // Done with this layer — don't fall through to vector cloning
+      }
+      // If no heat sub-layer was found, fall through to vector cloning so
+      // analysis layers that are actually polygon overlays (buffers, hulls)
+      // still render in the composer.
+    }
+
     const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
     if (geojson.features.length === 0) {
       info.layer.eachLayer(sub => { if (sub.toGeoJSON) geojson.features.push(sub.toGeoJSON()); });
