@@ -944,13 +944,15 @@
     cursor: pointer; user-select: none;
   }
   .layout-toggle input { margin: 0; cursor: pointer; }
-  #layout-coord-format {
+  #layout-coord-format,
+  #layout-scalebar-style {
     padding: 5px 8px; font-size: 11px;
     background: var(--surface-2); color: var(--text);
     border: 1px solid var(--border); border-radius: 4px;
     cursor: pointer;
   }
   #layout-coord-format:disabled { opacity: 0.45; cursor: not-allowed; }
+  #layout-scalebar-style:hover { border-color: var(--accent); }
   /* Hide ALL Leaflet UI controls (zoom buttons, attribution flag, etc.) inside the paper
      so they never appear in PNG/PDF exports. The composer is for static map elements only. */
   #layout-paper .leaflet-control-container,
@@ -970,19 +972,81 @@
   }
   #layout-scale {
     position: absolute; bottom: 12px; right: 12px;
-    background: rgba(255,255,255,0.92); border: 1px solid #1a202c;
-    border-radius: 3px; padding: 4px 8px 6px;
     font-size: 10px; color: #1a202c; pointer-events: none; z-index: 1000;
     display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
     font-family: Arial, Helvetica, sans-serif;
+  }
+  /* Background-card variant — wraps the bar in a translucent box (default). */
+  #layout-scale.has-card {
+    background: rgba(255,255,255,0.92); border: 1px solid #1a202c;
+    border-radius: 3px; padding: 4px 8px 6px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
-  #layout-scale .sb-bar {
-    height: 7px; background: #fff; border: 1px solid #1a202c;
-    box-shadow: inset 50% 0 0 0 #1a202c;
+  /* No-card variant — bar floats directly on the basemap. Add a soft text
+     halo so numbers stay readable against any tile (QGIS "plain" style). */
+  #layout-scale.no-card {
+    text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff;
   }
   #layout-scale .sb-row { display: flex; justify-content: space-between; width: 100%; color: #1a202c; }
   #layout-scale .sb-rf { opacity: 0.85; font-size: 9px; color: #1a202c; }
+
+  /* — Scalebar style variants (QGIS / ArcGIS conventions) —
+     Each .sb-bar carries one of the .sb-* style classes below. */
+
+  /* Single Box (default): black→white split, like QGIS "Single Box". */
+  #layout-scale .sb-bar.sb-single-box {
+    height: 7px; border: 1px solid #1a202c;
+    background: linear-gradient(to right, #1a202c 0%, #1a202c 50%, #fff 50%, #fff 100%);
+  }
+  /* Double Alternating: 4 alternating black/white cells. */
+  #layout-scale .sb-bar.sb-double-alt {
+    height: 7px; border: 1px solid #1a202c;
+    background: linear-gradient(to right,
+      #1a202c 0%, #1a202c 25%,
+      #fff   25%, #fff   50%,
+      #1a202c 50%, #1a202c 75%,
+      #fff   75%, #fff   100%);
+  }
+  /* Line + Ticks: thin baseline + vertical ticks at start/mid/end. */
+  #layout-scale .sb-bar.sb-line-ticks {
+    position: relative; height: 9px; background: transparent;
+    border-bottom: 1.5px solid #1a202c;
+  }
+  #layout-scale .sb-bar.sb-line-ticks::before,
+  #layout-scale .sb-bar.sb-line-ticks::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 1.5px; background: #1a202c;
+  }
+  #layout-scale .sb-bar.sb-line-ticks::before { left: 0; }
+  #layout-scale .sb-bar.sb-line-ticks::after  { right: 0; }
+  #layout-scale .sb-bar.sb-line-ticks .sb-mid-tick {
+    position: absolute; top: 0; bottom: 0; left: 50%; width: 1.5px; background: #1a202c; transform: translateX(-50%);
+  }
+  /* Stepped Line (ArcGIS "Stepped Line"): baseline runs full width; left half
+     has a tall riser, right half is just the baseline — visually a step. */
+  #layout-scale .sb-bar.sb-stepped {
+    position: relative; height: 10px; background: transparent;
+    border-bottom: 1.5px solid #1a202c;
+  }
+  #layout-scale .sb-bar.sb-stepped::before {
+    /* tall vertical riser at left edge */
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1.5px; background: #1a202c;
+  }
+  #layout-scale .sb-bar.sb-stepped::after {
+    /* horizontal step across the upper-left quadrant */
+    content: ''; position: absolute; left: 0; right: 50%; top: 0; height: 1.5px; background: #1a202c;
+  }
+  #layout-scale .sb-bar.sb-stepped .sb-mid-tick {
+    /* descender at the step */
+    position: absolute; left: 50%; top: 0; bottom: 0; width: 1.5px; background: #1a202c; transform: translateX(-50%);
+  }
+  /* Hollow: just the outline rectangle, no fill. */
+  #layout-scale .sb-bar.sb-hollow {
+    height: 7px; background: transparent; border: 1px solid #1a202c;
+  }
+  /* Numeric only: hide the bar element entirely (label row carries the info). */
+  #layout-scale .sb-bar.sb-numeric {
+    height: 0; border: none; background: transparent;
+  }
   #layout-overview-wrap {
     position: absolute; top: 70px; right: 12px;
     width: 160px; height: 120px;
@@ -1538,6 +1602,17 @@
           <option value="DMS">DMS (deg min sec)</option>
           <option value="DM">DM (deg decimal min)</option>
         </select>
+        <select id="layout-scalebar-style" onchange="onLayoutScalebarChange()" title="Scalebar style (QGIS/ArcGIS conventions)">
+          <option value="single-box" selected>Scalebar: Single Box</option>
+          <option value="double-alt">Scalebar: Double Alternating</option>
+          <option value="line-ticks">Scalebar: Line + Ticks</option>
+          <option value="stepped">Scalebar: Stepped Line</option>
+          <option value="hollow">Scalebar: Hollow</option>
+          <option value="numeric">Scalebar: Numeric Only</option>
+        </select>
+        <label class="layout-toggle" title="Wrap the scalebar in a translucent background card. Off = bar floats directly on the basemap.">
+          <input type="checkbox" id="layout-scalebar-card" checked onchange="onLayoutScalebarChange()"> Card
+        </label>
         <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
       </div>
     </div>
@@ -1707,6 +1782,27 @@ const MapLegend = L.Control.extend({
     const u = units ? ` ${escapeHtml(units)}` : '';
     const attrLine = attrName
       ? `<div class="map-legend-raster-attr">${escapeHtml(attrName)}</div>` : '';
+
+    // Continuous render mode: smooth gradient + min/mid/max labels.
+    // Skips break computation entirely — used for purely numeric attributes
+    // (species richness, abundance) where stepped bands would mask gradient detail.
+    const isContinuous = classification && classification.method === 'continuous';
+    if (isContinuous) {
+      const colors = ramp.join(',');
+      const gradient = `linear-gradient(to right, ${colors})`;
+      const lo = (minVal != null && isFinite(minVal)) ? _formatRasterTick(minVal) : 'low';
+      const hi = (maxVal != null && isFinite(maxVal)) ? _formatRasterTick(maxVal) : 'high';
+      const mid = (minVal != null && maxVal != null && isFinite(minVal) && isFinite(maxVal))
+        ? _formatRasterTick((Number(minVal) + Number(maxVal)) / 2) : '';
+      let html = `<div class="map-legend-raster">`;
+      html += attrLine;
+      html += `<div class="map-legend-raster-bar" style="background:${gradient}"></div>`;
+      html += `<div class="map-legend-raster-labels"><span>${lo}${u}</span>`;
+      if (mid !== '') html += `<span>${mid}</span>`;
+      html += `<span>${hi}${u}</span></div>`;
+      html += `</div>`;
+      return html;
+    }
 
     // If we have classification breaks, render a stepped gradient with one
     // tick per break edge. Otherwise fall back to the original 3-tick view.
@@ -1946,6 +2042,8 @@ function _classifyJenks(values, n) {
 }
 
 // Dispatch by method name. `manualBreaks` is required for method === 'manual'.
+// 'continuous' is a render-mode marker, not an algorithm — callers handle it
+// separately by skipping break computation and drawing a smooth gradient.
 function computeClassificationBreaks(method, values, n, manualBreaks) {
   if (method === 'manual' && Array.isArray(manualBreaks) && manualBreaks.length >= 2) {
     const sorted = manualBreaks.map(Number).filter(v => isFinite(v)).sort((a, b) => a - b);
@@ -1954,6 +2052,41 @@ function computeClassificationBreaks(method, values, n, manualBreaks) {
   if (method === 'quantile') return _classifyQuantile(values, n);
   if (method === 'jenks')    return _classifyJenks(values, n);
   return _classifyEqualInterval(values, n);
+}
+
+// Inspect raw values to recommend a classification method. The heuristic
+// follows QGIS/ArcGIS conventions:
+//   • Few distinct integer values (≤12, all integers, dominantly discrete)
+//     → Quantile is most informative (count-like data: abundance, counts).
+//   • Highly skewed continuous (mean/median ratio > 2.5 or skew > 1.5)
+//     → Natural Breaks (Jenks) — handles long-tail distributions well.
+//   • Otherwise (continuous, roughly even spread) → Equal Interval.
+// Returns { method, reason } so the UI can surface why the suggestion was made.
+function _recommendClassificationMethod(values) {
+  if (!Array.isArray(values) || values.length < 3) return { method: 'equal', reason: 'small sample' };
+  const finite = values.map(Number).filter(v => isFinite(v));
+  if (finite.length < 3) return { method: 'equal', reason: 'too few values' };
+  const sorted = [...finite].sort((a, b) => a - b);
+  const mn = sorted[0], mx = sorted[sorted.length - 1];
+  if (mn === mx) return { method: 'equal', reason: 'constant data' };
+  const uniq = new Set(finite);
+  const allInt = finite.every(v => Math.abs(v - Math.round(v)) < 1e-9);
+  if (allInt && uniq.size <= 12) {
+    return { method: 'quantile', reason: 'discrete counts — Quantile evens class sizes' };
+  }
+  const n = finite.length;
+  const mean = finite.reduce((a, b) => a + b, 0) / n;
+  const median = sorted[Math.floor(n / 2)];
+  const variance = finite.reduce((a, b) => a + (b - mean) * (b - mean), 0) / n;
+  const std = Math.sqrt(variance);
+  const skew = std > 0
+    ? finite.reduce((a, b) => a + Math.pow((b - mean) / std, 3), 0) / n
+    : 0;
+  const ratio = median !== 0 ? Math.abs(mean / median) : 1;
+  if (Math.abs(skew) > 1.5 || ratio > 2.5) {
+    return { method: 'jenks', reason: 'skewed distribution — Natural Breaks reveals clusters' };
+  }
+  return { method: 'equal', reason: 'continuous, evenly spread' };
 }
 
 // Build a CSS linear-gradient that paints discrete colour bands defined by
@@ -3924,37 +4057,70 @@ function buildRasterClassificationGroup(info) {
   const cls = (st && st.classification) || { method: 'equal', classes: 5, manualBreaks: null, breaks: [] };
   const method = cls.method || 'equal';
   const classes = cls.classes || 5;
+  const isContinuous = method === 'continuous';
   const manualStr = Array.isArray(cls.manualBreaks)
     ? cls.manualBreaks.join(', ')
     : (Array.isArray(cls.breaks) ? cls.breaks.map(b => _formatRasterTick(b)).join(', ') : '');
-  const opt = (val, label) => `<option value="${val}"${method === val ? ' selected' : ''}>${label}</option>`;
+  // Compute the recommended method from this layer's actual values so we can
+  // tag the dropdown option with "(recommended)". Falls back to Equal Interval.
+  const rec = _recommendClassificationMethod(cls.rawValues || []);
+  const recMethod = rec.method;
+  const recReason = rec.reason;
+  const labelFor = m => {
+    const base = m === 'equal' ? 'Equal Interval'
+              : m === 'quantile' ? 'Quantile'
+              : m === 'jenks' ? 'Natural Breaks (Jenks)'
+              : 'Manual';
+    return m === recMethod ? `${base} — recommended` : base;
+  };
+  const opt = m => `<option value="${m}"${method === m ? ' selected' : ''}>${labelFor(m)}</option>`;
+  // When continuous mode is active, hide Method/Classes/Manual controls entirely.
+  const detailsHidden = isContinuous ? 'display:none;' : '';
   const manualHidden = method === 'manual' ? '' : 'display:none;';
   const classesDisabled = method === 'manual' ? 'disabled' : '';
+  const renderModeContinuous = isContinuous;
   return `
     <!-- Classification (raster only) -->
     <div class="sym-group" style="margin-bottom:6px;">
       <div class="sym-group-title" style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;cursor:pointer;" onclick="this.nextElementSibling.classList.toggle('hidden')">Classification &#x25BC;</div>
       <div style="padding-top:3px;">
-        <div class="symbol-row">
-          <span>Method</span>
-          <select id="raster-class-method-${info.id}" onchange="setRasterClassMethod('${info.id}', this.value)" style="font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);flex:1;max-width:140px;">
-            ${opt('equal', 'Equal Interval')}
-            ${opt('quantile', 'Quantile')}
-            ${opt('jenks', 'Natural Breaks (Jenks)')}
-            ${opt('manual', 'Manual')}
-          </select>
+        <!-- Render mode toggle (Continuous vs Classified, QGIS-style) -->
+        <div class="symbol-row" style="flex-direction:column;align-items:stretch;gap:2px;">
+          <span style="font-size:9px;color:var(--text-muted);">Render mode</span>
+          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:3px;overflow:hidden;">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:3px 4px;cursor:pointer;font-size:10px;background:${renderModeContinuous ? 'var(--accent)' : 'var(--surface-2)'};color:${renderModeContinuous ? '#fff' : 'var(--text)'};font-weight:${renderModeContinuous ? '600' : '500'};">
+              <input type="radio" name="raster-render-mode-${info.id}" value="continuous" ${renderModeContinuous ? 'checked' : ''} onchange="setRasterRenderMode('${info.id}', 'continuous')" style="margin:0;accent-color:#fff;">
+              Continuous
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:3px 4px;cursor:pointer;font-size:10px;background:${!renderModeContinuous ? 'var(--accent)' : 'var(--surface-2)'};color:${!renderModeContinuous ? '#fff' : 'var(--text)'};font-weight:${!renderModeContinuous ? '600' : '500'};border-left:1px solid var(--border);">
+              <input type="radio" name="raster-render-mode-${info.id}" value="classified" ${!renderModeContinuous ? 'checked' : ''} onchange="setRasterRenderMode('${info.id}', 'classified')" style="margin:0;accent-color:#fff;">
+              Classified
+            </label>
+          </div>
+          <span style="font-size:9px;color:var(--text-muted);font-style:italic;">${isContinuous ? 'Smooth gradient — best for ordinal numeric (richness, abundance).' : `Stepped bands — ${escapeHtml(recReason)}.`}</span>
         </div>
-        <div class="symbol-row" style="margin-top:3px;">
-          <span>Classes</span>
-          <input type="number" id="raster-class-count-${info.id}" value="${classes}" min="2" max="10" ${classesDisabled} onchange="setRasterClassCount('${info.id}', this.value)" style="width:45px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
-        </div>
-        <div id="raster-manual-row-${info.id}" class="symbol-row" style="margin-top:3px;flex-direction:column;align-items:stretch;${manualHidden}">
-          <span style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">Manual breaks (comma-separated, ascending)</span>
-          <textarea id="raster-manual-breaks-${info.id}" rows="2" placeholder="e.g. 0, 5, 10, 25, 50" onchange="setRasterManualBreaks('${info.id}', this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:3px 4px;font-family:inherit;resize:vertical;">${escapeHtml(manualStr)}</textarea>
-        </div>
-        <div class="symbol-row" style="margin-top:3px;">
-          <button onclick="applyRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:3px;color:#fff;cursor:pointer;font-weight:600;">Apply</button>
-          <button onclick="resetRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
+        <div id="raster-class-details-${info.id}" style="${detailsHidden}">
+          <div class="symbol-row" style="margin-top:3px;">
+            <span>Method</span>
+            <select id="raster-class-method-${info.id}" onchange="setRasterClassMethod('${info.id}', this.value)" style="font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);flex:1;max-width:160px;">
+              ${opt('equal')}
+              ${opt('quantile')}
+              ${opt('jenks')}
+              ${opt('manual')}
+            </select>
+          </div>
+          <div class="symbol-row" style="margin-top:3px;">
+            <span>Classes</span>
+            <input type="number" id="raster-class-count-${info.id}" value="${classes}" min="2" max="10" ${classesDisabled} onchange="setRasterClassCount('${info.id}', this.value)" style="width:45px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
+          </div>
+          <div id="raster-manual-row-${info.id}" class="symbol-row" style="margin-top:3px;flex-direction:column;align-items:stretch;${manualHidden}">
+            <span style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">Manual breaks (comma-separated, ascending)</span>
+            <textarea id="raster-manual-breaks-${info.id}" rows="2" placeholder="e.g. 0, 5, 10, 25, 50" onchange="setRasterManualBreaks('${info.id}', this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:3px 4px;font-family:inherit;resize:vertical;">${escapeHtml(manualStr)}</textarea>
+          </div>
+          <div class="symbol-row" style="margin-top:3px;">
+            <button onclick="applyRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--accent);border:1px solid var(--accent);border-radius:3px;color:#fff;cursor:pointer;font-weight:600;">Apply</button>
+            <button onclick="resetRasterClassification('${info.id}')" style="font-size:10px;padding:2px 8px;background:var(--border);border:1px solid var(--border-strong);border-radius:3px;color:var(--text);cursor:pointer;">Reset</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3973,6 +4139,39 @@ function setRasterClassMethod(id, method) {
   if (manualRow) manualRow.style.display = method === 'manual' ? '' : 'none';
   if (classesInp) classesInp.disabled = (method === 'manual');
   // Recompute breaks immediately so the legend updates live.
+  _recomputeAndApplyClassification(id);
+}
+
+// Switch between Continuous (smooth gradient) and Classified (stepped bands).
+// Continuous bypasses the break algorithms entirely — used for ordinal
+// numeric attributes where stepped bands would hide gradient detail.
+// When flipping back to Classified, we keep the previously-chosen method
+// (or fall back to the layer's recommendation) so users don't lose state.
+function setRasterRenderMode(id, mode) {
+  const st = legendState[id];
+  if (!st || !st.classification) return;
+  const cls = st.classification;
+  if (mode === 'continuous') {
+    // Stash the prior classified method so a flip back restores it.
+    if (cls.method !== 'continuous') cls._priorMethod = cls.method;
+    cls.method = 'continuous';
+  } else {
+    // Restore the user's previous classified method, or fall back to the
+    // attribute-type-aware recommendation if we have nothing stored.
+    const fallback = _recommendClassificationMethod(cls.rawValues || []).method;
+    cls.method = (cls._priorMethod && cls._priorMethod !== 'continuous') ? cls._priorMethod : fallback;
+  }
+  // Re-build the whole classification group so the toggle pill + details
+  // section flip together (CSS-only would leave the inactive pill stuck).
+  const info = uploadedLayers.find(l => l.id === id);
+  if (info) {
+    const container = document.getElementById('symbology-controls');
+    if (container) {
+      const existing = container.querySelector(`[data-sym-id="${id}"]`);
+      if (existing) existing.remove();
+      buildSymbologyControls(info);
+    }
+  }
   _recomputeAndApplyClassification(id);
 }
 
@@ -4019,18 +4218,22 @@ function applyRasterClassification(id) {
 function resetRasterClassification(id) {
   const st = legendState[id];
   if (!st || !st.classification) return;
-  st.classification.method = 'equal';
+  // Reset to the attribute-aware recommendation — not always Equal Interval.
+  const recommended = _recommendClassificationMethod(st.classification.rawValues || []).method;
+  st.classification.method = recommended;
+  st.classification._priorMethod = recommended;
   st.classification.classes = 5;
   st.classification.manualBreaks = null;
-  // Refresh UI controls.
-  const methodEl = document.getElementById(`raster-class-method-${id}`);
-  const countEl  = document.getElementById(`raster-class-count-${id}`);
-  const manualEl = document.getElementById(`raster-manual-breaks-${id}`);
-  const manualRow = document.getElementById(`raster-manual-row-${id}`);
-  if (methodEl) methodEl.value = 'equal';
-  if (countEl)  { countEl.value = 5; countEl.disabled = false; }
-  if (manualEl) manualEl.value = '';
-  if (manualRow) manualRow.style.display = 'none';
+  // Re-build the whole group so the toggle pill state stays consistent.
+  const info = uploadedLayers.find(l => l.id === id);
+  if (info) {
+    const container = document.getElementById('symbology-controls');
+    if (container) {
+      const existing = container.querySelector(`[data-sym-id="${id}"]`);
+      if (existing) existing.remove();
+      buildSymbologyControls(info);
+    }
+  }
   _recomputeAndApplyClassification(id);
 }
 
@@ -4041,6 +4244,12 @@ function _recomputeAndApplyClassification(id) {
   const st = legendState[id];
   if (!st || !st.classification) return;
   const cls = st.classification;
+  // Continuous render mode: no breaks needed, just sync heat surface + legend.
+  if (cls.method === 'continuous') {
+    _applyClassificationToHeatLayer(id);
+    refreshMapLegend();
+    return;
+  }
   // Special-case: user just switched to Manual but hasn't entered breaks yet.
   // Pre-seed manualBreaks with the current breaks so the textarea shows them,
   // and the legend keeps rendering instead of going blank.
@@ -4077,12 +4286,27 @@ function _recomputeAndApplyClassification(id) {
 // band edge so adjacent stops with the same colour produce visible steps.
 function _applyClassificationToHeatLayer(id) {
   const st = legendState[id];
-  if (!st || !st.classification || !Array.isArray(st.classification.breaks)) return;
+  if (!st || !st.classification) return;
   const info = uploadedLayers.find(l => l.id === id);
   if (!info || !info.isRaster) return;
+  const ramp = st.ramp || _paletteToRamp(HEAT_PALETTES[st.paletteKey] || HEAT_PALETTES.thermal);
+
+  // Continuous render mode: restore the smooth palette gradient so the
+  // heat surface blends instead of stepping. Skip break-based stops entirely.
+  if (st.classification.method === 'continuous') {
+    const smoothGrad = HEAT_PALETTES[st.paletteKey] || HEAT_PALETTES.thermal;
+    info.layer.eachLayer(sub => {
+      if (sub && sub.options && typeof sub.options.gradient !== 'undefined' && typeof sub.setOptions === 'function') {
+        sub.setOptions({ gradient: smoothGrad });
+        if (typeof sub.redraw === 'function') sub.redraw();
+      }
+    });
+    return;
+  }
+
+  if (!Array.isArray(st.classification.breaks)) return;
   const breaks = st.classification.breaks;
   if (breaks.length < 2) return;
-  const ramp = st.ramp || _paletteToRamp(HEAT_PALETTES[st.paletteKey] || HEAT_PALETTES.thermal);
   const { bandColors } = buildClassifiedGradientCss(breaks, ramp, 'to right');
   // Map break edges → normalised [0,1] using the layer's overall min/max so
   // the heat surface aligns with the legend (which is labeled in raw units).
@@ -5291,12 +5515,16 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
   if (rasterMeta && rasterMeta.isHeat) {
     const paletteObj = HEAT_PALETTES[rasterMeta.paletteKey] || HEAT_PALETTES.thermal;
     const ramp = _paletteToRamp(paletteObj);
-    // Default to Equal Interval with 5 classes — same as QGIS' default.
-    const DEFAULT_METHOD = 'equal';
+    // QGIS/ArcGIS-style default: render as a single continuous gradient for
+    // numeric attributes (richness, abundance, density). The user can flip
+    // to Classified at any time — we still pre-compute breaks using the
+    // attribute-type-aware recommendation so the switch is instant.
+    const DEFAULT_METHOD = 'continuous';
     const DEFAULT_CLASSES = 5;
     const rawValues = Array.isArray(rasterMeta.rawValues) ? rasterMeta.rawValues : null;
+    const recommended = _recommendClassificationMethod(rawValues || []).method;
     const breaks = computeClassificationBreaks(
-      DEFAULT_METHOD,
+      recommended,
       rawValues || [rasterMeta.minVal, rasterMeta.maxVal],
       DEFAULT_CLASSES,
       null
@@ -5315,7 +5543,8 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
       units: rasterMeta.units || null,
       // Classification state (saved per-layer for the life of the session).
       classification: {
-        method: DEFAULT_METHOD,
+        method: DEFAULT_METHOD,           // 'continuous' by default — smooth gradient
+        _priorMethod: recommended,        // restored if user flips Continuous → Classified
         classes: DEFAULT_CLASSES,
         breaks,
         manualBreaks: null,
@@ -6816,6 +7045,9 @@ async function buildLayout() {
   _repositionLayoutLabels();
   // Bind once per map instance so panning/zooming keeps labels glued to features
   layoutMap.on('move zoomend moveend viewreset', _repositionLayoutLabels);
+  // Re-render the scalebar after zoom finishes so the "nice" round distance
+  // (1, 2, 5, 10 km, etc.) stays accurate at every zoom level.
+  layoutMap.on('zoomend', () => _renderScalebar(layoutMap));
 
   // ── Build overlays in parallel with overview ──
   // Legend
@@ -6847,6 +7079,24 @@ async function buildLayout() {
         }
         const u = sym.units ? ' ' + sym.units : '';
         const cls = sym.classification;
+        // Continuous render mode in composer: smooth gradient + min/mid/max labels.
+        if (cls && cls.method === 'continuous') {
+          const bar = document.createElement('div');
+          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
+          block.appendChild(bar);
+          const labels = document.createElement('div');
+          labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
+          const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
+          const mid = (sym.minVal != null && sym.maxVal != null)
+            ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
+          const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
+          if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
+          const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
+          block.appendChild(labels);
+          legendEl.appendChild(block);
+          return;
+        }
         if (cls && Array.isArray(cls.breaks) && cls.breaks.length >= 2) {
           const { gradient } = buildClassifiedGradientCss(cls.breaks, sym.ramp, 'to right');
           const bar = document.createElement('div');
@@ -6947,30 +7197,7 @@ async function buildLayout() {
   }
 
   // Scale
-  const scaleEl = document.getElementById('layout-scale');
-  scaleEl.innerHTML = '';
-  const bar = _niceScaleBar(layoutMap, 160);
-  const rf = _representativeFraction(layoutMap);
-  if (bar) {
-    const barDiv = document.createElement('div');
-    barDiv.className = 'sb-bar';
-    barDiv.style.width = bar.px + 'px';
-    const row = document.createElement('div');
-    row.className = 'sb-row';
-    const left = document.createElement('span');
-    left.textContent = '0';
-    const right = document.createElement('span');
-    right.textContent = bar.label;
-    row.appendChild(left); row.appendChild(right);
-    scaleEl.appendChild(barDiv);
-    scaleEl.appendChild(row);
-  }
-  if (rf) {
-    const rfDiv = document.createElement('div');
-    rfDiv.className = 'sb-rf';
-    rfDiv.textContent = `1 : ${rf.toLocaleString()}`;
-    scaleEl.appendChild(rfDiv);
-  }
+  _renderScalebar(layoutMap);
 
   // ── Overview inset map ──
   const ovEl = document.getElementById('layout-overview');
@@ -7102,6 +7329,108 @@ function _representativeFraction(lmap) {
   const rf = Math.round(mpp / 0.0002645);
   const digits = Math.pow(10, Math.max(0, Math.floor(Math.log10(rf)) - 1));
   return Math.round(rf / digits) * digits;
+}
+
+// — Composer scalebar renderer (QGIS/ArcGIS style options) —
+// Reads the chosen style + card toggle from the toolbar, persists them to
+// localStorage so they survive a composer reopen, and rebuilds #layout-scale.
+//
+// Six styles match QGIS Print Composer / ArcGIS Pro:
+//   single-box   — black→white halved bar (default, most common)
+//   double-alt   — 4 alternating black/white cells (precision)
+//   line-ticks   — baseline + start/mid/end vertical ticks (minimal)
+//   stepped      — stepped baseline crossing at midpoint (ArcGIS)
+//   hollow       — outline-only rectangle (publication clean)
+//   numeric      — no bar; just the distance label + RF (compact)
+function _renderScalebar(lmap) {
+  const scaleEl = document.getElementById('layout-scale');
+  if (!scaleEl) return;
+  scaleEl.innerHTML = '';
+  // Read toolbar prefs (default Single Box + Card on — matches previous behaviour).
+  const styleSel = document.getElementById('layout-scalebar-style');
+  const cardChk  = document.getElementById('layout-scalebar-card');
+  const style    = (styleSel && styleSel.value) || 'single-box';
+  const hasCard  = cardChk ? !!cardChk.checked : true;
+  // Persist user pref so composer remembers across reopens.
+  try {
+    localStorage.setItem('mapkit.scalebarStyle', style);
+    localStorage.setItem('mapkit.scalebarCard',  hasCard ? '1' : '0');
+  } catch (e) { /* ignore quota / private-mode errors */ }
+  // Toggle card vs no-card frame on the container.
+  scaleEl.classList.toggle('has-card',  hasCard);
+  scaleEl.classList.toggle('no-card',  !hasCard);
+  const bar = _niceScaleBar(lmap, 160);
+  const rf  = _representativeFraction(lmap);
+  if (!bar) return;
+  // Build the visual bar element (numeric-only is a no-op shell).
+  const barDiv = document.createElement('div');
+  barDiv.className = `sb-bar sb-${style}`;
+  barDiv.style.width = bar.px + 'px';
+  // Styles that need an explicit midpoint tick add a child span.
+  if (style === 'line-ticks' || style === 'stepped') {
+    const mid = document.createElement('span');
+    mid.className = 'sb-mid-tick';
+    barDiv.appendChild(mid);
+  }
+  // Label row: 0 — mid — distance. For numeric-only we still want the
+  // distance prominently visible since there is no bar.
+  const row = document.createElement('div');
+  row.className = 'sb-row';
+  if (style === 'numeric') {
+    // Compact form: just the full distance, centered.
+    row.style.justifyContent = 'flex-end';
+    const v = document.createElement('span');
+    v.textContent = `0 — ${bar.label}`;
+    v.style.fontWeight = '600';
+    row.appendChild(v);
+  } else {
+    const left  = document.createElement('span'); left.textContent  = '0';
+    const right = document.createElement('span'); right.textContent = bar.label;
+    // For Double Alternating, surface a midpoint label too — matches QGIS.
+    if (style === 'double-alt') {
+      row.style.position = 'relative';
+      const midLabel = document.createElement('span');
+      const halfNum = bar.meters / 2;
+      midLabel.textContent = halfNum >= 1000
+        ? `${(halfNum / 1000).toLocaleString()}`
+        : `${halfNum.toLocaleString()}`;
+      midLabel.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);';
+      row.appendChild(left); row.appendChild(midLabel); row.appendChild(right);
+    } else {
+      row.appendChild(left); row.appendChild(right);
+    }
+  }
+  if (style !== 'numeric') scaleEl.appendChild(barDiv);
+  scaleEl.appendChild(row);
+  if (rf) {
+    const rfDiv = document.createElement('div');
+    rfDiv.className = 'sb-rf';
+    rfDiv.textContent = `1 : ${rf.toLocaleString()}`;
+    scaleEl.appendChild(rfDiv);
+  }
+}
+
+// Called when the user changes the scalebar style dropdown or the Card
+// checkbox in the composer toolbar. We re-render against the current
+// layout map so the change is live (no need to click Preview again).
+function onLayoutScalebarChange() {
+  if (typeof layoutMap !== 'undefined' && layoutMap) {
+    _renderScalebar(layoutMap);
+  }
+}
+
+// Restore saved scalebar prefs into the toolbar controls. Called from
+// previewExport() before the first render so the toolbar reflects the
+// user's last choice when they reopen the composer.
+function _restoreScalebarPrefs() {
+  const styleSel = document.getElementById('layout-scalebar-style');
+  const cardChk  = document.getElementById('layout-scalebar-card');
+  try {
+    const savedStyle = localStorage.getItem('mapkit.scalebarStyle');
+    const savedCard  = localStorage.getItem('mapkit.scalebarCard');
+    if (styleSel && savedStyle) styleSel.value = savedStyle;
+    if (cardChk  && savedCard != null) cardChk.checked = savedCard !== '0';
+  } catch (e) { /* ignore */ }
 }
 
 // Pick a "nice" round distance for the scale bar (1, 2, 5 × 10^n) that
@@ -7322,6 +7651,9 @@ async function previewExport() {
   try {
     // Show modal FIRST so the layout container has real dimensions.
     document.getElementById('layout-modal').classList.add('show');
+    // Restore the user's last scalebar style + card pref into the toolbar
+    // so the rendered scalebar matches their previous session choice.
+    _restoreScalebarPrefs();
     await buildLayout();
   } catch (e) {
     console.error('Layout failed:', e);
