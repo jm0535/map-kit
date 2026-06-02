@@ -1384,8 +1384,12 @@
         <button class="export-btn" onclick="exportProfile('svg')"><span class="icon">&#x1f5fe;</span> Profile as SVG</button>
         <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Per-Layer Export</div>
         <select id="export-layer-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+        <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Output CRS (CSV / GeoJSON / Shapefile)</div>
+        <select id="export-crs-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;"></select>
         <button class="export-btn" onclick="exportLayerGeoJSON()"><span class="icon">&#x1f5c3;</span> Export layer as GeoJSON</button>
         <button class="export-btn" onclick="exportLayerCSV()"><span class="icon">&#x1f4ca;</span> Export layer as CSV</button>
+        <button class="export-btn" onclick="exportLayerXLSX()"><span class="icon">&#x1f4ca;</span> Export layer as XLSX</button>
+        <button class="export-btn" onclick="exportAllXLSX()"><span class="icon">&#x1f4ca;</span> Export all as XLSX</button>
         <button class="export-btn" onclick="exportLayerShapefile()"><span class="icon">&#x1f4e6;</span> Export layer as Shapefile (.zip)</button>
         <button class="export-btn" onclick="exportLayerKML()"><span class="icon">&#x1f30d;</span> Export layer as KML</button>
         <button class="export-btn" onclick="exportLayerGPX()"><span class="icon">&#x1f4cd;</span> Export layer as GPX</button>
@@ -8285,33 +8289,86 @@ async function exportProfile(fmt) {
   }
 }
 
-function exportAllCSV() {
-  const allFeatures = [];
-  uploadedLayers.forEach(l => {
-    l.properties.forEach(p => {
-      const row = Object.assign({}, p);
-      row._layer = l.name;
-      allFeatures.push(row);
-    });
+// Build per-feature rows enriched with reprojected X/Y when a non-WGS84 CRS is chosen.
+function _featureRowsWithCrs(features, crsCode) {
+  const projected = crsCode && crsCode !== 'EPSG:4326';
+  return features.map(f => {
+    const row = Object.assign({}, f.properties || {});
+    if (f.geometry) {
+      const g = f.geometry;
+      let lon, lat;
+      if (g.type === 'Point') { [lon, lat] = g.coordinates; }
+      else if (g.type === 'MultiPoint' && g.coordinates[0]) { [lon, lat] = g.coordinates[0]; }
+      if (lon !== undefined) {
+        if (projected) {
+          const [x, y] = _reprojectCoord(lon, lat, crsCode);
+          row._x = +x.toFixed(4);
+          row._y = +y.toFixed(4);
+        } else {
+          row._longitude = +lon.toFixed(8);
+          row._latitude  = +lat.toFixed(8);
+        }
+      }
+    }
+    return row;
   });
-  if (allFeatures.length === 0) { showToast('No features to export', 'error'); return; }
-  const keys = ['_layer', ...new Set(allFeatures.flatMap(Object.keys).filter(k => k !== '_layer'))];
-  const csv = [keys.join(','), ...allFeatures.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
-  const blob = new Blob([csv], {type: 'text/csv'});
-  _downloadBlob(blob, 'all_features.csv');
-  showToast('CSV exported', 'success');
+}
+
+function exportAllCSV() {
+  const crsCode = _exportCrsCode();
+  const allRows = [];
+  uploadedLayers.forEach(l => {
+    const features = _layerToFeatures(l);
+    const rows = _featureRowsWithCrs(features, crsCode);
+    rows.forEach(r => { r._layer = l.name; allRows.push(r); });
+  });
+  if (allRows.length === 0) { showToast('No features to export', 'error'); return; }
+  const keys = ['_layer', ...new Set(allRows.flatMap(Object.keys).filter(k => k !== '_layer'))];
+  const csv = [keys.join(','), ...allRows.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
+  _downloadBlob(new Blob([csv], {type: 'text/csv'}), 'all_features.csv');
+  showToast('CSV exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function exportLayerCSV() {
-  const layerId = document.getElementById('export-layer-select').value;
-  const lyr = uploadedLayers.find(l => l.id === layerId);
+  const lyr = _selectedExportLayer();
   if (!lyr) { showToast('Select a layer first', 'error'); return; }
-  if (!lyr.properties || lyr.properties.length === 0) { showToast('No features to export', 'error'); return; }
-  const keys = [...new Set(lyr.properties.flatMap(Object.keys))];
-  const csv = [keys.join(','), ...lyr.properties.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
-  const blob = new Blob([csv], {type: 'text/csv'});
-  _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv');
-  showToast('CSV exported', 'success');
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No features to export', 'error'); return; }
+  const crsCode = _exportCrsCode();
+  const rows = _featureRowsWithCrs(features, crsCode);
+  const keys = [...new Set(rows.flatMap(Object.keys))];
+  const csv = [keys.join(','), ...rows.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
+  _downloadBlob(new Blob([csv], {type: 'text/csv'}), _safeName(lyr.name) + '.csv');
+  showToast('CSV exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
+}
+
+function exportLayerXLSX() {
+  const lyr = _selectedExportLayer();
+  if (!lyr) { showToast('Select a layer first', 'error'); return; }
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No features to export', 'error'); return; }
+  const crsCode = _exportCrsCode();
+  const rows = _featureRowsWithCrs(features, crsCode);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, lyr.name.slice(0, 31));
+  XLSX.writeFile(wb, _safeName(lyr.name) + '.xlsx');
+  showToast('XLSX exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
+}
+
+function exportAllXLSX() {
+  const crsCode = _exportCrsCode();
+  const wb = XLSX.utils.book_new();
+  uploadedLayers.forEach(l => {
+    const features = _layerToFeatures(l);
+    const rows = _featureRowsWithCrs(features, crsCode);
+    if (rows.length === 0) return;
+    const ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, l.name.slice(0, 31));
+  });
+  if (!wb.SheetNames || wb.SheetNames.length === 0) { showToast('No features to export', 'error'); return; }
+  XLSX.writeFile(wb, 'all_features.xlsx');
+  showToast('XLSX exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function _layerToFeatures(lyr) {
@@ -8327,7 +8384,21 @@ function _layerToFeatures(lyr) {
   return features;
 }
 
+function _geoJSONWithCrs(features, crsCode) {
+  const projected = crsCode && crsCode !== 'EPSG:4326';
+  const out = features.map(f => Object.assign({}, f, {
+    geometry: projected ? _reprojectGeom(f.geometry, crsCode) : f.geometry
+  }));
+  const fc = {type: 'FeatureCollection', features: out};
+  if (projected) {
+    // Named CRS member (pre-RFC7946, but understood by QGIS/ArcGIS for projected output)
+    fc.crs = {type: 'name', properties: {name: `urn:ogc:def:crs:${crsCode.replace(':', '::')}` }};
+  }
+  return fc;
+}
+
 function exportAllGeoJSON() {
+  const crsCode = _exportCrsCode();
   const features = [];
   uploadedLayers.forEach(l => {
     const lFeatures = _layerToFeatures(l);
@@ -8338,28 +8409,68 @@ function exportAllGeoJSON() {
     features.push(...lFeatures);
   });
   if (features.length === 0) { showToast('No features to export', 'error'); return; }
-  const gj = {type: 'FeatureCollection', features};
-  const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
-  _downloadBlob(blob, 'all_features.geojson');
-  showToast('GeoJSON exported', 'success');
+  const gj = _geoJSONWithCrs(features, crsCode);
+  _downloadBlob(new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'}), 'all_features.geojson');
+  showToast('GeoJSON exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function refreshExportLayerSelect() {
   const sel = document.getElementById('export-layer-select');
   if (!sel) return;
   sel.innerHTML = uploadedLayers.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('');
+  _initExportCrsSelect();
+}
+
+function _initExportCrsSelect() {
+  const sel = document.getElementById('export-crs-select');
+  if (!sel || sel.options.length > 0) return;
+  sel.innerHTML = CRS_PRESETS
+    .filter(p => p.code !== '__custom__')
+    .map(p => `<option value="${p.code}">${p.label}</option>`)
+    .join('');
+  sel.value = 'EPSG:4326';
+}
+
+// Reproject [lon, lat] (WGS84) → [x, y] in the chosen export CRS.
+// Returns the original pair unchanged when CRS is EPSG:4326 or proj4 is absent.
+function _reprojectCoord(lon, lat, targetCode) {
+  if (!targetCode || targetCode === 'EPSG:4326') return [lon, lat];
+  if (typeof proj4 === 'undefined') return [lon, lat];
+  try {
+    return proj4('EPSG:4326', targetCode, [lon, lat]);
+  } catch (_) { return [lon, lat]; }
+}
+
+function _exportCrsCode() {
+  const sel = document.getElementById('export-crs-select');
+  return sel ? sel.value : 'EPSG:4326';
+}
+
+// Reproject every coordinate in a GeoJSON geometry (in-place clone).
+function _reprojectGeom(geom, crsCode) {
+  if (!geom || crsCode === 'EPSG:4326') return geom;
+  const rp = c => _reprojectCoord(c[0], c[1], crsCode).concat(c.slice(2));
+  const rpRing = ring => ring.map(rp);
+  const clone = JSON.parse(JSON.stringify(geom));
+  switch (clone.type) {
+    case 'Point': clone.coordinates = rp(clone.coordinates); break;
+    case 'MultiPoint': case 'LineString': clone.coordinates = clone.coordinates.map(rp); break;
+    case 'MultiLineString': case 'Polygon': clone.coordinates = clone.coordinates.map(rpRing); break;
+    case 'MultiPolygon': clone.coordinates = clone.coordinates.map(p => p.map(rpRing)); break;
+    case 'GeometryCollection': clone.geometries = clone.geometries.map(g => _reprojectGeom(g, crsCode)); break;
+  }
+  return clone;
 }
 
 function exportLayerGeoJSON() {
-  const layerId = document.getElementById('export-layer-select').value;
-  const lyr = uploadedLayers.find(l => l.id === layerId);
+  const lyr = _selectedExportLayer();
   if (!lyr) { showToast('Select a layer first', 'error'); return; }
   const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
-  const gj = {type: 'FeatureCollection', features};
-  const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
-  _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.geojson');
-  showToast('GeoJSON exported', 'success');
+  const crsCode = _exportCrsCode();
+  const gj = _geoJSONWithCrs(features, crsCode);
+  _downloadBlob(new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'}), _safeName(lyr.name) + '.geojson');
+  showToast('GeoJSON exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function exportLayerShapefile() {
