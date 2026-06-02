@@ -10,7 +10,7 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import LineString, Point
 
-from map_kit.data import MT_WILHELM_POINTS, YUS_POINTS, TRANSECT_COLORS
+from map_kit.data import MT_WILHELM_POINTS, TRANSECT_COLORS, YUS_POINTS
 from map_kit.maps import build_interactive_map, build_static_map
 
 

@@ -159,7 +159,7 @@ def build_static_map(gdf, lines_gdf, yus_points, mtwilhelm_points, colors, out_p
     ax_yus.scatter(yus_dist, yus_elev, color=colors["YUS"], s=50,
                    edgecolors="white", linewidths=0.8, zorder=4)
 
-    for d, e, _ in zip(yus_dist, yus_elev, yus_sites):
+    for d, e, _ in zip(yus_dist, yus_elev, yus_sites, strict=True):
         ax_yus.annotate(f"{e} m", xy=(d, e), xytext=(0, 6),
                         textcoords="offset points", fontsize=7,
                         ha="center", color=colors["YUS"])
@@ -183,7 +183,7 @@ def build_static_map(gdf, lines_gdf, yus_points, mtwilhelm_points, colors, out_p
     ax_mtw.scatter(mtwilhelm_dist, mtw_elev, color=colors["Mt Wilhelm"], s=50,
                    edgecolors="white", linewidths=0.8, zorder=4)
 
-    for d, e, _ in zip(mtwilhelm_dist, mtw_elev, mtw_sites):
+    for d, e, _ in zip(mtwilhelm_dist, mtw_elev, mtw_sites, strict=True):
         ax_mtw.annotate(f"{e} m", xy=(d, e), xytext=(0, 6),
                         textcoords="offset points", fontsize=7,
                         ha="center", color=colors["Mt Wilhelm"])

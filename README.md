@@ -220,24 +220,29 @@ map-kit/
 │       ├── cli.py            # CLI entry point (make-maps)
 │       ├── data.py           # Study site data constants
 │       └── maps.py           # Map generation functions
-├── data/
-│   ├── yus_transect.csv      # Sample biodiversity data (YUS Conservation Area)
-│   └── mt_wilhelm_transect.xlsx # Mt Wilhelm transect data
+├── data/                     # Local data files (git-ignored, not synced)
 └── docs/
-    ├── transect_map.html     # Generated Folium interactive map
-    └── transect_map.png     # Generated static map with elevation profiles
+    ├── transect_map.html     # Generated Folium interactive map (tracked)
+    └── transect_map.png      # Generated static map (git-ignored; run `make build`)
 ```
+
+> **Note:** The `data/` directory and the large `docs/transect_map.png` render are
+> git-ignored and kept local only. The study-site data used by the Python pipeline
+> is built in to `src/map_kit/data.py`, so the maps regenerate without any data files.
 
 ---
 
 ## Data
 
-The project includes sample elevational transect data from Papua New Guinea:
+The Python pipeline ships with built-in sample elevational transect data from Papua New
+Guinea (defined in `src/map_kit/data.py`):
 
 - **YUS Conservation Area** (Huon Peninsula, Morobe Province): 9 sites, 200 m - 2800 m elevation
 - **Mt Wilhelm** (Chimbu Province): 7 sites, 2600 m - 4509 m (Papua New Guinea's highest summit)
 
-The CSV (`data/yus_transect.csv`) contains bird species abundance records across YUS sites.
+The `data/` directory is reserved for your own local datasets (CSV/XLSX). It is
+git-ignored, so personal data is never synced to the remote. Load such files into the
+Web GIS (`index.html`) directly via the in-app import controls.
 
 ---
 
