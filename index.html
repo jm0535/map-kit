@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Map-Kit</title>
+<title>GeoSpaX</title>
 
 <!-- Inter font -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1210,7 +1210,7 @@
 
 <!-- Top bar -->
 <div id="topbar">
-  <div class="logo">&#x1f5fa; Map-Kit</div>
+  <div class="logo">&#x1f5fa; GeoSpaX</div>
   <div class="spacer"></div>
   <div class="search-box" id="search-box" title="Enter coordinates (lat, lon) or place name">
     <input type="text" id="goto-search" placeholder="Go to XY or search place…" onkeydown="if(event.key==='Enter')doGotoSearch()">
@@ -5726,7 +5726,7 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
       attrName: rasterMeta.attrName || null,
       units: rasterMeta.units || null,
     };
-    leafletLayers.forEach(l => { if (l && l.options && typeof l.options.gradient !== 'undefined') l._mapkitLayerId = id; });
+    leafletLayers.forEach(l => { if (l && l.options && typeof l.options.gradient !== 'undefined') l._geospaxLayerId = id; });
   }
   uploadedLayers.push(info);
   addLayerToPanel(info);
@@ -5839,7 +5839,7 @@ function rebuildHeatLayers() {
     if (parent) parent.removeLayer(h);
     groups.forEach(g => g.removeLayer(h));
     const newH = L.heatLayer(data, {radius:r, blur:b, maxZoom:17, minOpacity:op, gradient:grad});
-    if (ownerInfo) { newH._mapkitLayerId = ownerInfo.id; affectedLayerIds.add(ownerInfo.id); }
+    if (ownerInfo) { newH._geospaxLayerId = ownerInfo.id; affectedLayerIds.add(ownerInfo.id); }
     if (parent) newH.addTo(parent);
     groups.forEach(g => g.addLayer(newH));
     newActive.push(newH);
@@ -6431,11 +6431,11 @@ function toggleTheme() {
   document.body.classList.toggle('light');
   const light = document.body.classList.contains('light');
   document.getElementById('theme-toggle').textContent = light ? '\u2600' : '\uD83C\uDF19';
-  try { localStorage.setItem('mapkit_theme', light ? 'light' : 'dark'); } catch(e){}
+  try { localStorage.setItem('geospax_theme', light ? 'light' : 'dark'); } catch(e){}
 }
 // Restore theme on load
 try {
-  if (localStorage.getItem('mapkit_theme') === 'light') {
+  if (localStorage.getItem('geospax_theme') === 'light') {
     document.body.classList.add('light');
     document.getElementById('theme-toggle').textContent = '\u2600';
   }
@@ -6609,7 +6609,7 @@ function reorderLayers(srcId, dstId) {
 // ═══════════════════════════════════════════════════════════════════════════
 // BOOKMARKS
 // ═══════════════════════════════════════════════════════════════════════════
-const BOOKMARKS_KEY = 'mapkit_bookmarks';
+const BOOKMARKS_KEY = 'geospax_bookmarks';
 let bookmarks = JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]');
 
 function renderBookmarks() {
@@ -7614,8 +7614,8 @@ function _renderScalebar(lmap) {
   const hasCard  = cardChk ? !!cardChk.checked : true;
   // Persist user pref so composer remembers across reopens.
   try {
-    localStorage.setItem('mapkit.scalebarStyle', style);
-    localStorage.setItem('mapkit.scalebarCard',  hasCard ? '1' : '0');
+    localStorage.setItem('geospax.scalebarStyle', style);
+    localStorage.setItem('geospax.scalebarCard',  hasCard ? '1' : '0');
   } catch (e) { /* ignore quota / private-mode errors */ }
   // Toggle card vs no-card frame on the container.
   scaleEl.classList.toggle('has-card',  hasCard);
@@ -7687,8 +7687,8 @@ function _restoreScalebarPrefs() {
   const styleSel = document.getElementById('layout-scalebar-style');
   const cardChk  = document.getElementById('layout-scalebar-card');
   try {
-    const savedStyle = localStorage.getItem('mapkit.scalebarStyle');
-    const savedCard  = localStorage.getItem('mapkit.scalebarCard');
+    const savedStyle = localStorage.getItem('geospax.scalebarStyle');
+    const savedCard  = localStorage.getItem('geospax.scalebarCard');
     if (styleSel && savedStyle) styleSel.value = savedStyle;
     if (cardChk  && savedCard != null) cardChk.checked = savedCard !== '0';
   } catch (e) { /* ignore */ }
@@ -8143,7 +8143,7 @@ async function _renderProfileToCanvas(opts) {
     ctx.fillStyle = '#4a5568';
     ctx.font = `400 ${fz(10)}px system-ui, -apple-system, Segoe UI, sans-serif`;
     ctx.textBaseline = 'middle';
-    const captionTxt = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  Map-Kit  ·  ${dpi} DPI`;
+    const captionTxt = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  GeoSpaX  ·  ${dpi} DPI`;
     ctx.fillText(captionTxt, Math.round(20 * scale), H - captionH / 2);
 
     return { canvas: out, W, H, dpi };
@@ -8237,7 +8237,7 @@ function _renderProfileToSVG() {
 
   // Caption strip
   svg += `<rect x="0" y="${H - 42}" width="${W}" height="42" fill="#f7fafc"/>\n`;
-  const cap = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  Map-Kit`
+  const cap = `Sort: ${meta.sortLabel}  ·  Layers: ${meta.layers}  ·  GeoSpaX`
     .replace(/&/g,'&amp;').replace(/</g,'&lt;');
   svg += `<text x="24" y="${H - 16}" font-size="12" fill="#4a5568">${cap}</text>\n`;
 

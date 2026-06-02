@@ -1,4 +1,4 @@
-# Contributing to map-kit
+# Contributing to GeoSpaX
 
 Thank you for your interest in contributing! This document outlines the standards and workflows for this project.
 
@@ -6,8 +6,8 @@ Thank you for your interest in contributing! This document outlines the standard
 
 ```bash
 # Clone and enter the repo
-git clone git@github.com:jm0535/map-kit.git
-cd map-kit
+git clone git@github.com:jm0535/geospax.git
+cd geospax
 
 # Create a virtual environment
 python -m venv .venv
@@ -56,13 +56,13 @@ pre-commit run --all-files
 ## Project Structure
 
 ```text
-map-kit/
+geospax/
 ├── index.html              # Web GIS frontend (standalone, zero-backend)
 ├── src/
 │   ├── make_maps.py        # Legacy script (kept for backward compatibility)
-│   └── map_kit/            # Python package
+│   └── geospax/            # Python package
 │       ├── __init__.py     # Package metadata
-│       ├── cli.py          # CLI entry point (make-maps)
+│       ├── cli.py          # CLI entry point (geospax)
 │       ├── data.py         # Study site data constants
 │       └── maps.py         # Map generation functions
 ├── data/                   # Sample datasets
