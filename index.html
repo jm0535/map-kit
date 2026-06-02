@@ -1387,6 +1387,8 @@
         <button class="export-btn" onclick="exportLayerGeoJSON()"><span class="icon">&#x1f5c3;</span> Export layer as GeoJSON</button>
         <button class="export-btn" onclick="exportLayerCSV()"><span class="icon">&#x1f4ca;</span> Export layer as CSV</button>
         <button class="export-btn" onclick="exportLayerShapefile()"><span class="icon">&#x1f4e6;</span> Export layer as Shapefile (.zip)</button>
+        <button class="export-btn" onclick="exportLayerKML()"><span class="icon">&#x1f30d;</span> Export layer as KML</button>
+        <button class="export-btn" onclick="exportLayerGPX()"><span class="icon">&#x1f4cd;</span> Export layer as GPX</button>
       </div>
     </div>
 
@@ -8376,6 +8378,138 @@ function exportLayerShapefile() {
     _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.geojson');
     showToast('Exported as GeoJSON (install shp-write for Shapefile support)', 'success');
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KML / GPX EXPORT (OGC / GPS interchange — no extra deps, hand-rolled writers)
+// All in-app geometry is WGS84 (EPSG:4326), which is exactly what KML and GPX
+// require, so no reprojection is needed on the way out.
+// ═══════════════════════════════════════════════════════════════════════════
+
+function _xmlEscape(val) {
+  if (val === null || val === undefined) return '';
+  return String(val)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+// Flatten a coordinate array into KML "lon,lat[,alt] " tuples.
+function _kmlCoords(coords) {
+  return coords.map(c => `${c[0]},${c[1]}${c.length > 2 ? ',' + c[2] : ''}`).join(' ');
+}
+
+// Render a single GeoJSON geometry as a KML geometry fragment.
+function _geomToKml(geom) {
+  if (!geom) return '';
+  switch (geom.type) {
+    case 'Point':
+      return `<Point><coordinates>${_kmlCoords([geom.coordinates])}</coordinates></Point>`;
+    case 'MultiPoint':
+      return geom.coordinates.map(c => `<Point><coordinates>${_kmlCoords([c])}</coordinates></Point>`).join('');
+    case 'LineString':
+      return `<LineString><coordinates>${_kmlCoords(geom.coordinates)}</coordinates></LineString>`;
+    case 'MultiLineString':
+      return geom.coordinates.map(l => `<LineString><coordinates>${_kmlCoords(l)}</coordinates></LineString>`).join('');
+    case 'Polygon':
+      return `<Polygon>${geom.coordinates.map((ring, i) =>
+        `<${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}><LinearRing><coordinates>${_kmlCoords(ring)}</coordinates></LinearRing></${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}>`
+      ).join('')}</Polygon>`;
+    case 'MultiPolygon':
+      return geom.coordinates.map(poly =>
+        `<Polygon>${poly.map((ring, i) =>
+          `<${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}><LinearRing><coordinates>${_kmlCoords(ring)}</coordinates></LinearRing></${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}>`
+        ).join('')}</Polygon>`
+      ).join('');
+    case 'GeometryCollection':
+      return `<MultiGeometry>${(geom.geometries || []).map(_geomToKml).join('')}</MultiGeometry>`;
+    default:
+      return '';
+  }
+}
+
+function _featuresToKml(features, docName) {
+  const placemarks = features.map(f => {
+    const props = f.properties || {};
+    const nameKey = ['name', 'Name', 'title', 'label', 'site', 'id'].find(k => props[k] != null);
+    const name = nameKey ? _xmlEscape(props[nameKey]) : '';
+    const rows = Object.keys(props)
+      .map(k => `<Data name="${_xmlEscape(k)}"><value>${_xmlEscape(props[k])}</value></Data>`)
+      .join('');
+    const geom = _geomToKml(f.geometry);
+    if (!geom) return '';
+    return `<Placemark>${name ? `<name>${name}</name>` : ''}`
+      + (rows ? `<ExtendedData>${rows}</ExtendedData>` : '')
+      + `${geom}</Placemark>`;
+  }).filter(Boolean).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n`
+    + `<kml xmlns="http://www.opengis.net/kml/2.2"><Document>`
+    + `<name>${_xmlEscape(docName || 'Map-Kit export')}</name>\n${placemarks}\n`
+    + `</Document></kml>\n`;
+}
+
+// GPX only models points (waypoints) and lines (tracks). Polygons are emitted
+// as track segments using their outer ring so nothing is silently dropped.
+function _featuresToGpx(features, docName) {
+  const wpts = [], trks = [];
+  const propLookup = (props, keys) => { const k = keys.find(k => props[k] != null); return k ? props[k] : null; };
+  features.forEach(f => {
+    const props = f.properties || {};
+    const g = f.geometry;
+    if (!g) return;
+    const nameVal = propLookup(props, ['name', 'Name', 'title', 'label', 'site', 'id']);
+    const eleVal = propLookup(props, ['ele', 'elevation', 'elev', 'altitude', 'z']);
+    const nameTag = nameVal != null ? `<name>${_xmlEscape(nameVal)}</name>` : '';
+    const ptWpt = c => `<wpt lat="${c[1]}" lon="${c[0]}">`
+      + (c.length > 2 ? `<ele>${c[2]}</ele>` : (eleVal != null ? `<ele>${_xmlEscape(eleVal)}</ele>` : ''))
+      + `${nameTag}</wpt>`;
+    const trkFromLine = line => `<trk>${nameTag}<trkseg>`
+      + line.map(c => `<trkpt lat="${c[1]}" lon="${c[0]}">${c.length > 2 ? `<ele>${c[2]}</ele>` : ''}</trkpt>`).join('')
+      + `</trkseg></trk>`;
+    switch (g.type) {
+      case 'Point': wpts.push(ptWpt(g.coordinates)); break;
+      case 'MultiPoint': g.coordinates.forEach(c => wpts.push(ptWpt(c))); break;
+      case 'LineString': trks.push(trkFromLine(g.coordinates)); break;
+      case 'MultiLineString': g.coordinates.forEach(l => trks.push(trkFromLine(l))); break;
+      case 'Polygon': if (g.coordinates[0]) trks.push(trkFromLine(g.coordinates[0])); break;
+      case 'MultiPolygon': g.coordinates.forEach(p => { if (p[0]) trks.push(trkFromLine(p[0])); }); break;
+    }
+  });
+  return `<?xml version="1.0" encoding="UTF-8"?>\n`
+    + `<gpx version="1.1" creator="Map-Kit" xmlns="http://www.topografix.com/GPX/1/1" `
+    + `xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" `
+    + `xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n`
+    + `<metadata><name>${_xmlEscape(docName || 'Map-Kit export')}</name></metadata>\n`
+    + wpts.join('\n') + (wpts.length ? '\n' : '') + trks.join('\n') + (trks.length ? '\n' : '')
+    + `</gpx>\n`;
+}
+
+function _safeName(name) {
+  return (name || 'layer').replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function _selectedExportLayer() {
+  const layerId = document.getElementById('export-layer-select').value;
+  return uploadedLayers.find(l => l.id === layerId);
+}
+
+function exportLayerKML() {
+  const lyr = _selectedExportLayer();
+  if (!lyr) { showToast('Select a layer first', 'error'); return; }
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
+  const kml = _featuresToKml(features, lyr.name);
+  _downloadBlob(new Blob([kml], {type: 'application/vnd.google-earth.kml+xml'}), _safeName(lyr.name) + '.kml');
+  showToast('KML exported', 'success');
+}
+
+function exportLayerGPX() {
+  const lyr = _selectedExportLayer();
+  if (!lyr) { showToast('Select a layer first', 'error'); return; }
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
+  const gpx = _featuresToGpx(features, lyr.name);
+  _downloadBlob(new Blob([gpx], {type: 'application/gpx+xml'}), _safeName(lyr.name) + '.gpx');
+  showToast('GPX exported', 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
