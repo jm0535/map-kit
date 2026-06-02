@@ -6,8 +6,8 @@ Thank you for your interest in contributing! This document outlines the standard
 
 ```bash
 # Clone and enter the repo
-git clone git@github.com:jm0535/geospax.git
-cd geospax
+git clone git@github.com:jm0535/map-kit.git
+cd map-kit
 
 # Create a virtual environment
 python -m venv .venv
@@ -56,7 +56,7 @@ pre-commit run --all-files
 ## Project Structure
 
 ```text
-geospax/
+map-kit/                    # Repository name (app is branded "GeoSpaX")
 ├── index.html              # Web GIS frontend (standalone, zero-backend)
 ├── src/
 │   ├── make_maps.py        # Legacy script (kept for backward compatibility)

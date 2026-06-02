@@ -2,7 +2,7 @@
 
 A modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis, built entirely in the browser. Includes a Python package for generating publication-ready static and interactive maps with elevation profiles.
 
-**Live demo**: [https://jm0535.github.io/geospax/](https://jm0535.github.io/geospax/)
+**Live app**: [https://geospax.in4metrix.dev](https://geospax.in4metrix.dev) &nbsp;·&nbsp; **Mirror (GitHub Pages)**: [https://jm0535.github.io/map-kit/](https://jm0535.github.io/map-kit/)
 
 ---
 
@@ -203,8 +203,10 @@ python src/make_maps.py
 ## Project Structure
 
 ```text
-geospax/
-├── index.html                # Full-featured standalone Web GIS (GitHub Pages entry point)
+map-kit/                      # Repository name (app is branded "GeoSpaX")
+├── index.html                # Full-featured standalone Web GIS (entry point for Vercel + GitHub Pages)
+├── vercel.json               # Vercel static hosting config (geospax.in4metrix.dev)
+├── .vercelignore             # Files excluded from the Vercel deployment
 ├── README.md                 # This file
 ├── LICENSE                   # MIT License
 ├── CONTRIBUTING.md           # Contribution guidelines
@@ -243,6 +245,39 @@ Guinea (defined in `src/geospax/data.py`):
 The `data/` directory is reserved for your own local datasets (CSV/XLSX). It is
 git-ignored, so personal data is never synced to the remote. Load such files into the
 Web GIS (`index.html`) directly via the in-app import controls.
+
+---
+
+## Deployment
+
+GeoSpaX is a single static file (`index.html`), so it deploys to any static host with no build step.
+
+### Vercel (primary — `geospax.in4metrix.dev`)
+
+The repo includes `vercel.json` (static config + security headers) and `.vercelignore`
+(excludes the Python pipeline from the deployment).
+
+1. In Vercel, **Add New → Project** and import the `jm0535/map-kit` GitHub repo.
+2. **Framework Preset:** `Other`. Leave **Build Command** empty and **Output Directory** as the repo root (`.`). Vercel serves `index.html` automatically.
+3. Deploy. You'll get a default `*.vercel.app` URL.
+4. **Project → Settings → Domains → Add** `geospax.in4metrix.dev`.
+5. Vercel shows a DNS record to create. In your `in4metrix.dev` DNS provider, add:
+
+   ```text
+   Type:   CNAME
+   Name:   geospax
+   Value:  cname.vercel-dns.com
+   ```
+
+   (Vercel may instead ask for an A record — follow whatever it displays.) SSL is issued automatically once DNS propagates.
+
+Every push to `main` auto-deploys. `"github": { "silent": true }` keeps Vercel from spamming commit comments.
+
+### GitHub Pages (mirror — `jm0535.github.io/map-kit/`)
+
+Kept active and unchanged. Pages serves `index.html` from the repo root on `main`.
+Confirm under **repo Settings → Pages**: *Source = Deploy from a branch*, *Branch = `main` / `/ (root)`*.
+Since both hosts serve the same `index.html` from the same branch, they stay in sync on every push.
 
 ---
 
