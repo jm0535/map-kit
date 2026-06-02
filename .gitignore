@@ -48,3 +48,18 @@ node_modules/
 # Generated output (uncomment to exclude from git)
 # docs/transect_map.png
 # docs/transect_map.html
+
+# Local data (do not sync to remote)
+data/
+*.xlsx
+*.xls
+
+# Test exports / generated map images
+test_static_map_export/
+*_300dpi.png
+*_600dpi.png
+*_300dpi.pdf
+elevation_profile_*.png
+
+# Claude Flow workspace
+.claude-flow/
