@@ -21,43 +21,41 @@
 <meta name="twitter:title" content="GeoSpaX — Interactive Web GIS & Spatial Analysis">
 <meta name="twitter:description" content="A modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis.">
 
-<!-- Inter font -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Inter font (vendored locally — no CDN) -->
+<link rel="stylesheet" href="vendor/fonts/inter.css">
 
 <!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css"/>
+<script src="vendor/leaflet/leaflet.js"></script>
 
 <!-- Leaflet plugins -->
-<script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css"/>
-<script src="https://unpkg.com/leaflet.fullscreen@3.0.2/Control.FullScreen.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@3.0.2/Control.FullScreen.css"/>
+<script src="vendor/leaflet-measure/leaflet-measure.js"></script>
+<link rel="stylesheet" href="vendor/leaflet-measure/leaflet-measure.css"/>
+<script src="vendor/leaflet-fullscreen/Control.FullScreen.js"></script>
+<link rel="stylesheet" href="vendor/leaflet-fullscreen/Control.FullScreen.css"/>
 
 <!-- Heatmap -->
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="vendor/leaflet-heat/leaflet-heat.js"></script>
 
 <!-- File parsing libs -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
-<script src="https://unpkg.com/shpjs@4.0.4/dist/shp.min.js"></script>
-<script src="https://unpkg.com/togeojson@0.16.0/togeojson.js"></script>
+<script src="vendor/xlsx/xlsx.full.min.js"></script>
+<script src="vendor/proj4/proj4.js"></script>
+<script src="vendor/shpjs/shp.min.js"></script>
+<script src="vendor/togeojson/togeojson.js"></script>
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="vendor/chartjs/chart.umd.js"></script>
 
 <!-- Export -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="vendor/html2canvas/html2canvas.min.js"></script>
+<script src="vendor/jspdf/jspdf.umd.min.js"></script>
 
 <!-- Raster import -->
-<script src="https://unpkg.com/georaster@1.6.0/dist/georaster.browser.bundle.min.js"></script>
-<script src="https://unpkg.com/georaster-layer-for-leaflet@3.10.0/dist/georaster-layer-for-leaflet.min.js"></script>
+<script src="vendor/georaster/georaster.browser.bundle.min.js"></script>
+<script src="vendor/georaster-layer/georaster-layer-for-leaflet.min.js"></script>
 
 <!-- Shapefile export -->
-<script src="https://unpkg.com/shp-write@0.3.2/shpwrite.js"></script>
+<script src="vendor/shp-write/shpwrite.js"></script>
 
 <style>
   /* ── Design tokens ── */
@@ -1327,8 +1325,31 @@
         <button class="export-btn" onclick="runAnalysis('extent')">Bounding Box &amp; Area</button>
         <button class="export-btn" onclick="runAnalysis('nni')">Nearest Neighbor Index</button>
 
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Autocorrelation</div>
-        <button class="export-btn" onclick="runAnalysis('moranI')">Moran's I (spatial autocorrelation)</button>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Inferential Hotspots &amp; Autocorrelation</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">Variable = the “Weight attr” selector below (auto-detect if unset).</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Weights:</span>
+          <select id="analysis-weights-type" onchange="onWeightsTypeChange()" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:10px;padding:3px 4px;">
+            <option value="band">Distance band</option>
+            <option value="knn">K-nearest neighbours</option>
+          </select>
+        </div>
+        <div id="analysis-band-row" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Distance band (km):</span>
+          <input type="number" id="analysis-band-km" placeholder="auto" min="0" step="0.5" title="Leave blank for the ArcGIS-style min-threshold distance (every feature gets ≥1 neighbour)" style="width:64px;font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;">
+        </div>
+        <div id="analysis-knn-row" style="display:none;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">k neighbours:</span>
+          <input type="number" id="analysis-knn-k" value="8" min="1" step="1" title="Number of nearest neighbours per feature" style="width:64px;font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;">
+        </div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;">
+          <input type="checkbox" id="analysis-fdr" checked style="margin:0;"> Apply FDR correction (Gi*)
+        </label>
+        <button class="export-btn" onclick="runAnalysis('gistar')">Getis-Ord Gi* Hot Spots</button>
+        <button class="export-btn" onclick="runAnalysis('lisa')">Local Moran's I (LISA clusters)</button>
+        <button class="export-btn" onclick="runAnalysis('moranI')">Global Moran's I (significance test)</button>
+        <button class="export-btn" onclick="runAnalysis('moranScatter')">Moran Scatterplot</button>
+        <div style="font-size:9px;color:var(--text-muted);margin:2px 0 0;">Distances computed on an auto-selected UTM projection.</div>
 
         <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Interpolation &amp; Density</div>
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -1400,9 +1421,15 @@
         <button class="export-btn" onclick="exportProfile('svg')"><span class="icon">&#x1f5fe;</span> Profile as SVG</button>
         <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Per-Layer Export</div>
         <select id="export-layer-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+        <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Output CRS (CSV / GeoJSON / Shapefile)</div>
+        <select id="export-crs-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;"></select>
         <button class="export-btn" onclick="exportLayerGeoJSON()"><span class="icon">&#x1f5c3;</span> Export layer as GeoJSON</button>
         <button class="export-btn" onclick="exportLayerCSV()"><span class="icon">&#x1f4ca;</span> Export layer as CSV</button>
+        <button class="export-btn" onclick="exportLayerXLSX()"><span class="icon">&#x1f4ca;</span> Export layer as XLSX</button>
+        <button class="export-btn" onclick="exportAllXLSX()"><span class="icon">&#x1f4ca;</span> Export all as XLSX</button>
         <button class="export-btn" onclick="exportLayerShapefile()"><span class="icon">&#x1f4e6;</span> Export layer as Shapefile (.zip)</button>
+        <button class="export-btn" onclick="exportLayerKML()"><span class="icon">&#x1f30d;</span> Export layer as KML</button>
+        <button class="export-btn" onclick="exportLayerGPX()"><span class="icon">&#x1f4cd;</span> Export layer as GPX</button>
       </div>
     </div>
 
@@ -5913,6 +5940,265 @@ function clearAnalysisResults() {
   empty.style.display = '';
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// INFERENTIAL SPATIAL STATISTICS (Getis-Ord Gi*, Local & Global Moran's I)
+// ---------------------------------------------------------------------------
+// These follow the standard formulations used by ArcGIS Pro (Hot Spot
+// Analysis), GeoDa and PySAL/esda so results are directly comparable:
+//   • Getis-Ord Gi*  — Ord & Getis (1995), analytical z-score + two-tailed p.
+//   • Local Moran's I — Anselin (1995) LISA, conditional-permutation pseudo-p.
+//   • Global Moran's I — Cliff & Ord randomization-assumption z-score + p.
+// Spatial weights use a binary distance band. When no band is supplied we use
+// the ArcGIS default: the smallest distance at which every feature has at
+// least one neighbour ("min-threshold distance").
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Standard normal CDF (Abramowitz & Stegun 7.1.26) — accurate to ~7e-8.
+function _normCdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+  const prob = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return z > 0 ? 1 - prob : prob;
+}
+function _twoTailP(z) { return 2 * (1 - _normCdf(Math.abs(z))); }
+
+// Benjamini-Hochberg FDR-adjusted p-values (q-values), order-preserving.
+function _bhAdjust(pvals) {
+  const m = pvals.length;
+  const order = pvals.map((v, i) => i).sort((a, b) => pvals[a] - pvals[b]);
+  const q = new Array(m);
+  let prev = 1;
+  for (let k = m - 1; k >= 0; k--) {
+    const i = order[k];
+    prev = Math.min(prev, pvals[i] * m / (k + 1), 1);
+    q[i] = prev;
+  }
+  return q;
+}
+
+// Auto-pick the UTM zone for a lon/lat and return its proj4 definition.
+function _utmDefForLonLat(lon, lat) {
+  const zone = Math.floor((lon + 180) / 6) + 1;
+  const hemi = lat < 0 ? 'S' : 'N';
+  return {
+    code: `UTMAUTO:${zone}${hemi}`,
+    def: `+proj=utm +zone=${zone}${lat < 0 ? ' +south' : ''} +datum=WGS84 +units=m +no_defs`,
+    zone, hemi,
+  };
+}
+
+// Project {lat,lon} points to an equal-distance planar CRS (auto UTM zone from
+// the centroid) so neighbour/distance computations are metric and undistorted.
+// Falls back to a local equirectangular approximation if proj4 is unavailable.
+function _projectPointsAuto(pts) {
+  const cLon = pts.reduce((s, p) => s + p.lon, 0) / pts.length;
+  const cLat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
+  if (typeof proj4 === 'undefined') {
+    const mPerDegLat = 110540, mPerDegLon = 111320 * Math.cos(cLat * Math.PI / 180);
+    return {xy: pts.map(p => [p.lon * mPerDegLon, p.lat * mPerDegLat]), label: 'local planar approx.', zone: null};
+  }
+  const u = _utmDefForLonLat(cLon, cLat);
+  try { proj4.defs(u.code, u.def); } catch (_) {}
+  const xy = pts.map(p => { try { return proj4('EPSG:4326', u.code, [p.lon, p.lat]); } catch (_) { return [p.lon, p.lat]; } });
+  return {xy, label: `UTM ${u.zone}${u.hemi}`, zone: u.zone, hemi: u.hemi};
+}
+
+// Unified binary spatial-weights builder on projected coordinates.
+// opts: {type:'band'|'knn', bandM, k, includeSelf}. Distance-band defaults to
+// the min-threshold distance (every feature gets >=1 neighbour) when bandM is
+// blank. Returns neighbour index lists plus metadata for reporting.
+function _buildWeights(pts, opts) {
+  const proj = _projectPointsAuto(pts);
+  const xy = proj.xy, n = pts.length;
+  const dist = (i, j) => { const dx = xy[i][0] - xy[j][0], dy = xy[i][1] - xy[j][1]; return Math.sqrt(dx * dx + dy * dy); };
+  const nbrs = Array.from({length: n}, () => []);
+  let band = opts.bandM || 0, k = opts.k || 0;
+  if (opts.type === 'knn') {
+    k = Math.max(1, Math.min(k || 8, n - 1));
+    for (let i = 0; i < n; i++) {
+      const order = [];
+      for (let j = 0; j < n; j++) if (j !== i) order.push([dist(i, j), j]);
+      order.sort((a, b) => a[0] - b[0]);
+      if (opts.includeSelf) nbrs[i].push(i);
+      for (let t = 0; t < k; t++) nbrs[i].push(order[t][1]);
+    }
+  } else {
+    if (!band || band <= 0) {
+      let maxNN = 0;
+      for (let i = 0; i < n; i++) {
+        let mn = Infinity;
+        for (let j = 0; j < n; j++) if (i !== j) { const d = dist(i, j); if (d < mn) mn = d; }
+        if (isFinite(mn) && mn > maxNN) maxNN = mn;
+      }
+      band = maxNN * 1.0000001;
+    }
+    for (let i = 0; i < n; i++) {
+      if (opts.includeSelf) nbrs[i].push(i);
+      for (let j = 0; j < n; j++) if (i !== j && dist(i, j) <= band) nbrs[i].push(j);
+    }
+  }
+  return {nbrs, band, k, proj, type: opts.type};
+}
+
+// W0, S1, S2 weight moments for any binary weights (handles asymmetric KNN).
+function _weightMoments(nbrs, n) {
+  const setArr = nbrs.map(a => new Set(a));
+  const rs = new Array(n), cs = new Array(n).fill(0);
+  let W0 = 0;
+  for (let i = 0; i < n; i++) { rs[i] = nbrs[i].length; W0 += rs[i]; for (const j of nbrs[i]) if (j !== i) cs[j]++; }
+  let S2 = 0;
+  for (let i = 0; i < n; i++) { const t = rs[i] + cs[i]; S2 += t * t; }
+  let S1 = 0; const seen = new Set();
+  for (let i = 0; i < n; i++) for (const j of nbrs[i]) {
+    if (i === j) continue;
+    const key = i < j ? i * n + j : j * n + i;
+    if (seen.has(key)) continue; seen.add(key);
+    const wij = setArr[i].has(j) ? 1 : 0, wji = setArr[j].has(i) ? 1 : 0;
+    S1 += (wij + wji) * (wij + wji);
+  }
+  return {W0, S1, S2};
+}
+
+// Human-readable weights description for result panels.
+function _weightDesc(r) {
+  const proj = r.proj ? ` · ${r.proj.label}` : '';
+  return (r.type === 'knn')
+    ? `k-nearest neighbours (k = ${r.k})${proj}`
+    : `distance band = ${(r.band / 1000).toFixed(2)} km${proj}`;
+}
+
+// Getis-Ord Gi* — per-feature z-scores and two-tailed p-values (Ord & Getis
+// 1995). Binary weights include the focal feature (self-neighbour).
+function getisOrdGiStar(pts, x, wopts) {
+  const n = pts.length;
+  const W = _buildWeights(pts, Object.assign({includeSelf: true}, wopts));
+  const xbar = x.reduce((a, b) => a + b, 0) / n;
+  const S = Math.sqrt(Math.max(x.reduce((a, b) => a + b * b, 0) / n - xbar * xbar, 0));
+  const z = new Array(n), p = new Array(n), nb = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = W.nbrs[i].length;       // weight sum (binary, incl self)
+    let wx = 0;
+    for (const j of W.nbrs[i]) wx += x[j];
+    nb[i] = k - 1;
+    const denom = S * Math.sqrt(Math.max((n * k - k * k) / (n - 1), 1e-12));
+    const zi = denom > 0 ? (wx - xbar * k) / denom : 0;
+    z[i] = zi; p[i] = _twoTailP(zi);
+  }
+  return {z, p, nb, band: W.band, k: W.k, type: W.type, proj: W.proj};
+}
+
+// Local Moran's I (LISA) with conditional-permutation inference (GeoDa-style).
+// Row-standardised binary weights. Returns Ii, spatial lag, pseudo-p and the
+// mean-centred value z_i so cluster type (HH/LL/HL/LH) can be assigned.
+function localMoran(pts, x, wopts, perms) {
+  const n = pts.length;
+  const W = _buildWeights(pts, Object.assign({includeSelf: false}, wopts));
+  const xbar = x.reduce((a, b) => a + b, 0) / n;
+  const z = x.map(v => v - xbar);
+  const m2 = z.reduce((a, b) => a + b * b, 0) / n;
+  const Ii = new Array(n), lag = new Array(n), pval = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = W.nbrs[i].length;
+    if (k === 0 || m2 === 0) { Ii[i] = 0; lag[i] = 0; pval[i] = 1; continue; }
+    let s = 0;
+    for (const j of W.nbrs[i]) s += z[j];
+    const lagi = s / k;
+    const obs = (z[i] / m2) * lagi;
+    lag[i] = lagi; Ii[i] = obs;
+    const pool = [];
+    for (let j = 0; j < n; j++) if (j !== i) pool.push(j);
+    let ge = 0;
+    const absObs = Math.abs(obs);
+    for (let it = 0; it < perms; it++) {
+      let ss = 0;
+      for (let t = 0; t < k; t++) {
+        const r = t + ((Math.random() * (pool.length - t)) | 0);
+        const tmp = pool[t]; pool[t] = pool[r]; pool[r] = tmp;
+        ss += z[pool[t]];
+      }
+      if (Math.abs((z[i] / m2) * (ss / k)) >= absObs) ge++;
+    }
+    pval[i] = (ge + 1) / (perms + 1);
+  }
+  return {Ii, lag, z, pval, band: W.band, k: W.k, type: W.type, proj: W.proj};
+}
+
+// Global Moran's I with randomization-assumption variance (Cliff & Ord).
+// Works with any binary weights (symmetric band or asymmetric KNN).
+function globalMoran(pts, x, wopts) {
+  const n = pts.length;
+  const W = _buildWeights(pts, Object.assign({includeSelf: false}, wopts));
+  const nbrs = W.nbrs;
+  const xbar = x.reduce((a, b) => a + b, 0) / n;
+  const z = x.map(v => v - xbar);
+  const {W0, S1, S2} = _weightMoments(nbrs, n);
+  let cross = 0;
+  for (let i = 0; i < n; i++) for (const j of nbrs[i]) cross += z[i] * z[j];
+  const denom = z.reduce((a, b) => a + b * b, 0);
+  const I = (n / W0) * (cross / denom);
+  const E = -1 / (n - 1);
+  const m2 = denom / n;
+  const m4 = z.reduce((a, b) => a + Math.pow(b, 4), 0) / n;
+  const b2 = m4 / (m2 * m2);
+  const A = n * ((n * n - 3 * n + 3) * S1 - n * S2 + 3 * W0 * W0);
+  const B = b2 * ((n * n - n) * S1 - 2 * n * S2 + 6 * W0 * W0);
+  const C = (n - 1) * (n - 2) * (n - 3) * W0 * W0;
+  const varR = C > 0 ? (A - B) / C - E * E : NaN;
+  const zscore = isFinite(varR) && varR > 0 ? (I - E) / Math.sqrt(varR) : NaN;
+  const p = isFinite(zscore) ? _twoTailP(zscore) : NaN;
+  return {I, E, varR, z: zscore, p, band: W.band, k: W.k, type: W.type, proj: W.proj, W0};
+}
+
+// Resolve the numeric analysis attribute: explicit UI selection, else a name
+// match against the supplied regex, else the first numeric field.
+function _pickAnalysisAttr(pts, preferRegex) {
+  const sel = document.getElementById('analysis-attr-select');
+  const chosen = sel ? sel.value : '';
+  const numKeys = Object.keys(pts[0].props || {}).filter(k => isFinite(parseFloat(pts[0].props[k])));
+  if (numKeys.length === 0) return null;
+  if (chosen && numKeys.includes(chosen)) return chosen;
+  return numKeys.find(k => preferRegex.test(k)) || numKeys[0];
+}
+
+// Distance band (metres) from the UI input; 0/blank ⇒ auto (min-threshold).
+function _analysisBandMeters() {
+  const el = document.getElementById('analysis-band-km');
+  const km = el ? parseFloat(el.value) : NaN;
+  return isFinite(km) && km > 0 ? km * 1000 : 0;
+}
+function _analysisUseFDR() {
+  const el = document.getElementById('analysis-fdr');
+  return el ? el.checked : true;
+}
+
+// Spatial-weights options selected in the Inferential panel.
+function _analysisWeightOpts() {
+  const typeEl = document.getElementById('analysis-weights-type');
+  const type = typeEl ? typeEl.value : 'band';
+  if (type === 'knn') {
+    const kEl = document.getElementById('analysis-knn-k');
+    const k = kEl ? parseInt(kEl.value) : 8;
+    return {type: 'knn', k: isFinite(k) && k > 0 ? k : 8};
+  }
+  return {type: 'band', bandM: _analysisBandMeters()};
+}
+
+// Toggle the band vs KNN input rows when the weights type changes.
+function onWeightsTypeChange() {
+  const type = (document.getElementById('analysis-weights-type') || {}).value || 'band';
+  const bandRow = document.getElementById('analysis-band-row');
+  const knnRow = document.getElementById('analysis-knn-row');
+  if (bandRow) bandRow.style.display = type === 'band' ? '' : 'none';
+  if (knnRow) knnRow.style.display = type === 'knn' ? '' : 'none';
+}
+
+// A small circle marker styled for a statistical class, with a hover tooltip.
+function _statMarker(lat, lon, color, tooltip) {
+  const m = L.circleMarker([lat, lon], {radius: 7, color: '#11151c', weight: 1, fillColor: color, fillOpacity: 0.9});
+  m.bindTooltip(tooltip, {direction: 'top', className: 'site-tooltip'});
+  return m;
+}
+
 function runAnalysis(tool) {
   const layerId = document.getElementById('analysis-layer-select').value;
   if (!layerId) { showToast('Select a layer first', 'error'); return; }
@@ -5988,34 +6274,164 @@ function runAnalysis(tool) {
   }
 
   case 'moranI': {
-    if (pts.length < 4) { showToast('Need at least 4 points with numeric attributes', 'error'); return; }
-    const numKeys = Object.keys(pts[0].props || {}).filter(k => {
-      const v = parseFloat(pts[0].props[k]);
-      return isFinite(v);
-    });
-    if (numKeys.length === 0) { showToast('No numeric attribute found for Moran\'s I', 'error'); return; }
-    const attr = numKeys.find(k => /elev|alt|z|value|pop|density|temp/i.test(k)) || numKeys[0];
+    if (pts.length < 5) { showToast('Global Moran\'s I needs at least 5 points with a numeric attribute', 'error'); return; }
+    const attr = _pickAnalysisAttr(pts, /elev|alt|abundance|richness|value|pop|density|temp|score/i);
+    if (!attr) { showToast('No numeric attribute found for Moran\'s I', 'error'); return; }
     const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
-    const mean = vals.reduce((s,v)=>s+v,0) / vals.length;
-    const n = vals.length;
-    let numerator = 0, denominator = 0, W = 0;
-    for (let i = 0; i < n; i++) {
-      denominator += (vals[i]-mean)**2;
-      for (let j = 0; j < n; j++) {
-        if (i === j) continue;
-        const d = haversineDist(pts[i], pts[j]);
-        if (d === 0) continue;
-        const w = 1 / d;
-        W += w;
-        numerator += w * (vals[i]-mean) * (vals[j]-mean);
-      }
+    const r = globalMoran(pts, vals, _analysisWeightOpts());
+    const sig = isFinite(r.p) && r.p < 0.05;
+    const sign = r.I > r.E ? 'Positive' : 'Negative';
+    const interp = !sig
+      ? 'Not statistically significant — the pattern is indistinguishable from spatial randomness (CSR).'
+      : (r.I > r.E
+          ? 'Statistically significant <b>positive</b> autocorrelation — similar values cluster together.'
+          : 'Statistically significant <b>negative</b> autocorrelation — dissimilar values are adjacent (checkerboard).');
+    showResult(
+      `<b>Global Moran's I</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
+      `<table style="margin-top:6px;font-size:11px;border-collapse:collapse">` +
+      `<tr><td style="padding:1px 10px 1px 0">Moran's I</td><td><b>${r.I.toFixed(4)}</b></td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">Expected I</td><td>${r.E.toFixed(4)}</td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">Variance</td><td>${isFinite(r.varR) ? r.varR.toExponential(3) : 'n/a'}</td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">z-score</td><td><b>${isFinite(r.z) ? r.z.toFixed(4) : 'n/a'}</b></td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">p-value</td><td><b style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(r.p) ? r.p.toExponential(3) : 'n/a'}</b></td></tr>` +
+      `</table>` +
+      `<div style="margin-top:6px">${interp}</div>` +
+      `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">Weights: ${_weightDesc(r)}. ` +
+      `Inference: randomization assumption (Cliff &amp; Ord). Two-tailed at α = 0.05.</div>`
+    );
+    break;
+  }
+
+  case 'gistar': {
+    if (pts.length < 6) { showToast('Getis-Ord Gi* needs at least 6 points with a numeric attribute', 'error'); return; }
+    const attr = _pickAnalysisAttr(pts, /abundance|richness|count|density|value|pop|score|threat|priority/i);
+    if (!attr) { showToast('No numeric attribute found for Gi*', 'error'); return; }
+    const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
+    const useFDR = _analysisUseFDR();
+    const r = getisOrdGiStar(pts, vals, _analysisWeightOpts());
+    const probs = useFDR ? _bhAdjust(r.p) : r.p;
+    const counts = {h99:0, h95:0, h90:0, ns:0, c90:0, c95:0, c99:0};
+    const markers = [], features = [];
+    for (let i = 0; i < pts.length; i++) {
+      const z = r.z[i], pr = probs[i];
+      let color = '#9aa5b1', cls = 'Not significant', conf = '';
+      if (pr <= 0.10) {
+        conf = pr <= 0.01 ? '99%' : pr <= 0.05 ? '95%' : '90%';
+        if (z > 0) { color = pr <= 0.01 ? '#b30000' : pr <= 0.05 ? '#e34a33' : '#fc8d59'; cls = 'Hot spot ' + conf; counts[pr <= 0.01 ? 'h99' : pr <= 0.05 ? 'h95' : 'h90']++; }
+        else { color = pr <= 0.01 ? '#0c2c84' : pr <= 0.05 ? '#225ea8' : '#41b6c4'; cls = 'Cold spot ' + conf; counts[pr <= 0.01 ? 'c99' : pr <= 0.05 ? 'c95' : 'c90']++; }
+      } else counts.ns++;
+      const tip = `<b>${cls}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Gi* z: ${z.toFixed(3)}<br>${useFDR ? 'q' : 'p'}-value: ${pr.toExponential(2)}<br>neighbours: ${r.nb[i]}`;
+      markers.push(_statMarker(pts[i].lat, pts[i].lon, color, tip));
+      features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
+        gi_z: +z.toFixed(4), gi_p: +r.p[i].toExponential(4), gi_q: useFDR ? +probs[i].toExponential(4) : null, gi_class: cls, neighbours: r.nb[i]
+      })});
     }
-    const I = (n / W) * (numerator / denominator);
-    const expected = -1 / (n - 1);
-    let interp = 'No significant autocorrelation';
-    if (I > expected + 0.2) interp = 'Positive spatial autocorrelation (similar values cluster)';
-    else if (I < expected - 0.2) interp = 'Negative spatial autocorrelation (dissimilar values cluster)';
-    showResult(`<b>Moran's I</b> (attribute: ${escapeHtml(attr)})<br><b>I:</b> ${I.toFixed(4)}<br><b>Expected:</b> ${expected.toFixed(4)}<br><b>Interpretation:</b> ${interp}<br><span style="color:var(--text-muted)">Inverse-distance weights used</span>`);
+    markers.forEach(m => analysisOverlays.push(m));
+    addAnalysisLayer(`Gi* Hot Spots (${escapeHtml(attr)})`, markers, {type:'FeatureCollection', features});
+    const totalSig = counts.h99+counts.h95+counts.h90+counts.c90+counts.c95+counts.c99;
+    showResult(
+      `<b>Getis-Ord Gi* Hot Spot Analysis</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
+      `<div style="margin-top:6px;font-size:11px">` +
+      `<span style="color:#b30000">■</span> Hot 99%: <b>${counts.h99}</b> &nbsp; ` +
+      `<span style="color:#e34a33">■</span> 95%: <b>${counts.h95}</b> &nbsp; ` +
+      `<span style="color:#fc8d59">■</span> 90%: <b>${counts.h90}</b><br>` +
+      `<span style="color:#0c2c84">■</span> Cold 99%: <b>${counts.c99}</b> &nbsp; ` +
+      `<span style="color:#225ea8">■</span> 95%: <b>${counts.c95}</b> &nbsp; ` +
+      `<span style="color:#41b6c4">■</span> 90%: <b>${counts.c90}</b><br>` +
+      `<span style="color:#9aa5b1">■</span> Not significant: <b>${counts.ns}</b></div>` +
+      `<div style="margin-top:6px">${totalSig} of ${pts.length} features are statistically significant hot/cold spots.</div>` +
+      `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">Weights: ${_weightDesc(r)}. ` +
+      `z-scores from Ord &amp; Getis (1995); two-tailed p. ${useFDR ? 'False Discovery Rate (Benjamini-Hochberg) correction applied.' : 'No multiple-comparison correction.'}</div>`
+    );
+    break;
+  }
+
+  case 'lisa': {
+    if (pts.length < 6) { showToast('Local Moran\'s I needs at least 6 points with a numeric attribute', 'error'); return; }
+    const attr = _pickAnalysisAttr(pts, /abundance|richness|count|density|value|pop|score|threat|priority/i);
+    if (!attr) { showToast('No numeric attribute found for LISA', 'error'); return; }
+    const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
+    const perms = pts.length > 2000 ? 199 : 999;
+    const r = localMoran(pts, vals, _analysisWeightOpts(), perms);
+    const counts = {HH:0, LL:0, HL:0, LH:0, ns:0};
+    const palette = {HH:'#e34a33', LL:'#2b8cbe', HL:'#fdae61', LH:'#abd9e9', ns:'#cbd5e0'};
+    const labels = {HH:'High-High (hot cluster)', LL:'Low-Low (cold cluster)', HL:'High-Low (outlier)', LH:'Low-High (outlier)', ns:'Not significant'};
+    const markers = [], features = [];
+    for (let i = 0; i < pts.length; i++) {
+      let key = 'ns';
+      if (r.pval[i] <= 0.05) {
+        if (r.z[i] > 0 && r.lag[i] > 0) key = 'HH';
+        else if (r.z[i] < 0 && r.lag[i] < 0) key = 'LL';
+        else if (r.z[i] > 0 && r.lag[i] < 0) key = 'HL';
+        else key = 'LH';
+      }
+      counts[key]++;
+      const tip = `<b>${labels[key]}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Local I: ${r.Ii[i].toFixed(3)}<br>pseudo-p: ${r.pval[i].toFixed(3)}`;
+      markers.push(_statMarker(pts[i].lat, pts[i].lon, palette[key], tip));
+      features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
+        local_I: +r.Ii[i].toFixed(4), lisa_p: +r.pval[i].toFixed(4), cluster: labels[key]
+      })});
+    }
+    markers.forEach(m => analysisOverlays.push(m));
+    addAnalysisLayer(`LISA Clusters (${escapeHtml(attr)})`, markers, {type:'FeatureCollection', features});
+    showResult(
+      `<b>Local Moran's I (LISA) Cluster &amp; Outlier Analysis</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
+      `<div style="margin-top:6px;font-size:11px">` +
+      `<span style="color:#e34a33">■</span> High-High clusters: <b>${counts.HH}</b><br>` +
+      `<span style="color:#2b8cbe">■</span> Low-Low clusters: <b>${counts.LL}</b><br>` +
+      `<span style="color:#fdae61">■</span> High-Low outliers: <b>${counts.HL}</b><br>` +
+      `<span style="color:#abd9e9">■</span> Low-High outliers: <b>${counts.LH}</b><br>` +
+      `<span style="color:#cbd5e0">■</span> Not significant: <b>${counts.ns}</b></div>` +
+      `<div style="color:var(--text-muted);margin-top:6px;font-size:10px">Weights: ${_weightDesc(r)}. ` +
+      `Conditional permutation inference (${perms} permutations), pseudo-p ≤ 0.05. ` +
+      `High-High = conservation hotspots; High-Low = isolated rich sites worth attention.</div>`
+    );
+    break;
+  }
+
+  case 'moranScatter': {
+    if (pts.length < 5) { showToast('Moran scatterplot needs at least 5 points with a numeric attribute', 'error'); return; }
+    const attr = _pickAnalysisAttr(pts, /abundance|richness|count|density|value|pop|score|elev|temp/i);
+    if (!attr) { showToast('No numeric attribute found', 'error'); return; }
+    const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
+    const wopts = _analysisWeightOpts();
+    const gm = globalMoran(pts, vals, wopts);
+    const W = _buildWeights(pts, Object.assign({includeSelf: false}, wopts));
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / vals.length) || 1;
+    const zs = vals.map(v => (v - mean) / sd);
+    const lag = W.nbrs.map(nb => nb.length ? nb.reduce((s, j) => s + zs[j], 0) / nb.length : 0);
+    const quad = (z, l) => (z >= 0 && l >= 0) ? '#e34a33' : (z < 0 && l < 0) ? '#2b8cbe' : (z >= 0 && l < 0) ? '#fdae61' : '#abd9e9';
+    const dataPts = zs.map((z, i) => ({x: z, y: lag[i], c: quad(z, lag[i])}));
+    const xMin = Math.min(...zs), xMax = Math.max(...zs);
+    const sig = isFinite(gm.p) && gm.p < 0.05;
+    showResult(
+      `<b>Moran Scatterplot</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
+      `<div>Global Moran's I = <b>${gm.I.toFixed(4)}</b> (slope) · z = ${isFinite(gm.z) ? gm.z.toFixed(2) : 'n/a'} · ` +
+      `p = <b style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(gm.p) ? gm.p.toExponential(2) : 'n/a'}</b></div>` +
+      `<div style="margin-top:6px;background:#fff;border-radius:6px;padding:6px;width:360px;max-width:100%"><canvas id="moran-scatter-canvas" width="348" height="300"></canvas></div>` +
+      `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">x = standardised ${escapeHtml(attr)}; y = spatial lag (mean of neighbours). ` +
+      `Upper-right/lower-left = positive autocorrelation. Weights: ${_weightDesc(gm)}.</div>`
+    );
+    if (window._moranScatterChart) { try { window._moranScatterChart.destroy(); } catch (_) {} }
+    const ctx = document.getElementById('moran-scatter-canvas').getContext('2d');
+    window._moranScatterChart = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {label: 'features', data: dataPts, pointBackgroundColor: dataPts.map(d => d.c), pointRadius: 4, pointBorderColor: '#333', pointBorderWidth: 0.5},
+          {label: 'Moran slope', type: 'line', data: [{x: xMin, y: gm.I * xMin}, {x: xMax, y: gm.I * xMax}], borderColor: '#1a1d23', borderWidth: 2, pointRadius: 0, fill: false},
+        ],
+      },
+      options: {
+        responsive: false, animation: false,
+        plugins: {legend: {display: false}, tooltip: {enabled: false}},
+        scales: {
+          x: {title: {display: true, text: `z(${attr})`, color: '#2d3748', font: {size: 11}}, grid: {color: '#e2e8f0'}, ticks: {color: '#4a5568', font: {size: 9}}},
+          y: {title: {display: true, text: 'spatial lag', color: '#2d3748', font: {size: 11}}, grid: {color: '#e2e8f0'}, ticks: {color: '#4a5568', font: {size: 9}}},
+        },
+      },
+    });
     break;
   }
 
@@ -8299,33 +8715,86 @@ async function exportProfile(fmt) {
   }
 }
 
-function exportAllCSV() {
-  const allFeatures = [];
-  uploadedLayers.forEach(l => {
-    l.properties.forEach(p => {
-      const row = Object.assign({}, p);
-      row._layer = l.name;
-      allFeatures.push(row);
-    });
+// Build per-feature rows enriched with reprojected X/Y when a non-WGS84 CRS is chosen.
+function _featureRowsWithCrs(features, crsCode) {
+  const projected = crsCode && crsCode !== 'EPSG:4326';
+  return features.map(f => {
+    const row = Object.assign({}, f.properties || {});
+    if (f.geometry) {
+      const g = f.geometry;
+      let lon, lat;
+      if (g.type === 'Point') { [lon, lat] = g.coordinates; }
+      else if (g.type === 'MultiPoint' && g.coordinates[0]) { [lon, lat] = g.coordinates[0]; }
+      if (lon !== undefined) {
+        if (projected) {
+          const [x, y] = _reprojectCoord(lon, lat, crsCode);
+          row._x = +x.toFixed(4);
+          row._y = +y.toFixed(4);
+        } else {
+          row._longitude = +lon.toFixed(8);
+          row._latitude  = +lat.toFixed(8);
+        }
+      }
+    }
+    return row;
   });
-  if (allFeatures.length === 0) { showToast('No features to export', 'error'); return; }
-  const keys = ['_layer', ...new Set(allFeatures.flatMap(Object.keys).filter(k => k !== '_layer'))];
-  const csv = [keys.join(','), ...allFeatures.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
-  const blob = new Blob([csv], {type: 'text/csv'});
-  _downloadBlob(blob, 'all_features.csv');
-  showToast('CSV exported', 'success');
+}
+
+function exportAllCSV() {
+  const crsCode = _exportCrsCode();
+  const allRows = [];
+  uploadedLayers.forEach(l => {
+    const features = _layerToFeatures(l);
+    const rows = _featureRowsWithCrs(features, crsCode);
+    rows.forEach(r => { r._layer = l.name; allRows.push(r); });
+  });
+  if (allRows.length === 0) { showToast('No features to export', 'error'); return; }
+  const keys = ['_layer', ...new Set(allRows.flatMap(Object.keys).filter(k => k !== '_layer'))];
+  const csv = [keys.join(','), ...allRows.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
+  _downloadBlob(new Blob([csv], {type: 'text/csv'}), 'all_features.csv');
+  showToast('CSV exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function exportLayerCSV() {
-  const layerId = document.getElementById('export-layer-select').value;
-  const lyr = uploadedLayers.find(l => l.id === layerId);
+  const lyr = _selectedExportLayer();
   if (!lyr) { showToast('Select a layer first', 'error'); return; }
-  if (!lyr.properties || lyr.properties.length === 0) { showToast('No features to export', 'error'); return; }
-  const keys = [...new Set(lyr.properties.flatMap(Object.keys))];
-  const csv = [keys.join(','), ...lyr.properties.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
-  const blob = new Blob([csv], {type: 'text/csv'});
-  _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv');
-  showToast('CSV exported', 'success');
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No features to export', 'error'); return; }
+  const crsCode = _exportCrsCode();
+  const rows = _featureRowsWithCrs(features, crsCode);
+  const keys = [...new Set(rows.flatMap(Object.keys))];
+  const csv = [keys.join(','), ...rows.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
+  _downloadBlob(new Blob([csv], {type: 'text/csv'}), _safeName(lyr.name) + '.csv');
+  showToast('CSV exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
+}
+
+function exportLayerXLSX() {
+  const lyr = _selectedExportLayer();
+  if (!lyr) { showToast('Select a layer first', 'error'); return; }
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No features to export', 'error'); return; }
+  const crsCode = _exportCrsCode();
+  const rows = _featureRowsWithCrs(features, crsCode);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, lyr.name.slice(0, 31));
+  XLSX.writeFile(wb, _safeName(lyr.name) + '.xlsx');
+  showToast('XLSX exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
+}
+
+function exportAllXLSX() {
+  const crsCode = _exportCrsCode();
+  const wb = XLSX.utils.book_new();
+  uploadedLayers.forEach(l => {
+    const features = _layerToFeatures(l);
+    const rows = _featureRowsWithCrs(features, crsCode);
+    if (rows.length === 0) return;
+    const ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, l.name.slice(0, 31));
+  });
+  if (!wb.SheetNames || wb.SheetNames.length === 0) { showToast('No features to export', 'error'); return; }
+  XLSX.writeFile(wb, 'all_features.xlsx');
+  showToast('XLSX exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function _layerToFeatures(lyr) {
@@ -8341,7 +8810,21 @@ function _layerToFeatures(lyr) {
   return features;
 }
 
+function _geoJSONWithCrs(features, crsCode) {
+  const projected = crsCode && crsCode !== 'EPSG:4326';
+  const out = features.map(f => Object.assign({}, f, {
+    geometry: projected ? _reprojectGeom(f.geometry, crsCode) : f.geometry
+  }));
+  const fc = {type: 'FeatureCollection', features: out};
+  if (projected) {
+    // Named CRS member (pre-RFC7946, but understood by QGIS/ArcGIS for projected output)
+    fc.crs = {type: 'name', properties: {name: `urn:ogc:def:crs:${crsCode.replace(':', '::')}` }};
+  }
+  return fc;
+}
+
 function exportAllGeoJSON() {
+  const crsCode = _exportCrsCode();
   const features = [];
   uploadedLayers.forEach(l => {
     const lFeatures = _layerToFeatures(l);
@@ -8352,28 +8835,68 @@ function exportAllGeoJSON() {
     features.push(...lFeatures);
   });
   if (features.length === 0) { showToast('No features to export', 'error'); return; }
-  const gj = {type: 'FeatureCollection', features};
-  const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
-  _downloadBlob(blob, 'all_features.geojson');
-  showToast('GeoJSON exported', 'success');
+  const gj = _geoJSONWithCrs(features, crsCode);
+  _downloadBlob(new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'}), 'all_features.geojson');
+  showToast('GeoJSON exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function refreshExportLayerSelect() {
   const sel = document.getElementById('export-layer-select');
   if (!sel) return;
   sel.innerHTML = uploadedLayers.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('');
+  _initExportCrsSelect();
+}
+
+function _initExportCrsSelect() {
+  const sel = document.getElementById('export-crs-select');
+  if (!sel || sel.options.length > 0) return;
+  sel.innerHTML = CRS_PRESETS
+    .filter(p => p.code !== '__custom__')
+    .map(p => `<option value="${p.code}">${p.label}</option>`)
+    .join('');
+  sel.value = 'EPSG:4326';
+}
+
+// Reproject [lon, lat] (WGS84) → [x, y] in the chosen export CRS.
+// Returns the original pair unchanged when CRS is EPSG:4326 or proj4 is absent.
+function _reprojectCoord(lon, lat, targetCode) {
+  if (!targetCode || targetCode === 'EPSG:4326') return [lon, lat];
+  if (typeof proj4 === 'undefined') return [lon, lat];
+  try {
+    return proj4('EPSG:4326', targetCode, [lon, lat]);
+  } catch (_) { return [lon, lat]; }
+}
+
+function _exportCrsCode() {
+  const sel = document.getElementById('export-crs-select');
+  return sel ? sel.value : 'EPSG:4326';
+}
+
+// Reproject every coordinate in a GeoJSON geometry (in-place clone).
+function _reprojectGeom(geom, crsCode) {
+  if (!geom || crsCode === 'EPSG:4326') return geom;
+  const rp = c => _reprojectCoord(c[0], c[1], crsCode).concat(c.slice(2));
+  const rpRing = ring => ring.map(rp);
+  const clone = JSON.parse(JSON.stringify(geom));
+  switch (clone.type) {
+    case 'Point': clone.coordinates = rp(clone.coordinates); break;
+    case 'MultiPoint': case 'LineString': clone.coordinates = clone.coordinates.map(rp); break;
+    case 'MultiLineString': case 'Polygon': clone.coordinates = clone.coordinates.map(rpRing); break;
+    case 'MultiPolygon': clone.coordinates = clone.coordinates.map(p => p.map(rpRing)); break;
+    case 'GeometryCollection': clone.geometries = clone.geometries.map(g => _reprojectGeom(g, crsCode)); break;
+  }
+  return clone;
 }
 
 function exportLayerGeoJSON() {
-  const layerId = document.getElementById('export-layer-select').value;
-  const lyr = uploadedLayers.find(l => l.id === layerId);
+  const lyr = _selectedExportLayer();
   if (!lyr) { showToast('Select a layer first', 'error'); return; }
   const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
-  const gj = {type: 'FeatureCollection', features};
-  const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
-  _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.geojson');
-  showToast('GeoJSON exported', 'success');
+  const crsCode = _exportCrsCode();
+  const gj = _geoJSONWithCrs(features, crsCode);
+  _downloadBlob(new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'}), _safeName(lyr.name) + '.geojson');
+  showToast('GeoJSON exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
 function exportLayerShapefile() {
@@ -8392,6 +8915,138 @@ function exportLayerShapefile() {
     _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.geojson');
     showToast('Exported as GeoJSON (install shp-write for Shapefile support)', 'success');
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KML / GPX EXPORT (OGC / GPS interchange — no extra deps, hand-rolled writers)
+// All in-app geometry is WGS84 (EPSG:4326), which is exactly what KML and GPX
+// require, so no reprojection is needed on the way out.
+// ═══════════════════════════════════════════════════════════════════════════
+
+function _xmlEscape(val) {
+  if (val === null || val === undefined) return '';
+  return String(val)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+// Flatten a coordinate array into KML "lon,lat[,alt] " tuples.
+function _kmlCoords(coords) {
+  return coords.map(c => `${c[0]},${c[1]}${c.length > 2 ? ',' + c[2] : ''}`).join(' ');
+}
+
+// Render a single GeoJSON geometry as a KML geometry fragment.
+function _geomToKml(geom) {
+  if (!geom) return '';
+  switch (geom.type) {
+    case 'Point':
+      return `<Point><coordinates>${_kmlCoords([geom.coordinates])}</coordinates></Point>`;
+    case 'MultiPoint':
+      return geom.coordinates.map(c => `<Point><coordinates>${_kmlCoords([c])}</coordinates></Point>`).join('');
+    case 'LineString':
+      return `<LineString><coordinates>${_kmlCoords(geom.coordinates)}</coordinates></LineString>`;
+    case 'MultiLineString':
+      return geom.coordinates.map(l => `<LineString><coordinates>${_kmlCoords(l)}</coordinates></LineString>`).join('');
+    case 'Polygon':
+      return `<Polygon>${geom.coordinates.map((ring, i) =>
+        `<${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}><LinearRing><coordinates>${_kmlCoords(ring)}</coordinates></LinearRing></${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}>`
+      ).join('')}</Polygon>`;
+    case 'MultiPolygon':
+      return geom.coordinates.map(poly =>
+        `<Polygon>${poly.map((ring, i) =>
+          `<${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}><LinearRing><coordinates>${_kmlCoords(ring)}</coordinates></LinearRing></${i === 0 ? 'outerBoundaryIs' : 'innerBoundaryIs'}>`
+        ).join('')}</Polygon>`
+      ).join('');
+    case 'GeometryCollection':
+      return `<MultiGeometry>${(geom.geometries || []).map(_geomToKml).join('')}</MultiGeometry>`;
+    default:
+      return '';
+  }
+}
+
+function _featuresToKml(features, docName) {
+  const placemarks = features.map(f => {
+    const props = f.properties || {};
+    const nameKey = ['name', 'Name', 'title', 'label', 'site', 'id'].find(k => props[k] != null);
+    const name = nameKey ? _xmlEscape(props[nameKey]) : '';
+    const rows = Object.keys(props)
+      .map(k => `<Data name="${_xmlEscape(k)}"><value>${_xmlEscape(props[k])}</value></Data>`)
+      .join('');
+    const geom = _geomToKml(f.geometry);
+    if (!geom) return '';
+    return `<Placemark>${name ? `<name>${name}</name>` : ''}`
+      + (rows ? `<ExtendedData>${rows}</ExtendedData>` : '')
+      + `${geom}</Placemark>`;
+  }).filter(Boolean).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n`
+    + `<kml xmlns="http://www.opengis.net/kml/2.2"><Document>`
+    + `<name>${_xmlEscape(docName || 'Map-Kit export')}</name>\n${placemarks}\n`
+    + `</Document></kml>\n`;
+}
+
+// GPX only models points (waypoints) and lines (tracks). Polygons are emitted
+// as track segments using their outer ring so nothing is silently dropped.
+function _featuresToGpx(features, docName) {
+  const wpts = [], trks = [];
+  const propLookup = (props, keys) => { const k = keys.find(k => props[k] != null); return k ? props[k] : null; };
+  features.forEach(f => {
+    const props = f.properties || {};
+    const g = f.geometry;
+    if (!g) return;
+    const nameVal = propLookup(props, ['name', 'Name', 'title', 'label', 'site', 'id']);
+    const eleVal = propLookup(props, ['ele', 'elevation', 'elev', 'altitude', 'z']);
+    const nameTag = nameVal != null ? `<name>${_xmlEscape(nameVal)}</name>` : '';
+    const ptWpt = c => `<wpt lat="${c[1]}" lon="${c[0]}">`
+      + (c.length > 2 ? `<ele>${c[2]}</ele>` : (eleVal != null ? `<ele>${_xmlEscape(eleVal)}</ele>` : ''))
+      + `${nameTag}</wpt>`;
+    const trkFromLine = line => `<trk>${nameTag}<trkseg>`
+      + line.map(c => `<trkpt lat="${c[1]}" lon="${c[0]}">${c.length > 2 ? `<ele>${c[2]}</ele>` : ''}</trkpt>`).join('')
+      + `</trkseg></trk>`;
+    switch (g.type) {
+      case 'Point': wpts.push(ptWpt(g.coordinates)); break;
+      case 'MultiPoint': g.coordinates.forEach(c => wpts.push(ptWpt(c))); break;
+      case 'LineString': trks.push(trkFromLine(g.coordinates)); break;
+      case 'MultiLineString': g.coordinates.forEach(l => trks.push(trkFromLine(l))); break;
+      case 'Polygon': if (g.coordinates[0]) trks.push(trkFromLine(g.coordinates[0])); break;
+      case 'MultiPolygon': g.coordinates.forEach(p => { if (p[0]) trks.push(trkFromLine(p[0])); }); break;
+    }
+  });
+  return `<?xml version="1.0" encoding="UTF-8"?>\n`
+    + `<gpx version="1.1" creator="Map-Kit" xmlns="http://www.topografix.com/GPX/1/1" `
+    + `xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" `
+    + `xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n`
+    + `<metadata><name>${_xmlEscape(docName || 'Map-Kit export')}</name></metadata>\n`
+    + wpts.join('\n') + (wpts.length ? '\n' : '') + trks.join('\n') + (trks.length ? '\n' : '')
+    + `</gpx>\n`;
+}
+
+function _safeName(name) {
+  return (name || 'layer').replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function _selectedExportLayer() {
+  const layerId = document.getElementById('export-layer-select').value;
+  return uploadedLayers.find(l => l.id === layerId);
+}
+
+function exportLayerKML() {
+  const lyr = _selectedExportLayer();
+  if (!lyr) { showToast('Select a layer first', 'error'); return; }
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
+  const kml = _featuresToKml(features, lyr.name);
+  _downloadBlob(new Blob([kml], {type: 'application/vnd.google-earth.kml+xml'}), _safeName(lyr.name) + '.kml');
+  showToast('KML exported', 'success');
+}
+
+function exportLayerGPX() {
+  const lyr = _selectedExportLayer();
+  if (!lyr) { showToast('Select a layer first', 'error'); return; }
+  const features = _layerToFeatures(lyr);
+  if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
+  const gpx = _featuresToGpx(features, lyr.name);
+  _downloadBlob(new Blob([gpx], {type: 'application/gpx+xml'}), _safeName(lyr.name) + '.gpx');
+  showToast('GPX exported', 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
