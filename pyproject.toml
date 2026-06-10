@@ -1,7 +1,7 @@
 [project]
-name = "map-kit"
+name = "geospax"
 version = "1.0.0"
-description = "A lightweight Web GIS toolkit for interactive geospatial visualization and spatial analysis, with a Python pipeline for publication-ready static maps."
+description = "GeoSpaX — a modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis, plus a Python pipeline for publication-ready static maps."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -39,7 +39,7 @@ dev = [
 ]
 
 [project.scripts]
-make-maps = "map_kit.cli:main"
+geospax = "geospax.cli:main"
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
@@ -47,7 +47,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["map_kit*"]
+include = ["geospax*"]
 
 # ── Ruff (linter + formatter) ──────────────────────────────────────────────
 [tool.ruff]
@@ -71,7 +71,7 @@ select = [
 ignore = ["E501"]  # line length handled by formatter
 
 [tool.ruff.lint.isort]
-known-first-party = ["map_kit"]
+known-first-party = ["geospax"]
 
 [tool.ruff.format]
 quote-style = "double"

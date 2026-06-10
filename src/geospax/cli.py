@@ -1,4 +1,4 @@
-"""Command-line interface for map-kit map generation."""
+"""Command-line interface for GeoSpaX map generation."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import LineString, Point
 
-from map_kit.data import MT_WILHELM_POINTS, YUS_POINTS, TRANSECT_COLORS
-from map_kit.maps import build_interactive_map, build_static_map
+from geospax.data import MT_WILHELM_POINTS, TRANSECT_COLORS, YUS_POINTS
+from geospax.maps import build_interactive_map, build_static_map
 
 
 def _build_geodataframes() -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, pd.DataFrame]:
@@ -30,9 +30,9 @@ def _build_geodataframes() -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, pd.DataF
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Entry point for the make-maps CLI."""
+    """Entry point for the geospax CLI."""
     parser = argparse.ArgumentParser(
-        prog="make-maps",
+        prog="geospax",
         description="Generate static and interactive transect maps for PNG study sites.",
     )
     parser.add_argument(

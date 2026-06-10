@@ -1,0 +1,12 @@
+# GeoSpaX is a single-file static Web GIS (index.html).
+# Exclude the Python pipeline and local artifacts from the Vercel deployment.
+src/
+data/
+docs/
+.claude-flow/
+test_static_map_export/
+pyproject.toml
+Makefile
+.pre-commit-config.yaml
+.editorconfig
+CONTRIBUTING.md

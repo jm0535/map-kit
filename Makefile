@@ -19,13 +19,13 @@ check: lint typecheck  ## Run all checks
 # ── Build ──────────────────────────────────────────────────────────────────
 
 build:          ## Generate static and interactive maps
-	python -m map_kit.cli
+	python -m geospax.cli
 
 build-static:   ## Generate static map only
-	python -m map_kit.cli --static-only
+	python -m geospax.cli --static-only
 
 build-interactive: ## Generate interactive map only
-	python -m map_kit.cli --interactive-only
+	python -m geospax.cli --interactive-only
 
 # ── Serve ──────────────────────────────────────────────────────────────────
 
