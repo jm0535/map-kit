@@ -1311,8 +1311,18 @@
         <button class="export-btn" onclick="runAnalysis('extent')">Bounding Box &amp; Area</button>
         <button class="export-btn" onclick="runAnalysis('nni')">Nearest Neighbor Index</button>
 
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Autocorrelation</div>
-        <button class="export-btn" onclick="runAnalysis('moranI')">Moran's I (spatial autocorrelation)</button>
+        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Inferential Hotspots &amp; Autocorrelation</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">Variable = the “Weight attr” selector below (auto-detect if unset).</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Distance band (km):</span>
+          <input type="number" id="analysis-band-km" placeholder="auto" min="0" step="0.5" title="Leave blank for the ArcGIS-style min-threshold distance (every feature gets ≥1 neighbour)" style="width:64px;font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;">
+        </div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;">
+          <input type="checkbox" id="analysis-fdr" checked style="margin:0;"> Apply FDR correction (Gi*)
+        </label>
+        <button class="export-btn" onclick="runAnalysis('gistar')">Getis-Ord Gi* Hot Spots</button>
+        <button class="export-btn" onclick="runAnalysis('lisa')">Local Moran's I (LISA clusters)</button>
+        <button class="export-btn" onclick="runAnalysis('moranI')">Global Moran's I (significance test)</button>
 
         <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Interpolation &amp; Density</div>
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -5903,6 +5913,198 @@ function clearAnalysisResults() {
   empty.style.display = '';
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// INFERENTIAL SPATIAL STATISTICS (Getis-Ord Gi*, Local & Global Moran's I)
+// ---------------------------------------------------------------------------
+// These follow the standard formulations used by ArcGIS Pro (Hot Spot
+// Analysis), GeoDa and PySAL/esda so results are directly comparable:
+//   • Getis-Ord Gi*  — Ord & Getis (1995), analytical z-score + two-tailed p.
+//   • Local Moran's I — Anselin (1995) LISA, conditional-permutation pseudo-p.
+//   • Global Moran's I — Cliff & Ord randomization-assumption z-score + p.
+// Spatial weights use a binary distance band. When no band is supplied we use
+// the ArcGIS default: the smallest distance at which every feature has at
+// least one neighbour ("min-threshold distance").
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Standard normal CDF (Abramowitz & Stegun 7.1.26) — accurate to ~7e-8.
+function _normCdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+  const prob = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return z > 0 ? 1 - prob : prob;
+}
+function _twoTailP(z) { return 2 * (1 - _normCdf(Math.abs(z))); }
+
+// Benjamini-Hochberg FDR-adjusted p-values (q-values), order-preserving.
+function _bhAdjust(pvals) {
+  const m = pvals.length;
+  const order = pvals.map((v, i) => i).sort((a, b) => pvals[a] - pvals[b]);
+  const q = new Array(m);
+  let prev = 1;
+  for (let k = m - 1; k >= 0; k--) {
+    const i = order[k];
+    prev = Math.min(prev, pvals[i] * m / (k + 1), 1);
+    q[i] = prev;
+  }
+  return q;
+}
+
+// Build a symmetric distance matrix (metres) for an array of {lat,lon} points.
+function _distanceMatrix(pts) {
+  const n = pts.length;
+  const D = Array.from({length: n}, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const d = haversineDist(pts[i], pts[j]);
+      D[i][j] = d; D[j][i] = d;
+    }
+  }
+  return D;
+}
+
+// Binary distance-band weights. If bandM is falsy, derive the min-threshold
+// distance so every feature has >=1 neighbour. includeSelf=true for Gi*.
+function _distanceBand(pts, bandM, includeSelf, D) {
+  const n = pts.length;
+  D = D || _distanceMatrix(pts);
+  let band = bandM;
+  if (!band || band <= 0) {
+    let maxNN = 0;
+    for (let i = 0; i < n; i++) {
+      let mn = Infinity;
+      for (let j = 0; j < n; j++) if (i !== j && D[i][j] < mn) mn = D[i][j];
+      if (mn > maxNN && isFinite(mn)) maxNN = mn;
+    }
+    band = maxNN * 1.0000001;
+  }
+  const nbrs = Array.from({length: n}, () => []);
+  for (let i = 0; i < n; i++) {
+    if (includeSelf) nbrs[i].push(i);
+    for (let j = 0; j < n; j++) if (i !== j && D[i][j] <= band) nbrs[i].push(j);
+  }
+  return {nbrs, band, D};
+}
+
+// Getis-Ord Gi* — returns per-feature z-scores and two-tailed p-values.
+// Binary weights including the focal feature (self-neighbour), per Ord & Getis.
+function getisOrdGiStar(pts, x, bandM) {
+  const n = pts.length;
+  const {nbrs, band} = _distanceBand(pts, bandM, true);
+  const xbar = x.reduce((a, b) => a + b, 0) / n;
+  const S = Math.sqrt(Math.max(x.reduce((a, b) => a + b * b, 0) / n - xbar * xbar, 0));
+  const z = new Array(n), p = new Array(n), nb = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = nbrs[i].length;        // weight sum (binary, incl self)
+    let wx = 0;
+    for (const j of nbrs[i]) wx += x[j];
+    nb[i] = k - 1;                    // neighbours excluding self
+    const denom = S * Math.sqrt(Math.max((n * k - k * k) / (n - 1), 1e-12));
+    const zi = denom > 0 ? (wx - xbar * k) / denom : 0;
+    z[i] = zi; p[i] = _twoTailP(zi);
+  }
+  return {z, p, nb, band};
+}
+
+// Local Moran's I (LISA) with conditional-permutation inference (GeoDa-style).
+// Row-standardised binary band weights. Returns Ii, spatial lag, pseudo-p and
+// the standardised value z_i so cluster type (HH/LL/HL/LH) can be assigned.
+function localMoran(pts, x, bandM, perms) {
+  const n = pts.length;
+  const {nbrs, band} = _distanceBand(pts, bandM, false);
+  const xbar = x.reduce((a, b) => a + b, 0) / n;
+  const z = x.map(v => v - xbar);
+  const m2 = z.reduce((a, b) => a + b * b, 0) / n;
+  const Ii = new Array(n), lag = new Array(n), pval = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = nbrs[i].length;
+    if (k === 0 || m2 === 0) { Ii[i] = 0; lag[i] = 0; pval[i] = 1; continue; }
+    let s = 0;
+    for (const j of nbrs[i]) s += z[j];
+    const lagi = s / k;                          // row-standardised neighbour mean
+    const obs = (z[i] / m2) * lagi;
+    lag[i] = lagi; Ii[i] = obs;
+    // Conditional permutation: hold z_i fixed, draw k values WITHOUT replacement
+    // from the remaining n-1 observations (partial Fisher-Yates on a pool).
+    const pool = [];
+    for (let j = 0; j < n; j++) if (j !== i) pool.push(j);
+    let ge = 0;
+    const absObs = Math.abs(obs);
+    for (let it = 0; it < perms; it++) {
+      let ss = 0;
+      for (let t = 0; t < k; t++) {
+        const r = t + ((Math.random() * (pool.length - t)) | 0);
+        const tmp = pool[t]; pool[t] = pool[r]; pool[r] = tmp;
+        ss += z[pool[t]];
+      }
+      if (Math.abs((z[i] / m2) * (ss / k)) >= absObs) ge++;
+    }
+    pval[i] = (ge + 1) / (perms + 1);
+  }
+  return {Ii, lag, z, pval, band};
+}
+
+// Global Moran's I with randomization-assumption variance (Cliff & Ord).
+// Binary distance-band weights. Returns I, expected value, variance, z and p.
+function globalMoran(pts, x, bandM) {
+  const n = pts.length;
+  const {nbrs, band} = _distanceBand(pts, bandM, false);
+  const xbar = x.reduce((a, b) => a + b, 0) / n;
+  const z = x.map(v => v - xbar);
+  // W0 = sum of weights; with symmetric binary weights S1 and S2 simplify.
+  let W0 = 0, S2 = 0, cross = 0;
+  const rowSum = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) { rowSum[i] = nbrs[i].length; W0 += nbrs[i].length; }
+  // S1 = 0.5 * ΣΣ (w_ij + w_ji)^2 ; symmetric binary ⇒ each linked pair adds (2)^2=4 twice ⇒ per ordered pair 4 → S1 = 2*W0/... handle generally:
+  let S1 = 0;
+  for (let i = 0; i < n; i++) for (const j of nbrs[i]) S1 += Math.pow(1 + 1, 2); // w_ij=w_ji=1
+  S1 *= 0.5;
+  for (let i = 0; i < n; i++) S2 += Math.pow(rowSum[i] + rowSum[i], 2); // (Σj w_ij + Σj w_ji)^2, symmetric
+  for (let i = 0; i < n; i++) for (const j of nbrs[i]) cross += z[i] * z[j];
+  const denom = z.reduce((a, b) => a + b * b, 0);
+  const I = (n / W0) * (cross / denom);
+  const E = -1 / (n - 1);
+  // randomization kurtosis term b2 = m4 / m2^2
+  const m2 = denom / n;
+  const m4 = z.reduce((a, b) => a + Math.pow(b, 4), 0) / n;
+  const b2 = m4 / (m2 * m2);
+  const A = n * ((n * n - 3 * n + 3) * S1 - n * S2 + 3 * W0 * W0);
+  const B = b2 * ((n * n - n) * S1 - 2 * n * S2 + 6 * W0 * W0);
+  const C = (n - 1) * (n - 2) * (n - 3) * W0 * W0;
+  const varR = C > 0 ? (A - B) / C - E * E : NaN;
+  const zscore = isFinite(varR) && varR > 0 ? (I - E) / Math.sqrt(varR) : NaN;
+  const p = isFinite(zscore) ? _twoTailP(zscore) : NaN;
+  return {I, E, varR, z: zscore, p, band, W0};
+}
+
+// Resolve the numeric analysis attribute: explicit UI selection, else a name
+// match against the supplied regex, else the first numeric field.
+function _pickAnalysisAttr(pts, preferRegex) {
+  const sel = document.getElementById('analysis-attr-select');
+  const chosen = sel ? sel.value : '';
+  const numKeys = Object.keys(pts[0].props || {}).filter(k => isFinite(parseFloat(pts[0].props[k])));
+  if (numKeys.length === 0) return null;
+  if (chosen && numKeys.includes(chosen)) return chosen;
+  return numKeys.find(k => preferRegex.test(k)) || numKeys[0];
+}
+
+// Distance band (metres) from the UI input; 0/blank ⇒ auto (min-threshold).
+function _analysisBandMeters() {
+  const el = document.getElementById('analysis-band-km');
+  const km = el ? parseFloat(el.value) : NaN;
+  return isFinite(km) && km > 0 ? km * 1000 : 0;
+}
+function _analysisUseFDR() {
+  const el = document.getElementById('analysis-fdr');
+  return el ? el.checked : true;
+}
+
+// A small circle marker styled for a statistical class, with a hover tooltip.
+function _statMarker(lat, lon, color, tooltip) {
+  const m = L.circleMarker([lat, lon], {radius: 7, color: '#11151c', weight: 1, fillColor: color, fillOpacity: 0.9});
+  m.bindTooltip(tooltip, {direction: 'top', className: 'site-tooltip'});
+  return m;
+}
+
 function runAnalysis(tool) {
   const layerId = document.getElementById('analysis-layer-select').value;
   if (!layerId) { showToast('Select a layer first', 'error'); return; }
@@ -5978,34 +6180,118 @@ function runAnalysis(tool) {
   }
 
   case 'moranI': {
-    if (pts.length < 4) { showToast('Need at least 4 points with numeric attributes', 'error'); return; }
-    const numKeys = Object.keys(pts[0].props || {}).filter(k => {
-      const v = parseFloat(pts[0].props[k]);
-      return isFinite(v);
-    });
-    if (numKeys.length === 0) { showToast('No numeric attribute found for Moran\'s I', 'error'); return; }
-    const attr = numKeys.find(k => /elev|alt|z|value|pop|density|temp/i.test(k)) || numKeys[0];
+    if (pts.length < 5) { showToast('Global Moran\'s I needs at least 5 points with a numeric attribute', 'error'); return; }
+    const attr = _pickAnalysisAttr(pts, /elev|alt|abundance|richness|value|pop|density|temp|score/i);
+    if (!attr) { showToast('No numeric attribute found for Moran\'s I', 'error'); return; }
     const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
-    const mean = vals.reduce((s,v)=>s+v,0) / vals.length;
-    const n = vals.length;
-    let numerator = 0, denominator = 0, W = 0;
-    for (let i = 0; i < n; i++) {
-      denominator += (vals[i]-mean)**2;
-      for (let j = 0; j < n; j++) {
-        if (i === j) continue;
-        const d = haversineDist(pts[i], pts[j]);
-        if (d === 0) continue;
-        const w = 1 / d;
-        W += w;
-        numerator += w * (vals[i]-mean) * (vals[j]-mean);
-      }
+    const r = globalMoran(pts, vals, _analysisBandMeters());
+    const sig = isFinite(r.p) && r.p < 0.05;
+    const sign = r.I > r.E ? 'Positive' : 'Negative';
+    const interp = !sig
+      ? 'Not statistically significant — the pattern is indistinguishable from spatial randomness (CSR).'
+      : (r.I > r.E
+          ? 'Statistically significant <b>positive</b> autocorrelation — similar values cluster together.'
+          : 'Statistically significant <b>negative</b> autocorrelation — dissimilar values are adjacent (checkerboard).');
+    showResult(
+      `<b>Global Moran's I</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
+      `<table style="margin-top:6px;font-size:11px;border-collapse:collapse">` +
+      `<tr><td style="padding:1px 10px 1px 0">Moran's I</td><td><b>${r.I.toFixed(4)}</b></td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">Expected I</td><td>${r.E.toFixed(4)}</td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">Variance</td><td>${isFinite(r.varR) ? r.varR.toExponential(3) : 'n/a'}</td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">z-score</td><td><b>${isFinite(r.z) ? r.z.toFixed(4) : 'n/a'}</b></td></tr>` +
+      `<tr><td style="padding:1px 10px 1px 0">p-value</td><td><b style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(r.p) ? r.p.toExponential(3) : 'n/a'}</b></td></tr>` +
+      `</table>` +
+      `<div style="margin-top:6px">${interp}</div>` +
+      `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">Binary distance-band weights, band = ${(r.band/1000).toFixed(2)} km. ` +
+      `Inference: randomization assumption (Cliff &amp; Ord). Two-tailed at α = 0.05.</div>`
+    );
+    break;
+  }
+
+  case 'gistar': {
+    if (pts.length < 6) { showToast('Getis-Ord Gi* needs at least 6 points with a numeric attribute', 'error'); return; }
+    const attr = _pickAnalysisAttr(pts, /abundance|richness|count|density|value|pop|score|threat|priority/i);
+    if (!attr) { showToast('No numeric attribute found for Gi*', 'error'); return; }
+    const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
+    const useFDR = _analysisUseFDR();
+    const r = getisOrdGiStar(pts, vals, _analysisBandMeters());
+    const probs = useFDR ? _bhAdjust(r.p) : r.p;
+    const counts = {h99:0, h95:0, h90:0, ns:0, c90:0, c95:0, c99:0};
+    const markers = [], features = [];
+    for (let i = 0; i < pts.length; i++) {
+      const z = r.z[i], pr = probs[i];
+      let color = '#9aa5b1', cls = 'Not significant', conf = '';
+      if (pr <= 0.10) {
+        conf = pr <= 0.01 ? '99%' : pr <= 0.05 ? '95%' : '90%';
+        if (z > 0) { color = pr <= 0.01 ? '#b30000' : pr <= 0.05 ? '#e34a33' : '#fc8d59'; cls = 'Hot spot ' + conf; counts[pr <= 0.01 ? 'h99' : pr <= 0.05 ? 'h95' : 'h90']++; }
+        else { color = pr <= 0.01 ? '#0c2c84' : pr <= 0.05 ? '#225ea8' : '#41b6c4'; cls = 'Cold spot ' + conf; counts[pr <= 0.01 ? 'c99' : pr <= 0.05 ? 'c95' : 'c90']++; }
+      } else counts.ns++;
+      const tip = `<b>${cls}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Gi* z: ${z.toFixed(3)}<br>${useFDR ? 'q' : 'p'}-value: ${pr.toExponential(2)}<br>neighbours: ${r.nb[i]}`;
+      markers.push(_statMarker(pts[i].lat, pts[i].lon, color, tip));
+      features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
+        gi_z: +z.toFixed(4), gi_p: +r.p[i].toExponential(4), gi_q: useFDR ? +probs[i].toExponential(4) : null, gi_class: cls, neighbours: r.nb[i]
+      })});
     }
-    const I = (n / W) * (numerator / denominator);
-    const expected = -1 / (n - 1);
-    let interp = 'No significant autocorrelation';
-    if (I > expected + 0.2) interp = 'Positive spatial autocorrelation (similar values cluster)';
-    else if (I < expected - 0.2) interp = 'Negative spatial autocorrelation (dissimilar values cluster)';
-    showResult(`<b>Moran's I</b> (attribute: ${escapeHtml(attr)})<br><b>I:</b> ${I.toFixed(4)}<br><b>Expected:</b> ${expected.toFixed(4)}<br><b>Interpretation:</b> ${interp}<br><span style="color:var(--text-muted)">Inverse-distance weights used</span>`);
+    markers.forEach(m => analysisOverlays.push(m));
+    addAnalysisLayer(`Gi* Hot Spots (${escapeHtml(attr)})`, markers, {type:'FeatureCollection', features});
+    const totalSig = counts.h99+counts.h95+counts.h90+counts.c90+counts.c95+counts.c99;
+    showResult(
+      `<b>Getis-Ord Gi* Hot Spot Analysis</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
+      `<div style="margin-top:6px;font-size:11px">` +
+      `<span style="color:#b30000">■</span> Hot 99%: <b>${counts.h99}</b> &nbsp; ` +
+      `<span style="color:#e34a33">■</span> 95%: <b>${counts.h95}</b> &nbsp; ` +
+      `<span style="color:#fc8d59">■</span> 90%: <b>${counts.h90}</b><br>` +
+      `<span style="color:#0c2c84">■</span> Cold 99%: <b>${counts.c99}</b> &nbsp; ` +
+      `<span style="color:#225ea8">■</span> 95%: <b>${counts.c95}</b> &nbsp; ` +
+      `<span style="color:#41b6c4">■</span> 90%: <b>${counts.c90}</b><br>` +
+      `<span style="color:#9aa5b1">■</span> Not significant: <b>${counts.ns}</b></div>` +
+      `<div style="margin-top:6px">${totalSig} of ${pts.length} features are statistically significant hot/cold spots.</div>` +
+      `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">Distance band = ${(r.band/1000).toFixed(2)} km. ` +
+      `z-scores from Ord &amp; Getis (1995); two-tailed p. ${useFDR ? 'False Discovery Rate (Benjamini-Hochberg) correction applied.' : 'No multiple-comparison correction.'}</div>`
+    );
+    break;
+  }
+
+  case 'lisa': {
+    if (pts.length < 6) { showToast('Local Moran\'s I needs at least 6 points with a numeric attribute', 'error'); return; }
+    const attr = _pickAnalysisAttr(pts, /abundance|richness|count|density|value|pop|score|threat|priority/i);
+    if (!attr) { showToast('No numeric attribute found for LISA', 'error'); return; }
+    const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
+    const perms = pts.length > 2000 ? 199 : 999;
+    const r = localMoran(pts, vals, _analysisBandMeters(), perms);
+    const counts = {HH:0, LL:0, HL:0, LH:0, ns:0};
+    const palette = {HH:'#e34a33', LL:'#2b8cbe', HL:'#fdae61', LH:'#abd9e9', ns:'#cbd5e0'};
+    const labels = {HH:'High-High (hot cluster)', LL:'Low-Low (cold cluster)', HL:'High-Low (outlier)', LH:'Low-High (outlier)', ns:'Not significant'};
+    const markers = [], features = [];
+    for (let i = 0; i < pts.length; i++) {
+      let key = 'ns';
+      if (r.pval[i] <= 0.05) {
+        if (r.z[i] > 0 && r.lag[i] > 0) key = 'HH';
+        else if (r.z[i] < 0 && r.lag[i] < 0) key = 'LL';
+        else if (r.z[i] > 0 && r.lag[i] < 0) key = 'HL';
+        else key = 'LH';
+      }
+      counts[key]++;
+      const tip = `<b>${labels[key]}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Local I: ${r.Ii[i].toFixed(3)}<br>pseudo-p: ${r.pval[i].toFixed(3)}`;
+      markers.push(_statMarker(pts[i].lat, pts[i].lon, palette[key], tip));
+      features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
+        local_I: +r.Ii[i].toFixed(4), lisa_p: +r.pval[i].toFixed(4), cluster: labels[key]
+      })});
+    }
+    markers.forEach(m => analysisOverlays.push(m));
+    addAnalysisLayer(`LISA Clusters (${escapeHtml(attr)})`, markers, {type:'FeatureCollection', features});
+    showResult(
+      `<b>Local Moran's I (LISA) Cluster &amp; Outlier Analysis</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
+      `<div style="margin-top:6px;font-size:11px">` +
+      `<span style="color:#e34a33">■</span> High-High clusters: <b>${counts.HH}</b><br>` +
+      `<span style="color:#2b8cbe">■</span> Low-Low clusters: <b>${counts.LL}</b><br>` +
+      `<span style="color:#fdae61">■</span> High-Low outliers: <b>${counts.HL}</b><br>` +
+      `<span style="color:#abd9e9">■</span> Low-High outliers: <b>${counts.LH}</b><br>` +
+      `<span style="color:#cbd5e0">■</span> Not significant: <b>${counts.ns}</b></div>` +
+      `<div style="color:var(--text-muted);margin-top:6px;font-size:10px">Distance band = ${(r.band/1000).toFixed(2)} km. ` +
+      `Conditional permutation inference (${perms} permutations), pseudo-p ≤ 0.05. ` +
+      `High-High = conservation hotspots; High-Low = isolated rich sites worth attention.</div>`
+    );
     break;
   }
 
