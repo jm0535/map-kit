@@ -724,8 +724,8 @@
   .stat-card .lbl { color: var(--text-muted); margin-top: 1px; }
 
   /* ── Map container ── */
-  #map-wrap { flex: 1; position: relative; display: flex; flex-direction: column; }
-  #map { flex: 1; }
+  #map-wrap { flex: 1; min-width: 0; min-height: 0; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  #map { flex: 1; min-height: 0; }
 
   /* ── Bottom profile panel ── */
   #profile-panel {
@@ -733,6 +733,7 @@
     background: var(--surface-1); border-top: 1px solid var(--border);
     display: flex; flex-direction: column; flex-shrink: 0;
     position: relative;
+    overflow: hidden;
     transition: height 0.2s ease;
   }
   #profile-panel.collapsed { height: 36px !important; overflow: hidden; }
@@ -783,10 +784,18 @@
     border-bottom-color: var(--accent);
     background: transparent;
   }
-  .bottom-tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .bottom-tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
   .bottom-tab-content:not(.active) { display: none !important; }
-  #profile-canvas-wrap { flex: 1; padding: 10px 16px 12px; position: relative; }
-  #profile-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+  #profile-canvas-wrap { flex: 1; min-height: 0; padding: 10px 16px 12px; position: relative; overflow: hidden; }
+  /* Absolutely position the canvas so its intrinsic size can never inflate
+     the flex chain and push the panel beyond its set height (Chart.js
+     responsive-container pattern). */
+  #profile-canvas-wrap canvas {
+    position: absolute !important;
+    top: 10px; left: 16px; right: 16px; bottom: 12px;
+    width: calc(100% - 32px) !important;
+    height: calc(100% - 22px) !important;
+  }
   #analysis-results-panel { padding: 12px 16px; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
   .ar-clear-btn {
     font-size: 11px; font-weight: 500;
