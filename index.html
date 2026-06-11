@@ -689,8 +689,16 @@
     font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
     color: var(--accent); margin: 14px 0 3px;
     padding-bottom: 4px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 6px; cursor: pointer; user-select: none;
   }
+  #analysis-drawer-body .ad-section-title:hover { color: var(--accent-hover); }
   #analysis-drawer-body .ad-section-title:first-child { margin-top: 0; }
+  #analysis-drawer-body .ad-section-title .arrow {
+    color: var(--text-faint); font-size: 9px; transition: transform 0.2s; flex: none;
+  }
+  #analysis-drawer-body .ad-section-title.collapsed .arrow { transform: rotate(-90deg); }
+  #analysis-drawer-body .ad-collapsed { display: none !important; }
   #analysis-drawer-body .ad-hint {
     font-size: 10px; color: var(--text-muted); margin: 0 0 6px; line-height: 1.5;
   }
@@ -1966,7 +1974,7 @@
   <!-- ════ SINGLE-LAYER GEOMETRIC / STATISTICAL TOOLS ════ -->
 
     <!-- ── SECTION 1: Point Pattern ── -->
-    <div class="ad-section-title">&#x1F4CD; Point Pattern</div>
+    <div class="ad-section-title" onclick="toggleAnalysisSection(this)"><span>&#x1F4CD; Point Pattern</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Summarise where your points fall and how they are distributed.</div>
 
     <div class="ad-tool-row">
@@ -1987,7 +1995,7 @@
     </div>
 
     <!-- ── SECTION 2: Inferential Statistics ── -->
-    <div class="ad-section-title">&#x1F4CA; Inferential Hotspots &amp; Autocorrelation</div>
+    <div class="ad-section-title" onclick="toggleAnalysisSection(this)"><span>&#x1F4CA; Inferential Hotspots &amp; Autocorrelation</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Statistically test <em>where</em> high and low values cluster. All distances use an auto-selected UTM projection for accuracy.</div>
 
     <!-- Weights settings card -->
@@ -2049,7 +2057,7 @@
     </div>
 
     <!-- ── SECTION 3: Interpolation & Density ── -->
-    <div class="ad-section-title">&#x1F321; Interpolation &amp; Density</div>
+    <div class="ad-section-title" onclick="toggleAnalysisSection(this)"><span>&#x1F321; Interpolation &amp; Density</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Visualise continuous surfaces from point data. Exploratory — not significance-tested.</div>
 
     <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;margin-bottom:8px;">
@@ -2096,7 +2104,7 @@
     </div>
 
     <!-- ── SECTION 4: Clustering ── -->
-    <div class="ad-section-title">&#x1F9E9; Clustering</div>
+    <div class="ad-section-title" onclick="toggleAnalysisSection(this)"><span>&#x1F9E9; Clustering</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Find groups in your point data without specifying the number of clusters in advance.</div>
 
     <div class="ad-tool-row">
@@ -2105,7 +2113,7 @@
     </div>
 
     <!-- ── SECTION 5: Lines & Polygons ── -->
-    <div class="ad-section-title">&#x1F4D0; Lines &amp; Polygons</div>
+    <div class="ad-section-title" onclick="toggleAnalysisSection(this)"><span>&#x1F4D0; Lines &amp; Polygons</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Geometric operations — work on any geometry type.</div>
 
     <div class="ad-tool-row">
@@ -2139,7 +2147,7 @@
     </div>
 
     <!-- ── SECTION 6: Raster Analysis ── -->
-    <div class="ad-section-title" id="geotiff-section">&#x1F6F0;&#xFE0F; Raster Analysis</div>
+    <div class="ad-section-title" id="geotiff-section" onclick="toggleAnalysisSection(this)"><span>&#x1F6F0;&#xFE0F; Raster Analysis</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Import GeoTIFF raster files as environmental variable layers for multi-criteria and species distribution analyses.</div>
     <div class="ad-form-row">
       <label>Select GeoTIFF</label>
@@ -2155,7 +2163,7 @@
     <div id="geotiff-status" class="ad-status"></div>
 
     <!-- ── SECTION 7: Multi-Criteria Evaluation ── -->
-    <div class="ad-section-title" id="hotspot-section">&#x2696;&#xFE0F; Multi-Criteria Evaluation</div>
+    <div class="ad-section-title" id="hotspot-section" onclick="toggleAnalysisSection(this)"><span>&#x2696;&#xFE0F; Multi-Criteria Evaluation</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Combine multiple vector layers into composite scores using weighted overlays. Equivalent to ArcGIS Weighted Overlay / QGIS MCDA.</div>
 
     <div class="ad-subhead">Conservation Hotspot Grid</div>
@@ -2202,7 +2210,7 @@
     </div>
 
     <!-- ── SECTION 8: Species Distribution Modelling ── -->
-    <div class="ad-section-title" id="sdm-section">&#x1F98B; Species Distribution Modelling</div>
+    <div class="ad-section-title" id="sdm-section" onclick="toggleAnalysisSection(this)"><span>&#x1F98B; Species Distribution Modelling</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Predict species habitat suitability from presence records and environmental variables. Equivalent to MaxEnt, BIOCLIM and Mahalanobis tools in QGIS / biomod2.</div>
     <div class="ad-form-row">
       <label>Presence Layer</label>
@@ -7530,6 +7538,18 @@ function runAnalysis(tool) {
 // ═══════════════════════════════════════════════════════════════════════════
 // UI HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
+
+// Collapse/expand an analysis drawer section. Sections are flat siblings:
+// an .ad-section-title followed by its content until the next title. Toggling
+// hides every sibling up to (but not including) the next .ad-section-title.
+function toggleAnalysisSection(title) {
+  const collapsed = title.classList.toggle('collapsed');
+  let el = title.nextElementSibling;
+  while (el && !el.classList.contains('ad-section-title')) {
+    el.classList.toggle('ad-collapsed', collapsed);
+    el = el.nextElementSibling;
+  }
+}
 
 function toggleSection(header) {
   header.classList.toggle('collapsed');
