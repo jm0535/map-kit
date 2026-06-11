@@ -7010,10 +7010,16 @@ function runAnalysis(tool) {
                   * haversineDist({lat:Math.min(...lats),lon:Math.min(...lons)},{lat:Math.max(...lats),lon:Math.min(...lons)});
     const expectedNN = 0.5 * Math.sqrt(areaM2 / pts.length);
     const nni = meanNN / expectedNN;
+    // Clark-Evans z-test: SE of the mean nearest-neighbour distance under CSR.
+    const density = pts.length / areaM2;
+    const se = 0.26136 / Math.sqrt(pts.length * pts.length * density);
+    const zscore = se > 0 ? (meanNN - expectedNN) / se : NaN;
+    const pval = isFinite(zscore) ? _twoTailP(zscore) : NaN;
+    const sig = isFinite(pval) && pval < 0.05;
     let pattern = 'Random';
-    if (nni < 0.8) pattern = 'Clustered';
-    else if (nni > 1.2) pattern = 'Dispersed';
-    showResult(`<b>Nearest Neighbor Index</b><br><b>NNI:</b> ${nni.toFixed(3)}<br><b>Mean NN dist:</b> ${(meanNN/1000).toFixed(3)} km<br><b>Expected NN dist:</b> ${(expectedNN/1000).toFixed(3)} km<br><b>Pattern:</b> <span style="color:${nni<0.8?'#fc8181':nni>1.2?'#68d391':'#f6e05e'}">${pattern}</span><br><span style="color:var(--text-muted)">&lt;1 = clustered, 1 = random, &gt;1 = dispersed</span>`);
+    if (sig && nni < 1) pattern = 'Clustered';
+    else if (sig && nni > 1) pattern = 'Dispersed';
+    showResult(`<b>Nearest Neighbor Index</b><br><b>NNI:</b> ${nni.toFixed(3)}<br><b>Mean NN dist:</b> ${(meanNN/1000).toFixed(3)} km<br><b>Expected NN dist:</b> ${(expectedNN/1000).toFixed(3)} km<br><b>z-score:</b> ${isFinite(zscore) ? zscore.toFixed(4) : 'n/a'}<br><b>p-value:</b> <span style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(pval) ? pval.toExponential(3) : 'n/a'}</span><br><b>Pattern:</b> <span style="color:${pattern==='Clustered'?'#fc8181':pattern==='Dispersed'?'#68d391':'#f6e05e'}">${pattern}</span><br><span style="color:var(--text-muted)">&lt;1 = clustered, 1 = random, &gt;1 = dispersed. Clark-Evans test, two-tailed at α = 0.05.</span>`);
     break;
   }
 
@@ -7145,17 +7151,23 @@ function runAnalysis(tool) {
     const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / vals.length) || 1;
     const zs = vals.map(v => (v - mean) / sd);
     const lag = W.nbrs.map(nb => nb.length ? nb.reduce((s, j) => s + zs[j], 0) / nb.length : 0);
+    // Slope of the scatterplot = row-standardised Moran's I (regression of
+    // spatial lag on z), consistent with the plotted row-standardised lag.
+    const sZZ = zs.reduce((a, z) => a + z * z, 0);
+    const slope = sZZ > 0 ? zs.reduce((a, z, i) => a + z * lag[i], 0) / sZZ : 0;
     const quad = (z, l) => (z >= 0 && l >= 0) ? '#e34a33' : (z < 0 && l < 0) ? '#2b8cbe' : (z >= 0 && l < 0) ? '#fdae61' : '#abd9e9';
     const dataPts = zs.map((z, i) => ({x: z, y: lag[i], c: quad(z, lag[i])}));
     const xMin = Math.min(...zs), xMax = Math.max(...zs);
     const sig = isFinite(gm.p) && gm.p < 0.05;
     showResult(
       `<b>Moran Scatterplot</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
-      `<div>Global Moran's I = <b>${gm.I.toFixed(4)}</b> (slope) · z = ${isFinite(gm.z) ? gm.z.toFixed(2) : 'n/a'} · ` +
+      `<div>Moran's I = <b>${slope.toFixed(4)}</b> (slope, row-standardised) · ` +
+      `z = ${isFinite(gm.z) ? gm.z.toFixed(2) : 'n/a'} · ` +
       `p = <b style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(gm.p) ? gm.p.toExponential(2) : 'n/a'}</b></div>` +
       `<div style="margin-top:6px;background:#fff;border-radius:6px;padding:6px;width:360px;max-width:100%"><canvas id="moran-scatter-canvas" width="348" height="300"></canvas></div>` +
       `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">x = standardised ${escapeHtml(attr)}; y = spatial lag (mean of neighbours). ` +
-      `Upper-right/lower-left = positive autocorrelation. Weights: ${_weightDesc(gm)}.</div>`
+      `Upper-right/lower-left = positive autocorrelation. Weights: ${_weightDesc(gm)}. ` +
+      `z and p from the global randomisation test.</div>`
     );
     if (window._moranScatterChart) { try { window._moranScatterChart.destroy(); } catch (_) {} }
     const ctx = document.getElementById('moran-scatter-canvas').getContext('2d');
@@ -7164,7 +7176,7 @@ function runAnalysis(tool) {
       data: {
         datasets: [
           {label: 'features', data: dataPts, pointBackgroundColor: dataPts.map(d => d.c), pointRadius: 4, pointBorderColor: '#333', pointBorderWidth: 0.5},
-          {label: 'Moran slope', type: 'line', data: [{x: xMin, y: gm.I * xMin}, {x: xMax, y: gm.I * xMax}], borderColor: '#1a1d23', borderWidth: 2, pointRadius: 0, fill: false},
+          {label: 'Moran slope', type: 'line', data: [{x: xMin, y: slope * xMin}, {x: xMax, y: slope * xMax}], borderColor: '#1a1d23', borderWidth: 2, pointRadius: 0, fill: false},
         ],
       },
       options: {
