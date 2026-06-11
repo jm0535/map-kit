@@ -564,32 +564,38 @@
   .export-btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: white; }
 
   /* ── Analysis Drawer ── */
-  #analysis-backdrop {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.35);
-    z-index: 1005;
-    display: none;
-    backdrop-filter: blur(1px);
-    -webkit-backdrop-filter: blur(1px);
-  }
+  #analysis-backdrop { display: none; /* kept for API compat but not used in push mode */ }
   #analysis-drawer {
-    position: fixed;
-    top: 44px;
-    right: 0;
-    width: 360px;
-    height: calc(100vh - 44px);
+    flex-shrink: 0;
+    width: 0;
+    height: 100%;
     background: var(--surface-1);
-    border-left: 1px solid var(--border);
-    box-shadow: -6px 0 32px rgba(0,0,0,0.35);
-    z-index: 1006;
+    border-left: 0 solid var(--border);
+    box-shadow: none;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    transform: translateX(100%);
-    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    transition: width 0.28s cubic-bezier(.4,0,.2,1),
+                border-left-width 0.01s 0.28s,
+                box-shadow 0.28s;
+  }
+  #analysis-drawer.open {
+    width: 360px;
+    border-left-width: 1px;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.18);
+    transition: width 0.28s cubic-bezier(.4,0,.2,1),
+                border-left-width 0s,
+                box-shadow 0.28s;
+  }
+  /* inner wrapper keeps content at a fixed 360px so it doesn't squish during animation */
+  #analysis-drawer-inner {
+    width: 360px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
-  #analysis-drawer.open { transform: translateX(0); }
-  /* Push the digitize toolbar left when the drawer is open */
+  /* Shift digitize toolbar left when drawer is open */
   body.analysis-open .digitize-toolbar { right: 370px; }
   #analysis-drawer-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -1779,13 +1785,9 @@
     </div>
   </div>
 
-</div><!-- /main -->
-
-<!-- Analysis backdrop -->
-<div id="analysis-backdrop" onclick="closeAnalysisDrawer()"></div>
-
-<!-- Analysis Drawer -->
-<div id="analysis-drawer" role="dialog" aria-label="Spatial Analysis">
+  <!-- Analysis Drawer — flex sibling of right-panel, pushes map rather than overlaying -->
+  <div id="analysis-drawer" role="dialog" aria-label="Spatial Analysis">
+  <div id="analysis-drawer-inner">
   <div id="analysis-drawer-header">
     <div class="adh-title">&#x1F9EA; Spatial Analysis</div>
     <button class="adh-close" onclick="closeAnalysisDrawer()" title="Close (Esc)">&#x2715;</button>
@@ -1974,7 +1976,12 @@
     </div>
 
   </div><!-- /analysis-drawer-body -->
-</div><!-- /analysis-drawer -->
+  </div><!-- /analysis-drawer-inner -->
+  </div><!-- /analysis-drawer -->
+
+</div><!-- /main -->
+
+<div id="analysis-backdrop"></div><!-- kept for JS compat -->
 
 <!-- Status bar -->
 <div id="statusbar">
@@ -7239,19 +7246,10 @@ function toggleRightPanel() {
 
 function toggleAnalysisDrawer() {
   const drawer = document.getElementById('analysis-drawer');
-  const isOpen = drawer.classList.contains('open');
-  if (isOpen) {
+  if (drawer.classList.contains('open')) {
     closeAnalysisDrawer();
   } else {
-    // Collapse right panel to free up space for the drawer
-    const rp = document.getElementById('right-panel');
-    if (rp && !rp.classList.contains('collapsed')) {
-      rp.classList.add('collapsed');
-      document.getElementById('collapse-right-btn').textContent = '◀';
-      rp.dataset.collapsedByDrawer = '1';
-    }
     drawer.classList.add('open');
-    document.getElementById('analysis-backdrop').style.display = 'block';
     document.getElementById('analysis-drawer-btn').classList.add('active');
     document.body.classList.add('analysis-open');
     refreshAnalysisLayerSelect();
@@ -7261,16 +7259,8 @@ function toggleAnalysisDrawer() {
 
 function closeAnalysisDrawer() {
   document.getElementById('analysis-drawer').classList.remove('open');
-  document.getElementById('analysis-backdrop').style.display = 'none';
   document.getElementById('analysis-drawer-btn').classList.remove('active');
   document.body.classList.remove('analysis-open');
-  // Restore right panel only if we collapsed it
-  const rp = document.getElementById('right-panel');
-  if (rp && rp.dataset.collapsedByDrawer === '1') {
-    rp.classList.remove('collapsed');
-    document.getElementById('collapse-right-btn').textContent = '▶';
-    delete rp.dataset.collapsedByDrawer;
-  }
   setTimeout(() => map.invalidateSize(), 300);
 }
 
