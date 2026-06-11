@@ -6284,7 +6284,7 @@ function rebuildProfileFromCheckboxes() {
           titleColor:'#e2e8f0',bodyColor:'#a0aec0',
           callbacks:{
             title:items=>`${items[0].parsed.x.toFixed(2)} km`,
-            label:item=>` ${item.dataset.label}: ${item.parsed.y} m`,
+            label:item=>` ${item.dataset.label}: ${(Math.round(item.parsed.y * 100) / 100)} m`,
           }
         }
       },
