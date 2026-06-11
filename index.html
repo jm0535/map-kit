@@ -1588,47 +1588,196 @@
       <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>User Guide</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body hidden" style="font-size:10px;color:var(--text-muted);line-height:1.6;max-height:400px;overflow-y:auto;">
-        <b style="color:var(--accent);">Getting Started</b><br>
-        Drag &amp; drop or use the upload button to import GeoJSON, KML, GPX, Shapefile (.zip), CSV, XLSX, or GeoTIFF files.<br><br>
-        <b style="color:var(--accent);">Navigation</b><br>
-        Scroll to zoom, drag to pan. Use the zoom buttons (top-left) or double-click to zoom in. Toggle fullscreen with the button top-left.<br><br>
-        <b style="color:var(--accent);">Basemaps</b><br>
-        Switch between Topo, Satellite, Streets, Hillshade, OpenTopoMap, Positron, and Dark basemaps. Adjust basemap opacity with the slider.<br><br>
-        <b style="color:var(--accent);">Layers</b><br>
-        Toggle layer visibility with checkboxes. Remove layers with the &times; button. The &#x1f3f7; button opens label controls &mdash; choose which attribute to display as map labels.<br><br>
-        <b style="color:var(--accent);">Symbology</b><br>
-        <b>Simple Symbol</b> &mdash; Change fill color, size, opacity, stroke color/width/style, and marker shape (circle, square, triangle, diamond, star, cross).<br>
-        <b>Categorized</b> &mdash; Color features by unique values of a selected attribute column.<br>
-        <b>Graduated</b> &mdash; Color features along a color ramp based on numeric values. Choose column, number of classes, and color ramp (Viridis, Heat, Cool, Terrain).<br>
-        Click <b>Reset</b> to return to the default single-color symbol.<br><br>
-        <b style="color:var(--accent);">Elevation Profile</b><br>
-        Layers with elevation data automatically generate a profile chart in the bottom panel. Toggle layers on/off with checkboxes. <b>Click a point on the profile</b> to pan the map to that location. Drag the top edge of the panel to resize.<br><br>
-        <b style="color:var(--accent);">Spatial Analysis</b><br>
-        Select a layer, then choose a tool:<br>
-        &bull; <b>Mean Center</b> &mdash; Geographic center with standard distance circle<br>
-        &bull; <b>Bounding Box</b> &mdash; Minimum bounding rectangle with area<br>
-        &bull; <b>NNI</b> &mdash; Nearest Neighbor Index (clustered/random/dispersed)<br>
-        &bull; <b>Moran's I</b> &mdash; Spatial autocorrelation with inverse-distance weights<br>
-        &bull; <b>IDW</b> &mdash; Inverse Distance Weighting interpolation surface<br>
-        &bull; <b>Point Density</b> &mdash; Concentration heat map<br>
-        &bull; <b>Weighted Density</b> &mdash; Attribute-weighted density surface<br>
-        &bull; <b>DBSCAN</b> &mdash; Density-based clustering (auto eps, MinPts=3)<br>
-        &bull; <b>Convex Hull</b> &mdash; Minimum convex polygon with perimeter<br>
-        &bull; <b>Line Lengths</b> &mdash; Haversine line distance calculation<br>
-        &bull; <b>Polygon Areas</b> &mdash; Spherical excess area calculation<br>
-        &bull; <b>Centroids</b> &mdash; Area-weighted centroid for polygons, mean center for points<br>
-        &bull; <b>Simplify</b> &mdash; Douglas-Peucker simplification (adjustable tolerance)<br>
-        &bull; <b>Buffer</b> &mdash; Circular buffer zones around features<br>
-        &bull; <b>Voronoi</b> &mdash; Thiessen polygon tessellation<br><br>
-        <b style="color:var(--accent);">Attribute Table</b><br>
-        Select a layer to view its attribute table. Click a row to zoom to that feature and inspect its properties. Use the search box to filter rows.<br><br>
-        <b style="color:var(--accent);">Export</b><br>
-        Export the map as PNG or PDF with configurable DPI. Export layer data as CSV or GeoJSON. The "Shapefile" option exports GeoJSON (convert with ogr2ogr/QGIS).<br><br>
-        <b style="color:var(--accent);">Keyboard Shortcuts</b><br>
-        &bull; <b>+/-</b> &mdash; Zoom in/out<br>
-        &bull; <b>F</b> &mdash; Toggle fullscreen<br>
-        &bull; <b>L</b> &mdash; Toggle layer panel<br>
+      <div class="panel-body hidden" style="font-size:10px;color:var(--text-muted);line-height:1.7;max-height:500px;overflow-y:auto;padding-right:2px;">
+
+        <!-- ── GETTING STARTED ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;margin-top:2px;">&#x25B6; Getting Started</div>
+        Drag &amp; drop any supported file onto the map, or click the <b>Import</b> panel and use <b>Choose file</b>.<br>
+        Supported formats: <b>GeoJSON</b>, <b>KML/KMZ</b>, <b>GPX</b>, <b>Shapefile (.zip)</b>, <b>CSV</b>, <b>XLSX</b>, <b>GeoTIFF</b>.<br>
+        CSV and XLSX files open a column mapper — pick the latitude, longitude, optional label, and elevation columns, and set the source CRS if your coordinates are projected (e.g. UTM).<br>
+        Try the built-in sample: drag <code>samples/sample_species_richness.geojson</code> onto the map to explore all analysis tools with ready-made data.<br><br>
+
+        <!-- ── MAP NAVIGATION ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Map Navigation</div>
+        <b>Scroll</b> to zoom &mdash; <b>drag</b> to pan &mdash; <b>double-click</b> to zoom in.<br>
+        <b>+ / &minus;</b> buttons top-left, or keyboard <b>+</b> / <b>&minus;</b>.<br>
+        <b>F</b> toggles fullscreen &mdash; <b>L</b> toggles the layer panel.<br>
+        The <b>minimap</b> (bottom-right) shows your current viewport in context.<br>
+        The <b>status bar</b> shows current zoom level, cursor coordinates, and visible feature count.<br><br>
+
+        <!-- ── BASEMAPS ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Basemaps</div>
+        Choose from 6 free basemaps: <b>Topo</b> (OpenTopoMap), <b>Satellite</b> (Esri Imagery), <b>Streets</b> (OSM), <b>Relief</b> (Esri Shaded Relief), <b>Terrain</b> (Esri World Topo), <b>Dark</b> (CartoDB Dark Matter).<br>
+        Adjust basemap opacity with the slider beneath the selector.<br><br>
+
+        <!-- ── LAYER PANEL ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Layer Panel</div>
+        &bull; <b>Eye icon</b> &mdash; show / hide the layer<br>
+        &bull; <b>Double-click name</b> &mdash; rename inline (Enter to confirm, Esc to cancel)<br>
+        &bull; <b>&#x1F50D;</b> button &mdash; zoom to layer extent<br>
+        &bull; <b>&times;</b> button &mdash; remove layer<br>
+        &bull; <b>Opacity slider</b> &mdash; per-layer transparency<br>
+        &bull; <b>Label button</b> &mdash; choose an attribute to show as map labels and set font size<br>
+        &bull; Click the layer name to select it for symbology editing<br><br>
+
+        <!-- ── SYMBOLOGY ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Symbology</div>
+        <b>Simple Symbol</b> &mdash; fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Shapes: circle, square, triangle, diamond, star, cross.<br>
+        <b>Categorized</b> &mdash; one colour per unique value of a chosen attribute. Click legend entries on the map to rename them.<br>
+        <b>Graduated</b> &mdash; numeric attribute divided into 2–10 classes along a colour ramp (Viridis, Heat, Cool, Terrain).<br>
+        <b>Reset</b> returns the layer to its default style.<br><br>
+
+        <!-- ── DIGITIZING ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Digitizing</div>
+        Use the pencil toolbar (top-right of map) to draw <b>Points</b>, <b>Lines</b>, or <b>Polygons</b>.<br>
+        Click the map to add vertices; double-click to finish a line or polygon. A crosshair cursor is shown during digitizing. Press <b>Esc</b> to cancel at any time.<br>
+        After drawing, fill in the attribute form (name, description, category). Features are saved to the <b>Drawn Features</b> layer, which is fully exportable.<br><br>
+
+        <!-- ── FEATURE INFO ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Feature Info</div>
+        Click any feature on the map to open its attribute card in the right panel. Shows geometry type, lat/lon, and all attributes.<br>
+        <b>Prev / Next</b> buttons navigate through features in the same layer. <b>Zoom to feature</b> pans and zooms the map. <b>Copy attributes</b> copies the full table to clipboard.<br><br>
+
+        <!-- ── ATTRIBUTE TABLE ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Attribute Table</div>
+        Select a layer from the dropdown. All features appear in a searchable table. Click any row to zoom to that feature and open it in Feature Info. Use the search box to filter across all columns.<br><br>
+
+        <!-- ── ELEVATION PROFILE ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Elevation Profile</div>
+        Layers with an elevation column (<code>elevation</code>, <code>elev</code>, <code>alt</code>, or <code>z</code>) auto-populate the bottom profile panel. X-axis = distance (km), Y-axis = elevation (m a.s.l.).<br>
+        Toggle layers on/off with checkboxes. <b>Click a point on the chart</b> to pan the map to that location. Drag the top edge of the panel to resize it.<br><br>
+
+        <!-- ── EXPORT ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Export</div>
+        <b>Output CRS</b> &mdash; choose a target coordinate reference system before exporting. Default is WGS 84 (EPSG:4326). Coordinates are reprojected client-side.<br><br>
+        <u>Data exports</u><br>
+        &bull; <b>GeoJSON</b> &mdash; RFC 7946 + named CRS member (read by QGIS &amp; ArcGIS)<br>
+        &bull; <b>CSV</b> &mdash; flat table with longitude / latitude columns<br>
+        &bull; <b>XLSX</b> &mdash; Excel workbook (one layer per sheet when exporting all)<br>
+        &bull; <b>Shapefile</b> &mdash; zipped .shp / .dbf / .prj / .shx<br>
+        &bull; <b>KML</b> &mdash; OGC KML 2.2 (Google Earth, ArcGIS Earth)<br>
+        &bull; <b>GPX</b> &mdash; GPX 1.1 (GPS devices, Garmin, OsmAnd)<br><br>
+        <u>Map image exports</u><br>
+        &bull; <b>Export map as PNG</b> &mdash; current viewport at 72–400 DPI with title, legend, north arrow, scale bar<br>
+        &bull; <b>Export map as PDF</b> &mdash; same content as a PDF page<br>
+        &bull; <b>Map Layout Composer</b> &mdash; full print-layout tool with adjustable inset, gridlines, scale bar styles, and north arrow<br><br>
+
+        <!-- ── ANALYSIS: GEOMETRIC ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Spatial Analysis — Geometric &amp; Descriptive</div>
+        Select a layer and run any tool. Results appear in the panel and are added as exportable layers.<br><br>
+
+        <b>Mean Center &amp; Standard Distance</b><br>
+        Calculates the geographic mean of all point coordinates (the "centre of gravity") and a standard-distance circle. A small circle = tightly clustered data; a large circle = widely spread data. Use it to compare the geographic centroid of two groups or track shifts over time.<br><br>
+
+        <b>Bounding Box</b><br>
+        Minimum axis-aligned rectangle enclosing all features. Shows width, height, and area (km²). Useful as a quick study-area extent or for comparing dataset sizes.<br><br>
+
+        <b>Nearest Neighbor Index (NNI)</b><br>
+        Compares observed mean nearest-neighbor distance with the expected distance under complete spatial randomness (Clark &amp; Evans 1954).<br>
+        &bull; <b>NNI &lt; 1</b> &mdash; clustered (sites are closer together than random)<br>
+        &bull; <b>NNI ≈ 1</b> &mdash; random<br>
+        &bull; <b>NNI &gt; 1</b> &mdash; dispersed (regularly spaced)<br>
+        The z-score and p-value test if the pattern differs significantly from random. p &lt; 0.05 + NNI &lt; 1 = statistically significant clustering.<br><br>
+
+        <b>Convex Hull</b><br>
+        Smallest convex polygon enclosing all features. Output includes perimeter (km) and area (km²). Useful for comparing species ranges, estimating home ranges, or defining a study boundary.<br><br>
+
+        <b>Line Lengths</b><br>
+        Haversine great-circle length for each line feature. Appends a <code>length_km</code> attribute; total is shown in the results panel.<br><br>
+
+        <b>Polygon Areas</b><br>
+        Spherical excess area (Chamberlain &amp; Duquette 2009) for each polygon. Appends <code>area_km2</code>; accurate to &lt; 0.3% at continental scale. Total shown in results.<br><br>
+
+        <b>Centroids</b><br>
+        Area-weighted centroid for polygons, coordinate mean for lines and points. Useful as a representative coordinate for labelling or joining.<br><br>
+
+        <b>Buffer</b><br>
+        Creates a circular buffer of a user-specified radius (km) around each feature as a 24-sided polygon. For production-grade buffers on lines or polygons, use QGIS → Vector → Geoprocessing → Buffer.<br><br>
+
+        <b>Simplify (Douglas-Peucker)</b><br>
+        Reduces vertex count while preserving shape. Increase tolerance to simplify more aggressively. Useful when exporting to web maps where file size matters, or when polygon detail exceeds the target scale.<br><br>
+
+        <b>DBSCAN Clustering</b><br>
+        Groups points into density clusters without requiring a pre-set number of clusters (Ester et al. 1996). Points that don't fit any cluster are labelled <b>noise</b> (cluster = &minus;1). Epsilon (neighbourhood radius) is auto-derived from 1.5× the median nearest-neighbor distance; MinPts = 3.<br>
+        Each point gets a <code>cluster</code> attribute. Use DBSCAN first to explore groupings, then run Gi* or LISA for significance-tested hot spots.<br><br>
+
+        <b>IDW Interpolation</b><br>
+        Inverse Distance Weighting surface (Shepard 1968, p = 2) on a 50 × 50 grid. Estimates values at unsampled locations by weighting nearby observations more heavily. Good for a quick continuous surface (e.g. species richness, rainfall). Note: IDW can produce "bull's-eye" artefacts around isolated extreme values — consider this exploratory.<br><br>
+
+        <b>Point Density</b><br>
+        Counts points within a moving kernel window on a 50 × 50 grid — a simple heat map of concentration. Not a significance test. Use Gi* for statistically tested hot spots.<br><br>
+
+        <b>Weighted Density</b><br>
+        Same as Point Density but each point is weighted by a numeric attribute (e.g. richness, abundance). Shows where high-value features concentrate in space.<br><br>
+
+        <b>Voronoi / Thiessen Polygons</b><br>
+        Divides the map so every location is assigned to its nearest point. Computed on a 120 × 120 raster grid (boundaries may appear slightly pixelated). Useful for allocating service areas or delineating nearest-feature catchments.<br><br>
+
+        <!-- ── ANALYSIS: INFERENTIAL ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Inferential Spatial Statistics</div>
+        These four tools test whether spatial patterns are <i>statistically significant</i> and identify which specific features are driving them. All tools share common <b>Weights</b> and <b>UTM projection</b> settings (see below).<br><br>
+
+        <b>Spatial Weights options</b><br>
+        &bull; <b>Distance band</b> &mdash; two features are neighbours if they are within <i>d</i> km. Default: the minimum distance that gives every feature at least one neighbour. Best for regular grids or continuous fields.<br>
+        &bull; <b>K-nearest neighbours (KNN)</b> &mdash; each feature's <i>k</i> nearest features are its neighbours (default k = 8). Every feature always gets exactly <i>k</i> neighbours regardless of density. Best for irregular sampling or variable-density data.<br>
+        &bull; <b>UTM auto-projection</b> &mdash; distances are computed on an auto-selected UTM zone (not raw degrees), removing distortion near the equator and at high latitudes.<br>
+        &bull; <b>FDR correction</b> &mdash; Benjamini-Hochberg False Discovery Rate adjustment prevents spurious hot spots when many features are tested at once. Leave it checked for confirmatory analysis; uncheck only for exploratory work.<br><br>
+
+        <!-- Gi* -->
+        <b>Getis-Ord Gi* Hot Spot Analysis</b> <span style="color:var(--text-muted)">(Ord &amp; Getis 1995)</span><br>
+        For each feature, asks: "Is this feature's value, together with its neighbours', unusually high or low compared with the global mean?" Each feature receives a z-score and p-value. Features are coloured by confidence level:<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#b30000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Deep red — 99% hot spot</b> (z ≥ 2.58): extremely strong evidence of a high-value cluster<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#e60000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Red — 95% hot spot</b> (z ≥ 1.96): strong evidence<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#ff6600;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Orange — 90% hot spot</b> (z ≥ 1.65): moderate evidence<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#888;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Grey — not significant</b>: no evidence of unusual clustering<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#add8e6;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Light blue — 90% cold spot</b> (z ≤ &minus;1.65)<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#0000e6;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Blue — 95% cold spot</b> (z ≤ &minus;1.96)<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#000080;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Dark blue — 99% cold spot</b> (z ≤ &minus;2.58): extremely strong evidence of a low-value cluster<br><br>
+        <i>How to use results:</i> A 95%+ hot spot cluster indicates a zone where high values are not random — likely a refugium, optimal habitat, or resource concentration worth prioritising for conservation. A cold spot cluster may indicate habitat degradation or harsh microclimate. Features marked "not significant" may simply lack enough neighbours — try increasing the band distance or switching to KNN.<br><br>
+
+        <!-- LISA -->
+        <b>Local Moran's I — LISA Cluster &amp; Outlier Analysis</b> <span style="color:var(--text-muted)">(Anselin 1995)</span><br>
+        LISA classifies each feature into a cluster or outlier type based on its own value relative to its neighbours. Significance is assessed by conditional permutation (999 randomisations).<br><br>
+        <span style="display:inline-block;width:10px;height:10px;background:#e60000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>HH — High-High</b>: high value surrounded by high neighbours → core of a spatial hot spot. Prioritise for protection.<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#0000cc;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>LL — Low-Low</b>: low value surrounded by low neighbours → core of a spatial cold spot. Investigate cause (degradation, edge effect, microclimate).<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#ff8800;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>HL — High-Low</b>: high value surrounded by low neighbours → <i>spatial outlier</i>. Often a micro-refugium or remnant patch; high conservation value per unit area.<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#88aaff;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>LH — Low-High</b>: low value surrounded by high neighbours → <i>spatial outlier</i>. Unexpectedly depauperate patch within a rich landscape; potential degradation signal.<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#888;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Grey — not significant</b>: pseudo-p &gt; 0.05 (or FDR threshold).<br><br>
+        <i>High / Low are relative to the global mean.</i> The pseudo-p-value comes from conditional permutation — how often a random re-labelling of neighbours produces a more extreme local Moran's I than the observed value.<br><br>
+
+        <!-- Global Moran's I -->
+        <b>Global Moran's I — Spatial Autocorrelation Test</b> <span style="color:var(--text-muted)">(Cliff &amp; Ord 1981)</span><br>
+        Summarises the degree of spatial autocorrelation across the entire layer in a single index and tests whether it differs from zero.<br><br>
+        Results table:<br>
+        &bull; <b>Moran's I</b> &mdash; observed index (roughly &minus;1 to +1, but not strictly bounded)<br>
+        &bull; <b>Expected I</b> &mdash; &minus;1/(n&minus;1); the mean under spatial randomness<br>
+        &bull; <b>Variance</b> &mdash; Cliff &amp; Ord randomisation variance<br>
+        &bull; <b>z-score</b> &mdash; (I &minus; E[I]) / &radic;Var(I)<br>
+        &bull; <b>p-value</b> &mdash; two-tailed probability under H&#x2080;: no spatial autocorrelation<br><br>
+        <i>Interpretation:</i><br>
+        &bull; I &gt;&gt; E[I], z &gt; 1.96, p &lt; 0.05 &rarr; <b>positive autocorrelation</b> — similar values cluster together (e.g. high-richness sites near other high-richness sites). This confirms that Gi* and LISA results are meaningful.<br>
+        &bull; I ≈ E[I] &rarr; <b>random</b> — no global spatial structure detected.<br>
+        &bull; I &lt;&lt; E[I], z &lt; &minus;1.96, p &lt; 0.05 &rarr; <b>negative autocorrelation</b> — dissimilar values are neighbours (checkerboard pattern).<br>
+        A non-significant I does not rule out local hot spots — local clusters can exist even when the global average is near zero.<br><br>
+
+        <!-- Moran Scatterplot -->
+        <b>Moran Scatterplot</b><br>
+        A diagnostic chart that visualises Global Moran's I and shows which features drive autocorrelation.<br>
+        X-axis = standardised value (z-score) for each feature. Y-axis = spatial lag (mean standardised value of its neighbours). The slope of the regression line = Global Moran's I.<br><br>
+        Quadrant meanings:<br>
+        &bull; <b>Upper-right (HH)</b> &mdash; high value, high-value neighbours → positive autocorrelation (hot-spot core)<br>
+        &bull; <b>Lower-left (LL)</b> &mdash; low value, low-value neighbours → positive autocorrelation (cold-spot core)<br>
+        &bull; <b>Upper-left (LH)</b> &mdash; low value, high-value neighbours → spatial outlier<br>
+        &bull; <b>Lower-right (HL)</b> &mdash; high value, low-value neighbours → spatial outlier<br>
+        Points far from the origin in HH/LL correspond to LISA HH/LL clusters. Hover a point to see its site name and value.<br><br>
+
+        <!-- ── KEYBOARD SHORTCUTS ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Keyboard Shortcuts</div>
+        &bull; <b>+ / &minus;</b> &mdash; zoom in / out<br>
+        &bull; <b>F</b> &mdash; toggle fullscreen<br>
+        &bull; <b>L</b> &mdash; toggle layer panel<br>
+        &bull; <b>Esc</b> &mdash; cancel digitizing / close modals<br>
+        &bull; <b>Enter</b> &mdash; confirm inline layer rename<br>
       </div>
     </div>
   </div>
