@@ -1913,95 +1913,6 @@
       </select>
     </div>
 
-  <!-- ════ MULTI-LAYER CONSERVATION TOOLS ════ -->
-
-  <!-- HOTSPOT GRID SECTION -->
-  <div class="ad-section-title" id="hotspot-section">&#x1F525; Conservation Hotspot Grid</div>
-  <p class="ad-tool-desc">Overlay multiple layers onto a grid to identify biodiversity concentration areas.</p>
-  <div class="ad-tool-row">
-    <label>Grid Type</label>
-    <select id="hotspot-grid-type">
-      <option value="hex">Hexagonal</option>
-      <option value="square">Square</option>
-    </select>
-  </div>
-  <div class="ad-tool-row">
-    <label>Cell Size (degrees)</label>
-    <input type="number" id="hotspot-cell-size" value="0.5" min="0.01" step="0.01" style="width:80px">
-  </div>
-  <div class="ad-tool-row">
-    <label>Score Method</label>
-    <select id="hotspot-score-method">
-      <option value="count">Feature Count</option>
-      <option value="density">Density</option>
-      <option value="presence">Presence/Absence</option>
-    </select>
-  </div>
-  <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
-  <div id="hotspot-layer-weights" class="ad-layer-weight-table"></div>
-  <div class="ad-tool-row" style="margin-top:8px">
-    <button class="export-btn" onclick="refreshHotspotLayerRows()">&#x21BB; Refresh Layers</button>
-    <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
-  </div>
-
-  <!-- SUITABILITY WLC SECTION -->
-  <div class="ad-section-title" id="wlc-section">&#x1F5FA;&#xFE0F; Suitability Mapping (WLC)</div>
-  <p class="ad-tool-desc">Weighted linear combination of vector layers to create a composite suitability surface.</p>
-  <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
-  <div id="wlc-layer-weights" class="ad-layer-weight-table"></div>
-  <div class="ad-tool-row">
-    <label>Constraint Layer (optional)</label>
-    <select id="wlc-constraint-layer">
-      <option value="">None</option>
-    </select>
-  </div>
-  <div class="ad-tool-row" style="margin-top:8px">
-    <button class="export-btn" onclick="refreshWLCLayerRows()">&#x21BB; Refresh Layers</button>
-    <button class="export-btn primary" onclick="runSuitabilityWLC()">Run WLC Analysis</button>
-  </div>
-
-  <!-- GEOTIFF INPUT SECTION -->
-  <div class="ad-section-title" id="geotiff-section">&#x1F6F0;&#xFE0F; GeoTIFF Raster Input</div>
-  <p class="ad-tool-desc">Upload GeoTIFF files to use as environmental variable layers in SDM analysis.</p>
-  <div class="ad-tool-row">
-    <label>Select GeoTIFF</label>
-    <input type="file" id="geotiff-file-input" accept=".tif,.tiff" style="flex:1">
-  </div>
-  <div class="ad-tool-row">
-    <label>Layer Name</label>
-    <input type="text" id="geotiff-layer-name" placeholder="e.g. elevation" style="flex:1">
-  </div>
-  <div class="ad-tool-row" style="margin-top:8px">
-    <button class="export-btn primary" onclick="loadGeoTIFF()">Load GeoTIFF</button>
-  </div>
-  <div id="geotiff-status" style="font-size:12px;color:#666;margin-top:6px"></div>
-
-  <!-- SDM SECTION -->
-  <div class="ad-section-title" id="sdm-section">&#x1F98B; Species Distribution Models</div>
-  <p class="ad-tool-desc">Model species habitat suitability using presence points and environmental variables.</p>
-  <div class="ad-tool-row">
-    <label>Presence Layer</label>
-    <select id="sdm-presence-layer"></select>
-  </div>
-  <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Environmental Variable Layers</div>
-  <div id="sdm-env-layers" class="ad-layer-weight-table"></div>
-  <div class="ad-tool-row">
-    <label>Model Type</label>
-    <select id="sdm-model-type">
-      <option value="bioclim">Bioclim Envelope</option>
-      <option value="mahalanobis">Mahalanobis Distance</option>
-      <option value="maxent">MaxEnt (server-side)</option>
-    </select>
-  </div>
-  <div class="ad-tool-row">
-    <label>Output Resolution (&#xB0;)</label>
-    <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01" style="width:80px">
-  </div>
-  <div class="ad-tool-row" style="margin-top:8px">
-    <button class="export-btn" onclick="refreshSDMLayerRows()">&#x21BB; Refresh Layers</button>
-    <button class="export-btn primary" onclick="runSDM()">Run SDM</button>
-  </div>
-
   <!-- ════ SINGLE-LAYER GEOMETRIC / STATISTICAL TOOLS ════ -->
 
     <!-- ── SECTION 1: Point Pattern ── -->
@@ -2175,6 +2086,95 @@
     <div class="ad-tool-row">
       <button class="export-btn" onclick="runAnalysis('voronoi')">&#x2B23; Voronoi / Thiessen Polygons</button>
       <div class="ad-tool-desc">Divides the map so every location is assigned to its nearest point. Grid-based approximation (120×120).</div>
+    </div>
+
+    <!-- ── SECTION 6: Raster Analysis ── -->
+    <div class="ad-section-title" id="geotiff-section">&#x1F6F0;&#xFE0F; Raster Analysis</div>
+    <div class="ad-hint">Import GeoTIFF raster files as environmental variable layers for multi-criteria and species distribution analyses.</div>
+    <div class="ad-tool-row">
+      <label>Select GeoTIFF</label>
+      <input type="file" id="geotiff-file-input" accept=".tif,.tiff" style="flex:1">
+    </div>
+    <div class="ad-tool-row">
+      <label>Layer Name</label>
+      <input type="text" id="geotiff-layer-name" placeholder="e.g. elevation" style="flex:1">
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn primary" onclick="loadGeoTIFF()">Load GeoTIFF</button>
+    </div>
+    <div id="geotiff-status" style="font-size:11px;color:var(--text-muted);margin-top:4px"></div>
+
+    <!-- ── SECTION 7: Multi-Criteria Evaluation ── -->
+    <div class="ad-section-title" id="hotspot-section">&#x2696;&#xFE0F; Multi-Criteria Evaluation</div>
+    <div class="ad-hint">Combine multiple vector layers into composite scores using weighted overlays. Equivalent to ArcGIS Weighted Overlay / QGIS MCDA.</div>
+
+    <div class="ad-section-title" style="font-size:9px;margin-top:10px;color:var(--text-muted);border-bottom:none;letter-spacing:0.3px;text-transform:none;font-weight:600;">Conservation Hotspot Grid</div>
+    <p class="ad-tool-desc">Score a hex or square grid by the number or density of features from each layer — reveals multi-layer biodiversity concentrations.</p>
+    <div class="ad-tool-row">
+      <label>Grid Type</label>
+      <select id="hotspot-grid-type">
+        <option value="hex">Hexagonal</option>
+        <option value="square">Square</option>
+      </select>
+    </div>
+    <div class="ad-tool-row">
+      <label>Cell Size (degrees)</label>
+      <input type="number" id="hotspot-cell-size" value="0.5" min="0.01" step="0.01" style="width:80px">
+    </div>
+    <div class="ad-tool-row">
+      <label>Score Method</label>
+      <select id="hotspot-score-method">
+        <option value="count">Feature Count</option>
+        <option value="density">Density</option>
+        <option value="presence">Presence/Absence</option>
+      </select>
+    </div>
+    <div class="ad-tool-desc" style="margin-top:6px;font-weight:600;font-size:10px">Layer Weights</div>
+    <div id="hotspot-layer-weights" class="ad-layer-weight-table"></div>
+    <div class="ad-tool-row" style="margin-top:6px">
+      <button class="export-btn" onclick="refreshHotspotLayerRows()">&#x21BB; Refresh Layers</button>
+      <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
+    </div>
+
+    <div class="ad-section-title" id="wlc-section" style="font-size:9px;margin-top:12px;color:var(--text-muted);border-bottom:none;letter-spacing:0.3px;text-transform:none;font-weight:600;">Suitability Mapping (WLC)</div>
+    <p class="ad-tool-desc">Weighted linear combination across layers — assigns each grid cell a 0–1 composite suitability score. Optionally mask by a constraint polygon layer.</p>
+    <div class="ad-tool-desc" style="margin-top:6px;font-weight:600;font-size:10px">Layer Weights</div>
+    <div id="wlc-layer-weights" class="ad-layer-weight-table"></div>
+    <div class="ad-tool-row">
+      <label>Constraint Layer (optional)</label>
+      <select id="wlc-constraint-layer">
+        <option value="">None</option>
+      </select>
+    </div>
+    <div class="ad-tool-row" style="margin-top:6px">
+      <button class="export-btn" onclick="refreshWLCLayerRows()">&#x21BB; Refresh Layers</button>
+      <button class="export-btn primary" onclick="runSuitabilityWLC()">Run WLC Analysis</button>
+    </div>
+
+    <!-- ── SECTION 8: Species Distribution Modelling ── -->
+    <div class="ad-section-title" id="sdm-section">&#x1F98B; Species Distribution Modelling</div>
+    <div class="ad-hint">Predict species habitat suitability from presence records and environmental variables. Equivalent to MaxEnt, BIOCLIM and Mahalanobis tools in QGIS / biomod2.</div>
+    <div class="ad-tool-row">
+      <label>Presence Layer</label>
+      <select id="sdm-presence-layer"></select>
+    </div>
+    <div class="ad-tool-desc" style="margin-top:6px;font-weight:600;font-size:10px">Environmental Variable Layers</div>
+    <div id="sdm-env-layers" class="ad-layer-weight-table"></div>
+    <div class="ad-tool-row">
+      <label>Model Type</label>
+      <select id="sdm-model-type">
+        <option value="bioclim">BIOCLIM Envelope</option>
+        <option value="mahalanobis">Mahalanobis Distance</option>
+        <option value="maxent">MaxEnt (server-side)</option>
+      </select>
+    </div>
+    <div class="ad-tool-row">
+      <label>Output Resolution (&#xB0;)</label>
+      <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01" style="width:80px">
+    </div>
+    <div class="ad-tool-row" style="margin-top:6px">
+      <button class="export-btn" onclick="refreshSDMLayerRows()">&#x21BB; Refresh Layers</button>
+      <button class="export-btn primary" onclick="runSDM()">Run SDM</button>
     </div>
 
   </div><!-- /analysis-drawer-body -->
