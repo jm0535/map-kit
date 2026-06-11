@@ -1,131 +1,198 @@
+"""
+Vercel Python serverless function: MaxEnt species distribution model.
+
+Expects POST JSON:
+{
+  "presences": [[lng, lat], ...],
+  "env_vars": {"varname": [val_at_presence_1, val_at_presence_2, ...], ...},
+  "extent": [minLng, minLat, maxLng, maxLat],
+  "resolution": 0.1
+}
+
+Returns a GeoJSON FeatureCollection of grid points with a `suitability`
+property (0-1). Uses elapid's MaxEnt if installed, otherwise falls back to a
+logistic-regression presence/pseudo-absence model (numpy + scikit-learn).
+"""
 import json
-import sys
+from http.server import BaseHTTPRequestHandler
 
-def handler(request):
-    # CORS headers
-    headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Content-Type": "application/json"
-    }
 
-    if request.method == "OPTIONS":
-        return {"statusCode": 200, "headers": headers, "body": ""}
+class handler(BaseHTTPRequestHandler):
+    def _send(self, status, payload):
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
-    try:
-        body = json.loads(request.body)
-        presences = body.get("presences", [])
-        env_vars = body.get("env_vars", {})
-        extent = body.get("extent", [-180, -90, 180, 90])
-        resolution = body.get("resolution", 0.1)
+    def do_OPTIONS(self):
+        self._send(200, {})
 
-        # Try elapid first, fall back to sklearn
+    def do_GET(self):
+        self._send(200, {"status": "ok", "service": "GeoSpaX MaxEnt SDM",
+                         "usage": "POST presences + env_vars + extent + resolution"})
+
+    def do_POST(self):
         try:
-            import elapid
-            result = run_maxent_elapid(presences, env_vars, extent, resolution)
-        except ImportError:
-            result = run_maxent_fallback(presences, env_vars, extent, resolution)
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length) if length else b"{}"
+            body = json.loads(raw or b"{}")
 
-        return {
-            "statusCode": 200,
-            "headers": headers,
-            "body": json.dumps(result)
-        }
-    except Exception as e:
-        return {
-            "statusCode": 500,
-            "headers": headers,
-            "body": json.dumps({"error": str(e)})
-        }
+            presences = body.get("presences", [])
+            env_vars = body.get("env_vars", {})
+            extent = body.get("extent", [-180, -90, 180, 90])
+            resolution = float(body.get("resolution", 0.1))
+
+            if not presences or not env_vars:
+                self._send(400, {"error": "presences and env_vars are required"})
+                return
+
+            result = run_sdm(presences, env_vars, extent, resolution)
+            self._send(200, result)
+        except Exception as e:  # noqa: BLE001
+            self._send(500, {"error": str(e)})
 
 
-def run_maxent_fallback(presences, env_vars, extent, resolution):
-    """Bioclim + logistic regression fallback"""
+def run_sdm(presences, env_vars, extent, resolution):
+    """Try elapid MaxEnt; fall back to logistic regression."""
+    try:
+        return run_maxent_elapid(presences, env_vars, extent, resolution)
+    except Exception:
+        return run_logreg_fallback(presences, env_vars, extent, resolution)
+
+
+def _grid_coords(extent, resolution, cap=8000):
+    """Generate grid cell centre coordinates, capped to avoid huge payloads."""
+    min_lng, min_lat, max_lng, max_lat = extent
+    coords = []
+    lng = min_lng
+    while lng <= max_lng:
+        lat = min_lat
+        while lat <= max_lat:
+            coords.append([lng, lat])
+            if len(coords) >= cap:
+                return coords
+            lat += resolution
+        lng += resolution
+    return coords
+
+
+def run_logreg_fallback(presences, env_vars, extent, resolution):
     import numpy as np
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
-    import math
-
-    if not presences or not env_vars:
-        return {"type": "FeatureCollection", "features": []}
 
     var_names = list(env_vars.keys())
     n_vars = len(var_names)
+    n_pres = len(presences)
 
-    # Build presence feature matrix
-    presence_features = []
-    for i, pt in enumerate(presences):
-        row = []
-        for var in var_names:
-            vals = env_vars[var]
-            if i < len(vals):
-                row.append(vals[i])
-            else:
-                row.append(0)
-        presence_features.append(row)
-
-    X_pres = np.array(presence_features)
-
-    # Generate pseudo-absences
-    n_abs = min(len(presences) * 10, 1000)
-    rng = np.random.RandomState(42)
-
-    X_abs = rng.uniform(
-        low=[v.min() for v in [np.array(env_vars[k]) for k in var_names]],
-        high=[v.max() for v in [np.array(env_vars[k]) for k in var_names]],
-        size=(n_abs, n_vars)
+    # Presence environmental matrix (rows = presence points)
+    X_pres = np.array(
+        [[float(env_vars[v][i]) for v in var_names] for i in range(n_pres)],
+        dtype=float,
     )
 
+    # Pseudo-absences sampled uniformly within each variable's observed range
+    lows = X_pres.min(axis=0)
+    highs = X_pres.max(axis=0)
+    rng = np.random.RandomState(42)
+    n_abs = min(max(n_pres * 10, 100), 2000)
+    X_abs = rng.uniform(low=lows, high=highs, size=(n_abs, n_vars))
+
     X = np.vstack([X_pres, X_abs])
-    y = np.array([1]*len(presences) + [0]*n_abs)
+    y = np.array([1] * n_pres + [0] * n_abs)
 
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
+    Xs = scaler.fit_transform(X)
     clf = LogisticRegression(max_iter=1000)
-    clf.fit(X_scaled, y)
+    clf.fit(Xs, y)
 
-    # Generate output grid
-    minLng, minLat, maxLng, maxLat = extent
-    features = []
+    # Build prediction grid. We do not have rasters server-side, so we
+    # interpolate each grid cell's environment from the nearest presence
+    # point (inverse-distance weighting on the two nearest neighbours).
+    coords = _grid_coords(extent, resolution)
+    pres_xy = np.array(presences, dtype=float)
 
-    grid_points = []
-    coords_list = []
-    lng_val = minLng
-    while lng_val <= maxLng:
-        lat_val = minLat
-        while lat_val <= maxLat:
-            coords_list.append([lng_val, lat_val])
-            # interpolate env values based on position — use mean as simplified fallback
-            row = []
-            for var in var_names:
-                vals = np.array(env_vars[var])
-                row.append(float(vals.mean()))
-            grid_points.append(row)
-            lat_val += resolution
-        lng_val += resolution
+    grid_env = []
+    for lng, lat in coords:
+        d = np.sqrt((pres_xy[:, 0] - lng) ** 2 + (pres_xy[:, 1] - lat) ** 2)
+        d = np.maximum(d, 1e-9)
+        w = 1.0 / (d ** 2)
+        w /= w.sum()
+        grid_env.append((X_pres * w[:, None]).sum(axis=0))
 
-    if grid_points:
-        X_grid = np.array(grid_points)
-        X_grid_scaled = scaler.transform(X_grid)
-        probs = clf.predict_proba(X_grid_scaled)[:, 1]
+    if not grid_env:
+        return {"type": "FeatureCollection", "features": []}
 
-        for i, (coord, prob) in enumerate(zip(coords_list, probs)):
-            features.append({
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": coord},
-                "properties": {"suitability": float(prob)}
-            })
+    Xg = scaler.transform(np.array(grid_env))
+    probs = clf.predict_proba(Xg)[:, 1]
 
-    return {"type": "FeatureCollection", "features": features}
+    features = [
+        {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [c[0], c[1]]},
+            "properties": {"suitability": round(float(p), 4)},
+        }
+        for c, p in zip(coords, probs)
+    ]
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+        "meta": {"model": "logistic-regression-fallback", "n_presences": n_pres},
+    }
 
 
 def run_maxent_elapid(presences, env_vars, extent, resolution):
-    """Run MaxEnt using elapid"""
+    """Run MaxEnt with elapid using tabular presence/background features."""
     import numpy as np
-    import elapid
+    from elapid import MaxentModel
 
-    # This would use elapid's MaxEnt implementation
-    # For now return the fallback
-    return run_maxent_fallback(presences, env_vars, extent, resolution)
+    var_names = list(env_vars.keys())
+    n_vars = len(var_names)
+    n_pres = len(presences)
+
+    X_pres = np.array(
+        [[float(env_vars[v][i]) for v in var_names] for i in range(n_pres)],
+        dtype=float,
+    )
+
+    lows, highs = X_pres.min(axis=0), X_pres.max(axis=0)
+    rng = np.random.RandomState(42)
+    n_bg = min(max(n_pres * 10, 200), 5000)
+    X_bg = rng.uniform(low=lows, high=highs, size=(n_bg, n_vars))
+
+    X = np.vstack([X_pres, X_bg])
+    y = np.array([1] * n_pres + [0] * n_bg)
+
+    model = MaxentModel()
+    model.fit(X, y)
+
+    coords = _grid_coords(extent, resolution)
+    pres_xy = np.array(presences, dtype=float)
+    grid_env = []
+    for lng, lat in coords:
+        d = np.maximum(np.sqrt((pres_xy[:, 0] - lng) ** 2 + (pres_xy[:, 1] - lat) ** 2), 1e-9)
+        w = 1.0 / (d ** 2)
+        w /= w.sum()
+        grid_env.append((X_pres * w[:, None]).sum(axis=0))
+
+    preds = model.predict(np.array(grid_env))
+    preds = np.clip(np.array(preds).ravel(), 0, 1)
+
+    features = [
+        {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [c[0], c[1]]},
+            "properties": {"suitability": round(float(p), 4)},
+        }
+        for c, p in zip(coords, preds)
+    ]
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+        "meta": {"model": "elapid-maxent", "n_presences": n_pres},
+    }
