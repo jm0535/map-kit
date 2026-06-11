@@ -729,11 +729,14 @@
 
   /* ── Bottom profile panel ── */
   #profile-panel {
-    height: 280px; min-height: 120px; max-height: 70vh;
+    height: 200px; min-height: 36px; max-height: 45vh;
     background: var(--surface-1); border-top: 1px solid var(--border);
     display: flex; flex-direction: column; flex-shrink: 0;
     position: relative;
+    transition: height 0.2s ease;
   }
+  #profile-panel.collapsed { height: 36px !important; overflow: hidden; }
+  #profile-panel.collapsed #profile-resize-handle { display: none; }
   #profile-resize-handle {
     position: absolute; top: -4px; left: 0; right: 0; height: 8px;
     cursor: ns-resize; z-index: 10;
@@ -1486,6 +1489,8 @@
         </label>
         <div style="flex:1"></div>
         <span id="profile-hint">Click a point on the profile to pan the map</span>
+        <button id="profile-collapse-btn" onclick="toggleProfilePanel()" title="Collapse / expand bottom panel"
+          style="background:none;border:1px solid var(--border);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:11px;color:var(--text-muted);margin-left:8px;line-height:1.6;">&#x25BC;</button>
       </div>
       <div id="bottom-tab-elevation" class="bottom-tab-content active">
         <div id="profile-canvas-wrap"><canvas id="profile-chart"></canvas></div>
@@ -7240,6 +7245,14 @@ function toggleRightPanel() {
   setTimeout(() => map.invalidateSize(), 250);
 }
 
+function toggleProfilePanel() {
+  const panel = document.getElementById('profile-panel');
+  const btn = document.getElementById('profile-collapse-btn');
+  panel.classList.toggle('collapsed');
+  btn.innerHTML = panel.classList.contains('collapsed') ? '&#x25B2;' : '&#x25BC;';
+  setTimeout(() => { map.invalidateSize(); if (typeof profileChart !== 'undefined' && profileChart) profileChart.resize(); }, 220);
+}
+
 function toggleAnalysisDrawer() {
   const drawer = document.getElementById('analysis-drawer');
   if (drawer.classList.contains('open')) {
@@ -9439,7 +9452,7 @@ function exportLayerGPX() {
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
     const delta = startY - e.clientY;
-    const newH = Math.min(Math.max(startH + delta, 120), window.innerHeight * 0.7);
+    const newH = Math.min(Math.max(startH + delta, 80), window.innerHeight * 0.45);
     panel.style.height = newH + 'px';
     map.invalidateSize();
   });
