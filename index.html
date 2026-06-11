@@ -10148,7 +10148,7 @@ function runHotspotGrid() {
   try {
     let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
     selectedLayers.forEach(({ layer }) => {
-      const features = layer.geojson && layer.geojson.features || [];
+      const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
       features.forEach(f => {
         const coords = getAllCoords(f.geometry);
         coords.forEach(([lng, lat]) => {
@@ -10186,7 +10186,7 @@ function runHotspotGrid() {
       let totalWeight = 0;
       const breakdown = {};
       selectedLayers.forEach(({ layer, weight }) => {
-        const features = layer.geojson && layer.geojson.features || [];
+        const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
         const points = features.filter(f => f.geometry && f.geometry.type === 'Point');
         let score = 0;
         if (points.length > 0) {
@@ -10298,7 +10298,7 @@ function runSuitabilityWLC() {
   try {
     let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
     selectedLayers.forEach(({ layer }) => {
-      const features = layer.geojson && layer.geojson.features || [];
+      const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
       features.forEach(f => {
         const coords = getAllCoords(f.geometry);
         coords.forEach(([lng, lat]) => {
@@ -10324,7 +10324,7 @@ function runSuitabilityWLC() {
       let weightedSum = 0;
       let totalWeight = 0;
       selectedLayers.forEach(({ layer, weight }) => {
-        const features = layer.geojson && layer.geojson.features || [];
+        const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
         const points = features.filter(f => f.geometry && f.geometry.type === 'Point');
         let score = 0;
         if (points.length > 0) {
@@ -10347,7 +10347,7 @@ function runSuitabilityWLC() {
       let suitability = totalWeight > 0 ? weightedSum / totalWeight : 0;
 
       if (constraintLayer) {
-        const cf = constraintLayer.geojson && constraintLayer.geojson.features || [];
+        const cf = constraintLayer.geojsonFeatures || (constraintLayer.geojson && constraintLayer.geojson.features) || [];
         const inConstraint = cf.some(f => {
           if (!f.geometry) return false;
           try { return turf.booleanIntersects(cell, f); } catch (e) { return false; }
@@ -10431,7 +10431,7 @@ function runSDM() {
   });
 
   const presenceLayer = uploadedLayers[presenceIdx];
-  const presencePoints = (presenceLayer.geojson && presenceLayer.geojson.features || []).filter(f => f.geometry && f.geometry.type === 'Point');
+  const presencePoints = (presenceLayer.geojsonFeatures || (presenceLayer.geojson && presenceLayer.geojson.features) || []).filter(f => f.geometry && f.geometry.type === 'Point');
 
   if (presencePoints.length < 3) {
     showToast('Need at least 3 presence points', 'error');
@@ -10649,7 +10649,7 @@ function extractEnvAtPoints(points, envLayers) {
     const key = fieldName || layer.name;
     envData[key] = points.map(p => {
       const pCoords = p.geometry.coordinates;
-      const features = layer.geojson && layer.geojson.features || [];
+      const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
       let nearest = null, nearestDist = Infinity;
       features.forEach(f => {
         if (!f.geometry) return;
@@ -10678,7 +10678,7 @@ function interpolateEnvAtPoint(coords, envLayers) {
   const result = {};
   envLayers.forEach(({ layer, fieldName }) => {
     const key = fieldName || layer.name;
-    const features = layer.geojson && layer.geojson.features || [];
+    const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
     let nearest = null, nearestDist = Infinity;
     features.forEach(f => {
       if (!f.geometry) return;
