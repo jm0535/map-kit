@@ -1916,98 +1916,90 @@
   <!-- ════ MULTI-LAYER CONSERVATION TOOLS ════ -->
 
   <!-- HOTSPOT GRID SECTION -->
-  <div class="ad-section" id="hotspot-section">
-    <div class="ad-section-title">&#x1F525; Conservation Hotspot Grid</div>
-    <p class="ad-tool-desc">Overlay multiple layers onto a grid to identify biodiversity concentration areas.</p>
-    <div class="ad-tool-row">
-      <label>Grid Type</label>
-      <select id="hotspot-grid-type">
-        <option value="hex">Hexagonal</option>
-        <option value="square">Square</option>
-      </select>
-    </div>
-    <div class="ad-tool-row">
-      <label>Cell Size (degrees)</label>
-      <input type="number" id="hotspot-cell-size" value="0.5" min="0.01" step="0.01" style="width:80px">
-    </div>
-    <div class="ad-tool-row">
-      <label>Score Method</label>
-      <select id="hotspot-score-method">
-        <option value="count">Feature Count</option>
-        <option value="density">Density</option>
-        <option value="presence">Presence/Absence</option>
-      </select>
-    </div>
-    <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
-    <div id="hotspot-layer-weights" class="ad-layer-weight-table"></div>
-    <div class="ad-tool-row" style="margin-top:8px">
-      <button class="export-btn" onclick="refreshHotspotLayerRows()">&#x21BB; Refresh Layers</button>
-      <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
-    </div>
+  <div class="ad-section-title" id="hotspot-section">&#x1F525; Conservation Hotspot Grid</div>
+  <p class="ad-tool-desc">Overlay multiple layers onto a grid to identify biodiversity concentration areas.</p>
+  <div class="ad-tool-row">
+    <label>Grid Type</label>
+    <select id="hotspot-grid-type">
+      <option value="hex">Hexagonal</option>
+      <option value="square">Square</option>
+    </select>
+  </div>
+  <div class="ad-tool-row">
+    <label>Cell Size (degrees)</label>
+    <input type="number" id="hotspot-cell-size" value="0.5" min="0.01" step="0.01" style="width:80px">
+  </div>
+  <div class="ad-tool-row">
+    <label>Score Method</label>
+    <select id="hotspot-score-method">
+      <option value="count">Feature Count</option>
+      <option value="density">Density</option>
+      <option value="presence">Presence/Absence</option>
+    </select>
+  </div>
+  <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
+  <div id="hotspot-layer-weights" class="ad-layer-weight-table"></div>
+  <div class="ad-tool-row" style="margin-top:8px">
+    <button class="export-btn" onclick="refreshHotspotLayerRows()">&#x21BB; Refresh Layers</button>
+    <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
   </div>
 
   <!-- SUITABILITY WLC SECTION -->
-  <div class="ad-section" id="wlc-section">
-    <div class="ad-section-title">&#x1F5FA;&#xFE0F; Suitability Mapping (WLC)</div>
-    <p class="ad-tool-desc">Weighted linear combination of vector layers to create a composite suitability surface.</p>
-    <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
-    <div id="wlc-layer-weights" class="ad-layer-weight-table"></div>
-    <div class="ad-tool-row">
-      <label>Constraint Layer (optional)</label>
-      <select id="wlc-constraint-layer">
-        <option value="">None</option>
-      </select>
-    </div>
-    <div class="ad-tool-row" style="margin-top:8px">
-      <button class="export-btn" onclick="refreshWLCLayerRows()">&#x21BB; Refresh Layers</button>
-      <button class="export-btn primary" onclick="runSuitabilityWLC()">Run WLC Analysis</button>
-    </div>
+  <div class="ad-section-title" id="wlc-section">&#x1F5FA;&#xFE0F; Suitability Mapping (WLC)</div>
+  <p class="ad-tool-desc">Weighted linear combination of vector layers to create a composite suitability surface.</p>
+  <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
+  <div id="wlc-layer-weights" class="ad-layer-weight-table"></div>
+  <div class="ad-tool-row">
+    <label>Constraint Layer (optional)</label>
+    <select id="wlc-constraint-layer">
+      <option value="">None</option>
+    </select>
+  </div>
+  <div class="ad-tool-row" style="margin-top:8px">
+    <button class="export-btn" onclick="refreshWLCLayerRows()">&#x21BB; Refresh Layers</button>
+    <button class="export-btn primary" onclick="runSuitabilityWLC()">Run WLC Analysis</button>
   </div>
 
   <!-- GEOTIFF INPUT SECTION -->
-  <div class="ad-section" id="geotiff-section">
-    <div class="ad-section-title">&#x1F6F0;&#xFE0F; GeoTIFF Raster Input</div>
-    <p class="ad-tool-desc">Upload GeoTIFF files to use as environmental variable layers in SDM analysis.</p>
-    <div class="ad-tool-row">
-      <label>Select GeoTIFF</label>
-      <input type="file" id="geotiff-file-input" accept=".tif,.tiff" style="flex:1">
-    </div>
-    <div class="ad-tool-row">
-      <label>Layer Name</label>
-      <input type="text" id="geotiff-layer-name" placeholder="e.g. elevation" style="flex:1">
-    </div>
-    <div class="ad-tool-row" style="margin-top:8px">
-      <button class="export-btn primary" onclick="loadGeoTIFF()">Load GeoTIFF</button>
-    </div>
-    <div id="geotiff-status" style="font-size:12px;color:#666;margin-top:6px"></div>
+  <div class="ad-section-title" id="geotiff-section">&#x1F6F0;&#xFE0F; GeoTIFF Raster Input</div>
+  <p class="ad-tool-desc">Upload GeoTIFF files to use as environmental variable layers in SDM analysis.</p>
+  <div class="ad-tool-row">
+    <label>Select GeoTIFF</label>
+    <input type="file" id="geotiff-file-input" accept=".tif,.tiff" style="flex:1">
   </div>
+  <div class="ad-tool-row">
+    <label>Layer Name</label>
+    <input type="text" id="geotiff-layer-name" placeholder="e.g. elevation" style="flex:1">
+  </div>
+  <div class="ad-tool-row" style="margin-top:8px">
+    <button class="export-btn primary" onclick="loadGeoTIFF()">Load GeoTIFF</button>
+  </div>
+  <div id="geotiff-status" style="font-size:12px;color:#666;margin-top:6px"></div>
 
   <!-- SDM SECTION -->
-  <div class="ad-section" id="sdm-section">
-    <div class="ad-section-title">&#x1F98B; Species Distribution Models</div>
-    <p class="ad-tool-desc">Model species habitat suitability using presence points and environmental variables.</p>
-    <div class="ad-tool-row">
-      <label>Presence Layer</label>
-      <select id="sdm-presence-layer"></select>
-    </div>
-    <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Environmental Variable Layers</div>
-    <div id="sdm-env-layers" class="ad-layer-weight-table"></div>
-    <div class="ad-tool-row">
-      <label>Model Type</label>
-      <select id="sdm-model-type">
-        <option value="bioclim">Bioclim Envelope</option>
-        <option value="mahalanobis">Mahalanobis Distance</option>
-        <option value="maxent">MaxEnt (server-side)</option>
-      </select>
-    </div>
-    <div class="ad-tool-row">
-      <label>Output Resolution (&#xB0;)</label>
-      <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01" style="width:80px">
-    </div>
-    <div class="ad-tool-row" style="margin-top:8px">
-      <button class="export-btn" onclick="refreshSDMLayerRows()">&#x21BB; Refresh Layers</button>
-      <button class="export-btn primary" onclick="runSDM()">Run SDM</button>
-    </div>
+  <div class="ad-section-title" id="sdm-section">&#x1F98B; Species Distribution Models</div>
+  <p class="ad-tool-desc">Model species habitat suitability using presence points and environmental variables.</p>
+  <div class="ad-tool-row">
+    <label>Presence Layer</label>
+    <select id="sdm-presence-layer"></select>
+  </div>
+  <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Environmental Variable Layers</div>
+  <div id="sdm-env-layers" class="ad-layer-weight-table"></div>
+  <div class="ad-tool-row">
+    <label>Model Type</label>
+    <select id="sdm-model-type">
+      <option value="bioclim">Bioclim Envelope</option>
+      <option value="mahalanobis">Mahalanobis Distance</option>
+      <option value="maxent">MaxEnt (server-side)</option>
+    </select>
+  </div>
+  <div class="ad-tool-row">
+    <label>Output Resolution (&#xB0;)</label>
+    <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01" style="width:80px">
+  </div>
+  <div class="ad-tool-row" style="margin-top:8px">
+    <button class="export-btn" onclick="refreshSDMLayerRows()">&#x21BB; Refresh Layers</button>
+    <button class="export-btn primary" onclick="runSDM()">Run SDM</button>
   </div>
 
   <!-- ════ SINGLE-LAYER GEOMETRIC / STATISTICAL TOOLS ════ -->
