@@ -57,6 +57,10 @@
 <!-- Shapefile export -->
 <script src="vendor/shp-write/shpwrite.js"></script>
 
+<!-- Spatial analysis & raster -->
+<script src="vendor/turf.min.js"></script>
+<script src="vendor/geotiff.js"></script>
+
 <style>
   /* ── Design tokens ── */
   :root {
@@ -714,6 +718,35 @@
     border-radius: 6px; color: var(--text); font-weight: 500;
   }
   #analysis-drawer-body .ad-layer-select:focus { outline: none; box-shadow: 0 0 0 2px var(--accent-bg); }
+  .ad-layer-weight-table {
+    width: 100%;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .ad-layer-weight-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .ad-layer-weight-row label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+  .ad-layer-weight-row input[type=number] {
+    width: 55px;
+    padding: 2px 4px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  .ad-layer-weight-row input[type=checkbox] {
+    width: auto;
+  }
   .analysis-toolbar-btn {
     display: flex; align-items: center; gap: 5px;
     background: var(--accent); color: white;
@@ -2052,6 +2085,101 @@
       <button class="export-btn" onclick="runAnalysis('voronoi')">&#x2B23; Voronoi / Thiessen Polygons</button>
       <div class="ad-tool-desc">Divides the map so every location is assigned to its nearest point. Grid-based approximation (120×120).</div>
     </div>
+
+  <!-- HOTSPOT GRID SECTION -->
+  <div class="ad-section" id="hotspot-section">
+    <div class="ad-section-title">&#x1F525; Conservation Hotspot Grid</div>
+    <p class="ad-tool-desc">Overlay multiple layers onto a grid to identify biodiversity concentration areas.</p>
+    <div class="ad-tool-row">
+      <label>Grid Type</label>
+      <select id="hotspot-grid-type">
+        <option value="hex">Hexagonal</option>
+        <option value="square">Square</option>
+      </select>
+    </div>
+    <div class="ad-tool-row">
+      <label>Cell Size (degrees)</label>
+      <input type="number" id="hotspot-cell-size" value="0.5" min="0.01" step="0.01" style="width:80px">
+    </div>
+    <div class="ad-tool-row">
+      <label>Score Method</label>
+      <select id="hotspot-score-method">
+        <option value="count">Feature Count</option>
+        <option value="density">Density</option>
+        <option value="presence">Presence/Absence</option>
+      </select>
+    </div>
+    <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
+    <div id="hotspot-layer-weights" class="ad-layer-weight-table"></div>
+    <div class="ad-tool-row" style="margin-top:8px">
+      <button class="export-btn" onclick="refreshHotspotLayerRows()">&#x21BB; Refresh Layers</button>
+      <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
+    </div>
+  </div>
+
+  <!-- SUITABILITY WLC SECTION -->
+  <div class="ad-section" id="wlc-section">
+    <div class="ad-section-title">&#x1F5FA;&#xFE0F; Suitability Mapping (WLC)</div>
+    <p class="ad-tool-desc">Weighted linear combination of vector layers to create a composite suitability surface.</p>
+    <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Layer Weights</div>
+    <div id="wlc-layer-weights" class="ad-layer-weight-table"></div>
+    <div class="ad-tool-row">
+      <label>Constraint Layer (optional)</label>
+      <select id="wlc-constraint-layer">
+        <option value="">None</option>
+      </select>
+    </div>
+    <div class="ad-tool-row" style="margin-top:8px">
+      <button class="export-btn" onclick="refreshWLCLayerRows()">&#x21BB; Refresh Layers</button>
+      <button class="export-btn primary" onclick="runSuitabilityWLC()">Run WLC Analysis</button>
+    </div>
+  </div>
+
+  <!-- GEOTIFF INPUT SECTION -->
+  <div class="ad-section" id="geotiff-section">
+    <div class="ad-section-title">&#x1F6F0;&#xFE0F; GeoTIFF Raster Input</div>
+    <p class="ad-tool-desc">Upload GeoTIFF files to use as environmental variable layers in SDM analysis.</p>
+    <div class="ad-tool-row">
+      <label>Select GeoTIFF</label>
+      <input type="file" id="geotiff-file-input" accept=".tif,.tiff" style="flex:1">
+    </div>
+    <div class="ad-tool-row">
+      <label>Layer Name</label>
+      <input type="text" id="geotiff-layer-name" placeholder="e.g. elevation" style="flex:1">
+    </div>
+    <div class="ad-tool-row" style="margin-top:8px">
+      <button class="export-btn primary" onclick="loadGeoTIFF()">Load GeoTIFF</button>
+    </div>
+    <div id="geotiff-status" style="font-size:12px;color:#666;margin-top:6px"></div>
+  </div>
+
+  <!-- SDM SECTION -->
+  <div class="ad-section" id="sdm-section">
+    <div class="ad-section-title">&#x1F98B; Species Distribution Models</div>
+    <p class="ad-tool-desc">Model species habitat suitability using presence points and environmental variables.</p>
+    <div class="ad-tool-row">
+      <label>Presence Layer</label>
+      <select id="sdm-presence-layer"></select>
+    </div>
+    <div class="ad-tool-desc" style="margin-top:8px;font-weight:600">Environmental Variable Layers</div>
+    <div id="sdm-env-layers" class="ad-layer-weight-table"></div>
+    <div class="ad-tool-row">
+      <label>Model Type</label>
+      <select id="sdm-model-type">
+        <option value="bioclim">Bioclim Envelope</option>
+        <option value="mahalanobis">Mahalanobis Distance</option>
+        <option value="maxent">MaxEnt (server-side)</option>
+      </select>
+    </div>
+    <div class="ad-tool-row">
+      <label>Output Resolution (&#xB0;)</label>
+      <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01" style="width:80px">
+    </div>
+    <div class="ad-tool-row" style="margin-top:8px">
+      <button class="export-btn" onclick="refreshSDMLayerRows()">&#x21BB; Refresh Layers</button>
+      <button class="export-btn primary" onclick="runSDM()">Run SDM</button>
+    </div>
+  </div>
 
   </div><!-- /analysis-drawer-body -->
   </div><!-- /analysis-drawer-inner -->
@@ -9766,6 +9894,854 @@ function exportLayerGPX() {
     if (profileChart) profileChart.resize();
   });
 })();
+
+// ========== ANALYSIS HELPER: REFRESH LAYER ROWS ==========
+
+function refreshHotspotLayerRows() {
+  const container = document.getElementById('hotspot-layer-weights');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!uploadedLayers || uploadedLayers.length === 0) {
+    container.innerHTML = '<div style="color:#999;font-size:11px;padding:4px">No layers loaded</div>';
+    return;
+  }
+  uploadedLayers.forEach((layer, idx) => {
+    const row = document.createElement('div');
+    row.className = 'ad-layer-weight-row';
+    row.innerHTML = `
+      <input type="checkbox" id="hotspot-chk-${idx}" checked title="Include layer">
+      <label for="hotspot-chk-${idx}" title="${layer.name}">${layer.name}</label>
+      <span style="font-size:10px;color:#999">wt:</span>
+      <input type="number" id="hotspot-wt-${idx}" value="1" min="0" max="10" step="0.1">
+    `;
+    container.appendChild(row);
+  });
+}
+
+function refreshWLCLayerRows() {
+  const container = document.getElementById('wlc-layer-weights');
+  const constraintSel = document.getElementById('wlc-constraint-layer');
+  if (!container) return;
+  container.innerHTML = '';
+  if (constraintSel) {
+    constraintSel.innerHTML = '<option value="">None</option>';
+  }
+  if (!uploadedLayers || uploadedLayers.length === 0) {
+    container.innerHTML = '<div style="color:#999;font-size:11px;padding:4px">No layers loaded</div>';
+    return;
+  }
+  uploadedLayers.forEach((layer, idx) => {
+    const row = document.createElement('div');
+    row.className = 'ad-layer-weight-row';
+    row.innerHTML = `
+      <input type="checkbox" id="wlc-chk-${idx}" checked title="Include layer">
+      <label for="wlc-chk-${idx}" title="${layer.name}">${layer.name}</label>
+      <span style="font-size:10px;color:#999">wt:</span>
+      <input type="number" id="wlc-wt-${idx}" value="1" min="0" max="10" step="0.1">
+    `;
+    container.appendChild(row);
+    if (constraintSel) {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = layer.name;
+      constraintSel.appendChild(opt);
+    }
+  });
+}
+
+function refreshSDMLayerRows() {
+  const presenceSel = document.getElementById('sdm-presence-layer');
+  const envContainer = document.getElementById('sdm-env-layers');
+  if (!presenceSel || !envContainer) return;
+  presenceSel.innerHTML = '';
+  envContainer.innerHTML = '';
+  if (!uploadedLayers || uploadedLayers.length === 0) {
+    presenceSel.innerHTML = '<option value="">No layers</option>';
+    envContainer.innerHTML = '<div style="color:#999;font-size:11px;padding:4px">No layers loaded</div>';
+    return;
+  }
+  uploadedLayers.forEach((layer, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = layer.name;
+    presenceSel.appendChild(opt);
+    const row = document.createElement('div');
+    row.className = 'ad-layer-weight-row';
+    row.innerHTML = `
+      <input type="checkbox" id="sdm-env-chk-${idx}" title="Use as env variable">
+      <label for="sdm-env-chk-${idx}" title="${layer.name}">${layer.name}</label>
+      <input type="text" id="sdm-env-field-${idx}" placeholder="field name" style="width:80px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:11px">
+    `;
+    envContainer.appendChild(row);
+  });
+}
+
+// ========== GEOTIFF LOADER ==========
+
+async function loadGeoTIFF() {
+  const fileInput = document.getElementById('geotiff-file-input');
+  const nameInput = document.getElementById('geotiff-layer-name');
+  const statusDiv = document.getElementById('geotiff-status');
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    showToast('Please select a GeoTIFF file', 'error');
+    return;
+  }
+  if (typeof GeoTIFF === 'undefined') {
+    showToast('GeoTIFF library not loaded', 'error');
+    return;
+  }
+  const file = fileInput.files[0];
+  const layerName = nameInput && nameInput.value.trim() ? nameInput.value.trim() : file.name.replace(/\.tiff?$/i, '');
+  if (statusDiv) statusDiv.textContent = 'Loading GeoTIFF…';
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
+    const image = await tiff.getImage();
+    const width = image.getWidth();
+    const height = image.getHeight();
+    const bbox = image.getBoundingBox();
+    const rasters = await image.readRasters({ interleave: true });
+    const samplesPerPixel = image.getSamplesPerPixel();
+    const features = [];
+    const stepX = (bbox[2] - bbox[0]) / width;
+    const stepY = (bbox[3] - bbox[1]) / height;
+    const sampleStep = Math.max(1, Math.floor(Math.sqrt((width * height) / 5000)));
+    for (let row = 0; row < height; row += sampleStep) {
+      for (let col = 0; col < width; col += sampleStep) {
+        const lng = bbox[0] + (col + 0.5) * stepX;
+        const lat = bbox[1] + (height - row - 0.5) * stepY;
+        const pixIdx = (row * width + col) * samplesPerPixel;
+        const val = rasters[pixIdx];
+        if (val !== undefined && !isNaN(val) && val !== -9999 && val !== -32768) {
+          features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [lng, lat] },
+            properties: { value: val, band1: val }
+          });
+        }
+      }
+    }
+    const geojson = { type: 'FeatureCollection', features };
+    const info = {
+      id: 'geotiff_' + Date.now(),
+      name: layerName,
+      geojson,
+      visible: true,
+      color: '#8B4513',
+      type: 'raster_points',
+      _rasterMeta: { bbox, width, height, samplesPerPixel, rasters, stepX, stepY }
+    };
+    const leafletLayer = L.geoJSON(geojson, {
+      pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 3, fillColor: '#8B4513', color: '#8B4513', weight: 1, fillOpacity: 0.6 }),
+      onEachFeature: (f, l) => l.bindPopup(`<b>${layerName}</b><br>Value: ${f.properties.value}`)
+    }).addTo(map);
+    info.layer = leafletLayer;
+    uploadedLayers.unshift(info);
+    if (typeof addLayerToPanel === 'function') addLayerToPanel(info);
+    if (statusDiv) statusDiv.textContent = `Loaded ${features.length} sample points from GeoTIFF`;
+    showToast(`GeoTIFF "${layerName}" loaded with ${features.length} points`, 'success');
+  } catch (err) {
+    console.error('GeoTIFF load error:', err);
+    if (statusDiv) statusDiv.textContent = 'Error: ' + err.message;
+    showToast('Failed to load GeoTIFF: ' + err.message, 'error');
+  }
+}
+
+// ========== HOTSPOT GRID ==========
+
+function runHotspotGrid() {
+  if (typeof turf === 'undefined') {
+    showToast('Turf.js not loaded – required for Hotspot Grid', 'error');
+    return;
+  }
+  const gridType = document.getElementById('hotspot-grid-type') && document.getElementById('hotspot-grid-type').value || 'hex';
+  const cellSize = parseFloat(document.getElementById('hotspot-cell-size') && document.getElementById('hotspot-cell-size').value || 0.5);
+  const scoreMethod = document.getElementById('hotspot-score-method') && document.getElementById('hotspot-score-method').value || 'count';
+
+  if (isNaN(cellSize) || cellSize <= 0) {
+    showToast('Invalid cell size', 'error');
+    return;
+  }
+
+  const selectedLayers = [];
+  uploadedLayers.forEach((layer, idx) => {
+    const chk = document.getElementById(`hotspot-chk-${idx}`);
+    const wt = document.getElementById(`hotspot-wt-${idx}`);
+    if (chk && chk.checked) {
+      selectedLayers.push({ layer, weight: parseFloat(wt && wt.value || 1) });
+    }
+  });
+
+  if (selectedLayers.length === 0) {
+    showToast('Select at least one layer', 'error');
+    return;
+  }
+
+  showToast('Generating hotspot grid…', 'info');
+
+  try {
+    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+    selectedLayers.forEach(({ layer }) => {
+      const features = layer.geojson && layer.geojson.features || [];
+      features.forEach(f => {
+        const coords = getAllCoords(f.geometry);
+        coords.forEach(([lng, lat]) => {
+          if (lng < minLng) minLng = lng;
+          if (lat < minLat) minLat = lat;
+          if (lng > maxLng) maxLng = lng;
+          if (lat > maxLat) maxLat = lat;
+        });
+      });
+    });
+
+    if (!isFinite(minLng)) {
+      showToast('No valid geometry found in selected layers', 'error');
+      return;
+    }
+
+    const buf = cellSize * 0.5;
+    const bbox = [minLng - buf, minLat - buf, maxLng + buf, maxLat + buf];
+
+    let grid;
+    try {
+      if (gridType === 'hex') {
+        grid = turf.hexGrid(bbox, cellSize * 111, { units: 'kilometers' });
+      } else {
+        grid = turf.squareGrid(bbox, cellSize * 111, { units: 'kilometers' });
+      }
+    } catch (e) {
+      showToast('Grid generation failed: ' + e.message, 'error');
+      return;
+    }
+
+    let maxScore = 0;
+    grid.features.forEach(cell => {
+      let compositeScore = 0;
+      let totalWeight = 0;
+      const breakdown = {};
+      selectedLayers.forEach(({ layer, weight }) => {
+        const features = layer.geojson && layer.geojson.features || [];
+        const points = features.filter(f => f.geometry && f.geometry.type === 'Point');
+        let score = 0;
+        if (points.length > 0) {
+          const ptFC = turf.featureCollection(points);
+          try {
+            const within = turf.pointsWithinPolygon(ptFC, cell);
+            const cnt = within.features.length;
+            if (scoreMethod === 'presence') {
+              score = cnt > 0 ? 1 : 0;
+            } else if (scoreMethod === 'density') {
+              const area = turf.area(cell) / 1e6;
+              score = area > 0 ? cnt / area : 0;
+            } else {
+              score = cnt;
+            }
+          } catch (e) {
+            score = 0;
+          }
+        } else {
+          features.forEach(f => {
+            if (!f.geometry) return;
+            try {
+              if (turf.booleanIntersects(cell, f)) score++;
+            } catch (e) {}
+          });
+          if (scoreMethod === 'presence') score = score > 0 ? 1 : 0;
+        }
+        breakdown[layer.name] = score;
+        compositeScore += score * weight;
+        totalWeight += weight;
+      });
+      cell.properties._score = totalWeight > 0 ? compositeScore / totalWeight : 0;
+      cell.properties._breakdown = breakdown;
+      if (cell.properties._score > maxScore) maxScore = cell.properties._score;
+    });
+
+    if (maxScore > 0) {
+      grid.features.forEach(cell => { cell.properties._normScore = cell.properties._score / maxScore; });
+    } else {
+      grid.features.forEach(cell => { cell.properties._normScore = 0; });
+    }
+
+    const leafletLayer = L.geoJSON(grid, {
+      style: feature => {
+        const s = feature.properties._normScore || 0;
+        return { fillColor: hotspotColor(s), fillOpacity: 0.65, color: '#333', weight: 0.5 };
+      },
+      onEachFeature: (feature, layer) => {
+        const s = (feature.properties._normScore * 100).toFixed(1);
+        const breakdown = feature.properties._breakdown || {};
+        let breakdownHtml = Object.entries(breakdown).map(([k, v]) => `<tr><td>${k}</td><td>${typeof v === 'number' ? v.toFixed(2) : v}</td></tr>`).join('');
+        layer.bindPopup(`<b>Hotspot Score: ${s}%</b><table style="font-size:11px;width:100%"><tr><th>Layer</th><th>Score</th></tr>${breakdownHtml}</table>`);
+      }
+    }).addTo(map);
+
+    const info = {
+      id: 'hotspot_' + Date.now(),
+      name: 'Hotspot Grid ' + new Date().toLocaleTimeString(),
+      geojson: grid,
+      visible: true,
+      color: '#ff4500',
+      layer: leafletLayer,
+      type: 'analysis'
+    };
+    uploadedLayers.unshift(info);
+    if (typeof addLayerToPanel === 'function') addLayerToPanel(info);
+    map.fitBounds(leafletLayer.getBounds(), { padding: [20, 20] });
+    showToast(`Hotspot grid: ${grid.features.length} cells generated`, 'success');
+  } catch (err) {
+    console.error('Hotspot grid error:', err);
+    showToast('Hotspot grid failed: ' + err.message, 'error');
+  }
+}
+
+function hotspotColor(t) {
+  const r = 255;
+  const g = Math.round(255 * (1 - t));
+  return `rgb(${r},${g},0)`;
+}
+
+// ========== SUITABILITY WLC ==========
+
+function runSuitabilityWLC() {
+  if (typeof turf === 'undefined') {
+    showToast('Turf.js not loaded – required for WLC', 'error');
+    return;
+  }
+
+  const selectedLayers = [];
+  uploadedLayers.forEach((layer, idx) => {
+    const chk = document.getElementById(`wlc-chk-${idx}`);
+    const wt = document.getElementById(`wlc-wt-${idx}`);
+    if (chk && chk.checked) {
+      selectedLayers.push({ layer, weight: parseFloat(wt && wt.value || 1) });
+    }
+  });
+
+  if (selectedLayers.length === 0) {
+    showToast('Select at least one layer for WLC', 'error');
+    return;
+  }
+
+  const constraintIdxEl = document.getElementById('wlc-constraint-layer');
+  const constraintIdx = constraintIdxEl && constraintIdxEl.value;
+  const constraintLayer = constraintIdx !== '' && constraintIdx !== undefined ? uploadedLayers[parseInt(constraintIdx)] : null;
+
+  showToast('Running WLC analysis…', 'info');
+
+  try {
+    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+    selectedLayers.forEach(({ layer }) => {
+      const features = layer.geojson && layer.geojson.features || [];
+      features.forEach(f => {
+        const coords = getAllCoords(f.geometry);
+        coords.forEach(([lng, lat]) => {
+          if (lng < minLng) minLng = lng;
+          if (lat < minLat) minLat = lat;
+          if (lng > maxLng) maxLng = lng;
+          if (lat > maxLat) maxLat = lat;
+        });
+      });
+    });
+
+    if (!isFinite(minLng)) {
+      showToast('No valid geometry in selected layers', 'error');
+      return;
+    }
+
+    const buf = 0.1;
+    const bbox = [minLng - buf, minLat - buf, maxLng + buf, maxLat + buf];
+    const cellSizeDeg = 0.2;
+    const grid = turf.squareGrid(bbox, cellSizeDeg * 111, { units: 'kilometers' });
+
+    grid.features.forEach(cell => {
+      let weightedSum = 0;
+      let totalWeight = 0;
+      selectedLayers.forEach(({ layer, weight }) => {
+        const features = layer.geojson && layer.geojson.features || [];
+        const points = features.filter(f => f.geometry && f.geometry.type === 'Point');
+        let score = 0;
+        if (points.length > 0) {
+          try {
+            const within = turf.pointsWithinPolygon(turf.featureCollection(points), cell);
+            score = Math.min(1, within.features.length / 5);
+          } catch (e) { score = 0; }
+        } else {
+          let intersects = 0;
+          features.forEach(f => {
+            if (!f.geometry) return;
+            try { if (turf.booleanIntersects(cell, f)) intersects++; } catch (e) {}
+          });
+          score = intersects > 0 ? 1 : 0;
+        }
+        weightedSum += score * weight;
+        totalWeight += weight;
+      });
+
+      let suitability = totalWeight > 0 ? weightedSum / totalWeight : 0;
+
+      if (constraintLayer) {
+        const cf = constraintLayer.geojson && constraintLayer.geojson.features || [];
+        const inConstraint = cf.some(f => {
+          if (!f.geometry) return false;
+          try { return turf.booleanIntersects(cell, f); } catch (e) { return false; }
+        });
+        if (inConstraint) suitability = 0;
+      }
+
+      cell.properties._suitability = Math.min(1, Math.max(0, suitability));
+    });
+
+    const leafletLayer = L.geoJSON(grid, {
+      style: feature => ({
+        fillColor: suitabilityColor(feature.properties._suitability || 0),
+        fillOpacity: 0.7,
+        color: '#555',
+        weight: 0.3
+      }),
+      onEachFeature: (feature, layer) => {
+        const s = ((feature.properties._suitability || 0) * 100).toFixed(1);
+        layer.bindPopup(`<b>Suitability: ${s}%</b>`);
+      }
+    }).addTo(map);
+
+    const info = {
+      id: 'wlc_' + Date.now(),
+      name: 'WLC Suitability ' + new Date().toLocaleTimeString(),
+      geojson: grid,
+      visible: true,
+      color: '#228B22',
+      layer: leafletLayer,
+      type: 'analysis'
+    };
+    uploadedLayers.unshift(info);
+    if (typeof addLayerToPanel === 'function') addLayerToPanel(info);
+    map.fitBounds(leafletLayer.getBounds(), { padding: [20, 20] });
+    showToast('WLC suitability map generated', 'success');
+  } catch (err) {
+    console.error('WLC error:', err);
+    showToast('WLC analysis failed: ' + err.message, 'error');
+  }
+}
+
+function suitabilityColor(t) {
+  if (t < 0.5) {
+    const r = 255;
+    const g = Math.round(255 * (t * 2));
+    return `rgb(${r},${g},0)`;
+  } else {
+    const r = Math.round(255 * (1 - (t - 0.5) * 2));
+    const g = 255;
+    return `rgb(${r},${g},0)`;
+  }
+}
+
+// ========== SDM DISPATCHER ==========
+
+function runSDM() {
+  const presenceIdxEl = document.getElementById('sdm-presence-layer');
+  const presenceIdx = presenceIdxEl && parseInt(presenceIdxEl.value);
+  const modelTypeEl = document.getElementById('sdm-model-type');
+  const modelType = modelTypeEl && modelTypeEl.value || 'bioclim';
+  const resolutionEl = document.getElementById('sdm-resolution');
+  const resolution = parseFloat(resolutionEl && resolutionEl.value || 0.1);
+
+  if (isNaN(presenceIdx) || !uploadedLayers[presenceIdx]) {
+    showToast('Select a presence layer', 'error');
+    return;
+  }
+  if (isNaN(resolution) || resolution <= 0) {
+    showToast('Invalid resolution', 'error');
+    return;
+  }
+
+  const envLayers = [];
+  uploadedLayers.forEach((layer, idx) => {
+    const chk = document.getElementById(`sdm-env-chk-${idx}`);
+    const field = document.getElementById(`sdm-env-field-${idx}`);
+    if (chk && chk.checked) {
+      envLayers.push({ layer, fieldName: field && field.value && field.value.trim() || 'value' });
+    }
+  });
+
+  const presenceLayer = uploadedLayers[presenceIdx];
+  const presencePoints = (presenceLayer.geojson && presenceLayer.geojson.features || []).filter(f => f.geometry && f.geometry.type === 'Point');
+
+  if (presencePoints.length < 3) {
+    showToast('Need at least 3 presence points', 'error');
+    return;
+  }
+
+  if (modelType === 'bioclim') {
+    runBioclimSDM(presencePoints, envLayers, resolution);
+  } else if (modelType === 'mahalanobis') {
+    runMahalanobisSDM(presencePoints, envLayers, resolution);
+  } else if (modelType === 'maxent') {
+    runMaxEntSDM(presencePoints, envLayers, resolution);
+  }
+}
+
+// ========== BIOCLIM SDM ==========
+
+function runBioclimSDM(presencePoints, envLayers, resolution) {
+  showToast('Running Bioclim SDM…', 'info');
+  try {
+    const envData = extractEnvAtPoints(presencePoints, envLayers);
+    if (Object.keys(envData).length === 0 && envLayers.length > 0) {
+      showToast('Could not extract environmental values at presence points', 'error');
+      return;
+    }
+
+    const envelopes = {};
+    Object.entries(envData).forEach(([varName, vals]) => {
+      const sorted = [...vals].filter(v => v !== null && !isNaN(v)).sort((a, b) => a - b);
+      if (sorted.length === 0) return;
+      const p5idx = Math.floor(sorted.length * 0.05);
+      const p95idx = Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95));
+      envelopes[varName] = { min: sorted[p5idx], max: sorted[p95idx] };
+    });
+
+    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+    presencePoints.forEach(f => {
+      const [lng, lat] = f.geometry.coordinates;
+      if (lng < minLng) minLng = lng;
+      if (lat < minLat) minLat = lat;
+      if (lng > maxLng) maxLng = lng;
+      if (lat > maxLat) maxLat = lat;
+    });
+    const buf = Math.max(1, (maxLng - minLng) * 0.5);
+    const bufLat = Math.max(1, (maxLat - minLat) * 0.5);
+
+    const grid = generateAnalysisGrid([minLng - buf, minLat - bufLat, maxLng + buf, maxLat + bufLat], resolution);
+    const nVars = Object.keys(envelopes).length;
+
+    grid.features.forEach(cell => {
+      let score = 1.0;
+      const cellCoords = cell.geometry.coordinates;
+      if (nVars > 0) {
+        const envVals = interpolateEnvAtPoint(cellCoords, envLayers);
+        let inEnvelope = 0;
+        Object.entries(envelopes).forEach(([varName, env]) => {
+          const v = envVals[varName];
+          if (v !== undefined && v !== null && !isNaN(v)) {
+            if (v >= env.min && v <= env.max) inEnvelope++;
+          }
+        });
+        score = nVars > 0 ? inEnvelope / nVars : 0.5;
+      } else {
+        let minDist = Infinity;
+        presencePoints.forEach(p => {
+          const d = Math.hypot(cellCoords[0] - p.geometry.coordinates[0], cellCoords[1] - p.geometry.coordinates[1]);
+          if (d < minDist) minDist = d;
+        });
+        score = Math.exp(-minDist * minDist / (2 * buf * buf));
+      }
+      cell.properties._suitability = score;
+    });
+
+    renderSDMResult(grid, 'Bioclim SDM');
+  } catch (err) {
+    console.error('Bioclim SDM error:', err);
+    showToast('Bioclim SDM failed: ' + err.message, 'error');
+  }
+}
+
+// ========== MAHALANOBIS SDM ==========
+
+function runMahalanobisSDM(presencePoints, envLayers, resolution) {
+  showToast('Running Mahalanobis SDM…', 'info');
+  try {
+    const envData = extractEnvAtPoints(presencePoints, envLayers);
+    const varNames = Object.keys(envData);
+
+    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+    presencePoints.forEach(f => {
+      const [lng, lat] = f.geometry.coordinates;
+      if (lng < minLng) minLng = lng;
+      if (lat < minLat) minLat = lat;
+      if (lng > maxLng) maxLng = lng;
+      if (lat > maxLat) maxLat = lat;
+    });
+    const buf = Math.max(1, (maxLng - minLng) * 0.5);
+    const bufLat = Math.max(1, (maxLat - minLat) * 0.5);
+
+    let matrix, mean, invCov;
+    if (varNames.length >= 2) {
+      matrix = presencePoints.map((_, i) => varNames.map(v => (envData[v][i] !== null && !isNaN(envData[v][i])) ? envData[v][i] : 0));
+      mean = varNames.map((v, vi) => matrix.reduce((s, r) => s + r[vi], 0) / matrix.length);
+      const cov = computeCovariance(matrix, mean);
+      invCov = invertMatrix(cov);
+    } else {
+      matrix = presencePoints.map(p => p.geometry.coordinates);
+      mean = [matrix.reduce((s, r) => s + r[0], 0) / matrix.length, matrix.reduce((s, r) => s + r[1], 0) / matrix.length];
+      const cov = computeCovariance(matrix, mean);
+      invCov = invertMatrix(cov);
+    }
+
+    const grid = generateAnalysisGrid([minLng - buf, minLat - bufLat, maxLng + buf, maxLat + bufLat], resolution);
+
+    grid.features.forEach(cell => {
+      const coords = cell.geometry.coordinates;
+      let x;
+      if (varNames.length >= 2) {
+        x = varNames.map(v => interpolateEnvAtPoint(coords, envLayers)[v] || 0);
+      } else {
+        x = coords;
+      }
+      const d = mahalanobisDistance(x, mean, invCov);
+      cell.properties._suitability = 1 / (1 + d);
+    });
+
+    renderSDMResult(grid, 'Mahalanobis SDM');
+  } catch (err) {
+    console.error('Mahalanobis SDM error:', err);
+    showToast('Mahalanobis SDM failed: ' + err.message, 'error');
+  }
+}
+
+// ========== MAXENT SDM ==========
+
+async function runMaxEntSDM(presencePoints, envLayers, resolution) {
+  showToast('Calling MaxEnt API…', 'info');
+
+  const presences = presencePoints.map(p => p.geometry.coordinates);
+  const env_vars = {};
+  envLayers.forEach(({ layer, fieldName }) => {
+    const vals = presencePoints.map(p => {
+      const envVal = interpolateEnvAtPoint(p.geometry.coordinates, [{ layer, fieldName }]);
+      return envVal[fieldName] !== undefined ? envVal[fieldName] : 0;
+    });
+    env_vars[fieldName || layer.name] = vals;
+  });
+
+  let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+  presencePoints.forEach(p => {
+    const [lng, lat] = p.geometry.coordinates;
+    if (lng < minLng) minLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lng > maxLng) maxLng = lng;
+    if (lat > maxLat) maxLat = lat;
+  });
+  const buf = Math.max(1, (maxLng - minLng) * 0.5);
+  const extent = [minLng - buf, minLat - buf * 0.5, maxLng + buf, maxLat + buf * 0.5];
+
+  try {
+    const response = await fetch('/api/sdm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ presences, env_vars, extent, resolution })
+    });
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    const geojson = await response.json();
+    if (geojson.error) throw new Error(geojson.error);
+    if (!geojson.features || geojson.features.length === 0) {
+      showToast('MaxEnt returned no results', 'warning');
+      return;
+    }
+    renderSDMResult(geojson, 'MaxEnt SDM');
+  } catch (err) {
+    console.error('MaxEnt API error:', err);
+    showToast('MaxEnt API unavailable: ' + err.message + '. Try Bioclim or Mahalanobis instead.', 'error');
+  }
+}
+
+// ========== HELPER FUNCTIONS ==========
+
+function getAllCoords(geometry) {
+  if (!geometry) return [];
+  const coords = [];
+  function traverse(c) {
+    if (Array.isArray(c[0])) c.forEach(traverse);
+    else coords.push(c);
+  }
+  traverse(geometry.coordinates);
+  return coords;
+}
+
+function generateAnalysisGrid(bbox, cellSizeDeg) {
+  const [minLng, minLat, maxLng, maxLat] = bbox;
+  const features = [];
+  let lng = minLng;
+  while (lng < maxLng) {
+    let lat = minLat;
+    while (lat < maxLat) {
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [lng + cellSizeDeg / 2, lat + cellSizeDeg / 2] },
+        properties: {}
+      });
+      lat += cellSizeDeg;
+    }
+    lng += cellSizeDeg;
+  }
+  return { type: 'FeatureCollection', features };
+}
+
+function extractEnvAtPoints(points, envLayers) {
+  const envData = {};
+  envLayers.forEach(({ layer, fieldName }) => {
+    const key = fieldName || layer.name;
+    envData[key] = points.map(p => {
+      const pCoords = p.geometry.coordinates;
+      const features = layer.geojson && layer.geojson.features || [];
+      let nearest = null, nearestDist = Infinity;
+      features.forEach(f => {
+        if (!f.geometry) return;
+        let fCoords;
+        if (f.geometry.type === 'Point') {
+          fCoords = f.geometry.coordinates;
+        } else {
+          const allC = getAllCoords(f.geometry);
+          if (allC.length === 0) return;
+          fCoords = allC[0];
+        }
+        const d = Math.hypot(pCoords[0] - fCoords[0], pCoords[1] - fCoords[1]);
+        if (d < nearestDist) { nearestDist = d; nearest = f; }
+      });
+      if (nearest) {
+        const val = nearest.properties[fieldName] !== undefined ? nearest.properties[fieldName] : nearest.properties.value;
+        return typeof val === 'number' ? val : null;
+      }
+      return null;
+    });
+  });
+  return envData;
+}
+
+function interpolateEnvAtPoint(coords, envLayers) {
+  const result = {};
+  envLayers.forEach(({ layer, fieldName }) => {
+    const key = fieldName || layer.name;
+    const features = layer.geojson && layer.geojson.features || [];
+    let nearest = null, nearestDist = Infinity;
+    features.forEach(f => {
+      if (!f.geometry) return;
+      let fCoords;
+      if (f.geometry.type === 'Point') {
+        fCoords = f.geometry.coordinates;
+      } else {
+        const allC = getAllCoords(f.geometry);
+        if (allC.length === 0) return;
+        fCoords = allC[0];
+      }
+      const d = Math.hypot(coords[0] - fCoords[0], coords[1] - fCoords[1]);
+      if (d < nearestDist) { nearestDist = d; nearest = f; }
+    });
+    if (nearest) {
+      const val = nearest.properties[fieldName] !== undefined ? nearest.properties[fieldName] : nearest.properties.value;
+      result[key] = typeof val === 'number' ? val : null;
+    } else {
+      result[key] = null;
+    }
+  });
+  return result;
+}
+
+function computeCovariance(matrix, mean) {
+  const n = matrix.length;
+  const p = mean.length;
+  const cov = Array.from({ length: p }, () => new Array(p).fill(0));
+  matrix.forEach(row => {
+    for (let i = 0; i < p; i++) {
+      for (let j = 0; j < p; j++) {
+        cov[i][j] += (row[i] - mean[i]) * (row[j] - mean[j]);
+      }
+    }
+  });
+  for (let i = 0; i < p; i++) {
+    for (let j = 0; j < p; j++) {
+      cov[i][j] /= Math.max(1, n - 1);
+    }
+  }
+  for (let i = 0; i < p; i++) cov[i][i] += 1e-6;
+  return cov;
+}
+
+function mahalanobisDistance(x, mean, invCov) {
+  const p = mean.length;
+  const diff = x.map((v, i) => v - mean[i]);
+  let dist = 0;
+  for (let i = 0; i < p; i++) {
+    let sum = 0;
+    for (let j = 0; j < p; j++) {
+      sum += invCov[i][j] * diff[j];
+    }
+    dist += diff[i] * sum;
+  }
+  return Math.sqrt(Math.max(0, dist));
+}
+
+function invertMatrix(m) {
+  const n = m.length;
+  const aug = m.map((row, i) => {
+    const identity = new Array(n).fill(0);
+    identity[i] = 1;
+    return [...row, ...identity];
+  });
+  for (let col = 0; col < n; col++) {
+    let maxRow = col;
+    for (let row = col + 1; row < n; row++) {
+      if (Math.abs(aug[row][col]) > Math.abs(aug[maxRow][col])) maxRow = row;
+    }
+    [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
+    const pivot = aug[col][col];
+    if (Math.abs(pivot) < 1e-10) {
+      return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => i === j ? 1 : 0));
+    }
+    for (let j = 0; j < 2 * n; j++) aug[col][j] /= pivot;
+    for (let row = 0; row < n; row++) {
+      if (row !== col) {
+        const factor = aug[row][col];
+        for (let j = 0; j < 2 * n; j++) aug[row][j] -= factor * aug[col][j];
+      }
+    }
+  }
+  return aug.map(row => row.slice(n));
+}
+
+function renderSDMResult(geojson, modelName) {
+  const isPoints = geojson.features.length > 0 && geojson.features[0].geometry && geojson.features[0].geometry.type === 'Point';
+  let leafletLayer;
+  if (isPoints) {
+    leafletLayer = L.geoJSON(geojson, {
+      pointToLayer: (feature, latlng) => {
+        const s = feature.properties._suitability || feature.properties.suitability || 0;
+        return L.circleMarker(latlng, { radius: 6, fillColor: suitabilityColor(s), color: 'none', fillOpacity: 0.7 });
+      },
+      onEachFeature: (feature, layer) => {
+        const s = ((feature.properties._suitability || feature.properties.suitability || 0) * 100).toFixed(1);
+        layer.bindPopup(`<b>${modelName}</b><br>Suitability: ${s}%`);
+      }
+    }).addTo(map);
+  } else {
+    leafletLayer = L.geoJSON(geojson, {
+      style: feature => ({
+        fillColor: suitabilityColor(feature.properties._suitability || feature.properties.suitability || 0),
+        fillOpacity: 0.7,
+        color: 'none',
+        weight: 0
+      }),
+      onEachFeature: (feature, layer) => {
+        const s = ((feature.properties._suitability || feature.properties.suitability || 0) * 100).toFixed(1);
+        layer.bindPopup(`<b>${modelName}</b><br>Suitability: ${s}%`);
+      }
+    }).addTo(map);
+  }
+
+  const info = {
+    id: 'sdm_' + Date.now(),
+    name: modelName + ' ' + new Date().toLocaleTimeString(),
+    geojson,
+    visible: true,
+    color: '#228B22',
+    layer: leafletLayer,
+    type: 'analysis'
+  };
+  uploadedLayers.unshift(info);
+  if (typeof addLayerToPanel === 'function') addLayerToPanel(info);
+  try { map.fitBounds(leafletLayer.getBounds(), { padding: [20, 20] }); } catch (e) {}
+  showToast(`${modelName} complete: ${geojson.features.length} cells`, 'success');
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INIT
