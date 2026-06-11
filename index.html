@@ -2622,19 +2622,24 @@ const MapLegend = L.Control.extend({
     return html;
   },
   _renderRamp(ramp, minVal, maxVal, breaks, geomType, shape) {
-    const colors = ramp.join(',');
-    const gradient = `linear-gradient(${colors})`;
+    // Stepped bands (vertical) when classification breaks are present, so the
+    // legend matches the classified map rendering. Otherwise smooth gradient.
+    const hasBreaks = Array.isArray(breaks) && breaks.length >= 2;
+    const gradient = hasBreaks
+      ? buildClassifiedGradientCss(breaks, ramp, 'to top').gradient
+      : `linear-gradient(${ramp.join(',')})`;
+    const swatch = hasBreaks ? _sampleRamp(ramp, 0.5) : ramp[Math.floor(ramp.length/2)];
     const topLabel = maxVal != null ? Number(maxVal).toFixed(1) : '';
     const botLabel = minVal != null ? Number(minVal).toFixed(1) : '';
     let html = `<div class="map-legend-ramp">`;
     if (shape && shape !== 'circle') {
-      html += `<div class="map-legend-symbol shape"><svg viewBox="-1.3 -1.3 2.6 2.6" width="12" height="12"><path d="${shape}" fill="${ramp[Math.floor(ramp.length/2)]}" stroke="white" stroke-width="0.15"/></svg></div>`;
+      html += `<div class="map-legend-symbol shape"><svg viewBox="-1.3 -1.3 2.6 2.6" width="12" height="12"><path d="${shape}" fill="${swatch}" stroke="white" stroke-width="0.15"/></svg></div>`;
     } else if (geomType === 'Point') {
-      html += `<div class="map-legend-symbol point" style="background:${ramp[Math.floor(ramp.length/2)]}"></div>`;
+      html += `<div class="map-legend-symbol point" style="background:${swatch}"></div>`;
     } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
-      html += `<div class="map-legend-symbol line" style="background:${ramp[Math.floor(ramp.length/2)]}"></div>`;
+      html += `<div class="map-legend-symbol line" style="background:${swatch}"></div>`;
     } else {
-      html += `<div class="map-legend-symbol polygon" style="background:${ramp[Math.floor(ramp.length/2)]}40;border-color:${ramp[Math.floor(ramp.length/2)]}"></div>`;
+      html += `<div class="map-legend-symbol polygon" style="background:${swatch}40;border-color:${swatch}"></div>`;
     }
     html += `<div class="map-legend-ramp-bar" style="background:${gradient}"></div>`;
     html += `<div class="map-legend-ramp-labels"><span>${topLabel}</span><span>${botLabel}</span></div>`;
@@ -2825,6 +2830,15 @@ function computeClassificationBreaks(method, values, n, manualBreaks) {
   if (method === 'quantile') return _classifyQuantile(values, n);
   if (method === 'jenks')    return _classifyJenks(values, n);
   return _classifyEqualInterval(values, n);
+}
+
+// Map a value to its class index (0 … breaks.length-2) given ascending break
+// edges [min, b1, …, max]. Values <= min fall in class 0; > max in the last.
+function _classIndexForValue(v, breaks) {
+  if (!breaks || breaks.length < 2) return 0;
+  const last = breaks.length - 2;
+  for (let i = 1; i <= last; i++) if (v < breaks[i]) return i - 1;
+  return last;
 }
 
 // Inspect raw values to recommend a classification method. The heuristic
@@ -5563,13 +5577,15 @@ function applyGraduated(id) {
 
   const minVal = Math.min(...numVals);
   const maxVal = Math.max(...numVals);
-  const range = maxVal - minVal || 1;
   const ramp = COLOR_RAMPS[rampName] || COLOR_RAMPS.viridis;
 
+  // Classify into numClasses equal-interval bands and derive one colour per
+  // band from the ramp, so the Classes control actually drives the rendering.
+  const breaks = computeClassificationBreaks('equal', numVals, numClasses) || [minVal, maxVal];
+  const { bandColors } = buildClassifiedGradientCss(breaks, ramp);
+
   function getColorForValue(v) {
-    const t = Math.max(0, Math.min(1, (v - minVal) / range));
-    const idx = Math.min(Math.floor(t * ramp.length), ramp.length - 1);
-    return ramp[idx];
+    return bandColors[_classIndexForValue(v, breaks)];
   }
 
   const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
@@ -5601,7 +5617,7 @@ function applyGraduated(id) {
   }).addTo(map);
 
   showToast(`Graduated by ${attr} (${numClasses} classes, ${rampName})`, 'success');
-  legendState[id] = { mode:'graduated', color:info.color, geomType:_detectGeomType(info), attr, ramp, minVal, maxVal, numClasses, shape:null };
+  legendState[id] = { mode:'graduated', color:info.color, geomType:_detectGeomType(info), attr, ramp, minVal, maxVal, numClasses, breaks, bandColors, shape:null };
   refreshMapLegend();
 }
 
@@ -8541,22 +8557,23 @@ async function buildLayout() {
       }).addTo(layoutMap);
     } else if (sym && sym.mode === 'graduated' && sym.attr && sym.ramp) {
       const range = sym.maxVal - sym.minVal || 1;
+      const hasBands = Array.isArray(sym.breaks) && Array.isArray(sym.bandColors) && sym.bandColors.length > 0;
+      const gradColor = v => {
+        if (hasBands) return sym.bandColors[_classIndexForValue(v, sym.breaks)] || '#718096';
+        const t = Math.max(0, Math.min(1, (v - sym.minVal) / range));
+        const idx = Math.min(Math.floor(t * sym.ramp.length), sym.ramp.length - 1);
+        return sym.ramp[idx] || '#718096';
+      };
       newLayer = L.geoJSON(geojson, {
         style: f => {
-          const v = parseFloat(f.properties && f.properties[sym.attr]);
-          const t = Math.max(0, Math.min(1, (v - sym.minVal) / range));
-          const idx = Math.min(Math.floor(t * sym.ramp.length), sym.ramp.length - 1);
-          const c = sym.ramp[idx] || '#718096';
+          const c = gradColor(parseFloat(f.properties && f.properties[sym.attr]));
           const gt = f.geometry.type;
           if (gt.includes('Polygon')) return { color:c, weight:2, fillColor:c, fillOpacity:0.3 };
           if (gt.includes('Line')) return { color:c, weight:2.5, opacity:0.9 };
           return {};
         },
         pointToLayer: (f, latlng) => {
-          const v = parseFloat(f.properties && f.properties[sym.attr]);
-          const t = Math.max(0, Math.min(1, (v - sym.minVal) / range));
-          const idx = Math.min(Math.floor(t * sym.ramp.length), sym.ramp.length - 1);
-          const c = sym.ramp[idx] || '#718096';
+          const c = gradColor(parseFloat(f.properties && f.properties[sym.attr]));
           return L.circleMarker(latlng, { radius:7, color:'white', weight:1.2, fillColor:c, fillOpacity:0.9 });
         }
       }).addTo(layoutMap);
