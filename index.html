@@ -563,6 +563,95 @@
   .export-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
   .export-btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: white; }
 
+  /* ── Analysis Drawer ── */
+  #analysis-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 890;
+    display: none;
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+  }
+  #analysis-drawer {
+    position: fixed;
+    top: 44px;
+    right: 0;
+    width: 360px;
+    height: calc(100vh - 44px);
+    background: var(--surface-1);
+    border-left: 1px solid var(--border);
+    box-shadow: -6px 0 32px rgba(0,0,0,0.35);
+    z-index: 891;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  #analysis-drawer.open { transform: translateX(0); }
+  #analysis-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    flex-shrink: 0;
+  }
+  #analysis-drawer-header .adh-title {
+    font-size: 13px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 7px;
+  }
+  #analysis-drawer-header .adh-close {
+    background: none; border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-muted); font-size: 16px; cursor: pointer;
+    padding: 1px 7px; line-height: 1.4;
+    transition: all .15s;
+  }
+  #analysis-drawer-header .adh-close:hover { background: var(--surface-3); color: var(--text); }
+  #analysis-drawer-body {
+    flex: 1; overflow-y: auto; padding: 12px 14px 24px;
+  }
+  #analysis-drawer-body .ad-section-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+    color: var(--accent); margin: 14px 0 3px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  }
+  #analysis-drawer-body .ad-section-title:first-child { margin-top: 0; }
+  #analysis-drawer-body .ad-hint {
+    font-size: 10px; color: var(--text-muted); margin: 0 0 6px; line-height: 1.5;
+  }
+  #analysis-drawer-body .ad-tool-row {
+    display: flex; flex-direction: column; gap: 1px; margin-bottom: 2px;
+  }
+  #analysis-drawer-body .ad-tool-desc {
+    font-size: 9px; color: var(--text-faint); padding: 0 10px 5px; line-height: 1.4; margin-top: -1px;
+  }
+  #analysis-drawer-body .ad-setting-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+  }
+  #analysis-drawer-body .ad-setting-row label {
+    font-size: 10px; color: var(--text-muted); white-space: nowrap; min-width: 110px;
+  }
+  #analysis-drawer-body .ad-setting-row input,
+  #analysis-drawer-body .ad-setting-row select {
+    flex: 1; font-size: 10px; padding: 3px 6px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+  }
+  #analysis-drawer-body .ad-layer-select {
+    width: 100%; font-size: 12px; padding: 7px 8px; margin-bottom: 4px;
+    background: var(--surface-2); border: 1px solid var(--accent);
+    border-radius: 6px; color: var(--text); font-weight: 500;
+  }
+  #analysis-drawer-body .ad-layer-select:focus { outline: none; box-shadow: 0 0 0 2px var(--accent-bg); }
+  .analysis-toolbar-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--accent); color: white;
+    border: none; border-radius: 5px;
+    padding: 4px 11px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  .analysis-toolbar-btn:hover { background: var(--accent-hover); }
+  .analysis-toolbar-btn.active { background: var(--accent-hover); box-shadow: 0 0 0 2px var(--accent-bg); }
+
   /* ── Upload zone ── */
   #upload-zone {
     margin: 6px 0; padding: 16px 10px; border: 2px dashed var(--border); border-radius: 6px;
@@ -1232,6 +1321,7 @@
   </div>
   <div class="coord-display" id="coord-display">Move cursor over map</div>
   <div class="scale-display" id="zoom-display">Zoom: --</div>
+  <button id="analysis-drawer-btn" class="analysis-toolbar-btn" onclick="toggleAnalysisDrawer()" title="Open Spatial Analysis tools (A)">&#x1F9EA; Analysis</button>
   <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light theme" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:14px;color:var(--text);">&#x1f319;</button>
   <button id="collapse-left-btn" onclick="toggleLeftPanel()" title="Toggle left panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25c0;</button>
   <button id="collapse-right-btn" onclick="toggleRightPanel()" title="Toggle right panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25b6;</button>
@@ -1309,101 +1399,6 @@
       </div>
     </div>
 
-    <!-- Spatial Analysis -->
-    <div class="panel-section">
-      <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Spatial Analysis</span><span class="arrow">&#x25BC;</span>
-      </div>
-      <div class="panel-body hidden" id="analysis-panel">
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">Select a layer, then run an analysis tool.</div>
-        <select id="analysis-layer-select" onchange="refreshAnalysisAttrSelect()" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:5px;margin-bottom:8px;">
-          <option value="">— Select layer —</option>
-        </select>
-
-        <div style="font-size:10px;color:var(--accent);margin:6px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Descriptive</div>
-        <button class="export-btn" onclick="runAnalysis('center')">Mean Center &amp; Std Distance</button>
-        <button class="export-btn" onclick="runAnalysis('extent')">Bounding Box &amp; Area</button>
-        <button class="export-btn" onclick="runAnalysis('nni')">Nearest Neighbor Index</button>
-
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Inferential Hotspots &amp; Autocorrelation</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">Variable = the “Weight attr” selector below (auto-detect if unset).</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Weights:</span>
-          <select id="analysis-weights-type" onchange="onWeightsTypeChange()" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:10px;padding:3px 4px;">
-            <option value="band">Distance band</option>
-            <option value="knn">K-nearest neighbours</option>
-          </select>
-        </div>
-        <div id="analysis-band-row" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Distance band (km):</span>
-          <input type="number" id="analysis-band-km" placeholder="auto" min="0" step="0.5" title="Leave blank for the ArcGIS-style min-threshold distance (every feature gets ≥1 neighbour)" style="width:64px;font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;">
-        </div>
-        <div id="analysis-knn-row" style="display:none;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">k neighbours:</span>
-          <input type="number" id="analysis-knn-k" value="8" min="1" step="1" title="Number of nearest neighbours per feature" style="width:64px;font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;">
-        </div>
-        <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;">
-          <input type="checkbox" id="analysis-fdr" checked style="margin:0;"> Apply FDR correction (Gi*)
-        </label>
-        <button class="export-btn" onclick="runAnalysis('gistar')">Getis-Ord Gi* Hot Spots</button>
-        <button class="export-btn" onclick="runAnalysis('lisa')">Local Moran's I (LISA clusters)</button>
-        <button class="export-btn" onclick="runAnalysis('moranI')">Global Moran's I (significance test)</button>
-        <button class="export-btn" onclick="runAnalysis('moranScatter')">Moran Scatterplot</button>
-        <div style="font-size:9px;color:var(--text-muted);margin:2px 0 0;">Distances computed on an auto-selected UTM projection.</div>
-
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Interpolation &amp; Density</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Weight attr:</span>
-          <select id="analysis-attr-select" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:10px;padding:3px 4px;">
-            <option value="">Auto-detect</option>
-          </select>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">Palette:</span>
-          <select id="heat-palette-select" onchange="onPaletteChange()" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:10px;padding:3px 4px;">
-            <option value="thermal">Thermal (blue→red)</option>
-            <option value="viridis">Viridis (purple→yellow)</option>
-            <option value="inferno">Inferno (black→yellow)</option>
-            <option value="plasma">Plasma (purple→orange)</option>
-            <option value="magma">Magma (dark→bright)</option>
-            <option value="yrg">Yellow→Red→Green</option>
-            <option value="hot">Hot (black→white)</option>
-          </select>
-        </div>
-        <div class="slider-row" style="margin:2px 0 4px">
-          <label style="font-size:10px;color:var(--text-muted);">Opacity <span id="heat-opacity-val">70%</span></label>
-          <input type="range" id="heat-opacity-slider" min="10" max="100" value="70" oninput="updateHeatOpacity(this.value)">
-        </div>
-        <div class="slider-row" style="margin:2px 0 4px">
-          <label style="font-size:10px;color:var(--text-muted);">Radius <span id="heat-radius-val">35</span></label>
-          <input type="range" id="heat-radius-slider" min="10" max="80" value="35" oninput="updateHeatRadius(this.value)">
-        </div>
-        <div class="slider-row" style="margin:2px 0 6px">
-          <label style="font-size:10px;color:var(--text-muted);">Blur <span id="heat-blur-val">25</span></label>
-          <input type="range" id="heat-blur-slider" min="5" max="60" value="25" oninput="updateHeatBlur(this.value)">
-        </div>
-        <button class="export-btn" onclick="runAnalysis('idw')">IDW Interpolation</button>
-        <button class="export-btn" onclick="runAnalysis('density')">Point Density</button>
-        <button class="export-btn" onclick="runAnalysis('hotspot')">Weighted Density Map</button>
-
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Clustering</div>
-        <button class="export-btn" onclick="runAnalysis('dbscan')">DBSCAN Clustering</button>
-        <button class="export-btn" onclick="runAnalysis('convexHull')">Convex Hull</button>
-
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Line &amp; Polygon</div>
-        <button class="export-btn" onclick="runAnalysis('lengths')">Line Lengths</button>
-        <button class="export-btn" onclick="runAnalysis('areas')">Polygon Areas</button>
-        <button class="export-btn" onclick="runAnalysis('centroid')">Centroids</button>
-        <button class="export-btn" onclick="runAnalysis('simplify')">Simplify Geometries</button>
-        <div style="display:flex;align-items:center;gap:6px;margin:4px 0;">
-          <label style="font-size:10px;color:var(--text-muted);">Simplify tolerance</label>
-          <input type="number" id="simplify-tol" value="0.002" min="0.0001" max="0.1" step="0.0005" style="width:60px;font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:2px 4px;">
-        </div>
-        <button class="export-btn" onclick="runAnalysis('buffer')">Buffer</button>
-        <button class="export-btn" onclick="runAnalysis('voronoi')">Voronoi / Thiessen Polygons</button>
-
-      </div>
-    </div>
 
     <!-- Export -->
     <div class="panel-section">
@@ -1783,6 +1778,201 @@
   </div>
 
 </div><!-- /main -->
+
+<!-- Analysis backdrop -->
+<div id="analysis-backdrop" onclick="closeAnalysisDrawer()"></div>
+
+<!-- Analysis Drawer -->
+<div id="analysis-drawer" role="dialog" aria-label="Spatial Analysis">
+  <div id="analysis-drawer-header">
+    <div class="adh-title">&#x1F9EA; Spatial Analysis</div>
+    <button class="adh-close" onclick="closeAnalysisDrawer()" title="Close (Esc)">&#x2715;</button>
+  </div>
+  <div id="analysis-drawer-body">
+
+    <!-- Layer selector -->
+    <div style="margin-bottom:2px;">
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">Select the layer to analyse, then click any tool below.</div>
+      <select id="analysis-layer-select" class="ad-layer-select" onchange="refreshAnalysisAttrSelect()">
+        <option value="">— Select layer —</option>
+      </select>
+    </div>
+
+    <!-- ── SECTION 1: Point Pattern ── -->
+    <div class="ad-section-title">&#x1F4CD; Point Pattern</div>
+    <div class="ad-hint">Summarise where your points fall and how they are distributed.</div>
+
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('center')">&#x2295; Mean Center &amp; Std Distance</button>
+      <div class="ad-tool-desc">Geographic centre of mass + standard-distance circle. Shows how tightly clustered the distribution is.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('extent')">&#x25A1; Bounding Box &amp; Area</button>
+      <div class="ad-tool-desc">Minimum axis-aligned rectangle enclosing all features, with width, height and area (km²).</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('nni')">&#x1F4CF; Nearest Neighbor Index</button>
+      <div class="ad-tool-desc">NNI &lt; 1 = clustered · NNI ≈ 1 = random · NNI &gt; 1 = dispersed. Includes z-score and p-value.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('convexHull')">&#x2B21; Convex Hull</button>
+      <div class="ad-tool-desc">Smallest convex polygon enclosing all features. Outputs perimeter and area.</div>
+    </div>
+
+    <!-- ── SECTION 2: Inferential Statistics ── -->
+    <div class="ad-section-title">&#x1F4CA; Inferential Hotspots &amp; Autocorrelation</div>
+    <div class="ad-hint">Statistically test <em>where</em> high and low values cluster. All distances use an auto-selected UTM projection for accuracy.</div>
+
+    <!-- Weights settings card -->
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px;">Spatial Weights</div>
+
+      <div class="ad-setting-row">
+        <label for="analysis-weights-type">Weights type</label>
+        <select id="analysis-weights-type" onchange="onWeightsTypeChange()">
+          <option value="band">Distance band</option>
+          <option value="knn">K-nearest neighbours</option>
+        </select>
+      </div>
+      <div id="analysis-band-row" class="ad-setting-row">
+        <label for="analysis-band-km">Band distance (km)</label>
+        <input type="number" id="analysis-band-km" placeholder="auto" min="0" step="0.5"
+               title="Leave blank for the minimum distance that gives every feature ≥1 neighbour">
+      </div>
+      <div id="analysis-knn-row" class="ad-setting-row" style="display:none;">
+        <label for="analysis-knn-k">Neighbours (k)</label>
+        <input type="number" id="analysis-knn-k" value="8" min="1" step="1"
+               title="Number of nearest neighbours per feature">
+      </div>
+      <div class="ad-setting-row">
+        <label for="analysis-attr-select">Analysis variable</label>
+        <select id="analysis-attr-select">
+          <option value="">Auto-detect</option>
+        </select>
+      </div>
+      <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);margin-top:4px;cursor:pointer;">
+        <input type="checkbox" id="analysis-fdr" checked style="margin:0;">
+        Apply Benjamini-Hochberg FDR correction
+      </label>
+    </div>
+
+    <div class="ad-tool-row">
+      <button class="export-btn primary" onclick="runAnalysis('gistar')">&#x1F525; Getis-Ord Gi* Hot Spots</button>
+      <div class="ad-tool-desc">
+        Colour-codes each feature by significance level: deep red = 99% hot spot, blue = cold spot, grey = not significant.
+        Use this to find where high values genuinely cluster beyond random chance.
+      </div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn primary" onclick="runAnalysis('lisa')">&#x1F5FA; LISA Cluster &amp; Outlier Map</button>
+      <div class="ad-tool-desc">
+        <b>HH</b> (red) = high surrounded by high — hot-spot core.<br>
+        <b>LL</b> (blue) = low surrounded by low — cold-spot core.<br>
+        <b>HL</b> (orange) = high outlier in a low area — micro-refugium.<br>
+        <b>LH</b> (light blue) = low outlier in a high area — degradation signal.
+      </div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('moranI')">&#x1F4C8; Global Moran's I</button>
+      <div class="ad-tool-desc">Single-number summary of spatial autocorrelation for the whole layer. Reports I, z-score, and p-value. p &lt; 0.05 confirms the pattern is not random.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('moranScatter')">&#x2022; Moran Scatterplot</button>
+      <div class="ad-tool-desc">Scatter plot of z(value) vs spatial lag. Slope = Moran's I. Upper-right = HH, lower-left = LL, corners = spatial outliers.</div>
+    </div>
+
+    <!-- ── SECTION 3: Interpolation & Density ── -->
+    <div class="ad-section-title">&#x1F321; Interpolation &amp; Density</div>
+    <div class="ad-hint">Visualise continuous surfaces from point data. Exploratory — not significance-tested.</div>
+
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;margin-bottom:8px;">
+      <div class="ad-setting-row">
+        <label for="heat-palette-select">Colour palette</label>
+        <select id="heat-palette-select" onchange="onPaletteChange()">
+          <option value="thermal">Thermal (blue→red)</option>
+          <option value="viridis">Viridis (purple→yellow)</option>
+          <option value="inferno">Inferno (black→yellow)</option>
+          <option value="plasma">Plasma (purple→orange)</option>
+          <option value="magma">Magma (dark→bright)</option>
+          <option value="yrg">Yellow→Red→Green</option>
+          <option value="hot">Hot (black→white)</option>
+        </select>
+      </div>
+      <div class="ad-setting-row">
+        <label>Opacity <span id="heat-opacity-val">70%</span></label>
+        <input type="range" id="heat-opacity-slider" min="10" max="100" value="70"
+               style="flex:1;" oninput="updateHeatOpacity(this.value)">
+      </div>
+      <div class="ad-setting-row">
+        <label>Radius <span id="heat-radius-val">35</span></label>
+        <input type="range" id="heat-radius-slider" min="10" max="80" value="35"
+               style="flex:1;" oninput="updateHeatRadius(this.value)">
+      </div>
+      <div class="ad-setting-row">
+        <label>Blur <span id="heat-blur-val">25</span></label>
+        <input type="range" id="heat-blur-slider" min="5" max="60" value="25"
+               style="flex:1;" oninput="updateHeatBlur(this.value)">
+      </div>
+    </div>
+
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('idw')">&#x1F4F6; IDW Interpolation</button>
+      <div class="ad-tool-desc">Inverse Distance Weighting surface (p=2, 50×50 grid). Estimates values at unsampled locations. Uses the Analysis variable above.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('density')">&#x1F7E1; Point Density</button>
+      <div class="ad-tool-desc">Count of points within a kernel window — a simple heat map of concentration. No significance test.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('hotspot')">&#x1F7E0; Weighted Density Map</button>
+      <div class="ad-tool-desc">Same as Point Density but each point is weighted by the selected Analysis variable.</div>
+    </div>
+
+    <!-- ── SECTION 4: Clustering ── -->
+    <div class="ad-section-title">&#x1F9E9; Clustering</div>
+    <div class="ad-hint">Find groups in your point data without specifying the number of clusters in advance.</div>
+
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('dbscan')">&#x1F300; DBSCAN Clustering</button>
+      <div class="ad-tool-desc">Density-based clustering. Each point gets a <code>cluster</code> attribute (≥0 = cluster ID, −1 = noise). Auto-selects epsilon from median nearest-neighbor distance × 1.5.</div>
+    </div>
+
+    <!-- ── SECTION 5: Lines & Polygons ── -->
+    <div class="ad-section-title">&#x1F4D0; Lines &amp; Polygons</div>
+    <div class="ad-hint">Geometric operations — work on any geometry type.</div>
+
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('lengths')">&#x1F4CF; Line Lengths</button>
+      <div class="ad-tool-desc">Haversine great-circle length per line feature. Appends <code>length_km</code>; total shown in results.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('areas')">&#x25A6; Polygon Areas</button>
+      <div class="ad-tool-desc">Spherical excess area per polygon (Chamberlain &amp; Duquette). Appends <code>area_km2</code>.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('centroid')">&#x2022; Centroids</button>
+      <div class="ad-tool-desc">Area-weighted centroid for polygons; coordinate mean for lines and points.</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('simplify')">&#x26F6; Simplify Geometries</button>
+      <div class="ad-tool-desc">Douglas-Peucker simplification. Increase tolerance to reduce vertex count more aggressively.</div>
+    </div>
+    <div class="ad-setting-row" style="margin-bottom:4px;padding:0 2px;">
+      <label for="simplify-tol" style="font-size:10px;color:var(--text-muted);min-width:110px;">Simplify tolerance (°)</label>
+      <input type="number" id="simplify-tol" value="0.002" min="0.0001" max="0.1" step="0.0005"
+             style="width:72px;font-size:10px;padding:3px 6px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);">
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('buffer')">&#x25CB; Buffer Zones</button>
+      <div class="ad-tool-desc">Circular buffer of a specified radius around each feature (24-sided polygon approximation).</div>
+    </div>
+    <div class="ad-tool-row">
+      <button class="export-btn" onclick="runAnalysis('voronoi')">&#x2B23; Voronoi / Thiessen Polygons</button>
+      <div class="ad-tool-desc">Divides the map so every location is assigned to its nearest point. Grid-based approximation (120×120).</div>
+    </div>
+
+  </div><!-- /analysis-drawer-body -->
+</div><!-- /analysis-drawer -->
 
 <!-- Status bar -->
 <div id="statusbar">
@@ -2891,10 +3081,15 @@ function _confirmAttrForm() {
 
 // Escape key to cancel digitizing
 document.addEventListener('keydown', e => {
+  const tag = (e.target && e.target.tagName || '').toLowerCase();
+  const isText = tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable);
   if (e.key === 'Escape') {
     if (_digMode) cancelDigitize();
     else if (_editMode) cancelEditMode();
     else if (_selectMode) cancelSelectMode();
+    else closeAnalysisDrawer();
+  } else if (!isText && (e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey) {
+    toggleAnalysisDrawer();
   }
 });
 
@@ -7038,6 +7233,27 @@ function toggleRightPanel() {
   rp.classList.toggle('collapsed');
   document.getElementById('collapse-right-btn').textContent = rp.classList.contains('collapsed') ? '\u25C0' : '\u25B6';
   setTimeout(() => map.invalidateSize(), 250);
+}
+
+function toggleAnalysisDrawer() {
+  const drawer = document.getElementById('analysis-drawer');
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    closeAnalysisDrawer();
+  } else {
+    drawer.classList.add('open');
+    document.getElementById('analysis-backdrop').style.display = 'block';
+    document.getElementById('analysis-drawer-btn').classList.add('active');
+    refreshAnalysisLayerSelect();
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+}
+
+function closeAnalysisDrawer() {
+  document.getElementById('analysis-drawer').classList.remove('open');
+  document.getElementById('analysis-backdrop').style.display = 'none';
+  document.getElementById('analysis-drawer-btn').classList.remove('active');
+  setTimeout(() => map.invalidateSize(), 300);
 }
 
 (function initPanelResize() {
