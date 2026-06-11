@@ -792,9 +792,11 @@
     border: 1px solid var(--border); border-radius: 4px;
   }
   #analysis-drawer-body .ad-subhead {
-    font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
-    color: var(--text-muted); margin: 10px 0 2px;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
+    color: var(--accent); margin: 12px 0 3px; padding-top: 6px;
+    border-top: 1px dashed var(--border);
   }
+  #analysis-drawer-body .ad-subhead:first-of-type { border-top: none; padding-top: 2px; }
   #analysis-drawer-body .ad-field-label {
     font-size: 9px; font-weight: 600; color: var(--text-muted); margin: 6px 0 2px;
   }
@@ -7551,6 +7553,33 @@ function toggleAnalysisSection(title) {
   }
 }
 
+// Collapse every collapsible section in the left, right and analysis panels on
+// startup so the user opens only what they need.
+function collapseAllSectionsByDefault() {
+  document.querySelectorAll('#left-panel .panel-header, #right-panel .panel-header').forEach(header => {
+    if (header.classList.contains('collapsed')) return;
+    header.classList.add('collapsed');
+    const body = header.nextElementSibling;
+    if (body && body.classList.contains('panel-body')) body.classList.add('hidden');
+    const section = header.parentElement;
+    if (section && section.classList.contains('panel-section')) {
+      if (section.dataset._origFlex == null && section.style.flex) {
+        section.dataset._origFlex = section.style.flex;
+      }
+      if (section.dataset._origFlex) section.style.flex = '0 0 auto';
+    }
+  });
+  document.querySelectorAll('#analysis-drawer-body .ad-section-title').forEach(title => {
+    if (title.classList.contains('collapsed')) return;
+    title.classList.add('collapsed');
+    let el = title.nextElementSibling;
+    while (el && !el.classList.contains('ad-section-title')) {
+      el.classList.add('ad-collapsed');
+      el = el.nextElementSibling;
+    }
+  });
+}
+
 function toggleSection(header) {
   header.classList.toggle('collapsed');
   const body = header.nextElementSibling;
@@ -10819,6 +10848,7 @@ refreshAnalysisLayerSelect();
 refreshAttrLayerSelect();
 refreshExportLayerSelect();
 renderBookmarks();
+collapseAllSectionsByDefault();
 function _hideLoading() { document.getElementById('loading').style.display='none'; }
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
