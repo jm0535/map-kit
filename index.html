@@ -723,29 +723,79 @@
     font-size: 12px;
     margin-bottom: 6px;
   }
+  .ad-layer-weight-table:empty::before {
+    content: "No layers loaded — import data, then Refresh Layers.";
+    display: block; font-size: 9px; color: var(--text-faint);
+    font-style: italic; padding: 4px 0;
+  }
   .ad-layer-weight-row {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 3px 0;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
   }
   .ad-layer-weight-row label {
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 11px;
+    font-size: 10px;
+    color: var(--text-muted);
   }
   .ad-layer-weight-row input[type=number] {
     width: 55px;
-    padding: 2px 4px;
-    border: 1px solid #ddd;
+    padding: 2px 5px;
+    border: 1px solid var(--border);
     border-radius: 3px;
-    font-size: 11px;
+    font-size: 10px;
+    background: var(--surface-2);
+    color: var(--text);
   }
   .ad-layer-weight-row input[type=checkbox] {
     width: auto;
+    accent-color: var(--accent);
+  }
+  /* Form controls inside analysis tool rows (raster / MCE / SDM sections) */
+  #analysis-drawer-body .ad-form-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+  }
+  #analysis-drawer-body .ad-form-row > label {
+    font-size: 10px; color: var(--text-muted); white-space: nowrap; min-width: 104px;
+  }
+  #analysis-drawer-body .ad-form-row select,
+  #analysis-drawer-body .ad-form-row input[type=text],
+  #analysis-drawer-body .ad-form-row input[type=number],
+  #analysis-drawer-body .ad-form-row input[type=file] {
+    flex: 1; min-width: 0; font-size: 10px; padding: 4px 6px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+  }
+  #analysis-drawer-body .ad-form-row select:focus,
+  #analysis-drawer-body .ad-form-row input:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+  #analysis-drawer-body .ad-form-row input[type=file] {
+    padding: 3px 4px; font-size: 9px;
+  }
+  #analysis-drawer-body .ad-form-row input[type=file]::file-selector-button {
+    font-size: 9px; padding: 3px 7px; margin-right: 6px; cursor: pointer;
+    background: var(--surface-3); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+  }
+  #analysis-drawer-body .ad-subhead {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+    color: var(--text-muted); margin: 10px 0 2px;
+  }
+  #analysis-drawer-body .ad-field-label {
+    font-size: 9px; font-weight: 600; color: var(--text-muted); margin: 6px 0 2px;
+  }
+  #analysis-drawer-body .ad-btn-row {
+    display: flex; gap: 6px; margin-top: 8px; margin-bottom: 4px;
+  }
+  #analysis-drawer-body .ad-btn-row .export-btn { flex: 1; }
+  #analysis-drawer-body .ad-status {
+    font-size: 9px; color: var(--text-faint); margin-top: 4px; line-height: 1.4;
   }
   .analysis-toolbar-btn {
     display: flex; align-items: center; gap: 5px;
@@ -2091,37 +2141,37 @@
     <!-- ── SECTION 6: Raster Analysis ── -->
     <div class="ad-section-title" id="geotiff-section">&#x1F6F0;&#xFE0F; Raster Analysis</div>
     <div class="ad-hint">Import GeoTIFF raster files as environmental variable layers for multi-criteria and species distribution analyses.</div>
-    <div class="ad-tool-row">
+    <div class="ad-form-row">
       <label>Select GeoTIFF</label>
-      <input type="file" id="geotiff-file-input" accept=".tif,.tiff" style="flex:1">
+      <input type="file" id="geotiff-file-input" accept=".tif,.tiff">
     </div>
-    <div class="ad-tool-row">
+    <div class="ad-form-row">
       <label>Layer Name</label>
-      <input type="text" id="geotiff-layer-name" placeholder="e.g. elevation" style="flex:1">
+      <input type="text" id="geotiff-layer-name" placeholder="e.g. elevation">
     </div>
-    <div class="ad-tool-row">
+    <div class="ad-btn-row">
       <button class="export-btn primary" onclick="loadGeoTIFF()">Load GeoTIFF</button>
     </div>
-    <div id="geotiff-status" style="font-size:11px;color:var(--text-muted);margin-top:4px"></div>
+    <div id="geotiff-status" class="ad-status"></div>
 
     <!-- ── SECTION 7: Multi-Criteria Evaluation ── -->
     <div class="ad-section-title" id="hotspot-section">&#x2696;&#xFE0F; Multi-Criteria Evaluation</div>
     <div class="ad-hint">Combine multiple vector layers into composite scores using weighted overlays. Equivalent to ArcGIS Weighted Overlay / QGIS MCDA.</div>
 
-    <div class="ad-section-title" style="font-size:9px;margin-top:10px;color:var(--text-muted);border-bottom:none;letter-spacing:0.3px;text-transform:none;font-weight:600;">Conservation Hotspot Grid</div>
-    <p class="ad-tool-desc">Score a hex or square grid by the number or density of features from each layer — reveals multi-layer biodiversity concentrations.</p>
-    <div class="ad-tool-row">
+    <div class="ad-subhead">Conservation Hotspot Grid</div>
+    <div class="ad-tool-desc" style="padding-left:0">Score a hex or square grid by the number or density of features from each layer — reveals multi-layer biodiversity concentrations.</div>
+    <div class="ad-form-row">
       <label>Grid Type</label>
       <select id="hotspot-grid-type">
         <option value="hex">Hexagonal</option>
         <option value="square">Square</option>
       </select>
     </div>
-    <div class="ad-tool-row">
+    <div class="ad-form-row">
       <label>Cell Size (degrees)</label>
-      <input type="number" id="hotspot-cell-size" value="0.5" min="0.01" step="0.01" style="width:80px">
+      <input type="number" id="hotspot-cell-size" value="0.5" min="0.01" step="0.01">
     </div>
-    <div class="ad-tool-row">
+    <div class="ad-form-row">
       <label>Score Method</label>
       <select id="hotspot-score-method">
         <option value="count">Feature Count</option>
@@ -2129,24 +2179,24 @@
         <option value="presence">Presence/Absence</option>
       </select>
     </div>
-    <div class="ad-tool-desc" style="margin-top:6px;font-weight:600;font-size:10px">Layer Weights</div>
+    <div class="ad-field-label">Layer Weights</div>
     <div id="hotspot-layer-weights" class="ad-layer-weight-table"></div>
-    <div class="ad-tool-row" style="margin-top:6px">
+    <div class="ad-btn-row">
       <button class="export-btn" onclick="refreshHotspotLayerRows()">&#x21BB; Refresh Layers</button>
       <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
     </div>
 
-    <div class="ad-section-title" id="wlc-section" style="font-size:9px;margin-top:12px;color:var(--text-muted);border-bottom:none;letter-spacing:0.3px;text-transform:none;font-weight:600;">Suitability Mapping (WLC)</div>
-    <p class="ad-tool-desc">Weighted linear combination across layers — assigns each grid cell a 0–1 composite suitability score. Optionally mask by a constraint polygon layer.</p>
-    <div class="ad-tool-desc" style="margin-top:6px;font-weight:600;font-size:10px">Layer Weights</div>
+    <div class="ad-subhead">Suitability Mapping (WLC)</div>
+    <div class="ad-tool-desc" style="padding-left:0" id="wlc-section">Weighted linear combination across layers — assigns each grid cell a 0–1 composite suitability score. Optionally mask by a constraint polygon layer.</div>
+    <div class="ad-field-label">Layer Weights</div>
     <div id="wlc-layer-weights" class="ad-layer-weight-table"></div>
-    <div class="ad-tool-row">
-      <label>Constraint Layer (optional)</label>
+    <div class="ad-form-row">
+      <label>Constraint Layer</label>
       <select id="wlc-constraint-layer">
-        <option value="">None</option>
+        <option value="">None (optional)</option>
       </select>
     </div>
-    <div class="ad-tool-row" style="margin-top:6px">
+    <div class="ad-btn-row">
       <button class="export-btn" onclick="refreshWLCLayerRows()">&#x21BB; Refresh Layers</button>
       <button class="export-btn primary" onclick="runSuitabilityWLC()">Run WLC Analysis</button>
     </div>
@@ -2154,13 +2204,13 @@
     <!-- ── SECTION 8: Species Distribution Modelling ── -->
     <div class="ad-section-title" id="sdm-section">&#x1F98B; Species Distribution Modelling</div>
     <div class="ad-hint">Predict species habitat suitability from presence records and environmental variables. Equivalent to MaxEnt, BIOCLIM and Mahalanobis tools in QGIS / biomod2.</div>
-    <div class="ad-tool-row">
+    <div class="ad-form-row">
       <label>Presence Layer</label>
       <select id="sdm-presence-layer"></select>
     </div>
-    <div class="ad-tool-desc" style="margin-top:6px;font-weight:600;font-size:10px">Environmental Variable Layers</div>
+    <div class="ad-field-label">Environmental Variable Layers</div>
     <div id="sdm-env-layers" class="ad-layer-weight-table"></div>
-    <div class="ad-tool-row">
+    <div class="ad-form-row">
       <label>Model Type</label>
       <select id="sdm-model-type">
         <option value="bioclim">BIOCLIM Envelope</option>
@@ -2168,11 +2218,11 @@
         <option value="maxent">MaxEnt (server-side)</option>
       </select>
     </div>
-    <div class="ad-tool-row">
+    <div class="ad-form-row">
       <label>Output Resolution (&#xB0;)</label>
-      <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01" style="width:80px">
+      <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01">
     </div>
-    <div class="ad-tool-row" style="margin-top:6px">
+    <div class="ad-btn-row">
       <button class="export-btn" onclick="refreshSDMLayerRows()">&#x21BB; Refresh Layers</button>
       <button class="export-btn primary" onclick="runSDM()">Run SDM</button>
     </div>
