@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#111c33"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#7dd3fc"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="930" cy="180" r="320" fill="url(#glow)"/>
+
+  <!-- map grid -->
+  <g stroke="#1e3a5f" stroke-width="1" opacity="0.45">
+    <path d="M0 90 H1200 M0 180 H1200 M0 270 H1200 M0 360 H1200 M0 450 H1200 M0 540 H1200"/>
+    <path d="M120 0 V630 M240 0 V630 M360 0 V630 M480 0 V630 M600 0 V630 M720 0 V630 M840 0 V630 M960 0 V630 M1080 0 V630"/>
+  </g>
+
+  <!-- topographic contours -->
+  <g fill="none" stroke="#2dd4bf" stroke-width="2" opacity="0.28">
+    <path d="M760 470 C 840 410, 1000 410, 1120 470 C 1000 520, 840 520, 760 470 Z"/>
+    <path d="M800 470 C 860 432, 980 432, 1075 470 C 980 505, 860 505, 800 470 Z"/>
+    <path d="M840 470 C 880 452, 945 452, 1030 470 C 945 488, 880 488, 840 470 Z"/>
+  </g>
+  <g fill="none" stroke="#6366f1" stroke-width="2" opacity="0.22">
+    <path d="M70 150 C 180 90, 360 100, 470 160 C 360 220, 180 215, 70 150 Z"/>
+    <path d="M120 152 C 200 116, 340 122, 425 160 C 340 196, 200 192, 120 152 Z"/>
+  </g>
+
+  <!-- map pin glyph -->
+  <g transform="translate(96,250)">
+    <path d="M40 0 C 18 0, 0 18, 0 40 C 0 70, 40 104, 40 104 C 40 104, 80 70, 80 40 C 80 18, 62 0, 40 0 Z" fill="#22d3ee"/>
+    <circle cx="40" cy="40" r="16" fill="#0f172a"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="206" y="330" font-size="120" font-weight="700" fill="url(#word)" letter-spacing="-2">GeoSpaX</text>
+
+  <!-- tagline -->
+  <text x="210" y="392" font-size="34" font-weight="500" fill="#94a3b8">Interactive Web GIS &amp; Spatial Analysis</text>
+
+  <!-- divider -->
+  <rect x="212" y="430" width="120" height="4" rx="2" fill="#22d3ee"/>
+
+  <!-- org label -->
+  <text x="96" y="582" font-size="24" font-weight="600" fill="#64748b" letter-spacing="1">in4metrix<tspan fill="#22d3ee">.dev</tspan></text>
+  <text x="1104" y="582" font-size="20" font-weight="500" fill="#475569" text-anchor="end">geospax.in4metrix.dev</text>
+</svg>
