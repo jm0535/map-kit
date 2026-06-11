@@ -7243,6 +7243,13 @@ function toggleAnalysisDrawer() {
   if (isOpen) {
     closeAnalysisDrawer();
   } else {
+    // Collapse right panel to free up space for the drawer
+    const rp = document.getElementById('right-panel');
+    if (rp && !rp.classList.contains('collapsed')) {
+      rp.classList.add('collapsed');
+      document.getElementById('collapse-right-btn').textContent = '◀';
+      rp.dataset.collapsedByDrawer = '1';
+    }
     drawer.classList.add('open');
     document.getElementById('analysis-backdrop').style.display = 'block';
     document.getElementById('analysis-drawer-btn').classList.add('active');
@@ -7257,6 +7264,13 @@ function closeAnalysisDrawer() {
   document.getElementById('analysis-backdrop').style.display = 'none';
   document.getElementById('analysis-drawer-btn').classList.remove('active');
   document.body.classList.remove('analysis-open');
+  // Restore right panel only if we collapsed it
+  const rp = document.getElementById('right-panel');
+  if (rp && rp.dataset.collapsedByDrawer === '1') {
+    rp.classList.remove('collapsed');
+    document.getElementById('collapse-right-btn').textContent = '▶';
+    delete rp.dataset.collapsedByDrawer;
+  }
   setTimeout(() => map.invalidateSize(), 300);
 }
 
