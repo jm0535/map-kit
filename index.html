@@ -330,6 +330,25 @@
   .search-box button:hover { background: var(--surface-3); }
 
   /* Layer drag handle */
+  /* Layer right-click context menu (QGIS-style) */
+  #layer-context-menu {
+    position: fixed; z-index: 3000; display: none;
+    min-width: 190px;
+    background: var(--surface-1); border: 1px solid var(--border-strong);
+    border-radius: 6px; box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    padding: 4px; font-size: 12px;
+  }
+  #layer-context-menu .lcm-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 4px; cursor: pointer;
+    color: var(--text); white-space: nowrap;
+  }
+  #layer-context-menu .lcm-item:hover { background: var(--accent-bg); color: var(--accent); }
+  #layer-context-menu .lcm-item.disabled { opacity: 0.35; pointer-events: none; }
+  #layer-context-menu .lcm-item.danger:hover { background: rgba(220,60,60,0.12); color: var(--error); }
+  #layer-context-menu .lcm-sep { height: 1px; background: var(--border); margin: 4px 6px; }
+  #layer-context-menu .lcm-icon { width: 16px; text-align: center; flex-shrink: 0; opacity: 0.8; }
+
   .layer-drag-handle {
     cursor: grab; font-size: 10px; color: var(--text-faint); padding: 0 2px;
     -webkit-user-select: none; user-select: none;
@@ -2847,7 +2866,7 @@ function _getDrawnLayer() {
     featureCount: 0, geomTypes: ['Mixed'], properties: [],
     geojsonFeatures: [], isAnalysis: false,
   };
-  uploadedLayers.push(info);
+  uploadedLayers.unshift(info);
   addLayerToPanel(info);
   buildSymbologyControls(info);
   refreshSymbologyLayerSelect();
@@ -3811,7 +3830,7 @@ function addUploadedGeoJSON(geojson, name, color) {
     properties: allProps,
     geojsonFeatures: geojson.features || [],
   };
-  uploadedLayers.push(info);
+  uploadedLayers.unshift(info);
 
   // Zoom to bounds
   try { map.fitBounds(layer.getBounds().pad(0.1)); } catch(e) {}
@@ -3877,7 +3896,7 @@ function addLayerToPanel(info) {
     <input type="checkbox" checked>
     <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}')" title="Toggle visibility">&#x1F441;</span>
     <div class="layer-color-swatch" style="background:${info.color}"></div>
-    <span class="layer-label" title="${safeName}&#10;Click to edit symbology&#10;Double-click to rename&#10;Right-click to zoom" ondblclick="renameLayer('${info.id}', this); event.stopPropagation();" oncontextmenu="zoomToLayer('${info.id}');event.preventDefault();">${safeName}</span>
+    <span class="layer-label" title="${safeName}&#10;Click to edit symbology&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this); event.stopPropagation();">${safeName}</span>
     <button class="layer-action-btn" onclick="zoomToLayer('${info.id}'); event.stopPropagation();" title="Zoom to layer">&#x1f50d;</button>
     <span class="layer-count">${info.featureCount}</span>
     <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this); event.stopPropagation();" title="Show/hide labels">&#x1f3f7;</button>
@@ -3891,8 +3910,15 @@ function addLayerToPanel(info) {
     if (e.target.closest('button, input, .layer-eye, .layer-drag-handle, .label-popover')) return;
     selectSymbologyLayer(info.id);
   });
+  el.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openLayerContextMenu(info.id, e.clientX, e.clientY);
+  });
   initLayerDrag(el);
-  document.getElementById('uploaded-layers-list').appendChild(el);
+  // New layers go to the TOP of the panel (QGIS convention) — they are the
+  // most recently added to the map so they naturally draw on top.
+  document.getElementById('uploaded-layers-list').prepend(el);
   initLegendState(info);
 }
 
@@ -3975,7 +4001,14 @@ function toggleUploadedLayer(id, on) {
   if (!info) return;
   // If `on` not specified, infer from current map state and flip it.
   if (typeof on !== 'boolean') on = !map.hasLayer(info.layer);
-  if (on) info.layer.addTo(map); else map.removeLayer(info.layer);
+  if (on) {
+    info.layer.addTo(map);
+    // Restore the layer's stack position — addTo always puts it on top,
+    // which would break the panel's z-order (top of list = top of map).
+    applyLayerZOrder();
+  } else {
+    map.removeLayer(info.layer);
+  }
   // Update checkbox and eye icon
   const el = document.querySelector(`.layer-item[data-layer-id="${id}"]`);
   if (el) {
@@ -5343,7 +5376,7 @@ async function processFile(file) {
         ],
         geojsonFeatures: [], isRaster: true,
       };
-      uploadedLayers.push(info);
+      uploadedLayers.unshift(info);
       addLayerToPanel(info);
       updateStats();
       map.fitBounds(layer.getBounds());
@@ -6134,7 +6167,7 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
     };
     leafletLayers.forEach(l => { if (l && l.options && typeof l.options.gradient !== 'undefined') l._geospaxLayerId = id; });
   }
-  uploadedLayers.push(info);
+  uploadedLayers.unshift(info);
   addLayerToPanel(info);
   buildSymbologyControls(info);
   // Seed legendState BEFORE refresh so the raster gradient shows on first render.
@@ -7414,19 +7447,112 @@ function reorderLayers(srcId, dstId) {
   if (srcIdx < 0 || dstIdx < 0) return;
   const [moved] = uploadedLayers.splice(srcIdx, 1);
   uploadedLayers.splice(dstIdx, 0, moved);
-  // Rebuild DOM order
+  syncLayerListDom();
+  applyLayerZOrder();
+  showToast('Layer order updated', 'success');
+}
+
+// Rebuild the panel DOM to match uploadedLayers array order.
+function syncLayerListDom() {
   const list = document.getElementById('uploaded-layers-list');
   uploadedLayers.forEach(info => {
     const el = document.querySelector(`.layer-item[data-layer-id="${info.id}"]`);
     if (el) list.appendChild(el);
   });
-  // Apply Z-order on map (last = on top)
-  uploadedLayers.forEach(info => {
-    if (map.hasLayer(info.layer)) {
-      info.layer.bringToFront && info.layer.bringToFront();
+}
+
+// QGIS/ArcGIS convention: the layer at the TOP of the panel list draws ON TOP
+// of the map. Leaflet's bringToFront stacks last-call-on-top, so iterate the
+// list bottom-up — the index-0 (top of panel) layer is raised last.
+function applyLayerZOrder() {
+  for (let i = uploadedLayers.length - 1; i >= 0; i--) {
+    const info = uploadedLayers[i];
+    if (map.hasLayer(info.layer) && info.layer.bringToFront) {
+      info.layer.bringToFront();
+    } else if (map.hasLayer(info.layer) && info.layer.eachLayer) {
+      // LayerGroup — raise each sub-layer
+      info.layer.eachLayer(sub => sub.bringToFront && sub.bringToFront());
     }
-  });
-  showToast('Layer order updated', 'success');
+  }
+}
+
+// Move a layer within the stack: 'up' | 'down' | 'top' | 'bottom'.
+// 'up' = closer to the top of the panel = drawn above more layers.
+function moveLayer(id, dir) {
+  const idx = uploadedLayers.findIndex(l => l.id === id);
+  if (idx < 0) return;
+  let newIdx = idx;
+  if (dir === 'up') newIdx = idx - 1;
+  else if (dir === 'down') newIdx = idx + 1;
+  else if (dir === 'top') newIdx = 0;
+  else if (dir === 'bottom') newIdx = uploadedLayers.length - 1;
+  newIdx = Math.max(0, Math.min(uploadedLayers.length - 1, newIdx));
+  if (newIdx === idx) return;
+  const [moved] = uploadedLayers.splice(idx, 1);
+  uploadedLayers.splice(newIdx, 0, moved);
+  syncLayerListDom();
+  applyLayerZOrder();
+}
+
+// ── Layer right-click context menu (QGIS-style) ──
+function openLayerContextMenu(id, x, y) {
+  closeLayerContextMenu();
+  const info = uploadedLayers.find(l => l.id === id);
+  if (!info) return;
+  const idx = uploadedLayers.findIndex(l => l.id === id);
+  const atTop = idx === 0;
+  const atBottom = idx === uploadedLayers.length - 1;
+  const visible = map.hasLayer(info.layer);
+
+  const menu = document.createElement('div');
+  menu.id = 'layer-context-menu';
+  menu.innerHTML = `
+    <div class="lcm-item" onclick="zoomToLayer('${id}');closeLayerContextMenu()"><span class="lcm-icon">&#x1F50D;</span> Zoom to Layer</div>
+    <div class="lcm-item" onclick="closeLayerContextMenu();renameLayer('${id}')"><span class="lcm-icon">&#x270F;</span> Rename…</div>
+    <div class="lcm-item" onclick="toggleUploadedLayer('${id}');closeLayerContextMenu()"><span class="lcm-icon">&#x1F441;</span> ${visible ? 'Hide Layer' : 'Show Layer'}</div>
+    <div class="lcm-sep"></div>
+    <div class="lcm-item${atTop ? ' disabled' : ''}" onclick="moveLayer('${id}','up');closeLayerContextMenu()"><span class="lcm-icon">&#x25B2;</span> Move Up</div>
+    <div class="lcm-item${atBottom ? ' disabled' : ''}" onclick="moveLayer('${id}','down');closeLayerContextMenu()"><span class="lcm-icon">&#x25BC;</span> Move Down</div>
+    <div class="lcm-item${atTop ? ' disabled' : ''}" onclick="moveLayer('${id}','top');closeLayerContextMenu()"><span class="lcm-icon">&#x2912;</span> Move to Top</div>
+    <div class="lcm-item${atBottom ? ' disabled' : ''}" onclick="moveLayer('${id}','bottom');closeLayerContextMenu()"><span class="lcm-icon">&#x2913;</span> Move to Bottom</div>
+    <div class="lcm-sep"></div>
+    <div class="lcm-item" onclick="closeLayerContextMenu();selectSymbologyLayer('${id}')"><span class="lcm-icon">&#x1F3A8;</span> Edit Symbology</div>
+    <div class="lcm-item" onclick="closeLayerContextMenu();openAttrTableForLayer('${id}')"><span class="lcm-icon">&#x1F4CB;</span> Open Attribute Table</div>
+    <div class="lcm-sep"></div>
+    <div class="lcm-item danger" onclick="closeLayerContextMenu();removeUploadedLayer('${id}')"><span class="lcm-icon">&#x1F5D1;</span> Remove Layer</div>
+  `;
+  document.body.appendChild(menu);
+  menu.style.display = 'block';
+  // Keep menu inside the viewport
+  const mw = menu.offsetWidth, mh = menu.offsetHeight;
+  menu.style.left = Math.min(x, window.innerWidth - mw - 6) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - mh - 6) + 'px';
+  // Dismiss on outside click / Esc / scroll
+  setTimeout(() => {
+    document.addEventListener('mousedown', _lcmOutside, true);
+    document.addEventListener('keydown', _lcmKey, true);
+  }, 0);
+}
+
+function _lcmOutside(e) {
+  const menu = document.getElementById('layer-context-menu');
+  if (menu && !menu.contains(e.target)) closeLayerContextMenu();
+}
+function _lcmKey(e) { if (e.key === 'Escape') closeLayerContextMenu(); }
+
+function closeLayerContextMenu() {
+  const menu = document.getElementById('layer-context-menu');
+  if (menu) menu.remove();
+  document.removeEventListener('mousedown', _lcmOutside, true);
+  document.removeEventListener('keydown', _lcmKey, true);
+}
+
+// Helper used by the context menu: select the layer in the attribute table.
+function openAttrTableForLayer(id) {
+  const sel = document.getElementById('attr-layer-select');
+  if (!sel) return;
+  sel.value = id;
+  loadAttrTable(id);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
