@@ -29,8 +29,6 @@
 <script src="vendor/leaflet/leaflet.js"></script>
 
 <!-- Leaflet plugins -->
-<script src="vendor/leaflet-measure/leaflet-measure.js"></script>
-<link rel="stylesheet" href="vendor/leaflet-measure/leaflet-measure.css"/>
 <script src="vendor/leaflet-fullscreen/Control.FullScreen.js"></script>
 <link rel="stylesheet" href="vendor/leaflet-fullscreen/Control.FullScreen.css"/>
 
@@ -1160,6 +1158,66 @@
   }
   .leaflet-control-zoom a:hover, .leaflet-control-fullscreen a:hover { background: var(--accent-bg) !important; }
   .leaflet-bar { border: 1px solid var(--border) !important; box-shadow: none !important; }
+
+  /* ── Measurement tool ── */
+  .measure-ctrl-btn {
+    display: flex !important; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    background: var(--surface-1) !important; color: var(--text-muted) !important;
+  }
+  .measure-ctrl-btn:hover { background: var(--accent-bg) !important; color: var(--accent) !important; }
+  .measure-ctrl-btn.active { background: var(--accent-bg) !important; color: var(--accent) !important; }
+  .measure-ctrl-btn svg { width: 16px; height: 16px; display: block; }
+
+  .measure-panel {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 1200; width: 300px; max-width: calc(100% - 24px);
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: var(--shadow); color: var(--text); font-size: 12px;
+    display: none; overflow: hidden;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+  .measure-panel.show { display: block; }
+  .measure-panel-head {
+    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+    background: var(--surface-2); border-bottom: 1px solid var(--border);
+  }
+  .measure-title { font-weight: 600; color: var(--accent); letter-spacing: .02em; flex: 0 0 auto; }
+  .measure-mode-toggle {
+    display: flex; margin-left: auto; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  }
+  .measure-mode-toggle button {
+    background: transparent; border: none; color: var(--text-muted);
+    font-size: 11px; padding: 3px 10px; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .measure-mode-toggle button.active { background: var(--accent); color: #fff; }
+  .measure-close {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 17px; line-height: 1; cursor: pointer; padding: 0 2px; flex: 0 0 auto;
+  }
+  .measure-close:hover { color: var(--text); }
+  .measure-readout { padding: 10px 12px 6px; }
+  .measure-primary { font-size: 18px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .measure-secondary { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .measure-hint { padding: 0 12px 9px; font-size: 10px; color: var(--text-faint); line-height: 1.4; }
+  .measure-actions { display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--border); }
+  .measure-btn {
+    flex: 1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+    font-size: 11px; padding: 5px 8px; border-radius: 5px; cursor: pointer; transition: all .15s;
+  }
+  .measure-btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+  .measure-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .measure-btn.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .measure-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .measure-tip {
+    background: var(--surface-1) !important; border: 1px solid var(--accent) !important;
+    color: var(--text) !important; font-size: 10px !important; font-weight: 600;
+    padding: 2px 6px !important; border-radius: 4px !important; box-shadow: var(--shadow) !important;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .measure-tip::before { display: none !important; }
+  .leaflet-container.measuring { cursor: crosshair !important; }
 
   /* Loading */
   #loading {
@@ -2448,13 +2506,234 @@ const map = L.map('map', { center:[-6.0,146.0], zoom:8, zoomControl:false });
 L.control.zoom({position:'topleft'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 try { L.control.fullscreen({position:'topleft'}).addTo(map); } catch(e) {}
-try {
-  L.control.measure({
-    primaryLengthUnit:'kilometers', secondaryLengthUnit:'meters',
-    primaryAreaUnit:'sqkilometers', activeColor:'#63b3ed', completedColor:'#2166AC',
-    position:'topleft',
-  }).addTo(map);
-} catch(e) {}
+// Custom measurement tool (distance + area) — replaces the leaflet-measure
+// vendor plugin for a UI that matches the app theme and never covers the
+// zoom/fullscreen controls. All distances are geodesic (Leaflet spherical);
+// areas use the spherical-excess ringArea() helper.
+let measureTool = null;
+try { measureTool = createMeasureTool(map); } catch (e) { console.error('Measure tool init failed:', e); }
+
+function createMeasureTool(map) {
+  const C = '#4f98a3';
+  const group = L.featureGroup().addTo(map);
+  let active = false, finished = false, mode = 'distance';
+  let pts = [];            // array of L.LatLng
+  let hover = null;        // current cursor LatLng (live segment)
+  let tip = null;          // floating on-map tooltip marker
+
+  // ── Floating results panel ────────────────────────────────────────────
+  const panel = L.DomUtil.create('div', 'measure-panel', map.getContainer());
+  panel.innerHTML = `
+    <div class="measure-panel-head">
+      <span class="measure-title">Measure</span>
+      <div class="measure-mode-toggle">
+        <button data-mode="distance" class="active">Distance</button>
+        <button data-mode="area">Area</button>
+      </div>
+      <button class="measure-close" title="Close (Esc)">&times;</button>
+    </div>
+    <div class="measure-readout">
+      <div class="measure-primary">—</div>
+      <div class="measure-secondary"></div>
+    </div>
+    <div class="measure-hint">Click the map to add points. Double-click or press Enter to finish · Esc to exit.</div>
+    <div class="measure-actions">
+      <button class="measure-btn measure-undo" disabled>Undo</button>
+      <button class="measure-btn measure-clear" disabled>Clear</button>
+      <button class="measure-btn primary measure-finish" disabled>Finish</button>
+    </div>`;
+  L.DomEvent.disableClickPropagation(panel);
+  L.DomEvent.disableScrollPropagation(panel);
+  const els = {
+    primary: panel.querySelector('.measure-primary'),
+    secondary: panel.querySelector('.measure-secondary'),
+    hint: panel.querySelector('.measure-hint'),
+    undo: panel.querySelector('.measure-undo'),
+    clear: panel.querySelector('.measure-clear'),
+    finish: panel.querySelector('.measure-finish'),
+    modeBtns: panel.querySelectorAll('.measure-mode-toggle button'),
+  };
+
+  // ── Formatting helpers ────────────────────────────────────────────────
+  function fmtDist(m) {
+    if (!isFinite(m)) return '—';
+    return m < 1000 ? `${m.toFixed(m < 10 ? 2 : 0)} m` : `${(m / 1000).toFixed(2)} km`;
+  }
+  function fmtArea(a) {
+    if (!isFinite(a) || a <= 0) return '—';
+    if (a < 1e4) return `${a.toFixed(0)} m²`;
+    if (a < 1e6) return `${(a / 1e4).toFixed(2)} ha`;
+    return `${(a / 1e6).toFixed(3)} km²`;
+  }
+
+  // ── Geometry math ─────────────────────────────────────────────────────
+  function totalDist(extra) {
+    let d = 0;
+    for (let i = 1; i < pts.length; i++) d += map.distance(pts[i - 1], pts[i]);
+    if (extra && pts.length > 0) d += map.distance(pts[pts.length - 1], extra);
+    return d;
+  }
+  function areaOf(extra) {
+    const ring = pts.map(p => [p.lng, p.lat]);
+    if (extra) ring.push([extra.lng, extra.lat]);
+    if (ring.length < 3) return 0;
+    return Math.abs(ringArea(ring));   // spherical-excess, closes ring internally
+  }
+  function perimeter(extra) {
+    const ring = pts.slice();
+    if (extra) ring.push(extra);
+    if (ring.length < 2) return 0;
+    let d = 0;
+    for (let i = 1; i < ring.length; i++) d += map.distance(ring[i - 1], ring[i]);
+    if (ring.length >= 3) d += map.distance(ring[ring.length - 1], ring[0]); // close
+    return d;
+  }
+
+  // ── Rendering ─────────────────────────────────────────────────────────
+  function redraw() {
+    group.clearLayers();
+    tip = null;
+    if (pts.length === 0) return;
+    const live = (!finished && hover) ? hover : null;
+    const latlngs = pts.map(p => [p.lat, p.lng]);
+    if (live) latlngs.push([live.lat, live.lng]);
+
+    if (mode === 'area' && latlngs.length >= 3) {
+      L.polygon(latlngs, { color: C, weight: 2, fillColor: C, fillOpacity: 0.12, dashArray: live ? '5 5' : null }).addTo(group);
+    } else {
+      L.polyline(latlngs, { color: C, weight: 2.5, dashArray: live ? '5 5' : null }).addTo(group);
+    }
+    pts.forEach(p => L.circleMarker(p, { radius: 4, color: '#fff', weight: 1.5, fillColor: C, fillOpacity: 1 }).addTo(group));
+
+    // On-map readout tooltip near the active end.
+    let anchor, text;
+    if (mode === 'distance') {
+      anchor = live || pts[pts.length - 1];
+      text = fmtDist(totalDist(live));
+    } else {
+      const a = areaOf(live);
+      if (a > 0) {
+        anchor = (live || pts[pts.length - 1]);
+        text = fmtArea(a);
+      }
+    }
+    if (anchor && text) {
+      tip = L.marker(anchor, {
+        interactive: false,
+        icon: L.divIcon({ className: 'measure-tip', html: text, iconSize: null, iconAnchor: [-8, 8] }),
+      }).addTo(group);
+    }
+  }
+
+  // ── Panel readout ─────────────────────────────────────────────────────
+  function updatePanel() {
+    const live = (!finished && hover) ? hover : null;
+    if (mode === 'distance') {
+      const d = totalDist(live);
+      els.primary.textContent = pts.length > 0 ? fmtDist(d) : '—';
+      els.secondary.textContent = `${pts.length} point${pts.length === 1 ? '' : 's'}`
+        + (pts.length >= 2 ? ` · ${pts.length - 1} segment${pts.length - 1 === 1 ? '' : 's'}` : '');
+    } else {
+      const hasArea = pts.length >= 3 || (pts.length >= 2 && live);
+      els.primary.textContent = hasArea ? fmtArea(areaOf(live)) : '—';
+      els.secondary.textContent = pts.length >= 2 ? `Perimeter ${fmtDist(perimeter(live))}` : `${pts.length} point${pts.length === 1 ? '' : 's'}`;
+    }
+    els.undo.disabled = pts.length === 0;
+    els.clear.disabled = pts.length === 0;
+    els.finish.disabled = pts.length < 2 || finished;
+    els.hint.textContent = finished
+      ? 'Measurement complete. Undo/Clear to edit, or click the map to start a new one.'
+      : 'Click the map to add points. Double-click or press Enter to finish · Esc to exit.';
+  }
+
+  function refresh() { redraw(); updatePanel(); }
+
+  // ── Actions ───────────────────────────────────────────────────────────
+  function addPoint(latlng) {
+    if (finished) { pts = []; finished = false; }
+    pts.push(latlng);
+    refresh();
+  }
+  function undo() { if (pts.length) { pts.pop(); if (pts.length < 2) finished = false; refresh(); } }
+  function clearAll() { pts = []; finished = false; hover = null; refresh(); }
+  function finish() {
+    if (pts.length < 2) return;
+    finished = true; hover = null; refresh();
+  }
+  function setMode(m) {
+    if (m === mode) return;
+    mode = m;
+    els.modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+    refresh();
+  }
+
+  // ── Map / keyboard handlers ───────────────────────────────────────────
+  function onClick(e) { addPoint(e.latlng); }
+  function onMove(e) { if (!finished) { hover = e.latlng; refresh(); } }
+  function onDbl(e) { L.DomEvent.stop(e); finish(); }
+  function onKey(e) {
+    if (!active) return;
+    if (e.key === 'Enter') { e.preventDefault(); finish(); }
+    else if (e.key === 'Escape') { e.preventDefault(); exit(); }
+    else if ((e.key === 'Backspace' || e.key === 'z') && (e.ctrlKey || e.metaKey || e.key === 'Backspace')) { e.preventDefault(); undo(); }
+  }
+
+  function enter() {
+    if (active) return;
+    active = true; finished = false; pts = []; hover = null;
+    panel.classList.add('show');
+    map.getContainer().classList.add('measuring');
+    map.doubleClickZoom.disable();
+    map.on('click', onClick);
+    map.on('mousemove', onMove);
+    map.on('dblclick', onDbl);
+    document.addEventListener('keydown', onKey);
+    if (btnLink) btnLink.classList.add('active');
+    refresh();
+  }
+  function exit() {
+    if (!active) return;
+    active = false;
+    panel.classList.remove('show');
+    map.getContainer().classList.remove('measuring');
+    map.doubleClickZoom.enable();
+    map.off('click', onClick);
+    map.off('mousemove', onMove);
+    map.off('dblclick', onDbl);
+    document.removeEventListener('keydown', onKey);
+    if (btnLink) btnLink.classList.remove('active');
+    clearAll();
+  }
+  function toggle() { active ? exit() : enter(); }
+
+  // ── Wire panel controls ───────────────────────────────────────────────
+  els.modeBtns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  els.undo.addEventListener('click', undo);
+  els.clear.addEventListener('click', clearAll);
+  els.finish.addEventListener('click', finish);
+  panel.querySelector('.measure-close').addEventListener('click', exit);
+
+  // ── Toolbar toggle button (stacks under zoom/fullscreen, top-left) ─────
+  let btnLink = null;
+  const MeasureControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd() {
+      const container = L.DomUtil.create('div', 'leaflet-bar measure-ctrl');
+      btnLink = L.DomUtil.create('a', 'measure-ctrl-btn', container);
+      btnLink.href = '#';
+      btnLink.title = 'Measure distance & area';
+      btnLink.setAttribute('role', 'button');
+      btnLink.setAttribute('aria-label', 'Measure distance and area');
+      btnLink.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l13 13 5-5L8 3z"/><path d="M7 7l2 2M11 5l2 2M5 11l2 2M9 15l2 2"/></svg>';
+      L.DomEvent.on(btnLink, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btnLink, 'click', toggle);
+      return container;
+    }
+  });
+  map.addControl(new MeasureControl());
+
+  return { enter, exit, toggle, setMode, isActive: () => active };
+}
 
 // Global layer storage (declared here because MapLegend references it)
 let uploadedLayers = [];
