@@ -4025,6 +4025,7 @@ function _onSelectMouseUp(e) {
 }
 
 function _selectFeaturesInBounds(bounds, mode) {
+  clearFeatureSelection();
   const selectedLayers = [];
   // Check all uploaded layers
   uploadedLayers.forEach(info => {
@@ -4098,6 +4099,7 @@ function cancelSelectMode() {
   if (_selectBox) { map.removeLayer(_selectBox); _selectBox = null; }
   if (_selectCircle) { map.removeLayer(_selectCircle); _selectCircle = null; }
   _selectStart = null;
+  clearFeatureSelection();
 }
 
 function clearFeatureSelection() {
