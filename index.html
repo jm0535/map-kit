@@ -10579,7 +10579,8 @@ function runHotspotGrid() {
     const leafletLayer = L.geoJSON(grid, {
       style: feature => {
         const s = feature.properties._normScore || 0;
-        return { fillColor: hotspotColor(s), fillOpacity: 0.65, color: '#333', weight: 0.5 };
+        const borderCol = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(128,128,128,0.4)';
+        return { fillColor: hotspotColor(s), fillOpacity: 0.65, color: borderCol, weight: 0.5 };
       },
       onEachFeature: (feature, layer) => {
         const s = (feature.properties._normScore * 100).toFixed(1);
@@ -11171,16 +11172,6 @@ function _hideLoading() { document.getElementById('loading').style.display='none
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
 setTimeout(_hideLoading, 2000);
-
-// Collapse all analysis drawer sections by default
-document.querySelectorAll('#analysis-drawer-body .ad-section-title').forEach(title => {
-  title.classList.add('collapsed');
-  let el = title.nextElementSibling;
-  while (el && !el.classList.contains('ad-section-title')) {
-    el.classList.add('ad-collapsed');
-    el = el.nextElementSibling;
-  }
-});
 </script>
 </body>
 </html>
