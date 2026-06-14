@@ -1670,19 +1670,19 @@
     <div id="loading"><div class="spinner" style="width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite"></div> Loading...</div>
     <div id="map"></div>
     <!-- Digitizing toolbar -->
-    <div class="digitize-toolbar" id="digitize-toolbar">
-      <button class="digitize-btn" id="dig-point" onclick="startDigitize('point')" title="Draw point">&#x1f4cd;</button>
-      <button class="digitize-btn" id="dig-line" onclick="startDigitize('line')" title="Draw line">&#x2500;</button>
-      <button class="digitize-btn" id="dig-polygon" onclick="startDigitize('polygon')" title="Draw polygon">&#x2B1F;</button>
-      <div class="digitize-sep"></div>
-      <button class="digitize-btn" id="dig-edit" onclick="startEditMode()" title="Edit features (move vertices)">&#x270f;</button>
-      <button class="digitize-btn" id="dig-select-rect" onclick="startSelectMode('rect')" title="Rectangle select">&#x25fb;</button>
-      <button class="digitize-btn" id="dig-select-circle" onclick="startSelectMode('circle')" title="Circle select">&#x25ef;</button>
-      <div class="digitize-sep"></div>
-      <button class="digitize-btn" id="dig-undo" onclick="historyUndo()" title="Undo (Ctrl+Z)" disabled>&#x21B6;</button>
-      <button class="digitize-btn" id="dig-redo" onclick="historyRedo()" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>&#x21B7;</button>
-      <div class="digitize-sep"></div>
-      <button class="digitize-btn" id="dig-cancel" onclick="cancelDigitize()" title="Cancel / clear selection (Esc)" disabled>&#x2716;</button>
+    <div class="digitize-toolbar" id="digitize-toolbar" role="toolbar" aria-label="Drawing tools">
+      <button class="digitize-btn" id="dig-point" onclick="startDigitize('point')" title="Draw point" aria-label="Draw point">&#x1f4cd;</button>
+      <button class="digitize-btn" id="dig-line" onclick="startDigitize('line')" title="Draw line" aria-label="Draw line">&#x2500;</button>
+      <button class="digitize-btn" id="dig-polygon" onclick="startDigitize('polygon')" title="Draw polygon" aria-label="Draw polygon">&#x2B1F;</button>
+      <div class="digitize-sep" role="separator"></div>
+      <button class="digitize-btn" id="dig-edit" onclick="startEditMode()" title="Edit vertices (drag to reshape, double-click to delete)" aria-label="Edit feature vertices">&#x270f;</button>
+      <button class="digitize-btn" id="dig-select-rect" onclick="startSelectMode('rect')" title="Rectangle select" aria-label="Rectangle select">&#x25fb;</button>
+      <button class="digitize-btn" id="dig-select-circle" onclick="startSelectMode('circle')" title="Circle select" aria-label="Circle select">&#x25ef;</button>
+      <div class="digitize-sep" role="separator"></div>
+      <button class="digitize-btn" id="dig-undo" onclick="historyUndo()" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>&#x21B6;</button>
+      <button class="digitize-btn" id="dig-redo" onclick="historyRedo()" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" aria-label="Redo" disabled>&#x21B7;</button>
+      <div class="digitize-sep" role="separator"></div>
+      <button class="digitize-btn" id="dig-cancel" onclick="cancelDigitize()" title="Cancel / clear selection (Esc)" aria-label="Cancel or clear" disabled>&#x2716;</button>
     </div>
     <svg id="north-arrow" viewBox="0 0 36 36">
       <circle cx="18" cy="18" r="17" fill="rgba(15,17,23,0.8)" stroke="#2d3748"/>
@@ -3507,12 +3507,13 @@ function _onDigClick(e) {
     }).addTo(map);
     _digVertexMarkers.push(vm);
     if (_digTempLayer) { map.removeLayer(_digTempLayer); _digTempLayer = null; }
+    const dc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     if (_digMode === 'line' && _digLatLngs.length >= 2) {
-      _digTempLayer = L.polyline(_digLatLngs, { color: '#63b3ed', weight: 2.5, dashArray: '6 4', opacity: 0.8 }).addTo(map);
+      _digTempLayer = L.polyline(_digLatLngs, { color: dc, weight: 2.5, dashArray: '6 4', opacity: 0.8 }).addTo(map);
     } else if (_digMode === 'polygon' && _digLatLngs.length >= 2) {
-      _digTempLayer = L.polygon(_digLatLngs, { color: '#63b3ed', weight: 2, fillColor: '#63b3ed', fillOpacity: 0.15, dashArray: '6 4' }).addTo(map);
+      _digTempLayer = L.polygon(_digLatLngs, { color: dc, weight: 2, fillColor: dc, fillOpacity: 0.15, dashArray: '6 4' }).addTo(map);
     }
-  }, 260); // < browser dblclick threshold (typically 300-500ms)
+  }, 300);
 }
 
 function _onDigDblClick(e) {
@@ -3578,6 +3579,9 @@ function _showAttrForm(feature, geomType) {
 
   const overlay = document.createElement('div');
   overlay.className = 'attr-form-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', `New ${geomLabel} Feature`);
   overlay.innerHTML = `
     <div class="attr-form-box">
       <h3>New ${geomLabel} Feature</h3>
@@ -3604,14 +3608,19 @@ function _showAttrForm(feature, geomType) {
   // Store pending feature
   window._pendingDigFeature = feature;
 
-  // Focus name input
-  setTimeout(() => { const inp = document.getElementById('af-name'); if (inp) inp.focus(); }, 50);
+  // Focus name input — use rAF so the overlay is painted first
+  requestAnimationFrame(() => { const inp = document.getElementById('af-name'); if (inp) inp.focus(); });
 
-  // Enter/Escape keys
-  overlay.addEventListener('keydown', e => {
-    if (e.key === 'Enter') _confirmAttrForm();
-    if (e.key === 'Escape') { overlay.remove(); window._pendingDigFeature = null; }
-  });
+  // Enter/Escape — listen on document so keys work regardless of which input has focus
+  function _afKeydown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); _confirmAttrForm(); }
+    if (e.key === 'Escape') { overlay.remove(); window._pendingDigFeature = null; document.removeEventListener('keydown', _afKeydown); }
+  }
+  document.addEventListener('keydown', _afKeydown);
+  // Clean up listener when overlay is removed for any reason (click Cancel, etc.)
+  new MutationObserver((_, obs) => {
+    if (!document.contains(overlay)) { document.removeEventListener('keydown', _afKeydown); obs.disconnect(); }
+  }).observe(document.body, { childList: true, subtree: false });
 }
 
 function _confirmAttrForm() {
@@ -3684,7 +3693,6 @@ let _editVertexMarkers = [];
 let _editMidpointMarkers = [];
 let _editDragIndex = -1;
 let _editIsMidpoint = false;
-let _editMoveFeature = false;
 let _editPreSnapshot = null;   // GeoJSON snapshot before current edit session
 let _editPreIndex = -1;
 let _editPreLayerId = null;
@@ -3812,7 +3820,7 @@ function _setupEdit(leafletLayer, info) {
     }
   }
 
-  showToast('Drag vertices to reshape. Double-click vertex to delete. Drag feature body to move.', 'info');
+  showToast('Drag vertices to reshape · Double-click vertex to delete · Ctrl+Z to undo', 'info');
 }
 
 function _onVertexDrag(e, index, isMidpoint) {
@@ -3850,19 +3858,9 @@ function _onVertexDrag(e, index, isMidpoint) {
     _editTargetLayer.setLatLngs(geo.geometry.coordinates[0].map(c => L.latLng(c[1], c[0])));
   }
 
-  // Update stored geojsonFeatures
-  if (_editTargetInfo) {
-    const idx = _editTargetInfo.geojsonFeatures.findIndex(f => f === geo);
-    if (idx >= 0) _editTargetInfo.geojsonFeatures[idx] = geo;
-    else {
-      // Try match by geometry equality
-      const str = JSON.stringify(geo.geometry.coordinates);
-      const matchIdx = _editTargetInfo.geojsonFeatures.findIndex(f =>
-        JSON.stringify(f.geometry.coordinates) === str ||
-        (f.geometry.type === geo.geometry.type && f.geometry.coordinates.length === geo.geometry.coordinates.length)
-      );
-      if (matchIdx >= 0) _editTargetInfo.geojsonFeatures[matchIdx] = geo;
-    }
+  // Update stored geojsonFeatures via the stable index tag set by _setupEdit
+  if (_editTargetInfo && typeof _editTargetLayer._mkFeatureIndex === 'number') {
+    _editTargetInfo.geojsonFeatures[_editTargetLayer._mkFeatureIndex] = geo;
   }
 
   // Refresh markers after dragend if midpoint was inserted
@@ -3995,10 +3993,11 @@ function _onSelectMouseDown(e) {
   _selectStart = e.latlng;
   if (_selectMode === 'rect') {
     _selectBox = L.rectangle([_selectStart, _selectStart], {
-      color: '#63b3ed', weight: 1.5, dashArray: '4 4', fillOpacity: 0.1
+      color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), weight: 1.5, dashArray: '4 4', fillOpacity: 0.1
     }).addTo(map);
   } else {
-    _selectCircle = L.circle(_selectStart, { radius: 0, color: '#63b3ed', weight: 1.5, dashArray: '4 4', fillOpacity: 0.1 }).addTo(map);
+    const _sc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    _selectCircle = L.circle(_selectStart, { radius: 0, color: _sc, weight: 1.5, dashArray: '4 4', fillOpacity: 0.1 }).addTo(map);
   }
   map.on('mousemove', _onSelectMouseMove);
   map.on('mouseup', _onSelectMouseUp);
@@ -4054,7 +4053,7 @@ function _selectFeaturesInBounds(bounds, mode) {
       const geo = sub.feature.geometry;
       if (geo.type === 'Point') {
         const p = L.latLng(geo.coordinates[1], geo.coordinates[0]);
-        inside = mode === 'rect' ? bounds.contains(p) : bounds.contains(p);
+        inside = bounds.contains(p);
         if (mode === 'circle') {
           const center = L.latLng((bounds.getSouth() + bounds.getNorth()) / 2, (bounds.getWest() + bounds.getEast()) / 2);
           const radius = bounds.getSouthWest().distanceTo(bounds.getNorthEast()) / 2;
@@ -4099,8 +4098,8 @@ function _refreshSelectionHighlight() {
   });
   if (features.length === 0) return;
   _selectedHighlightLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
-    style: { color: '#63b3ed', weight: 4, opacity: 0.8, fillOpacity: 0.15 },
-    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 10, color: '#63b3ed', weight: 3, fillOpacity: 0.3 })
+    style: { color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), weight: 4, opacity: 0.8, fillOpacity: 0.15 },
+    pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 10, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), weight: 3, fillOpacity: 0.3 })
   }).addTo(map);
 }
 
