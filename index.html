@@ -2467,8 +2467,8 @@
       <div id="layout-loading"><span class="spinner"></span>Loading tiles…</div>
     </div>
     <div class="layout-actions">
-      <button class="btn-primary" onclick="layoutExport('png')">Export PNG</button>
-      <button class="btn-primary" onclick="layoutExport('pdf')">Export PDF</button>
+      <button class="btn-primary" id="layout-export-btn" onclick="layoutExport(exportFormat)">Export PNG</button>
+      <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
     </div>
   </div>
 </div>
@@ -8486,7 +8486,10 @@ function clearAttrFilter() {
 let exportFormat = 'png';
 function openExport(fmt) {
   exportFormat = fmt;
-  document.getElementById('exp-confirm-btn').textContent = fmt==='pdf' ? 'Export PDF' : 'Export PNG';
+  const label = fmt === 'pdf' ? 'Export PDF' : 'Export PNG';
+  document.getElementById('exp-confirm-btn').textContent = label;
+  const layoutBtn = document.getElementById('layout-export-btn');
+  if (layoutBtn) layoutBtn.textContent = label;
   document.getElementById('export-overlay').classList.add('show');
 }
 function closeExport() { document.getElementById('export-overlay').classList.remove('show'); }
@@ -9562,6 +9565,9 @@ function onLayoutGridChange() {
 
 async function previewExport() {
   closeExport();
+  // Sync the layout modal export button to the chosen format before showing it
+  const layoutBtn = document.getElementById('layout-export-btn');
+  if (layoutBtn) layoutBtn.textContent = exportFormat === 'pdf' ? 'Export PDF' : 'Export PNG';
   showToast('Building layout... please wait');
   try {
     // Show modal FIRST so the layout container has real dimensions.
