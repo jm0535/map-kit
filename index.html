@@ -1675,9 +1675,12 @@
       <button class="digitize-btn" id="dig-line" onclick="startDigitize('line')" title="Draw line" aria-label="Draw line">&#x2500;</button>
       <button class="digitize-btn" id="dig-polygon" onclick="startDigitize('polygon')" title="Draw polygon" aria-label="Draw polygon">&#x2B1F;</button>
       <div class="digitize-sep" role="separator"></div>
-      <button class="digitize-btn" id="dig-edit" onclick="startEditMode()" title="Edit vertices (drag to reshape, double-click to delete)" aria-label="Edit feature vertices">&#x270f;</button>
+      <button class="digitize-btn" id="dig-edit" onclick="startEditMode()" title="Edit vertices — drag to reshape, drag body to move, double-click vertex to delete" aria-label="Edit feature vertices">&#x270f;</button>
       <button class="digitize-btn" id="dig-select-rect" onclick="startSelectMode('rect')" title="Rectangle select" aria-label="Rectangle select">&#x25fb;</button>
       <button class="digitize-btn" id="dig-select-circle" onclick="startSelectMode('circle')" title="Circle select" aria-label="Circle select">&#x25ef;</button>
+      <button class="digitize-btn" id="dig-duplicate" onclick="duplicateSelectedFeatures()" title="Duplicate selected features (Ctrl+D)" aria-label="Duplicate selected features" disabled>&#x2398;</button>
+      <div class="digitize-sep" role="separator"></div>
+      <button class="digitize-btn active" id="dig-snap" onclick="toggleSnap()" title="Snap to vertices (toggle)" aria-label="Toggle vertex snapping">&#x1F9F2;</button>
       <div class="digitize-sep" role="separator"></div>
       <button class="digitize-btn" id="dig-undo" onclick="historyUndo()" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>&#x21B6;</button>
       <button class="digitize-btn" id="dig-redo" onclick="historyRedo()" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" aria-label="Redo" disabled>&#x21B7;</button>
@@ -3387,6 +3390,7 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (k === 'z' && !e.shiftKey) { e.preventDefault(); historyUndo(); }
   else if ((k === 'y') || (k === 'z' && e.shiftKey)) { e.preventDefault(); historyRedo(); }
+  else if (k === 'd') { e.preventDefault(); duplicateSelectedFeatures(); }
 });
 
 let _digMode = null;       // 'point' | 'line' | 'polygon' | null
@@ -3420,6 +3424,117 @@ function _getDrawnLayer() {
   return info;
 }
 
+// ── SNAP ─────────────────────────────────────────────────────────────────
+let _snapEnabled = true;
+let _snapIndicator = null;
+let _snapTarget = null;
+
+function toggleSnap() {
+  _snapEnabled = !_snapEnabled;
+  document.getElementById('dig-snap').classList.toggle('active', _snapEnabled);
+  showToast(_snapEnabled ? 'Snapping on' : 'Snapping off', 'info');
+}
+
+function _nearestSnapVertex(cursorLL) {
+  const SNAP_PX = 16;
+  let best = null, bestPx = Infinity;
+  // Snap to vertices in all visible layers
+  uploadedLayers.forEach(info => {
+    if (!map.hasLayer(info.layer)) return;
+    (info.geojsonFeatures || []).forEach(f => {
+      if (!f || !f.geometry) return;
+      const t = f.geometry.type, c = f.geometry.coordinates;
+      const verts = t === 'Point' ? [c]
+        : t === 'LineString' ? c
+        : t === 'Polygon' ? c[0].slice(0, -1)
+        : [];
+      verts.forEach(v => {
+        const px = map.latLngToContainerPoint(L.latLng(v[1], v[0]));
+        const cx = map.latLngToContainerPoint(cursorLL);
+        const d = Math.hypot(px.x - cx.x, px.y - cx.y);
+        if (d < SNAP_PX && d < bestPx) { bestPx = d; best = L.latLng(v[1], v[0]); }
+      });
+    });
+  });
+  // Also snap to already-placed vertices of the current drawing (close ring, endpoint)
+  _digLatLngs.forEach(ll => {
+    const px = map.latLngToContainerPoint(ll);
+    const cx = map.latLngToContainerPoint(cursorLL);
+    const d = Math.hypot(px.x - cx.x, px.y - cx.y);
+    if (d < SNAP_PX && d < bestPx && d > 1) { bestPx = d; best = ll; }
+  });
+  return best;
+}
+
+function _updateSnapIndicator(snapped) {
+  if (_snapIndicator) { map.removeLayer(_snapIndicator); _snapIndicator = null; }
+  _snapTarget = snapped || null;
+  if (snapped) {
+    const ac = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    _snapIndicator = L.circleMarker(snapped, {
+      radius: 9, color: ac, weight: 2.5, fillOpacity: 0, interactive: false
+    }).addTo(map);
+  }
+}
+
+// Live rubber-band preview + snap indicator on mousemove while drawing
+let _digHoverLL = null;
+function _onDigMouseMove(e) {
+  if (!_digMode || _digMode === 'point') return;
+  const snapped = _snapEnabled ? _nearestSnapVertex(e.latlng) : null;
+  _updateSnapIndicator(snapped);
+  _digHoverLL = snapped || e.latlng;
+  // Rebuild live preview
+  if (_digTempLayer) { map.removeLayer(_digTempLayer); _digTempLayer = null; }
+  const preview = _digLatLngs.slice();
+  if (preview.length > 0) {
+    preview.push(_digHoverLL);
+    const ac = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    if (_digMode === 'line') {
+      _digTempLayer = L.polyline(preview.map(p => [p.lat, p.lng]),
+        { color: ac, weight: 2.5, dashArray: '6 4', opacity: 0.85 }).addTo(map);
+    } else if (_digMode === 'polygon' && preview.length >= 3) {
+      _digTempLayer = L.polygon(preview.map(p => [p.lat, p.lng]),
+        { color: ac, weight: 2, fillColor: ac, fillOpacity: 0.12, dashArray: '6 4' }).addTo(map);
+    } else if (_digMode === 'polygon') {
+      _digTempLayer = L.polyline(preview.map(p => [p.lat, p.lng]),
+        { color: ac, weight: 2, dashArray: '6 4', opacity: 0.7 }).addTo(map);
+    }
+  }
+}
+
+// ── DUPLICATE SELECTED FEATURES ────────────────────────────────────────────
+function duplicateSelectedFeatures() {
+  if (_selectedFeatures.size === 0) {
+    showToast('Select features first using rectangle or circle select', 'error'); return;
+  }
+  const info = _getDrawnLayer();
+  let count = 0;
+  function shiftCoords(c, depth) {
+    return depth === 0 ? [c[0] + 0.01, c[1] + 0.01] : c.map(x => shiftCoords(x, depth - 1));
+  }
+  _selectedFeatures.forEach(sub => {
+    const geo = sub.toGeoJSON ? sub.toGeoJSON() : sub.feature;
+    if (!geo) return;
+    const clone = _cloneFeature(geo);
+    const depth = { Point: 0, LineString: 1, Polygon: 2 }[clone.geometry.type] ?? 1;
+    clone.geometry.coordinates = shiftCoords(clone.geometry.coordinates, depth);
+    clone.properties = { ...(clone.properties || {}), name: ((clone.properties?.name || '') + ' (copy)').trim() };
+    const idx = info.geojsonFeatures.length;
+    info.geojsonFeatures.push(clone);
+    info.properties.push(clone.properties);
+    info.featureCount = info.geojsonFeatures.filter(Boolean).length;
+    const newSub = _buildSubLayerForFeature(info, clone, idx);
+    if (newSub) info.layer.addLayer(newSub);
+    historyPush({ type: 'add', layerId: info.id, index: idx, before: null, after: clone });
+    count++;
+  });
+  updateStats(); updateFeatureCount();
+  const countEl = document.querySelector(`[data-layer-id="${info.id}"] .layer-count`);
+  if (countEl) countEl.textContent = info.featureCount;
+  showToast(`Duplicated ${count} feature${count !== 1 ? 's' : ''} — offset ~1 km NE`, 'success');
+}
+
 function startDigitize(mode) {
   if (_digMode === mode) { cancelDigitize(); return; }
   cancelDigitize();
@@ -3443,11 +3558,12 @@ function startDigitize(mode) {
     map.doubleClickZoom.disable();
   }
 
-  // Bind map click handler
+  // Bind map event handlers
   map.on('click', _onDigClick);
   map.on('dblclick', _onDigDblClick);
+  if (mode !== 'point') map.on('mousemove', _onDigMouseMove);
 
-  showToast(`Drawing ${mode} — click to add vertices, double-click to finish`, 'info');
+  showToast(`Drawing ${mode} — click to add vertices, double-click or Enter to finish`, 'info');
 }
 
 function cancelDigitize() {
@@ -3477,6 +3593,12 @@ function cancelDigitize() {
   // Unbind handlers
   map.off('click', _onDigClick);
   map.off('dblclick', _onDigDblClick);
+  map.off('mousemove', _onDigMouseMove);
+  _updateSnapIndicator(null);
+  _digHoverLL = null;
+
+  // Restore snap toggle visual (snap stays on/off as user set it)
+  document.getElementById('dig-snap').classList.toggle('active', _snapEnabled);
 
   if (prev) showToast('Drawing cancelled', 'info');
 }
@@ -3485,8 +3607,9 @@ function _onDigClick(e) {
   if (!_digMode) return;
   if (_digMode === 'point') {
     // Point: commit immediately on click
-    _digLatLngs.push(e.latlng);
-    const vm = L.marker(e.latlng, {
+    const ptLL = (_snapEnabled && _snapTarget) ? _snapTarget : e.latlng;
+    _digLatLngs.push(ptLL);
+    const vm = L.marker(ptLL, {
       icon: L.divIcon({ className: 'vertex-marker', iconSize: [10, 10], iconAnchor: [5, 5] }),
       interactive: false,
     }).addTo(map);
@@ -3496,7 +3619,7 @@ function _onDigClick(e) {
   }
   // Line/polygon: debounce so the 2nd click of a dblclick is dropped
   if (_digClickTimer) { clearTimeout(_digClickTimer); _digClickTimer = null; }
-  const latlng = e.latlng;
+  const latlng = (_snapEnabled && _snapTarget) ? _snapTarget : e.latlng;
   _digClickTimer = setTimeout(() => {
     _digClickTimer = null;
     if (!_digMode) return;
@@ -3562,7 +3685,11 @@ function _finishDigitize() {
   map.doubleClickZoom.enable();
   map.off('click', _onDigClick);
   map.off('dblclick', _onDigDblClick);
+  map.off('mousemove', _onDigMouseMove);
+  _updateSnapIndicator(null);
+  _digHoverLL = null;
   document.querySelectorAll('.digitize-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dig-snap').classList.toggle('active', _snapEnabled);
   document.getElementById('dig-cancel').disabled = true;
   _digMode = null;
 
@@ -3637,8 +3764,13 @@ function _confirmAttrForm() {
   // Remove form
   document.querySelector('.attr-form-overlay')?.remove();
 
-  // Add to drawn features layer
+  // Add to drawn features layer (check for exact geometry duplicate)
   const info = _getDrawnLayer();
+  const newCoordsStr = JSON.stringify(feature.geometry.coordinates);
+  const isDupe = info.geojsonFeatures.some(f => f && f.geometry &&
+    f.geometry.type === feature.geometry.type &&
+    JSON.stringify(f.geometry.coordinates) === newCoordsStr);
+  if (isDupe) { showToast('Duplicate geometry — feature not added', 'warning'); return; }
   const newIndex = info.geojsonFeatures.length;
   info.geojsonFeatures.push(feature);
   info.properties.push(feature.properties);
@@ -3820,7 +3952,52 @@ function _setupEdit(leafletLayer, info) {
     }
   }
 
-  showToast('Drag vertices to reshape · Double-click vertex to delete · Ctrl+Z to undo', 'info');
+  // Feature body drag (non-Point): mousedown on the sublayer itself to translate all coords
+  if (type !== 'Point') {
+    let _dragStart = null;
+    let _dragPreSnap = null;
+    leafletLayer.on('mousedown', ev => {
+      if (ev.originalEvent.button !== 0) return;
+      L.DomEvent.stopPropagation(ev);
+      _dragStart = ev.latlng;
+      _dragPreSnap = _cloneFeature(info.geojsonFeatures[leafletLayer._mkFeatureIndex]);
+      map.dragging.disable();
+
+      function onMove(me) {
+        if (!_dragStart) return;
+        const dlat = me.latlng.lat - _dragStart.lat;
+        const dlng = me.latlng.lng - _dragStart.lng;
+        _dragStart = me.latlng;
+        const g = leafletLayer.toGeoJSON();
+        const translate = coords => coords.map(c => Array.isArray(c[0]) ? translate(c) : [c[0] + dlng, c[1] + dlat]);
+        g.geometry.coordinates = translate(g.geometry.coordinates);
+        if (g.geometry.type === 'LineString') {
+          leafletLayer.setLatLngs(g.geometry.coordinates.map(c => L.latLng(c[1], c[0])));
+        } else if (g.geometry.type === 'Polygon') {
+          leafletLayer.setLatLngs(g.geometry.coordinates.map(ring => ring.map(c => L.latLng(c[1], c[0]))));
+        }
+        info.geojsonFeatures[leafletLayer._mkFeatureIndex] = g;
+        _setupEdit(leafletLayer, info);
+      }
+
+      function onUp() {
+        map.off('mousemove', onMove);
+        map.off('mouseup', onUp);
+        map.dragging.enable();
+        if (_dragPreSnap) {
+          const idx = leafletLayer._mkFeatureIndex;
+          historyPush({ type: 'editFeature', layerId: info.id, index: idx, before: _dragPreSnap, after: _cloneFeature(info.geojsonFeatures[idx]) });
+        }
+        _dragStart = null;
+        _dragPreSnap = null;
+      }
+
+      map.on('mousemove', onMove);
+      map.on('mouseup', onUp);
+    });
+  }
+
+  showToast('Drag body to move · Drag vertices to reshape · Double-click vertex to delete · Ctrl+Z to undo', 'info');
 }
 
 function _onVertexDrag(e, index, isMidpoint) {
