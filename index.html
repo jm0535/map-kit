@@ -2514,12 +2514,16 @@ let measureTool = null;
 try { measureTool = createMeasureTool(map); } catch (e) { console.error('Measure tool init failed:', e); }
 
 function createMeasureTool(map) {
-  const C = '#4f98a3';
+  // Read accent colour from the active theme so lines adapt to dark/light mode
+  function accentColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4f98a3';
+  }
   const group = L.featureGroup().addTo(map);
   let active = false, finished = false, mode = 'distance';
   let pts = [];            // array of L.LatLng
   let hover = null;        // current cursor LatLng (live segment)
   let tip = null;          // floating on-map tooltip marker
+  let _clickTimer = null;  // debounce: suppress clicks that are part of a dblclick
 
   // ── Floating results panel ────────────────────────────────────────────
   const panel = L.DomUtil.create('div', 'measure-panel', map.getContainer());
@@ -2598,6 +2602,7 @@ function createMeasureTool(map) {
     const latlngs = pts.map(p => [p.lat, p.lng]);
     if (live) latlngs.push([live.lat, live.lng]);
 
+    const C = accentColor();
     if (mode === 'area' && latlngs.length >= 3) {
       L.polygon(latlngs, { color: C, weight: 2, fillColor: C, fillOpacity: 0.12, dashArray: live ? '5 5' : null }).addTo(group);
     } else {
@@ -2638,12 +2643,15 @@ function createMeasureTool(map) {
       els.primary.textContent = hasArea ? fmtArea(areaOf(live)) : '—';
       els.secondary.textContent = pts.length >= 2 ? `Perimeter ${fmtDist(perimeter(live))}` : `${pts.length} point${pts.length === 1 ? '' : 's'}`;
     }
+    const minPts = mode === 'area' ? 3 : 2;
     els.undo.disabled = pts.length === 0;
     els.clear.disabled = pts.length === 0;
-    els.finish.disabled = pts.length < 2 || finished;
+    els.finish.disabled = pts.length < minPts || finished;
     els.hint.textContent = finished
       ? 'Measurement complete. Undo/Clear to edit, or click the map to start a new one.'
-      : 'Click the map to add points. Double-click or press Enter to finish · Esc to exit.';
+      : mode === 'area'
+        ? 'Click to add points (3+ needed). Double-click or Enter to finish · Esc to exit.'
+        : 'Click the map to add points. Double-click or Enter to finish · Esc to exit.';
   }
 
   function refresh() { redraw(); updatePanel(); }
@@ -2668,9 +2676,18 @@ function createMeasureTool(map) {
   }
 
   // ── Map / keyboard handlers ───────────────────────────────────────────
-  function onClick(e) { addPoint(e.latlng); }
+  // Leaflet 1.9 fires two `click` events before every `dblclick`. Debounce
+  // clicks by 220 ms and cancel the pending add if a dblclick arrives first.
+  function onClick(e) {
+    if (_clickTimer) return; // second click of a dblclick — ignore
+    _clickTimer = setTimeout(() => { _clickTimer = null; addPoint(e.latlng); }, 220);
+  }
   function onMove(e) { if (!finished) { hover = e.latlng; refresh(); } }
-  function onDbl(e) { L.DomEvent.stop(e); finish(); }
+  function onDbl(e) {
+    L.DomEvent.stop(e);
+    if (_clickTimer) { clearTimeout(_clickTimer); _clickTimer = null; } // cancel phantom click
+    finish();
+  }
   function onKey(e) {
     if (!active) return;
     if (e.key === 'Enter') { e.preventDefault(); finish(); }
@@ -2694,6 +2711,7 @@ function createMeasureTool(map) {
   function exit() {
     if (!active) return;
     active = false;
+    if (_clickTimer) { clearTimeout(_clickTimer); _clickTimer = null; }
     panel.classList.remove('show');
     map.getContainer().classList.remove('measuring');
     map.doubleClickZoom.enable();
