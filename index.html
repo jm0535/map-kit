@@ -1571,10 +1571,10 @@
 
     <!-- Upload -->
     <div class="panel-section">
-      <div class="panel-header" onclick="toggleSection(this)">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>Data Sources</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body">
+      <div class="panel-body hidden">
         <div id="upload-zone" onclick="document.getElementById('upload-file').click()"
              ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
           <div class="upload-icon">&#x1f4c2;</div>
@@ -1593,10 +1593,10 @@
 
     <!-- Layers -->
     <div class="panel-section">
-      <div class="panel-header" onclick="toggleSection(this)">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>Layers</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body" id="layers-panel">
+      <div class="panel-body hidden" id="layers-panel">
         <div id="uploaded-layers-list"></div>
         <div id="layers-empty" style="font-size:11px;color:var(--text-faint);text-align:center;padding:12px 0;">Import data to add layers</div>
       </div>
@@ -1604,10 +1604,10 @@
 
     <!-- Basemaps -->
     <div class="panel-section">
-      <div class="panel-header" onclick="toggleSection(this)">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>Basemap</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body">
+      <div class="panel-body hidden">
         <!-- Hidden grid kept for switchBasemap() compatibility -->
         <div class="basemap-grid" id="basemap-grid" style="display:none">
           <div class="basemap-btn active" data-url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" data-attr="Tiles &copy; Esri" data-subdomains="" data-maxz="18" onclick="switchBasemap(this)">Topo</div>
@@ -1739,19 +1739,19 @@
     <div class="panel-resize-handle" id="right-resize"></div>
 
     <div class="panel-section">
-      <div class="panel-header" onclick="toggleSection(this)">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>Feature Info</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body" id="feature-info">
+      <div class="panel-body hidden" id="feature-info">
         <div class="fi-empty">Click a feature on the map to inspect its attributes.</div>
       </div>
     </div>
 
     <div class="panel-section">
-      <div class="panel-header" onclick="toggleSection(this)">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>Attribute Table</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body" style="padding:6px 8px;">
+      <div class="panel-body hidden" style="padding:6px 8px;">
         <select id="attr-layer-select" onchange="loadAttrTable(this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px;margin-bottom:6px;">
           <option value="">— Select layer —</option>
         </select>
@@ -11171,6 +11171,16 @@ function _hideLoading() { document.getElementById('loading').style.display='none
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
 setTimeout(_hideLoading, 2000);
+
+// Collapse all analysis drawer sections by default
+document.querySelectorAll('#analysis-drawer-body .ad-section-title').forEach(title => {
+  title.classList.add('collapsed');
+  let el = title.nextElementSibling;
+  while (el && !el.classList.contains('ad-section-title')) {
+    el.classList.add('ad-collapsed');
+    el = el.nextElementSibling;
+  }
+});
 </script>
 </body>
 </html>
