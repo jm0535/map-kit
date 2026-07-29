@@ -10414,8 +10414,16 @@ function exportLayerShapefile() {
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
   const gj = {type: 'FeatureCollection', features};
   try {
-    shpwrite.download(gj);
-    showToast('Shapefile (.zip) exported', 'success');
+    // shpwrite.download() navigates via `location.href = 'data:application/zip;base64,...'`,
+    // which modern browsers block for top-level navigation and silently throw.
+    // Use shpwrite.zip() to get the raw base64 zip payload and download it as a Blob instead.
+    const base64 = shpwrite.zip(gj);
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], {type: 'application/zip'});
+    _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '_shapefile.zip');
+    showToast('Shapefile (.zip: .shp/.shx/.dbf/.prj) exported', 'success');
   } catch(e) {
     console.warn('shpwrite unavailable, falling back to GeoJSON:', e);
     const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
