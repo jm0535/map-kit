@@ -178,6 +178,21 @@
   .panel-body { padding: 10px 12px; }
   .panel-body.hidden { display: none !important; }
 
+  /* Nested collapsible sub-groups (e.g. inside the Export panel) — reuses
+     .panel-header/.panel-body base rules (incl. toggleSection() and the
+     arrow-rotation CSS) with a lighter, indented visual treatment. */
+  .panel-subsection { border-top: 1px solid var(--border); }
+  .panel-subsection:first-child { border-top: none; }
+  .panel-header.sub {
+    padding: 7px 8px 7px 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: none;
+  }
+  .panel-body.sub { padding: 2px 2px 10px; }
+
   /* Layer item */
   .layer-item { display: flex; align-items: center; gap: 6px; padding: 5px 4px; font-size: 12px; border-radius: 4px; transition: background 0.15s; }
   .layer-item:hover { background: var(--accent-bg); }
@@ -1725,26 +1740,61 @@
       <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>Export</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body hidden">
-        <button class="export-btn" onclick="openExport('png')"><span class="icon">&#x1f5bc;</span> Export as PNG</button>
-        <button class="export-btn" onclick="openExport('pdf')"><span class="icon">&#x1f4c4;</span> Export as PDF</button>
-        <button class="export-btn" onclick="exportAllCSV()"><span class="icon">&#x1f4ca;</span> Export all points as CSV</button>
-        <button class="export-btn" onclick="exportAllGeoJSON()"><span class="icon">&#x1f5c3;</span> Export all as GeoJSON</button>
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Elevation Profile</div>
-        <button class="export-btn" onclick="exportProfile('png')"><span class="icon">&#x1f5bc;</span> Profile as PNG</button>
-        <button class="export-btn" onclick="exportProfile('pdf')"><span class="icon">&#x1f4c4;</span> Profile as PDF</button>
-        <button class="export-btn" onclick="exportProfile('svg')"><span class="icon">&#x1f5fe;</span> Profile as SVG</button>
-        <div style="font-size:10px;color:var(--accent);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Per-Layer Export</div>
-        <select id="export-layer-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
-        <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Output CRS (CSV / GeoJSON / Shapefile)</div>
-        <select id="export-crs-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;"></select>
-        <button class="export-btn" onclick="exportLayerGeoJSON()"><span class="icon">&#x1f5c3;</span> Export layer as GeoJSON</button>
-        <button class="export-btn" onclick="exportLayerCSV()"><span class="icon">&#x1f4ca;</span> Export layer as CSV</button>
-        <button class="export-btn" onclick="exportLayerXLSX()"><span class="icon">&#x1f4ca;</span> Export layer as XLSX</button>
-        <button class="export-btn" onclick="exportAllXLSX()"><span class="icon">&#x1f4ca;</span> Export all as XLSX</button>
-        <button class="export-btn" onclick="exportLayerShapefile()"><span class="icon">&#x1f4e6;</span> Export layer as Shapefile (.zip)</button>
-        <button class="export-btn" onclick="exportLayerKML()"><span class="icon">&#x1f30d;</span> Export layer as KML</button>
-        <button class="export-btn" onclick="exportLayerGPX()"><span class="icon">&#x1f4cd;</span> Export layer as GPX</button>
+      <div class="panel-body hidden" style="padding:0;">
+
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1f5fa;&#xfe0f; Map Image</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body sub">
+            <button class="export-btn" onclick="openExport('png')"><span class="icon">&#x1f5bc;</span> Export as PNG</button>
+            <button class="export-btn" onclick="openExport('pdf')"><span class="icon">&#x1f4c4;</span> Export as PDF</button>
+          </div>
+        </div>
+
+        <div class="panel-subsection">
+          <div class="panel-header sub collapsed" onclick="toggleSection(this)">
+            <span>&#x1f4c8; Elevation Profile</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body sub hidden">
+            <button class="export-btn" onclick="exportProfile('png')"><span class="icon">&#x1f5bc;</span> Profile as PNG</button>
+            <button class="export-btn" onclick="exportProfile('pdf')"><span class="icon">&#x1f4c4;</span> Profile as PDF</button>
+            <button class="export-btn" onclick="exportProfile('svg')"><span class="icon">&#x1f5fe;</span> Profile as SVG</button>
+          </div>
+        </div>
+
+        <div class="panel-subsection">
+          <div class="panel-header sub collapsed" onclick="toggleSection(this)">
+            <span>&#x1f4e6; Bulk Data Export (all layers)</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body sub hidden">
+            <button class="export-btn" onclick="exportAllGeoJSON()"><span class="icon">&#x1f5c3;</span> Export all as GeoJSON</button>
+            <button class="export-btn" onclick="exportAllCSV()"><span class="icon">&#x1f4ca;</span> Export all points as CSV</button>
+            <button class="export-btn" onclick="exportAllXLSX()"><span class="icon">&#x1f4ca;</span> Export all as XLSX</button>
+          </div>
+        </div>
+
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1f4c4; Per-Layer Export</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body sub">
+            <select id="export-layer-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+            <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Output CRS (CSV / GeoJSON / Shapefile)</div>
+            <select id="export-crs-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;"></select>
+            <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Format</div>
+            <select id="export-layer-format" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;">
+              <option value="geojson">GeoJSON</option>
+              <option value="csv">CSV</option>
+              <option value="xlsx">XLSX</option>
+              <option value="shp">Shapefile (.zip)</option>
+              <option value="kml">KML</option>
+              <option value="gpx">GPX</option>
+            </select>
+            <button class="export-btn primary" onclick="exportLayerSelectedFormat()"><span class="icon">&#x1f4be;</span> Export Layer</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -10397,6 +10447,19 @@ function _reprojectGeom(geom, crsCode) {
     case 'GeometryCollection': clone.geometries = clone.geometries.map(g => _reprojectGeom(g, crsCode)); break;
   }
   return clone;
+}
+
+function exportLayerSelectedFormat() {
+  const fmt = document.getElementById('export-layer-format').value;
+  const dispatch = {
+    geojson: exportLayerGeoJSON,
+    csv: exportLayerCSV,
+    xlsx: exportLayerXLSX,
+    shp: exportLayerShapefile,
+    kml: exportLayerKML,
+    gpx: exportLayerGPX,
+  };
+  (dispatch[fmt] || exportLayerGeoJSON)();
 }
 
 function exportLayerGeoJSON() {
