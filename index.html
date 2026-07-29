@@ -1373,6 +1373,88 @@
   .composer-section-body select,
   .composer-section-body .layout-toggle { width: 100%; box-sizing: border-box; }
   .composer-section-body .layout-toggle { justify-content: flex-start; }
+  /* Sidebar labels */
+  .composer-section-body .cs-label {
+    font-size: 10px; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.4px; margin: 2px 0 0 0;
+  }
+  .composer-section-body .layout-toggle:has(input[type="color"]) {
+    flex-direction: row; align-items: center; justify-content: space-between;
+  }
+  /* Title / subtitle / dynamic text elements on the paper */
+  #layout-title {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; pointer-events: auto; cursor: move;
+    font-family: Inter, system-ui, sans-serif; font-size: 22px; font-weight: 700;
+    color: #1a1a1a; text-align: center; white-space: nowrap;
+    text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+  }
+  #layout-subtitle {
+    position: absolute; top: 36px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; pointer-events: auto; cursor: move;
+    font-family: Inter, system-ui, sans-serif; font-size: 13px; font-weight: 500;
+    color: #333; text-align: center; white-space: nowrap;
+    text-shadow: 0 0 2px #fff, 0 0 2px #fff;
+  }
+  #layout-scaletext, #layout-datetext, #layout-crs-text {
+    position: absolute; z-index: 1000; pointer-events: auto; cursor: move;
+    font-family: Inter, system-ui, sans-serif; font-size: 10px; font-weight: 600;
+    color: #1a1a1a; white-space: nowrap;
+    background: rgba(255,255,255,0.85); padding: 2px 6px; border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+  #layout-scaletext { bottom: 30px; left: 12px; }
+  #layout-datetext { bottom: 8px; left: 12px; }
+  #layout-crs-text { bottom: 30px; right: 12px; }
+  #layout-paper.exporting #layout-title,
+  #layout-paper.exporting #layout-subtitle,
+  #layout-paper.exporting #layout-scaletext,
+  #layout-paper.exporting #layout-datetext,
+  #layout-paper.exporting #layout-crs-text { cursor: default; }
+  /* North arrow styles */
+  #layout-north.style-simple .na-disc,
+  #layout-north.style-simple .na-arrow-down { display: none; }
+  #layout-north.style-simple .na-arrow-up { border-bottom-color: #1a202c; top: 2px; }
+  #layout-north.style-simple .na-label { top: -12px; }
+  #layout-north.style-arrow .na-disc,
+  #layout-north.style-arrow .na-arrow-down { display: none; }
+  #layout-north.style-arrow .na-arrow-up { top: 0; border-bottom: 40px solid #1a202c; }
+  #layout-north.style-arrow .na-label { top: -12px; }
+  #layout-north.style-compass .na-arrow-up { border-bottom: 20px solid #c0392b; top: 4px; }
+  #layout-north.style-compass .na-arrow-down { border-top: 20px solid #1a202c; bottom: 4px; }
+  #layout-north.style-compass .na-disc { border-color: #1a202c; border-width: 1.5px; }
+  #layout-north.style-compass .na-label { color: #c0392b; }
+  #layout-north.style-none { display: none !important; }
+  /* Legend management list items */
+  .legend-mgmt-item {
+    display: flex; align-items: center; gap: 4px; padding: 3px 4px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 3px;
+    font-size: 10px;
+  }
+  .legend-mgmt-item input[type="checkbox"] { margin: 0; flex-shrink: 0; }
+  .legend-mgmt-item input[type="text"] {
+    flex: 1; min-width: 0; border: none; background: none; color: var(--text);
+    font-size: 10px; padding: 0;
+  }
+  .legend-mgmt-item input[type="text"]:focus { outline: 1px solid var(--accent); }
+  .legend-mgmt-item .lm-btn {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 12px; padding: 0 2px; line-height: 1;
+  }
+  .legend-mgmt-item .lm-btn:hover { color: var(--accent); }
+  /* Template list items */
+  .template-item {
+    display: flex; align-items: center; gap: 4px; padding: 4px 6px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 3px;
+    font-size: 10px;
+  }
+  .template-item .tmpl-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .template-item .tmpl-btn {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 11px; padding: 0 2px;
+  }
+  .template-item .tmpl-btn:hover { color: var(--accent); }
+  .template-item .tmpl-btn.del:hover { color: var(--danger, #e74c3c); }
   /* Sidebar footer */
   .composer-sidebar-footer {
     padding: 10px 12px; border-top: 1px solid var(--border);
@@ -1422,6 +1504,16 @@
     border: 2px solid var(--border); border-radius: 4px;
     background: var(--bg);
   }
+  /* Snap-to-grid visual overlay */
+  #layout-grid-overlay {
+    position: absolute; inset: 0; z-index: 999; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(99,179,237,0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(99,179,237,0.15) 1px, transparent 1px);
+    display: none;
+  }
+  #layout-paper.snap-grid #layout-grid-overlay { display: block; }
+  #layout-paper.exporting #layout-grid-overlay { display: none !important; }
   #layout-map {
     position: absolute; inset: 0;
   }
@@ -1472,21 +1564,17 @@
   #layout-attribution {
     position: absolute; bottom: 4px; right: 12px;
     font-size: 8px; color: #1a202c;
-    background: transparent; padding: 0; border-radius: 0;
-    pointer-events: none; z-index: 999;
+    background: rgba(255,255,255,0.82); padding: 2px 6px; border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.12);
+    pointer-events: auto; cursor: move; z-index: 999;
     font-family: Arial, Helvetica, sans-serif;
-    max-width: 60%; text-align: right;
-    --halo-w: 1.5px; --halo-c: #ffffff;
-    text-shadow:
-      calc(-1 * var(--halo-w)) calc(-1 * var(--halo-w)) 0 var(--halo-c),
-       var(--halo-w) calc(-1 * var(--halo-w)) 0 var(--halo-c),
-      calc(-1 * var(--halo-w))  var(--halo-w) 0 var(--halo-c),
-       var(--halo-w)  var(--halo-w) 0 var(--halo-c),
-       0 calc(-1 * var(--halo-w)) 0 var(--halo-c),
-       0  var(--halo-w) 0 var(--halo-c),
-      calc(-1 * var(--halo-w)) 0 0 var(--halo-c),
-       var(--halo-w) 0 0 var(--halo-c);
+    max-width: 60%; text-align: right; white-space: nowrap;
+    line-height: 1.3;
   }
+  #layout-attribution .attr-prefix {
+    font-weight: 600; color: #4a5568; margin-right: 2px;
+  }
+  #layout-paper.exporting #layout-attribution { cursor: default; }
   .layout-toggle {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 5px 10px; font-size: 11px; font-weight: 600;
@@ -1632,7 +1720,7 @@
   }
   #layout-legend {
     position: absolute; bottom: 12px; left: 12px;
-    min-width: 160px; max-width: 280px; min-height: 80px; max-height: 70%; overflow: auto;
+    min-width: 120px; min-height: 60px; overflow: auto;
     background: rgba(255,255,255,0.95); border: 1px solid #1a202c;
     border-radius: 3px; padding: 8px 10px; font-size: 10px; color: #1a202c;
     pointer-events: none; z-index: 1000;
@@ -1640,17 +1728,38 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
   .layout-legend-handle { pointer-events: auto; }
+  .layout-legend-subtitle {
+    font-size: 9px; font-weight: 400; color: #4a5568;
+    text-transform: none; letter-spacing: 0; margin-top: 1px;
+  }
 
-  /* Resize handle (bottom-right grip) for resizable layout items (legend, overview). */
+  /* Resize handle — standard enterprise corner grip (triangular dots). */
   .layout-resize-handle {
-    position: absolute; right: -4px; bottom: -4px;
-    width: 12px; height: 12px;
-    background: var(--accent); border: 1.5px solid #fff;
-    border-radius: 50%; cursor: nwse-resize; z-index: 1001;
-    pointer-events: auto;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    position: absolute; right: 0; bottom: 0;
+    width: 14px; height: 14px; z-index: 1001;
+    pointer-events: auto; cursor: nwse-resize;
+    background:
+      linear-gradient(135deg, transparent 50%, #cbd5e0 50%);
+    border-bottom-right-radius: 3px;
+  }
+  .layout-resize-handle::before {
+    content: ''; position: absolute; right: 2px; bottom: 2px;
+    width: 8px; height: 8px;
+    background-image: radial-gradient(circle, #4a5568 1px, transparent 1.5px);
+    background-size: 4px 4px;
+    background-position: 0 0;
+  }
+  .layout-resize-handle:hover {
+    background: linear-gradient(135deg, transparent 50%, #a0aec0 50%);
+  }
+  .layout-resize-handle:hover::before {
+    background-image: radial-gradient(circle, #2d3748 1px, transparent 1.5px);
   }
   #layout-paper.exporting .layout-resize-handle { display: none !important; }
+  /* Legend has overflow:auto, so the resize handle must sit inside the box. */
+  #layout-legend .layout-resize-handle {
+    right: 0; bottom: 0;
+  }
   .layout-item-dragging, .layout-item-resizing { opacity: 0.85; outline: 1.5px dashed var(--accent); outline-offset: 1px; }
   /* Legacy: layout-actions no longer used — buttons moved to sidebar footer */
 
@@ -2718,6 +2827,47 @@
               </label>
             </div>
           </details>
+          <details class="composer-section" open>
+            <summary>Paper</summary>
+            <div class="composer-section-body">
+              <select id="layout-paper-size" onchange="onLayoutPaperChange()" title="Paper size preset">
+                <option value="custom" selected>Custom (16:9)</option>
+                <option value="a4-landscape">A4 Landscape</option>
+                <option value="a4-portrait">A4 Portrait</option>
+                <option value="a3-landscape">A3 Landscape</option>
+                <option value="a3-portrait">A3 Portrait</option>
+                <option value="letter-landscape">Letter Landscape</option>
+                <option value="letter-portrait">Letter Portrait</option>
+                <option value="tabloid-landscape">Tabloid Landscape</option>
+                <option value="tabloid-portrait">Tabloid Portrait</option>
+              </select>
+              <label class="layout-toggle" title="Page background color">
+                <span class="cs-label">Background</span>
+                <input type="color" id="layout-paper-bg" value="#ffffff" onchange="onLayoutPaperBgChange()" style="width:32px;height:24px;border:1px solid var(--border);border-radius:3px;cursor:pointer;background:none;">
+              </label>
+              <label class="layout-toggle" title="Snap items to grid when dragging/resizing">
+                <input type="checkbox" id="layout-snap-grid" onchange="onLayoutSnapGridChange()"> Snap to grid
+              </label>
+              <label class="cs-label" style="font-size:10px;color:var(--text-muted);">Grid size (px)</label>
+              <input type="number" id="layout-grid-size" value="10" min="2" max="100" onchange="onLayoutSnapGridChange()" style="width:60px;padding:4px 6px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
+            </div>
+          </details>
+          <details class="composer-section" open>
+            <summary>Title &amp; Text</summary>
+            <div class="composer-section-body">
+              <input type="text" id="layout-title-input" placeholder="Map title…" oninput="onLayoutTitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
+              <input type="text" id="layout-subtitle-input" placeholder="Subtitle (optional)…" oninput="onLayoutSubtitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
+              <label class="layout-toggle" title="Show scale ratio text (e.g. 1:50,000)">
+                <input type="checkbox" id="layout-show-scaletext" onchange="onLayoutScaleTextChange()"> Scale text
+              </label>
+              <label class="layout-toggle" title="Show date exported">
+                <input type="checkbox" id="layout-show-date" onchange="onLayoutDateTextChange()"> Date
+              </label>
+              <label class="layout-toggle" title="Show spatial reference (EPSG)">
+                <input type="checkbox" id="layout-show-crs" onchange="onLayoutCrsTextChange()"> Spatial ref
+              </label>
+            </div>
+          </details>
           <details class="composer-section">
             <summary>Gridlines</summary>
             <div class="composer-section-body">
@@ -2729,6 +2879,7 @@
                 <option value="DMS">DMS (deg min sec)</option>
                 <option value="DM">DM (deg decimal min)</option>
               </select>
+              <input type="number" id="layout-grid-interval" placeholder="Auto interval" step="0.1" min="0.1" onchange="onLayoutGridIntervalChange()" title="Override grid interval in degrees (blank = auto)" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
             </div>
           </details>
           <details class="composer-section" open>
@@ -2748,6 +2899,18 @@
             </div>
           </details>
           <details class="composer-section">
+            <summary>North Arrow</summary>
+            <div class="composer-section-body">
+              <select id="layout-north-style" onchange="onLayoutNorthStyleChange()" title="North arrow style">
+                <option value="classic" selected>Classic (half/half)</option>
+                <option value="simple">Simple triangle</option>
+                <option value="compass">Compass rose</option>
+                <option value="arrow">Arrow only</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </details>
+          <details class="composer-section">
             <summary>Overview</summary>
             <div class="composer-section-body">
               <button class="lock-btn" id="lock-overview-btn" type="button" onclick="toggleLayoutLock('overview')" title="Unlock to edit the overview inset's pan/zoom independently. Locked = automatic fit.">
@@ -2755,18 +2918,70 @@
               </button>
             </div>
           </details>
+          <details class="composer-section">
+            <summary>Legend</summary>
+            <div class="composer-section-body" id="legend-management-body">
+              <input type="text" id="layout-legend-title-input" placeholder="Legend title…" oninput="onLegendTitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;">
+              <input type="text" id="layout-legend-subtitle-input" placeholder="Legend subtitle (optional)…" oninput="onLegendSubtitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
+              <p style="font-size:10px;color:var(--text-muted);margin:0 0 4px 0;">Toggle, rename, or reorder items. Drag the legend box by its title; drag the corner dot to resize.</p>
+              <div id="legend-item-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+          </details>
+          <details class="composer-section">
+            <summary>Export</summary>
+            <div class="composer-section-body">
+              <label class="cs-label" style="font-size:10px;color:var(--text-muted);">Format</label>
+              <select id="layout-export-format" onchange="onLayoutExportFormatChange()" title="Export format">
+                <option value="png" selected>PNG</option>
+                <option value="pdf">PDF</option>
+              </select>
+              <label class="cs-label" style="font-size:10px;color:var(--text-muted);">Resolution (DPI)</label>
+              <select id="layout-dpi" title="Export resolution">
+                <option value="96">96 DPI (Screen)</option>
+                <option value="150">150 DPI (Draft)</option>
+                <option value="300" selected>300 DPI (Print)</option>
+                <option value="600">600 DPI (Poster)</option>
+              </select>
+              <label class="cs-label" style="font-size:10px;color:var(--text-muted);">Map extent</label>
+              <select id="layout-extent" title="Extent mode">
+                <option value="current">Current view</option>
+                <option value="fit" selected>Fit to layers</option>
+              </select>
+              <label class="layout-toggle" title="Include legend in export">
+                <input type="checkbox" id="layout-include-legend" checked> Include legend
+              </label>
+              <label class="layout-toggle" title="Show basemap source/copyright attribution on the map">
+                <input type="checkbox" id="layout-show-attribution" checked onchange="onLayoutAttributionChange()"> Source attribution
+              </label>
+            </div>
+          </details>
+          <details class="composer-section">
+            <summary>Templates</summary>
+            <div class="composer-section-body">
+              <p style="font-size:10px;color:var(--text-muted);margin:0;">Save and load layout configurations.</p>
+              <input type="text" id="layout-template-name" placeholder="Template name…" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
+              <button class="btn-secondary" onclick="saveLayoutTemplate()" style="width:100%;">Save Template</button>
+              <div id="layout-template-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+          </details>
         </div>
         <div class="composer-sidebar-footer">
           <button class="btn-secondary" id="layout-refresh-btn" onclick="refreshComposer()" title="Refresh the composer to pick up layer, symbology and basemap changes without losing your layout.">&#x21bb; Refresh</button>
           <button class="btn-secondary composer-attached-only" id="layout-detach-btn" onclick="detachComposerWindow()" title="Open the composer in its own window so you can drag it to a second monitor. The source map stays in this window.">&#x29c9; Detach</button>
-          <button class="btn-primary" id="layout-export-btn" onclick="layoutExport(exportFormat)">Export PNG</button>
+          <button class="btn-primary" id="layout-export-btn" onclick="layoutExport(document.getElementById('layout-export-format') ? document.getElementById('layout-export-format').value : exportFormat)">Export PNG</button>
           <button class="btn-secondary composer-attached-only" onclick="closeLayoutModal()">Close</button>
         </div>
       </aside>
       <button class="composer-sidebar-expand" id="sidebar-expand-btn" onclick="toggleComposerSidebar()" title="Show sidebar">▸</button>
       <div class="composer-paper-area">
         <div id="layout-paper">
+          <div id="layout-grid-overlay"></div>
           <div id="layout-map"></div>
+          <div id="layout-title" style="display:none;"></div>
+          <div id="layout-subtitle" style="display:none;"></div>
+          <div id="layout-scaletext" style="display:none;"></div>
+          <div id="layout-datetext" style="display:none;"></div>
+          <div id="layout-crs-text" style="display:none;"></div>
           <!-- Professional north arrow rendered with pure HTML/CSS so html2canvas
                captures it reliably (inline SVG and SVG data-URIs are inconsistent). -->
           <div id="layout-north">
@@ -9235,6 +9450,12 @@ const LAYOUT_ITEM_CONFIG = [
   { id: 'layout-legend',        resizable: true, handleSelector: '.layout-legend-handle' },
   { id: 'layout-overview-wrap', resizable: true, handleSelector: '#layout-overview-label',
     onResize: el => { if (layoutOverviewMap && layoutOverviewMap.invalidateSize) layoutOverviewMap.invalidateSize(); } },
+  { id: 'layout-title',         resizable: false },
+  { id: 'layout-subtitle',      resizable: false },
+  { id: 'layout-scaletext',     resizable: false },
+  { id: 'layout-datetext',      resizable: false },
+  { id: 'layout-crs-text',      resizable: false },
+  { id: 'layout-attribution',   resizable: false },
 ];
 const LAYOUT_ITEM_MIN_W = 50, LAYOUT_ITEM_MIN_H = 30;
 
@@ -9298,8 +9519,10 @@ function _startLayoutItemDrag(e, el, paper, cfg) {
   function onMove(ev) {
     const dx = ev.clientX - startX, dy = ev.clientY - startY;
     const w = el.offsetWidth, h = el.offsetHeight;
-    const left = Math.max(0, Math.min(startLeft + dx, paper.clientWidth - w));
-    const top = Math.max(0, Math.min(startTop + dy, paper.clientHeight - h));
+    let left = Math.max(0, Math.min(startLeft + dx, paper.clientWidth - w));
+    let top = Math.max(0, Math.min(startTop + dy, paper.clientHeight - h));
+    const g = _getSnapGrid();
+    if (g > 0) { left = Math.round(left / g) * g; top = Math.round(top / g) * g; }
     el.style.left = left + 'px';
     el.style.top = top + 'px';
   }
@@ -9329,6 +9552,8 @@ function _startLayoutItemResize(e, el, paper, cfg) {
     let h = Math.max(LAYOUT_ITEM_MIN_H, startH + (ev.clientY - startY));
     w = Math.min(w, paper.clientWidth - left);
     h = Math.min(h, paper.clientHeight - top);
+    const g = _getSnapGrid();
+    if (g > 0) { w = Math.round(w / g) * g; h = Math.round(h / g) * g; }
     el.style.width = w + 'px';
     el.style.height = h + 'px';
     if (cfg.onResize) cfg.onResize(el);
@@ -9347,20 +9572,36 @@ function _startLayoutItemResize(e, el, paper, cfg) {
 async function buildLayout() {
   const myToken = ++layoutBuildToken;
   const stale = () => myToken !== layoutBuildToken || !layoutMap;
-  const fitToLayers = document.getElementById('exp-extent').value === 'fit';
-  const inclLeg = document.getElementById('exp-include-legend').checked;
+  const fitToLayers = document.getElementById('layout-extent').value === 'fit';
+  const inclLeg = document.getElementById('layout-include-legend').checked;
   const visibleLayers = isComposerPopout
     ? uploadedLayers.filter(l => l._composerVisible)
     : uploadedLayers.filter(l => map.hasLayer(l.layer));
 
   // Paper kept at base CSS pixels; html2canvas `scale` produces high DPI.
   // In popout mode, fit paper to available window space (maintain 16:9).
+  // Paper size can be overridden by the sidebar Paper section.
   const paper = document.getElementById('layout-paper');
+  const paperSizeSel = document.getElementById('layout-paper-size');
+  const paperPreset = paperSizeSel ? paperSizeSel.value : 'custom';
   let paperW, paperH;
+  // Standard paper sizes in pixels at 96 DPI (1 inch = 96px)
+  const PAPER_SIZES = {
+    'a4-landscape':       [1123, 794],
+    'a4-portrait':        [794, 1123],
+    'a3-landscape':       [1587, 1123],
+    'a3-portrait':        [1123, 1587],
+    'letter-landscape':   [1056, 816],
+    'letter-portrait':    [816, 1056],
+    'tabloid-landscape':  [1632, 1056],
+    'tabloid-portrait':   [1056, 1632],
+  };
   if (isComposerPopout) {
     const dims = _fitPaperToWindow();
     paperW = dims.w;
     paperH = dims.h;
+  } else if (paperPreset !== 'custom' && PAPER_SIZES[paperPreset]) {
+    [paperW, paperH] = PAPER_SIZES[paperPreset];
   } else {
     paperW = 1000;
     paperH = 562; // 16:9
@@ -9597,10 +9838,21 @@ async function buildLayout() {
   if (inclLeg) {
     legendEl.style.display = 'block';
     legendEl.innerHTML = '';
+    // Legend title (editable from sidebar; defaults to "Legend")
+    const legendTitleInput = document.getElementById('layout-legend-title-input');
+    const legendSubInput = document.getElementById('layout-legend-subtitle-input');
+    const legendTitleText = (legendTitleInput && legendTitleInput.value.trim()) ? legendTitleInput.value.trim() : 'Legend';
+    const legendSubText = legendSubInput ? legendSubInput.value.trim() : '';
     const head = document.createElement('div');
     head.className = 'layout-legend-handle';
     head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:var(--text);border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;cursor:move;';
-    head.textContent = 'Legend';
+    head.textContent = legendTitleText;
+    if (legendSubText) {
+      const sub = document.createElement('div');
+      sub.className = 'layout-legend-subtitle';
+      sub.textContent = legendSubText;
+      head.appendChild(sub);
+    }
     legendEl.appendChild(head);
     if (visibleLayers.length === 0) {
       const empty = document.createElement('div');
@@ -9608,7 +9860,27 @@ async function buildLayout() {
       empty.textContent = 'No visible layers';
       legendEl.appendChild(empty);
     }
-    visibleLayers.forEach(info => {
+    // Apply legend overrides: filter hidden layers, reorder, and rename
+    let orderedLayers = visibleLayers.slice();
+    if (_legendOrder && _legendOrder.length) {
+      orderedLayers.sort((a, b) => {
+        const ka = _getLegendLayerKey(a), kb = _getLegendLayerKey(b);
+        const ia = _legendOrder.indexOf(ka), ib = _legendOrder.indexOf(kb);
+        if (ia === -1 && ib === -1) return 0;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+    }
+    orderedLayers = orderedLayers.filter(info => {
+      const key = _getLegendLayerKey(info);
+      const ov = _legendOverrides[key];
+      return !ov || ov.visible !== false;
+    });
+    orderedLayers.forEach(info => {
+      const key = _getLegendLayerKey(info);
+      const ov = _legendOverrides[key];
+      const displayName = (ov && ov.label) ? ov.label : info.name;
       const sym = legendState[info.id];
 
       // RASTER (heat / IDW / weighted density): stacked layout with a wide gradient bar.
@@ -9617,7 +9889,7 @@ async function buildLayout() {
         block.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin:6px 0 4px 0;';
         const nameEl = document.createElement('div');
         nameEl.style.cssText = 'font-weight:600;font-size:10px;color:#1a202c;';
-        nameEl.textContent = info.name;
+        nameEl.textContent = displayName;
         block.appendChild(nameEl);
         if (sym.attrName) {
           const attrEl = document.createElement('div');
@@ -9693,7 +9965,7 @@ async function buildLayout() {
         const right = document.createElement('div');
         right.style.cssText = 'display:flex;flex-direction:column;justify-content:space-between;';
         const nameEl = document.createElement('div');
-        nameEl.textContent = info.name;
+        nameEl.textContent = displayName;
         nameEl.style.cssText = 'font-size:10px;line-height:1.1;';
         right.appendChild(nameEl);
         const range = document.createElement('div');
@@ -9718,7 +9990,7 @@ async function buildLayout() {
       }
       row.appendChild(dot);
       const name = document.createElement('span');
-      name.textContent = info.name;
+      name.textContent = displayName;
       row.appendChild(name);
       legendEl.appendChild(row);
 
@@ -9738,6 +10010,15 @@ async function buildLayout() {
         });
       }
     });
+    // Re-append resize handle — buildLayout's innerHTML='' above wipes the
+    // handle that _initLayoutItemDrag added, so we must restore it.
+    if (!legendEl.querySelector('.layout-resize-handle')) {
+      const rh = document.createElement('div');
+      rh.className = 'layout-resize-handle';
+      rh.title = 'Drag to resize';
+      rh.addEventListener('mousedown', e => _startLayoutItemResize(e, legendEl, paper, LAYOUT_ITEM_CONFIG.find(c => c.id === 'layout-legend')));
+      legendEl.appendChild(rh);
+    }
   } else {
     legendEl.style.display = 'none';
   }
@@ -9828,27 +10109,95 @@ async function buildLayout() {
   if (layoutMap) layoutMap.invalidateSize(false);
   if (layoutOverviewMap) layoutOverviewMap.invalidateSize(false);
 
-  // ── Static attribution string in the bottom-right corner of the paper ──
+  // ── Static attribution / source label in the bottom-right corner of the paper ──
   // (the live Leaflet attribution control is hidden by CSS — we render a
   // clean static copy so cartographic credit is preserved in PNG/PDF exports.)
   const attrEl = document.getElementById('layout-attribution');
   if (attrEl) {
-    // Strip HTML tags from the attribution string for the static label
-    const txt = String(currentAttribution || '').replace(/<[^>]+>/g, '').trim();
-    attrEl.textContent = txt;
+    const attrChk = document.getElementById('layout-show-attribution');
+    const showAttr = attrChk ? attrChk.checked : true;
+    if (showAttr) {
+      // Strip HTML tags from the attribution string for the static label
+      const txt = String(currentAttribution || '').replace(/<[^>]+>/g, '').trim();
+      attrEl.innerHTML = '';
+      if (txt) {
+        const prefix = document.createElement('span');
+        prefix.className = 'attr-prefix';
+        prefix.textContent = 'Source:';
+        attrEl.appendChild(prefix);
+        attrEl.appendChild(document.createTextNode(' ' + txt));
+        attrEl.style.display = 'block';
+      } else {
+        attrEl.style.display = 'none';
+      }
+    } else {
+      attrEl.style.display = 'none';
+    }
   }
 
   // ── Optional graticule (coordinate grid) ──
   const showGrid = document.getElementById('layout-show-grid');
   if (showGrid && showGrid.checked) {
     const fmt = document.getElementById('layout-coord-format').value || 'DD';
-    _renderGraticule(layoutMap, paper, fmt);
+    const intervalInput = document.getElementById('layout-grid-interval');
+    const interval = intervalInput && intervalInput.value ? intervalInput.value : null;
+    _renderGraticule(layoutMap, paper, fmt, interval);
   } else {
     // ensure no stale graticule is left over
     const oldG = paper.querySelector('#layout-graticule');
     if (oldG) oldG.remove();
     paper.querySelectorAll('.layout-grid-label').forEach(n => n.remove());
   }
+
+  // ── Dynamic text elements (scale text, date, CRS) ──
+  // These update on every build so they reflect the current map state.
+  const scaletextEl = document.getElementById('layout-scaletext');
+  const scaletextChk = document.getElementById('layout-show-scaletext');
+  if (scaletextEl && scaletextChk && scaletextChk.checked) {
+    const rf = _representativeFraction(layoutMap);
+    if (rf) { scaletextEl.textContent = `1 : ${rf.toLocaleString()}`; scaletextEl.style.display = 'block'; }
+    else scaletextEl.style.display = 'none';
+  } else if (scaletextEl) {
+    scaletextEl.style.display = 'none';
+  }
+  const dateEl = document.getElementById('layout-datetext');
+  const dateChk = document.getElementById('layout-show-date');
+  if (dateEl && dateChk && dateChk.checked) {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    dateEl.style.display = 'block';
+  } else if (dateEl) {
+    dateEl.style.display = 'none';
+  }
+  const crsEl = document.getElementById('layout-crs-text');
+  const crsChk = document.getElementById('layout-show-crs');
+  if (crsEl && crsChk && crsChk.checked) {
+    const crs = layoutMap.options.crs;
+    const epsg = crs && crs.code ? crs.code : 'EPSG:4326';
+    crsEl.textContent = epsg;
+    crsEl.style.display = 'block';
+  } else if (crsEl) {
+    crsEl.style.display = 'none';
+  }
+
+  // ── Paper background ──
+  const bgInput = document.getElementById('layout-paper-bg');
+  if (bgInput && bgInput.value) paper.style.background = bgInput.value;
+
+  // ── North arrow style restore ──
+  const northSel = document.getElementById('layout-north-style');
+  if (northSel) {
+    const style = northSel.value || 'classic';
+    const northEl = document.getElementById('layout-north');
+    northEl.classList.remove('style-classic', 'style-simple', 'style-compass', 'style-arrow', 'style-none');
+    northEl.classList.add('style-' + style);
+  }
+
+  // ── Legend management panel ──
+  _populateLegendManagement();
+
+  // ── Template list ──
+  _populateTemplateList();
 
   // ── Safety: clamp all furniture items into paper bounds ──
   // Saved geometry from a different paper size (or popout resize) may place
@@ -10115,7 +10464,9 @@ function _niceGridStep(spanDeg) {
 function _collectFurnitureRects(paperEl) {
   const paperRect = paperEl.getBoundingClientRect();
   const ids = ['layout-legend', 'layout-scale', 'layout-attribution',
-               'layout-overview-wrap', 'layout-north'];
+               'layout-overview-wrap', 'layout-north',
+               'layout-title', 'layout-subtitle', 'layout-scaletext',
+               'layout-datetext', 'layout-crs-text'];
   const rects = [];
   ids.forEach(id => {
     const el = document.getElementById(id);
@@ -10149,7 +10500,7 @@ function _labelHitsFurniture(rects, left, top, w, h, pad = 2) {
 // Removes any prior graticule first so this can be called on every buildLayout.
 // Graticule labels are placed at the map edges and shifted inward to avoid
 // overlapping the legend / scale bar / attribution / overview inset / north arrow.
-function _renderGraticule(lmap, paperEl, format) {
+function _renderGraticule(lmap, paperEl, format, intervalOverride) {
   // Clean up any previous graticule
   const old = paperEl.querySelector('#layout-graticule');
   if (old) old.remove();
@@ -10159,9 +10510,9 @@ function _renderGraticule(lmap, paperEl, format) {
   const bounds = lmap.getBounds();
   const south = bounds.getSouth(), north = bounds.getNorth();
   const west = bounds.getWest(), east = bounds.getEast();
-  const latStep = _niceGridStep(north - south);
-  const lonStep = _niceGridStep(east - west);
-  if (!latStep || !lonStep) return;
+  const latStep = intervalOverride ? parseFloat(intervalOverride) : _niceGridStep(north - south);
+  const lonStep = intervalOverride ? parseFloat(intervalOverride) : _niceGridStep(east - west);
+  if (!latStep || !lonStep || !isFinite(latStep) || !isFinite(lonStep)) return;
 
   const size = lmap.getSize();
   const W = size.x, H = size.y;
@@ -10256,12 +10607,421 @@ function onLayoutGridChange() {
   const paper = document.getElementById('layout-paper');
   if (!paper) return;
   if (showGrid && layoutMap) {
-    _renderGraticule(layoutMap, paper, fmtSel.value);
+    const intervalInput = document.getElementById('layout-grid-interval');
+    const interval = intervalInput && intervalInput.value ? intervalInput.value : null;
+    _renderGraticule(layoutMap, paper, fmtSel.value, interval);
   } else {
     const old = paper.querySelector('#layout-graticule');
     if (old) old.remove();
     paper.querySelectorAll('.layout-grid-label').forEach(n => n.remove());
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPOSER SIDEBAR — new enterprise feature handlers
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Paper size change — triggers a rebuild to apply new dimensions
+function onLayoutPaperChange() {
+  if (layoutMap || isComposerPopout) {
+    refreshComposer();
+  }
+}
+
+// Paper background color
+function onLayoutPaperBgChange() {
+  const paper = document.getElementById('layout-paper');
+  const bg = document.getElementById('layout-paper-bg');
+  if (paper && bg) paper.style.background = bg.value;
+}
+
+// Snap-to-grid toggle — shows/hides visual grid and enables snapping
+function onLayoutSnapGridChange() {
+  const paper = document.getElementById('layout-paper');
+  const chk = document.getElementById('layout-snap-grid');
+  const sizeInput = document.getElementById('layout-grid-size');
+  if (!paper || !chk) return;
+  const gridSize = Math.max(2, Math.min(100, parseInt(sizeInput.value) || 10));
+  sizeInput.value = gridSize;
+  if (chk.checked) {
+    paper.classList.add('snap-grid');
+    const overlay = document.getElementById('layout-grid-overlay');
+    if (overlay) {
+      overlay.style.backgroundSize = gridSize + 'px ' + gridSize + 'px';
+    }
+  } else {
+    paper.classList.remove('snap-grid');
+  }
+}
+
+// Returns the active snap grid size, or 0 if snapping is disabled
+function _getSnapGrid() {
+  const chk = document.getElementById('layout-snap-grid');
+  if (!chk || !chk.checked) return 0;
+  const sizeInput = document.getElementById('layout-grid-size');
+  return Math.max(2, Math.min(100, parseInt(sizeInput.value) || 10));
+}
+
+// Title text
+function onLayoutTitleChange() {
+  const el = document.getElementById('layout-title');
+  const input = document.getElementById('layout-title-input');
+  if (!el || !input) return;
+  const text = input.value.trim();
+  if (text) {
+    el.textContent = text;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+    el.textContent = '';
+  }
+}
+
+// Subtitle text
+function onLayoutSubtitleChange() {
+  const el = document.getElementById('layout-subtitle');
+  const input = document.getElementById('layout-subtitle-input');
+  if (!el || !input) return;
+  const text = input.value.trim();
+  if (text) {
+    el.textContent = text;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+    el.textContent = '';
+  }
+}
+
+// Scale text (e.g. "1 : 50,000")
+function onLayoutScaleTextChange() {
+  const el = document.getElementById('layout-scaletext');
+  if (!el) return;
+  const show = document.getElementById('layout-show-scaletext').checked;
+  if (show && layoutMap) {
+    const rf = _representativeFraction(layoutMap);
+    if (rf) {
+      el.textContent = `1 : ${rf.toLocaleString()}`;
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// Date text
+function onLayoutDateTextChange() {
+  const el = document.getElementById('layout-datetext');
+  if (!el) return;
+  const show = document.getElementById('layout-show-date').checked;
+  if (show) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    el.textContent = dateStr;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// CRS / spatial reference text
+function onLayoutCrsTextChange() {
+  const el = document.getElementById('layout-crs-text');
+  if (!el) return;
+  const show = document.getElementById('layout-show-crs').checked;
+  if (show && layoutMap) {
+    const crs = layoutMap.options.crs;
+    const epsg = crs && crs.code ? crs.code : 'EPSG:4326';
+    el.textContent = epsg;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// Legend title — live update of the legend header text
+function onLegendTitleChange() {
+  const head = document.querySelector('#layout-legend .layout-legend-handle');
+  if (!head) return;
+  const input = document.getElementById('layout-legend-title-input');
+  const text = (input && input.value.trim()) ? input.value.trim() : 'Legend';
+  // Preserve subtitle element if present
+  const sub = head.querySelector('.layout-legend-subtitle');
+  head.textContent = text;
+  if (sub) head.appendChild(sub);
+}
+
+// Legend subtitle — live update of the legend subtitle text
+function onLegendSubtitleChange() {
+  const head = document.querySelector('#layout-legend .layout-legend-handle');
+  if (!head) return;
+  const input = document.getElementById('layout-legend-subtitle-input');
+  const text = input ? input.value.trim() : '';
+  let sub = head.querySelector('.layout-legend-subtitle');
+  if (text) {
+    if (!sub) {
+      sub = document.createElement('div');
+      sub.className = 'layout-legend-subtitle';
+      head.appendChild(sub);
+    }
+    sub.textContent = text;
+  } else if (sub) {
+    sub.remove();
+  }
+}
+
+// North arrow style change
+function onLayoutNorthStyleChange() {
+  const el = document.getElementById('layout-north');
+  const sel = document.getElementById('layout-north-style');
+  if (!el || !sel) return;
+  const style = sel.value;
+  // Remove all style-* classes
+  el.classList.remove('style-classic', 'style-simple', 'style-compass', 'style-arrow', 'style-none');
+  el.classList.add('style-' + style);
+  try { localStorage.setItem('geospax.northStyle', style); } catch (e) {}
+}
+
+// Grid interval override
+function onLayoutGridIntervalChange() {
+  onLayoutGridChange();
+}
+
+// Attribution toggle — show/hide without full rebuild
+function onLayoutAttributionChange() {
+  const attrEl = document.getElementById('layout-attribution');
+  const chk = document.getElementById('layout-show-attribution');
+  if (!attrEl || !chk) return;
+  attrEl.style.display = chk.checked ? 'block' : 'none';
+}
+
+// Export format change — update the footer button label
+function onLayoutExportFormatChange() {
+  const sel = document.getElementById('layout-export-format');
+  if (!sel) return;
+  exportFormat = sel.value;
+  const layoutBtn = document.getElementById('layout-export-btn');
+  if (layoutBtn) layoutBtn.textContent = exportFormat === 'pdf' ? 'Export PDF' : 'Export PNG';
+  try { localStorage.setItem('geospax.exportFormat', exportFormat); } catch (e) {}
+}
+
+// ── Legend management ──
+// Stores legend overrides: { layerKey: { visible: bool, label: string } }
+let _legendOverrides = {};
+let _legendOrder = []; // array of layerKeys in display order
+
+function _getLegendLayerKey(layer) {
+  return layer.name || layer.id || (layer.layer && layer.layer._leaflet_id) || 'unknown';
+}
+
+function _populateLegendManagement() {
+  const container = document.getElementById('legend-item-list');
+  if (!container) return;
+  container.innerHTML = '';
+  const layers = isComposerPopout
+    ? uploadedLayers.filter(l => l._composerVisible)
+    : uploadedLayers.filter(l => map.hasLayer(l.layer));
+  // Build ordered list: use _legendOrder if set, otherwise default order
+  let orderedKeys = _legendOrder.length ? _legendOrder : layers.map(_getLegendLayerKey);
+  // Add any new layers not in order
+  layers.forEach(l => {
+    const key = _getLegendLayerKey(l);
+    if (!orderedKeys.includes(key)) orderedKeys.push(key);
+  });
+  // Filter to only currently visible layers
+  orderedKeys = orderedKeys.filter(k => layers.some(l => _getLegendLayerKey(l) === k));
+  _legendOrder = orderedKeys;
+
+  orderedKeys.forEach((key, idx) => {
+    const layer = layers.find(l => _getLegendLayerKey(l) === key);
+    if (!layer) return;
+    const ov = _legendOverrides[key] || { visible: true, label: key };
+    const row = document.createElement('div');
+    row.className = 'legend-mgmt-item';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.checked = ov.visible;
+    chk.onchange = () => {
+      _legendOverrides[key] = _legendOverrides[key] || {};
+      _legendOverrides[key].visible = chk.checked;
+    };
+    const txt = document.createElement('input');
+    txt.type = 'text'; txt.value = ov.label; txt.placeholder = key;
+    txt.onchange = () => {
+      _legendOverrides[key] = _legendOverrides[key] || {};
+      _legendOverrides[key].label = txt.value || key;
+    };
+    const upBtn = document.createElement('button');
+    upBtn.className = 'lm-btn'; upBtn.textContent = '▲'; upBtn.title = 'Move up';
+    upBtn.onclick = () => {
+      if (idx > 0) {
+        [_legendOrder[idx - 1], _legendOrder[idx]] = [_legendOrder[idx], _legendOrder[idx - 1]];
+        _populateLegendManagement();
+      }
+    };
+    const dnBtn = document.createElement('button');
+    dnBtn.className = 'lm-btn'; dnBtn.textContent = '▼'; dnBtn.title = 'Move down';
+    dnBtn.onclick = () => {
+      if (idx < _legendOrder.length - 1) {
+        [_legendOrder[idx + 1], _legendOrder[idx]] = [_legendOrder[idx], _legendOrder[idx + 1]];
+        _populateLegendManagement();
+      }
+    };
+    row.appendChild(chk); row.appendChild(txt); row.appendChild(upBtn); row.appendChild(dnBtn);
+    container.appendChild(row);
+  });
+}
+
+// ── Layout templates (save/load to localStorage) ──
+function _getTemplateKey(name) { return `geospax_layout_template_${name}`; }
+
+function _getTemplateList() {
+  try {
+    const raw = localStorage.getItem('geospax_layout_templates');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function _setTemplateList(list) {
+  try { localStorage.setItem('geospax_layout_templates', JSON.stringify(list)); } catch (e) {}
+}
+
+function saveLayoutTemplate() {
+  const nameInput = document.getElementById('layout-template-name');
+  const name = nameInput ? nameInput.value.trim() : '';
+  if (!name) { showToast('Enter a template name first', 'error'); return; }
+  // Collect all layout state
+  const state = {
+    paperSize: (document.getElementById('layout-paper-size') || {}).value || 'custom',
+    paperBg: (document.getElementById('layout-paper-bg') || {}).value || '#ffffff',
+    snapGrid: (document.getElementById('layout-snap-grid') || {}).checked || false,
+    snapGridSize: (document.getElementById('layout-grid-size') || {}).value || '10',
+    title: (document.getElementById('layout-title-input') || {}).value || '',
+    subtitle: (document.getElementById('layout-subtitle-input') || {}).value || '',
+    showScaleText: (document.getElementById('layout-show-scaletext') || {}).checked || false,
+    showDate: (document.getElementById('layout-show-date') || {}).checked || false,
+    showCrs: (document.getElementById('layout-show-crs') || {}).checked || false,
+    northStyle: (document.getElementById('layout-north-style') || {}).value || 'classic',
+    gridShow: (document.getElementById('layout-show-grid') || {}).checked || false,
+    gridFormat: (document.getElementById('layout-coord-format') || {}).value || 'DD',
+    gridInterval: (document.getElementById('layout-grid-interval') || {}).value || '',
+    scalebarStyle: (document.getElementById('layout-scalebar-style') || {}).value || 'single-box',
+    scalebarCard: (document.getElementById('layout-scalebar-card') || {}).checked || true,
+    exportFormat: (document.getElementById('layout-export-format') || {}).value || 'png',
+    dpi: (document.getElementById('layout-dpi') || {}).value || '300',
+    extent: (document.getElementById('layout-extent') || {}).value || 'fit',
+    includeLegend: (document.getElementById('layout-include-legend') || {}).checked || true,
+    showAttribution: (document.getElementById('layout-show-attribution') || {}).checked || true,
+    legendTitle: (document.getElementById('layout-legend-title-input') || {}).value || '',
+    legendSubtitle: (document.getElementById('layout-legend-subtitle-input') || {}).value || '',
+    legendOverrides: _legendOverrides,
+    legendOrder: _legendOrder,
+    itemGeom: {},
+  };
+  // Save furniture positions
+  LAYOUT_ITEM_CONFIG.forEach(cfg => {
+    const geom = _loadLayoutItemGeom(cfg.id);
+    if (geom) state.itemGeom[cfg.id] = geom;
+  });
+  try {
+    localStorage.setItem(_getTemplateKey(name), JSON.stringify(state));
+    const list = _getTemplateList();
+    if (!list.includes(name)) { list.push(name); _setTemplateList(list); }
+    _populateTemplateList();
+    showToast('Template "' + name + '" saved');
+    nameInput.value = '';
+  } catch (e) {
+    showToast('Failed to save template: ' + e.message, 'error');
+  }
+}
+
+function loadLayoutTemplate(name) {
+  try {
+    const raw = localStorage.getItem(_getTemplateKey(name));
+    if (!raw) { showToast('Template not found', 'error'); return; }
+    const state = JSON.parse(raw);
+    // Apply settings
+    const set = (id, prop, val) => {
+      const el = document.getElementById(id);
+      if (!el || val === undefined) return;
+      if (typeof val === 'boolean') el.checked = val;
+      else el.value = val;
+    };
+    set('layout-paper-size', 'value', state.paperSize);
+    set('layout-paper-bg', 'value', state.paperBg);
+    set('layout-snap-grid', 'checked', state.snapGrid || false);
+    set('layout-grid-size', 'value', state.snapGridSize || '10');
+    onLayoutSnapGridChange();
+    set('layout-title-input', 'value', state.title);
+    set('layout-subtitle-input', 'value', state.subtitle);
+    set('layout-show-scaletext', 'checked', state.showScaleText);
+    set('layout-show-date', 'checked', state.showDate);
+    set('layout-show-crs', 'checked', state.showCrs);
+    set('layout-north-style', 'value', state.northStyle);
+    set('layout-show-grid', 'checked', state.gridShow);
+    set('layout-coord-format', 'value', state.gridFormat);
+    set('layout-grid-interval', 'value', state.gridInterval);
+    set('layout-scalebar-style', 'value', state.scalebarStyle);
+    set('layout-scalebar-card', 'checked', state.scalebarCard);
+    set('layout-export-format', 'value', state.exportFormat);
+    set('layout-dpi', 'value', state.dpi);
+    set('layout-extent', 'value', state.extent);
+    set('layout-include-legend', 'checked', state.includeLegend);
+    set('layout-show-attribution', 'checked', state.showAttribution);
+    set('layout-legend-title-input', 'value', state.legendTitle || '');
+    set('layout-legend-subtitle-input', 'value', state.legendSubtitle || '');
+    _legendOverrides = state.legendOverrides || {};
+    _legendOrder = state.legendOrder || [];
+    // Restore furniture positions
+    if (state.itemGeom) {
+      Object.keys(state.itemGeom).forEach(id => {
+        _saveLayoutItemGeom(id, state.itemGeom[id]);
+      });
+    }
+    // Apply visual changes
+    onLayoutTitleChange();
+    onLayoutSubtitleChange();
+    onLayoutPaperBgChange();
+    onLayoutNorthStyleChange();
+    onLayoutExportFormatChange();
+    if (state.exportFormat) exportFormat = state.exportFormat;
+    // Rebuild to apply everything
+    refreshComposer();
+    showToast('Template "' + name + '" loaded');
+  } catch (e) {
+    showToast('Failed to load template: ' + e.message, 'error');
+  }
+}
+
+function deleteLayoutTemplate(name) {
+  try {
+    localStorage.removeItem(_getTemplateKey(name));
+    const list = _getTemplateList().filter(n => n !== name);
+    _setTemplateList(list);
+    _populateTemplateList();
+    showToast('Template "' + name + '" deleted');
+  } catch (e) {}
+}
+
+function _populateTemplateList() {
+  const container = document.getElementById('layout-template-list');
+  if (!container) return;
+  container.innerHTML = '';
+  const list = _getTemplateList();
+  list.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'template-item';
+    const span = document.createElement('span');
+    span.className = 'tmpl-name'; span.textContent = name;
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'tmpl-btn'; loadBtn.textContent = '↻'; loadBtn.title = 'Load';
+    loadBtn.onclick = () => loadLayoutTemplate(name);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'tmpl-btn del'; delBtn.textContent = '✕'; delBtn.title = 'Delete';
+    delBtn.onclick = () => deleteLayoutTemplate(name);
+    row.appendChild(span); row.appendChild(loadBtn); row.appendChild(delBtn);
+    container.appendChild(row);
+  });
 }
 
 function toggleComposerSidebar() {
@@ -10296,6 +11056,23 @@ async function previewExport() {
   // Sync the layout modal export button to the chosen format before showing it
   const layoutBtn = document.getElementById('layout-export-btn');
   if (layoutBtn) layoutBtn.textContent = exportFormat === 'pdf' ? 'Export PDF' : 'Export PNG';
+  // Restore saved export format into sidebar selector
+  const fmtSel = document.getElementById('layout-export-format');
+  if (fmtSel) fmtSel.value = exportFormat;
+  // Restore north arrow style from localStorage
+  try {
+    const savedStyle = localStorage.getItem('geospax.northStyle');
+    if (savedStyle) {
+      const ns = document.getElementById('layout-north-style');
+      if (ns) ns.value = savedStyle;
+    }
+    const savedFmt = localStorage.getItem('geospax.exportFormat');
+    if (savedFmt) {
+      exportFormat = savedFmt;
+      if (fmtSel) fmtSel.value = savedFmt;
+      if (layoutBtn) layoutBtn.textContent = exportFormat === 'pdf' ? 'Export PDF' : 'Export PNG';
+    }
+  } catch (e) {}
   showToast('Building layout... please wait');
   try {
     // Show modal FIRST so the layout container has real dimensions.
@@ -10316,7 +11093,7 @@ async function layoutExport(fmt) {
   // Toggle `exporting` class to hide editing-only chrome (lock badges) during capture.
   paper.classList.add('exporting');
   try {
-    const targetDpi = parseInt(document.getElementById('exp-dpi').value) || 300;
+    const targetDpi = parseInt(document.getElementById('layout-dpi').value) || 300;
     // html2canvas `scale` oversamples relative to 96 CSS DPI baseline.
     const dpiScale = targetDpi / 96;
 
@@ -10374,6 +11151,18 @@ async function layoutExport(fmt) {
 
 async function doExport() {
   closeExport();
+  // Sync old export overlay values to new sidebar controls
+  const oldDpi = document.getElementById('exp-dpi');
+  const newDpi = document.getElementById('layout-dpi');
+  if (oldDpi && newDpi) newDpi.value = oldDpi.value;
+  const oldExt = document.getElementById('exp-extent');
+  const newExt = document.getElementById('layout-extent');
+  if (oldExt && newExt) newExt.value = oldExt.value;
+  const oldLeg = document.getElementById('exp-include-legend');
+  const newLeg = document.getElementById('layout-include-legend');
+  if (oldLeg && newLeg) newLeg.checked = oldLeg.checked;
+  const fmtSel = document.getElementById('layout-export-format');
+  if (fmtSel) fmtSel.value = exportFormat;
   showToast('Building layout... please wait');
   try {
     const modal = document.getElementById('layout-modal');
