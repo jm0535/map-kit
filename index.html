@@ -1301,17 +1301,91 @@
   #layout-modal.show { display: flex; }
   #layout-box {
     background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px; max-width: 95vw;
+    padding: 0; max-width: 95vw; max-height: 95vh; height: 90vh;
     display: flex; flex-direction: column;
-    margin: auto;
+    margin: auto; overflow: hidden;
   }
-  .layout-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 10px; flex-shrink: 0;
+  /* Sidebar + paper area */
+  .composer-body {
+    display: flex; flex-direction: row; flex: 1; min-height: 0;
   }
-  .layout-header h3 { color: var(--accent); font-size: 13px; margin: 0; }
-  .layout-controls {
-    display: flex; align-items: center; gap: 8px;
+  .composer-sidebar {
+    width: 240px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    background: var(--surface-2);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .composer-sidebar-header {
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+  }
+  .composer-sidebar-header h3 {
+    color: var(--accent); font-size: 13px; margin: 0;
+    font-weight: 700; letter-spacing: 0.3px;
+  }
+  .composer-sidebar-collapse {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 14px; cursor: pointer; padding: 2px 6px; line-height: 1;
+    border-radius: 3px; transition: color .15s, background .15s;
+  }
+  .composer-sidebar-collapse:hover { color: var(--accent); background: rgba(255,255,255,0.06); }
+  /* Expand button — hidden by default, shown when sidebar is collapsed */
+  .composer-sidebar-expand {
+    display: none; background: var(--surface-2); border: 1px solid var(--border);
+    border-left: none; color: var(--text-muted); font-size: 14px;
+    cursor: pointer; padding: 8px 4px; border-radius: 0 4px 4px 0;
+    align-self: center; transition: color .15s, background .15s;
+  }
+  .composer-sidebar-expand:hover { color: var(--accent); background: var(--surface-1); }
+  /* Collapsed state */
+  .composer-body.sidebar-collapsed .composer-sidebar { display: none; }
+  .composer-body.sidebar-collapsed .composer-sidebar-expand { display: block; }
+  .composer-sidebar-scroll {
+    flex: 1; overflow-y: auto; padding: 6px 0;
+  }
+  .composer-sidebar-scroll::-webkit-scrollbar { width: 5px; }
+  .composer-sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  /* Accordion sections */
+  .composer-section {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .composer-section summary {
+    padding: 7px 12px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); cursor: pointer; user-select: none;
+    list-style: none; display: flex; align-items: center; gap: 6px;
+    transition: color .15s, background .15s;
+  }
+  .composer-section summary::-webkit-details-marker { display: none; }
+  .composer-section summary::before {
+    content: '▸'; font-size: 9px; transition: transform .15s;
+    color: var(--text-muted);
+  }
+  .composer-section[open] summary::before { transform: rotate(90deg); }
+  .composer-section summary:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .composer-section[open] summary { color: var(--accent); }
+  .composer-section-body {
+    padding: 6px 12px 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .composer-section-body .lock-btn,
+  .composer-section-body select,
+  .composer-section-body .layout-toggle { width: 100%; box-sizing: border-box; }
+  .composer-section-body .layout-toggle { justify-content: flex-start; }
+  /* Sidebar footer */
+  .composer-sidebar-footer {
+    padding: 10px 12px; border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+    flex-shrink: 0;
+  }
+  .composer-sidebar-footer button {
+    width: 100%; text-align: center;
+  }
+  /* Paper area */
+  .composer-paper-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 12px; overflow: auto; min-width: 0;
   }
   .lock-btn {
     display: inline-flex; align-items: center; gap: 5px;
@@ -1578,9 +1652,7 @@
   }
   #layout-paper.exporting .layout-resize-handle { display: none !important; }
   .layout-item-dragging, .layout-item-resizing { opacity: 0.85; outline: 1.5px dashed var(--accent); outline-offset: 1px; }
-  .layout-actions {
-    display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
-  }
+  /* Legacy: layout-actions no longer used — buttons moved to sidebar footer */
 
   /* ── Detached composer window (opened via "Detach", URL ?composer=1) ──
      The composer becomes the entire window so the user can drag it to a
@@ -1598,7 +1670,7 @@
   }
   body.composer-popout #layout-box {
     max-width: none; width: 100%; height: 100%; border: none; border-radius: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    display: flex; flex-direction: column;
   }
   /* Banner shown in the detached window when auto-update is off and the
      source map has diverged, offering a manual re-sync. */
@@ -2625,67 +2697,94 @@
       <span>Source map has changed.</span>
       <button class="btn-primary" onclick="requestComposerSync()">Sync now</button>
     </div>
-    <div class="layout-header">
-      <h3>Map Layout Composer</h3>
-      <div class="layout-controls">
-        <button class="lock-btn" id="lock-main-btn" type="button" onclick="toggleLayoutLock('main')" title="Unlock to edit the main map's pan/zoom independently of the source map. Locked = mirrors source map.">
-          <span class="lock-icon">🔒</span> <span class="lock-label">Main map</span>
-        </button>
-        <button class="lock-btn" id="lock-overview-btn" type="button" onclick="toggleLayoutLock('overview')" title="Unlock to edit the overview inset's pan/zoom independently. Locked = automatic fit.">
-          <span class="lock-icon">🔒</span> <span class="lock-label">Overview</span>
-        </button>
-        <select id="layout-basemap-select" onchange="setLayoutBasemap(this.value)" title="Change layout basemap without affecting the main map">
-          <option value="">Basemap: (from main)</option>
-        </select>
-        <label class="layout-toggle" title="Show coordinate gridlines (graticule)">
-          <input type="checkbox" id="layout-show-grid" onchange="onLayoutGridChange()"> Gridlines
-        </label>
-        <select id="layout-coord-format" onchange="onLayoutGridChange()" title="Coordinate label format" disabled>
-          <option value="DD" selected>DD (decimal degrees)</option>
-          <option value="DMS">DMS (deg min sec)</option>
-          <option value="DM">DM (deg decimal min)</option>
-        </select>
-        <select id="layout-scalebar-style" onchange="onLayoutScalebarChange()" title="Scalebar style (QGIS/ArcGIS conventions)">
-          <option value="single-box" selected>Scalebar: Single Box</option>
-          <option value="double-alt">Scalebar: Double Alternating</option>
-          <option value="line-ticks">Scalebar: Line + Ticks</option>
-          <option value="stepped">Scalebar: Stepped Line</option>
-          <option value="hollow">Scalebar: Hollow</option>
-          <option value="numeric">Scalebar: Numeric Only</option>
-        </select>
-        <label class="layout-toggle" title="Wrap the scalebar in a translucent background card. Off = bar floats directly on the basemap.">
-          <input type="checkbox" id="layout-scalebar-card" checked onchange="onLayoutScalebarChange()"> Card
-        </label>
-        <label class="layout-toggle composer-popout-only" title="Automatically rebuild this layout whenever layers, styling or the basemap change in the source map window.">
-          <input type="checkbox" id="layout-auto-update" checked onchange="setComposerAutoUpdate(this.checked)"> Auto-update
-        </label>
-        <button class="btn-secondary" id="layout-refresh-btn" onclick="refreshComposer()" title="Refresh the composer to pick up layer, symbology and basemap changes without losing your layout.">&#x21bb; Refresh</button>
-        <button class="btn-secondary composer-attached-only" id="layout-detach-btn" onclick="detachComposerWindow()" title="Open the composer in its own window so you can drag it to a second monitor. The source map stays in this window.">&#x29c9; Detach</button>
-        <button class="btn-secondary composer-attached-only" onclick="closeLayoutModal()">Close</button>
+    <div class="composer-body">
+      <aside class="composer-sidebar" id="composer-sidebar">
+        <div class="composer-sidebar-header">
+          <h3>Map Layout Composer</h3>
+          <button class="composer-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleComposerSidebar()" title="Collapse sidebar">◂</button>
+        </div>
+        <div class="composer-sidebar-scroll">
+          <details class="composer-section" open>
+            <summary>Map</summary>
+            <div class="composer-section-body">
+              <button class="lock-btn" id="lock-main-btn" type="button" onclick="toggleLayoutLock('main')" title="Unlock to edit the main map's pan/zoom independently of the source map. Locked = mirrors source map.">
+                <span class="lock-icon">🔒</span> <span class="lock-label">Main map</span>
+              </button>
+              <select id="layout-basemap-select" onchange="setLayoutBasemap(this.value)" title="Change layout basemap without affecting the main map">
+                <option value="">Basemap: (from main)</option>
+              </select>
+              <label class="layout-toggle composer-popout-only" title="Automatically rebuild this layout whenever layers, styling or the basemap change in the source map window.">
+                <input type="checkbox" id="layout-auto-update" checked onchange="setComposerAutoUpdate(this.checked)"> Auto-update
+              </label>
+            </div>
+          </details>
+          <details class="composer-section">
+            <summary>Gridlines</summary>
+            <div class="composer-section-body">
+              <label class="layout-toggle" title="Show coordinate gridlines (graticule)">
+                <input type="checkbox" id="layout-show-grid" onchange="onLayoutGridChange()"> Gridlines
+              </label>
+              <select id="layout-coord-format" onchange="onLayoutGridChange()" title="Coordinate label format" disabled>
+                <option value="DD" selected>DD (decimal degrees)</option>
+                <option value="DMS">DMS (deg min sec)</option>
+                <option value="DM">DM (deg decimal min)</option>
+              </select>
+            </div>
+          </details>
+          <details class="composer-section" open>
+            <summary>Scale Bar</summary>
+            <div class="composer-section-body">
+              <select id="layout-scalebar-style" onchange="onLayoutScalebarChange()" title="Scalebar style (QGIS/ArcGIS conventions)">
+                <option value="single-box" selected>Single Box</option>
+                <option value="double-alt">Double Alternating</option>
+                <option value="line-ticks">Line + Ticks</option>
+                <option value="stepped">Stepped Line</option>
+                <option value="hollow">Hollow</option>
+                <option value="numeric">Numeric Only</option>
+              </select>
+              <label class="layout-toggle" title="Wrap the scalebar in a translucent background card. Off = bar floats directly on the basemap.">
+                <input type="checkbox" id="layout-scalebar-card" checked onchange="onLayoutScalebarChange()"> Card
+              </label>
+            </div>
+          </details>
+          <details class="composer-section">
+            <summary>Overview</summary>
+            <div class="composer-section-body">
+              <button class="lock-btn" id="lock-overview-btn" type="button" onclick="toggleLayoutLock('overview')" title="Unlock to edit the overview inset's pan/zoom independently. Locked = automatic fit.">
+                <span class="lock-icon">🔒</span> <span class="lock-label">Overview</span>
+              </button>
+            </div>
+          </details>
+        </div>
+        <div class="composer-sidebar-footer">
+          <button class="btn-secondary" id="layout-refresh-btn" onclick="refreshComposer()" title="Refresh the composer to pick up layer, symbology and basemap changes without losing your layout.">&#x21bb; Refresh</button>
+          <button class="btn-secondary composer-attached-only" id="layout-detach-btn" onclick="detachComposerWindow()" title="Open the composer in its own window so you can drag it to a second monitor. The source map stays in this window.">&#x29c9; Detach</button>
+          <button class="btn-primary" id="layout-export-btn" onclick="layoutExport(exportFormat)">Export PNG</button>
+          <button class="btn-secondary composer-attached-only" onclick="closeLayoutModal()">Close</button>
+        </div>
+      </aside>
+      <button class="composer-sidebar-expand" id="sidebar-expand-btn" onclick="toggleComposerSidebar()" title="Show sidebar">▸</button>
+      <div class="composer-paper-area">
+        <div id="layout-paper">
+          <div id="layout-map"></div>
+          <!-- Professional north arrow rendered with pure HTML/CSS so html2canvas
+               captures it reliably (inline SVG and SVG data-URIs are inconsistent). -->
+          <div id="layout-north">
+            <div class="na-label">N</div>
+            <div class="na-disc"></div>
+            <div class="na-arrow-up"></div>
+            <div class="na-arrow-down"></div>
+          </div>
+          <div id="layout-scale">Scale</div>
+          <div id="layout-attribution"></div>
+          <div id="layout-overview-wrap">
+            <div id="layout-overview"></div>
+            <div id="layout-overview-label">Overview</div>
+          </div>
+          <div id="layout-legend"></div>
+          <div id="layout-loading"><span class="spinner"></span>Loading tiles…</div>
+        </div>
       </div>
-    </div>
-    <div id="layout-paper">
-      <div id="layout-map"></div>
-      <!-- Professional north arrow rendered with pure HTML/CSS so html2canvas
-           captures it reliably (inline SVG and SVG data-URIs are inconsistent). -->
-      <div id="layout-north">
-        <div class="na-label">N</div>
-        <div class="na-disc"></div>
-        <div class="na-arrow-up"></div>
-        <div class="na-arrow-down"></div>
-      </div>
-      <div id="layout-scale">Scale</div>
-      <div id="layout-attribution"></div>
-      <div id="layout-overview-wrap">
-        <div id="layout-overview"></div>
-        <div id="layout-overview-label">Overview</div>
-      </div>
-      <div id="layout-legend"></div>
-      <div id="layout-loading"><span class="spinner"></span>Loading tiles…</div>
-    </div>
-    <div class="layout-actions">
-      <button class="btn-primary" id="layout-export-btn" onclick="layoutExport(exportFormat)">Export PNG</button>
-      <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
     </div>
   </div>
 </div>
@@ -10165,6 +10264,16 @@ function onLayoutGridChange() {
   }
 }
 
+function toggleComposerSidebar() {
+  const body = document.querySelector('.composer-body');
+  if (!body) return;
+  body.classList.toggle('sidebar-collapsed');
+  // If the layout map exists, invalidate its size after the transition
+  // so Leaflet adjusts to the new container width.
+  if (layoutMap) setTimeout(() => layoutMap.invalidateSize(false), 50);
+  if (layoutOverviewMap) setTimeout(() => layoutOverviewMap.invalidateSize(false), 50);
+}
+
 async function refreshComposer() {
   if (!layoutMap && !isComposerPopout) {
     // Composer not open — just preview
@@ -12060,9 +12169,11 @@ function _initComposerPopout() {
 // Calculate paper dimensions that fit the available window space in popout mode.
 // Maintains 16:9 aspect ratio, leaves room for the toolbar above the paper.
 function _fitPaperToWindow() {
-  const box = document.getElementById('layout-box');
-  const availW = window.innerWidth - 24;
-  const availH = window.innerHeight - 80; // toolbar + padding
+  const body = document.querySelector('.composer-body');
+  const sidebarCollapsed = body && body.classList.contains('sidebar-collapsed');
+  const sidebarW = sidebarCollapsed ? 0 : (240 + 1); // sidebar width + border
+  const availW = window.innerWidth - sidebarW - 36; // sidebar + paper-area padding
+  const availH = window.innerHeight - 80; // sync banner + padding
   let w = availW;
   let h = w * 9 / 16;
   if (h > availH) {
