@@ -1667,7 +1667,7 @@
           <div class="formats">CSV &middot; XLSX &middot; GeoJSON &middot; Shapefile (.zip) &middot; KML &middot; GPX &middot; GeoTIFF</div>
         </div>
         <input type="file" id="upload-file" multiple
-               accept=".csv,.xlsx,.xls,.geojson,.json,.shp,.zip,.kml,.kmz,.gpx,.tif,.tiff"
+               accept=".csv,.xlsx,.xls,.geojson,.json,.zip,.kml,.kmz,.gpx,.tif,.tiff"
                onchange="handleFiles(this.files)">
         <div class="processing" id="processing">
           <div class="spinner"></div>
@@ -6227,6 +6227,10 @@ async function processFile(file) {
   const name = file.name;
   const ext = name.split('.').pop().toLowerCase();
 
+  if (ext === 'shp' || ext === 'shx' || ext === 'dbf') {
+    showToast('A .shp file alone can\'t be read — it has no attribute table (.dbf) or spatial index (.shx). Please upload the full Shapefile .zip bundle instead.', 'error');
+    return;
+  }
   if (ext === 'geojson' || (ext === 'json' && name.includes('geo'))) {
     const text = await file.text();
     const gj = JSON.parse(text);
@@ -10413,22 +10417,27 @@ async function exportLayerShapefile() {
   const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
   const gj = {type: 'FeatureCollection', features};
+  const safeName = lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_');
   try {
     // shpwrite.download() navigates via `location.href = 'data:application/zip;base64,...'`,
     // which modern browsers block for top-level navigation and silently throw.
     // shpwrite.zip() (patched to use JSZip 3.x's generateAsync) returns a Promise
     // resolving to a base64 zip payload — convert to a Blob and download that instead.
-    const base64 = await shpwrite.zip(gj);
+    // `options.types` maps geometry types to the layer name so the .shp/.shx/.dbf/.prj
+    // files are named after the layer instead of the generic "POINT"/"POLYLINE"/"POLYGON".
+    const base64 = await shpwrite.zip(gj, {
+      types: { point: safeName, polyline: safeName, polygon: safeName }
+    });
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const blob = new Blob([bytes], {type: 'application/zip'});
-    _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '_shapefile.zip');
+    _downloadBlob(blob, safeName + '_shapefile.zip');
     showToast('Shapefile (.zip: .shp/.shx/.dbf/.prj) exported', 'success');
   } catch(e) {
     console.warn('shpwrite unavailable, falling back to GeoJSON:', e);
     const blob = new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'});
-    _downloadBlob(blob, lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '.geojson');
+    _downloadBlob(blob, safeName + '.geojson');
     showToast('Exported as GeoJSON (install shp-write for Shapefile support)', 'success');
   }
 }
