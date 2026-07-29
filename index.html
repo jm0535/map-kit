@@ -1558,7 +1558,7 @@
   }
   #layout-legend {
     position: absolute; bottom: 12px; left: 12px;
-    min-width: 160px; overflow: auto;
+    min-width: 160px; max-width: 280px; min-height: 80px; max-height: 70%; overflow: auto;
     background: rgba(255,255,255,0.95); border: 1px solid #1a202c;
     border-radius: 3px; padding: 8px 10px; font-size: 10px; color: #1a202c;
     pointer-events: none; z-index: 1000;
@@ -1581,6 +1581,37 @@
   .layout-actions {
     display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
   }
+
+  /* ── Detached composer window (opened via "Detach", URL ?composer=1) ──
+     The composer becomes the entire window so the user can drag it to a
+     second monitor while the source map stays in the original window. */
+  .composer-popout-only { display: none !important; }
+  body.composer-popout .composer-popout-only { display: inline-flex !important; }
+  body.composer-popout .composer-attached-only { display: none !important; }
+  body.composer-popout #topbar,
+  body.composer-popout #main,
+  body.composer-popout #statusbar,
+  body.composer-popout #analysis-drawer,
+  body.composer-popout #loading { display: none !important; }
+  body.composer-popout #layout-modal {
+    display: flex !important; background: var(--bg); padding: 0; overflow: hidden;
+  }
+  body.composer-popout #layout-box {
+    max-width: none; width: 100%; height: 100%; border: none; border-radius: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  /* Banner shown in the detached window when auto-update is off and the
+     source map has diverged, offering a manual re-sync. */
+  #composer-sync-banner {
+    display: none;
+    align-items: center; gap: 10px;
+    padding: 6px 12px; margin-bottom: 8px;
+    font-size: 11px; font-weight: 600;
+    color: var(--warning); background: rgba(217,119,6,0.12);
+    border: 1px solid var(--warning); border-radius: 4px;
+  }
+  #composer-sync-banner.show { display: flex; }
+  #composer-sync-banner button { padding: 3px 10px; font-size: 11px; }
   #layout-loading {
     position: absolute; inset: 0; z-index: 20;
     display: none; align-items: center; justify-content: center;
@@ -2572,8 +2603,8 @@
     <div class="exp-row">
       <label>Map extent</label>
       <select id="exp-extent">
-        <option value="current" selected>Current view (zoom &amp; pan)</option>
-        <option value="fit">Fit to visible layers</option>
+        <option value="current">Current view (zoom &amp; pan)</option>
+        <option value="fit" selected>Fit to visible layers</option>
       </select>
     </div>
     <div class="exp-row">
@@ -2590,6 +2621,10 @@
 <!-- Layout Composer modal -->
 <div id="layout-modal">
   <div id="layout-box">
+    <div id="composer-sync-banner">
+      <span>Source map has changed.</span>
+      <button class="btn-primary" onclick="requestComposerSync()">Sync now</button>
+    </div>
     <div class="layout-header">
       <h3>Map Layout Composer</h3>
       <div class="layout-controls">
@@ -2621,7 +2656,12 @@
         <label class="layout-toggle" title="Wrap the scalebar in a translucent background card. Off = bar floats directly on the basemap.">
           <input type="checkbox" id="layout-scalebar-card" checked onchange="onLayoutScalebarChange()"> Card
         </label>
-        <button class="btn-secondary" onclick="closeLayoutModal()">Close</button>
+        <label class="layout-toggle composer-popout-only" title="Automatically rebuild this layout whenever layers, styling or the basemap change in the source map window.">
+          <input type="checkbox" id="layout-auto-update" checked onchange="setComposerAutoUpdate(this.checked)"> Auto-update
+        </label>
+        <button class="btn-secondary" id="layout-refresh-btn" onclick="refreshComposer()" title="Refresh the composer to pick up layer, symbology and basemap changes without losing your layout.">&#x21bb; Refresh</button>
+        <button class="btn-secondary composer-attached-only" id="layout-detach-btn" onclick="detachComposerWindow()" title="Open the composer in its own window so you can drag it to a second monitor. The source map stays in this window.">&#x29c9; Detach</button>
+        <button class="btn-secondary composer-attached-only" onclick="closeLayoutModal()">Close</button>
       </div>
     </div>
     <div id="layout-paper">
@@ -8937,6 +8977,7 @@ function _repositionLayoutLabels() {
 let layoutBuildToken = 0;
 let mainLocked = false;
 let overviewLocked = false;
+let _composerRefresh = false; // true during a refresh — preserves current view
 let layoutBasemapOverride = null; // {url, attr, maxz} when user picks one
 let lockedMainState = null;       // {center, zoom} preserved across rebuilds
 let lockedOverviewState = null;   // {center, zoom}
@@ -9041,14 +9082,15 @@ function setLayoutBasemap(value) {
     if (b) layoutBasemapOverride = { url: b.url, attr: b.attr, maxz: b.maxz };
   }
   // Re-render layout to apply new basemap
-  if (document.getElementById('layout-modal').classList.contains('show')) {
-    buildLayout();
+  if (document.getElementById('layout-modal').classList.contains('show') || isComposerPopout) {
+    refreshComposer();
   }
 }
 
 function _resetLayoutLockState() {
   mainLocked = false;
   overviewLocked = false;
+  _composerRefresh = false;
   layoutBasemapOverride = null;
   lockedMainState = null;
   lockedOverviewState = null;
@@ -9066,6 +9108,7 @@ function _resetLayoutLockState() {
 }
 
 function closeLayoutModal() {
+  if (isComposerPopout) return; // can't close — the popout IS the composer
   document.getElementById('layout-modal').classList.remove('show');
   if (layoutMap) {
     if (layoutMap.off) layoutMap.off('move zoomend moveend viewreset', _repositionLayoutLabels);
@@ -9122,8 +9165,8 @@ function _initLayoutItemDrag(paper) {
       el.style.right = 'auto';
       el.style.bottom = 'auto';
       if (cfg.resizable && saved.w != null) {
-        el.style.width = saved.w + 'px';
-        el.style.height = saved.h + 'px';
+        el.style.width = Math.max(saved.w, LAYOUT_ITEM_MIN_W) + 'px';
+        el.style.height = Math.max(saved.h, LAYOUT_ITEM_MIN_H) + 'px';
       }
     }
 
@@ -9207,12 +9250,22 @@ async function buildLayout() {
   const stale = () => myToken !== layoutBuildToken || !layoutMap;
   const fitToLayers = document.getElementById('exp-extent').value === 'fit';
   const inclLeg = document.getElementById('exp-include-legend').checked;
-  const visibleLayers = uploadedLayers.filter(l => map.hasLayer(l.layer));
+  const visibleLayers = isComposerPopout
+    ? uploadedLayers.filter(l => l._composerVisible)
+    : uploadedLayers.filter(l => map.hasLayer(l.layer));
 
   // Paper kept at base CSS pixels; html2canvas `scale` produces high DPI.
+  // In popout mode, fit paper to available window space (maintain 16:9).
   const paper = document.getElementById('layout-paper');
-  const paperW = 1000;
-  const paperH = 562; // 16:9
+  let paperW, paperH;
+  if (isComposerPopout) {
+    const dims = _fitPaperToWindow();
+    paperW = dims.w;
+    paperH = dims.h;
+  } else {
+    paperW = 1000;
+    paperH = 562; // 16:9
+  }
   const pendingLayoutLabels = [];
   // Wipe any previous label overlays and detach prior move/zoom handlers
   paper.querySelectorAll('.layout-feature-label').forEach(n => n.remove());
@@ -9225,11 +9278,12 @@ async function buildLayout() {
   // Callers (previewExport / doExport) must add `.show` to #layout-modal
   // before calling buildLayout so the Leaflet container has real dimensions.
 
-  // Capture current locked state BEFORE disposing maps
-  if (mainLocked && layoutMap) {
+  // Capture current view state BEFORE disposing maps.
+  // Always capture so a refresh can restore the current view even in synced mode.
+  if (layoutMap) {
     lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
   }
-  if (overviewLocked && layoutOverviewMap) {
+  if (layoutOverviewMap) {
     lockedOverviewState = { center: layoutOverviewMap.getCenter(), zoom: layoutOverviewMap.getZoom() };
   }
 
@@ -9312,7 +9366,7 @@ async function buildLayout() {
     }
 
     const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
-    if (geojson.features.length === 0) {
+    if (geojson.features.length === 0 && info.layer && info.layer.eachLayer) {
       info.layer.eachLayer(sub => { if (sub.toGeoJSON) geojson.features.push(sub.toGeoJSON()); });
     }
     // Re-apply current symbology from legendState if available
@@ -9372,19 +9426,21 @@ async function buildLayout() {
     // ── Harvest permanent labels (text + latlng + kind + style) for DOM overlay ──
     // `feature` = user-toggled enterprise labels (.feature-label class) — use halo style + per-layer state.
     // `chip`    = cluster/mean-center/centroid labels (.site-tooltip class) — keep boxed look.
-    info.layer.eachLayer(sub => {
-      const tt = sub.getTooltip && sub.getTooltip();
-      if (!tt || !tt.options || !tt.options.permanent) return;
-      const text = String(tt.getContent ? tt.getContent() : (tt._content || ''));
-      if (!text) return;
-      let latlng = null;
-      if (sub.getLatLng) latlng = sub.getLatLng();
-      else if (sub.getBounds) latlng = sub.getBounds().getCenter();
-      if (!latlng) return;
-      const cls = (tt.options.className || '');
-      const kind = cls === 'feature-label' ? 'feature' : 'chip';
-      pendingLayoutLabels.push({ text, latlng, kind, layerId: info.id });
-    });
+    if (info.layer && info.layer.eachLayer) {
+      info.layer.eachLayer(sub => {
+        const tt = sub.getTooltip && sub.getTooltip();
+        if (!tt || !tt.options || !tt.options.permanent) return;
+        const text = String(tt.getContent ? tt.getContent() : (tt._content || ''));
+        if (!text) return;
+        let latlng = null;
+        if (sub.getLatLng) latlng = sub.getLatLng();
+        else if (sub.getBounds) latlng = sub.getBounds().getCenter();
+        if (!latlng) return;
+        const cls = (tt.options.className || '');
+        const kind = cls === 'feature-label' ? 'feature' : 'chip';
+        pendingLayoutLabels.push({ text, latlng, kind, layerId: info.id });
+      });
+    }
 
     // Compute bounds
     if (newLayer.getBounds && newLayer.getBounds().isValid && newLayer.getBounds().isValid()) {
@@ -9421,49 +9477,23 @@ async function buildLayout() {
   // ── Set view ── (honor lock: restore user's edits to the layout map)
   if (mainLocked && lockedMainState) {
     layoutMap.setView(lockedMainState.center, lockedMainState.zoom, {animate: false});
+  } else if (_composerRefresh && lockedMainState) {
+    // Refresh: preserve the current view even in synced mode
+    layoutMap.setView(lockedMainState.center, lockedMainState.zoom, {animate: false});
   } else if (fitToLayers && layerBounds && layerBounds.isValid && layerBounds.isValid()) {
     layoutMap.fitBounds(layerBounds, {animate: false, padding: [60, 60]});
   } else {
-    layoutMap.setView(map.getCenter(), map.getZoom(), {animate: false});
+    // Default viewport: use main map view, or a sensible world view if main map isn't ready.
+    const c = (typeof map !== 'undefined' && map.getCenter) ? map.getCenter() : [0, 0];
+    const z = (typeof map !== 'undefined' && map.getZoom) ? map.getZoom() : 2;
+    layoutMap.setView(c, z, {animate: false});
   }
 
-  // ── Wait for basemap tiles to actually load (longer at high zoom) ──
-  const tileTimeout = layoutMap.getZoom() >= 14 ? 10000 : 5000;
-  await _waitForTiles(basemap, tileTimeout);
-  if (stale()) return; // modal was closed or a newer build started
-
-  // ── Render harvested labels as DOM overlays + bind to map move/zoom ──
-  // Labels are positioned once, then `_repositionLayoutLabels` re-projects them
-  // on every Leaflet `move`/`zoomend` event so they track when the user pans
-  // an unlocked map (fixes the "labels detach from features" bug).
-  _layoutLabelsState = pendingLayoutLabels.map(item => {
-    const el = document.createElement('div');
-    el.className = 'layout-feature-label ' + item.kind;
-    el.textContent = item.text;
-    // Per-layer style for enterprise feature labels (font, color, halo, size)
-    if (item.kind === 'feature' && item.layerId && typeof getLabelStyle === 'function') {
-      try {
-        const s = getLabelStyle(item.layerId);
-        el.style.color = s.color;
-        el.style.fontSize = s.size + 'px';
-        el.style.fontWeight = String(s.weight);
-        el.style.fontFamily = s.font;
-        el.style.setProperty('--halo-w', s.haloWidth + 'px');
-        el.style.setProperty('--halo-c', s.halo);
-      } catch (_) { /* fall back to CSS defaults */ }
-    }
-    paper.appendChild(el);
-    return { el, latlng: item.latlng, kind: item.kind, layerId: item.layerId };
-  });
-  _repositionLayoutLabels();
-  // Bind once per map instance so panning/zooming keeps labels glued to features
-  layoutMap.on('move zoomend moveend viewreset', _repositionLayoutLabels);
-  // Re-render the scalebar after zoom finishes so the "nice" round distance
-  // (1, 2, 5, 10 km, etc.) stays accurate at every zoom level.
-  layoutMap.on('zoomend', () => _renderScalebar(layoutMap));
-
-  // ── Build overlays in parallel with overview ──
-  // Legend
+  // ── Build legend BEFORE awaiting tiles ──
+  // The legend doesn't depend on tile loading — it only needs visibleLayers
+  // and legendState, which are available now. Building it before the await
+  // ensures it's always populated even if a newer buildLayout() call makes
+  // this one stale during the tile wait.
   const legendEl = document.getElementById('layout-legend');
   if (inclLeg) {
     legendEl.style.display = 'block';
@@ -9473,11 +9503,16 @@ async function buildLayout() {
     head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:var(--text);border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;cursor:move;';
     head.textContent = 'Legend';
     legendEl.appendChild(head);
+    if (visibleLayers.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'font-size:9px;color:#718096;font-style:italic;padding:4px 0;';
+      empty.textContent = 'No visible layers';
+      legendEl.appendChild(empty);
+    }
     visibleLayers.forEach(info => {
       const sym = legendState[info.id];
 
       // RASTER (heat / IDW / weighted density): stacked layout with a wide gradient bar.
-      // When classification breaks exist, paint stepped bands and one tick per break edge.
       if (sym && sym.mode === 'raster' && sym.ramp) {
         const block = document.createElement('div');
         block.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin:6px 0 4px 0;';
@@ -9493,7 +9528,6 @@ async function buildLayout() {
         }
         const u = sym.units ? ' ' + sym.units : '';
         const cls = sym.classification;
-        // Continuous render mode in composer: smooth gradient + min/mid/max labels.
         if (cls && cls.method === 'continuous') {
           const bar = document.createElement('div');
           bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
@@ -9532,7 +9566,6 @@ async function buildLayout() {
           });
           block.appendChild(ticks);
         } else {
-          // Fallback: smooth gradient + min/mid/max labels.
           const bar = document.createElement('div');
           bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
           block.appendChild(bar);
@@ -9610,6 +9643,41 @@ async function buildLayout() {
     legendEl.style.display = 'none';
   }
 
+  // ── Wait for basemap tiles to actually load (longer at high zoom) ──
+  const tileTimeout = layoutMap.getZoom() >= 14 ? 10000 : 5000;
+  await _waitForTiles(basemap, tileTimeout);
+  if (stale()) return; // modal was closed or a newer build started
+
+  // ── Render harvested labels as DOM overlays + bind to map move/zoom ──
+  // Labels are positioned once, then `_repositionLayoutLabels` re-projects them
+  // on every Leaflet `move`/`zoomend` event so they track when the user pans
+  // an unlocked map (fixes the "labels detach from features" bug).
+  _layoutLabelsState = pendingLayoutLabels.map(item => {
+    const el = document.createElement('div');
+    el.className = 'layout-feature-label ' + item.kind;
+    el.textContent = item.text;
+    // Per-layer style for enterprise feature labels (font, color, halo, size)
+    if (item.kind === 'feature' && item.layerId && typeof getLabelStyle === 'function') {
+      try {
+        const s = getLabelStyle(item.layerId);
+        el.style.color = s.color;
+        el.style.fontSize = s.size + 'px';
+        el.style.fontWeight = String(s.weight);
+        el.style.fontFamily = s.font;
+        el.style.setProperty('--halo-w', s.haloWidth + 'px');
+        el.style.setProperty('--halo-c', s.halo);
+      } catch (_) { /* fall back to CSS defaults */ }
+    }
+    paper.appendChild(el);
+    return { el, latlng: item.latlng, kind: item.kind, layerId: item.layerId };
+  });
+  _repositionLayoutLabels();
+  // Bind once per map instance so panning/zooming keeps labels glued to features
+  layoutMap.on('move zoomend moveend viewreset', _repositionLayoutLabels);
+  // Re-render the scalebar after zoom finishes so the "nice" round distance
+  // (1, 2, 5, 10 km, etc.) stays accurate at every zoom level.
+  layoutMap.on('zoomend', () => _renderScalebar(layoutMap));
+
   // Scale
   _renderScalebar(layoutMap);
 
@@ -9626,12 +9694,15 @@ async function buildLayout() {
     preferCanvas: true
   });
   const ovBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 13, crossOrigin: true
+    maxZoom: 13, crossOrigin: true, detectRetina: true
   }).addTo(layoutOverviewMap);
   // Fit overview to a wide buffer around the study area so country-level
   // context is visible regardless of where on the globe the user is.
   const mainBounds = layoutMap.getBounds();
   if (overviewLocked && lockedOverviewState) {
+    layoutOverviewMap.setView(lockedOverviewState.center, lockedOverviewState.zoom, {animate: false});
+  } else if (_composerRefresh && lockedOverviewState) {
+    // Refresh: preserve the current overview view
     layoutOverviewMap.setView(lockedOverviewState.center, lockedOverviewState.zoom, {animate: false});
   } else {
     const bufferFactor = 8; // expand each side by 8× the main extent
@@ -9680,7 +9751,42 @@ async function buildLayout() {
     paper.querySelectorAll('.layout-grid-label').forEach(n => n.remove());
   }
 
+  // ── Safety: clamp all furniture items into paper bounds ──
+  // Saved geometry from a different paper size (or popout resize) may place
+  // items off-screen. This ensures everything is visible after every build.
+  _clampLayoutItemsToPaper(paper, paperW, paperH);
+
   document.getElementById('layout-loading').classList.remove('show');
+}
+
+// Ensure all furniture items are within the paper bounds. Items that would be
+// partially or fully outside the paper are repositioned to the nearest valid
+// position. This is called after every buildLayout() and on popout resize.
+function _clampLayoutItemsToPaper(paper, paperW, paperH) {
+  LAYOUT_ITEM_CONFIG.forEach(cfg => {
+    const el = document.getElementById(cfg.id);
+    if (!el) return;
+    // Resolve current position — prefer inline style, fall back to offset.
+    let left = parseFloat(el.style.left);
+    let top = parseFloat(el.style.top);
+    if (isNaN(left)) left = el.offsetLeft;
+    if (isNaN(top)) top = el.offsetTop;
+    const iw = el.offsetWidth;
+    const ih = el.offsetHeight;
+    let changed = false;
+    // Clamp left
+    if (left + iw > paperW - 2) { left = Math.max(2, paperW - iw - 4); changed = true; }
+    if (left < 0) { left = 2; changed = true; }
+    // Clamp top
+    if (top + ih > paperH - 2) { top = Math.max(2, paperH - ih - 4); changed = true; }
+    if (top < 0) { top = 2; changed = true; }
+    if (changed) {
+      el.style.left = Math.round(left) + 'px';
+      el.style.top = Math.round(top) + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+    }
+  });
 }
 
 // Wait for tile layer to finish loading, with a hard timeout fallback
@@ -10056,6 +10162,23 @@ function onLayoutGridChange() {
     const old = paper.querySelector('#layout-graticule');
     if (old) old.remove();
     paper.querySelectorAll('.layout-grid-label').forEach(n => n.remove());
+  }
+}
+
+async function refreshComposer() {
+  if (!layoutMap && !isComposerPopout) {
+    // Composer not open — just preview
+    return previewExport();
+  }
+  _composerRefresh = true;
+  showToast('Refreshing composer...');
+  try {
+    await buildLayout();
+  } catch (e) {
+    console.error('Refresh failed:', e);
+    showToast('Refresh failed: ' + e.message, 'error');
+  } finally {
+    _composerRefresh = false;
   }
 }
 
@@ -11687,6 +11810,317 @@ function renderSDMResult(geojson, modelName) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// MULTI-MONITOR COMPOSER POPOUT + LIVE SYNC
+// The composer can be detached to its own browser window (dragged to a 2nd
+// monitor) while the source map stays in the main window. State is synced
+// via BroadcastChannel (same-origin, works across separate OS windows).
+// ═══════════════════════════════════════════════════════════════════════════
+const COMPOSER_CHANNEL = 'geospax_composer_sync';
+let isComposerPopout = false;
+let composerPopoutWindow = null;      // reference to detached window (main side)
+let composerSyncChannel = null;       // BroadcastChannel instance
+let composerAutoUpdate = true;        // auto-rebuild on source change
+let composerPendingState = null;      // latest state waiting for manual sync
+let _composerChangeTimer = null;      // debounce for source-change detection
+
+// ── State serialization ──
+// Packages all data buildLayout() needs so the detached window can render
+// an identical composer without having the actual Leaflet layers on its map.
+function _serializeComposerState() {
+  const visibleIds = new Set(
+    uploadedLayers.filter(l => map.hasLayer(l.layer)).map(l => l.id)
+  );
+  const layers = uploadedLayers.map(info => ({
+    id: info.id,
+    name: info.name,
+    color: info.color,
+    geomTypes: info.geomTypes,
+    geojsonFeatures: info.geojsonFeatures || [],
+    type: info.type || 'upload',
+    _composerVisible: visibleIds.has(info.id),
+    rasterMeta: info.rasterMeta || null,
+  }));
+  // Serialize legendState (symbology) — deep-clone to avoid shared refs.
+  const sym = {};
+  for (const k in legendState) {
+    try { sym[k] = JSON.parse(JSON.stringify(legendState[k])); } catch(e) {}
+  }
+  return {
+    layers,
+    legendState: sym,
+    basemap: {
+      url: basemapLayer._url,
+      attribution: basemapLayer.options.attribution,
+      maxNativeZoom: basemapLayer.options.maxNativeZoom,
+    },
+    view: { center: map.getCenter(), zoom: map.getZoom() },
+    exportSettings: {
+      format: exportFormat,
+      extent: document.getElementById('exp-extent').value,
+      includeLegend: document.getElementById('exp-include-legend').checked,
+      dpi: document.getElementById('exp-dpi').value,
+    },
+    timestamp: Date.now(),
+  };
+}
+
+// ── Detach: open the composer in a new browser window ──
+function detachComposerWindow() {
+  if (composerPopoutWindow && !composerPopoutWindow.closed) {
+    composerPopoutWindow.focus();
+    return;
+  }
+  const url = window.location.href.split('?')[0] + '?composer=1';
+  composerPopoutWindow = window.open(url, 'geospax_composer',
+    'width=1100,height=720,menubar=no,toolbar=no,location=no,status=no');
+  if (!composerPopoutWindow) {
+    showToast('Pop-up blocked. Allow pop-ups for this site to detach the composer.', 'error');
+    return;
+  }
+  // Close the in-page modal — the detached window takes over.
+  closeLayoutModal();
+  showToast('Composer detached. Drag the new window to your second monitor.', 'success');
+
+  // Poll for popout close — when detected, reopen the in-page composer
+  // so the user seamlessly returns to the attached layout view.
+  const _popoutCloseWatcher = setInterval(() => {
+    if (composerPopoutWindow && composerPopoutWindow.closed) {
+      clearInterval(_popoutCloseWatcher);
+      composerPopoutWindow = null;
+      // Reopen the in-page layout composer with current state.
+      previewExport();
+      showToast('Composer re-attached.', 'info');
+    }
+  }, 500);
+
+  // Set up BroadcastChannel for syncing
+  if (!composerSyncChannel) {
+    try {
+      composerSyncChannel = new BroadcastChannel(COMPOSER_CHANNEL);
+      composerSyncChannel.onmessage = (ev) => {
+        // Main window only listens for "ready" from the popout.
+        if (ev.data && ev.data.type === 'composer_ready') {
+          _pushComposerState();
+        }
+      };
+    } catch(e) { console.warn('BroadcastChannel not supported:', e); }
+  }
+}
+
+// ── Push current state to the detached composer window ──
+function _pushComposerState() {
+  if (!composerSyncChannel) return;
+  const state = _serializeComposerState();
+  composerSyncChannel.postMessage({ type: 'composer_state', state });
+}
+
+// ── Source-change detection (main window side) ──
+// Debounced: when layers/symbology/basemap/view change, push to popout.
+function _onComposerSourceChange() {
+  if (!composerPopoutWindow || composerPopoutWindow.closed) return;
+  if (!composerSyncChannel) return;
+  clearTimeout(_composerChangeTimer);
+  _composerChangeTimer = setTimeout(_pushComposerState, 400);
+}
+
+// ── Auto-update toggle (detached window side) ──
+function setComposerAutoUpdate(on) {
+  composerAutoUpdate = on;
+  if (on && composerPendingState) {
+    _applyComposerState(composerPendingState);
+    composerPendingState = null;
+  }
+  const banner = document.getElementById('composer-sync-banner');
+  if (banner) banner.classList.remove('show');
+}
+
+// ── Manual sync (detached window side, when auto-update is off) ──
+function requestComposerSync() {
+  if (composerPendingState) {
+    _applyComposerState(composerPendingState);
+    composerPendingState = null;
+  }
+  const banner = document.getElementById('composer-sync-banner');
+  if (banner) banner.classList.remove('show');
+}
+
+// ── Apply received state in the detached window ──
+async function _applyComposerState(state) {
+  // Populate uploadedLayers from received data (without adding to main map).
+  uploadedLayers = state.layers.map(l => ({
+    id: l.id,
+    name: l.name,
+    color: l.color,
+    geomTypes: l.geomTypes,
+    geojsonFeatures: l.geojsonFeatures,
+    type: l.type,
+    layer: null,  // no main-map layer in popout mode
+    featureCount: l.geojsonFeatures.length,
+    properties: [],
+    rasterMeta: l.rasterMeta,
+    _composerVisible: l._composerVisible,
+  }));
+  // Restore symbology state.
+  for (const k in state.legendState) {
+    legendState[k] = state.legendState[k];
+  }
+  // Set basemap override so buildLayout() uses the source map's basemap.
+  layoutBasemapOverride = {
+    url: state.basemap.url,
+    attr: state.basemap.attribution,
+    maxz: state.basemap.maxNativeZoom,
+  };
+  // Apply export settings.
+  const ee = state.exportSettings;
+  if (ee) {
+    exportFormat = ee.format || 'png';
+    const ext = document.getElementById('exp-extent');
+    if (ext) ext.value = ee.extent || 'fit';
+    const leg = document.getElementById('exp-include-legend');
+    if (leg) leg.checked = ee.includeLegend !== false;
+    const dpi = document.getElementById('exp-dpi');
+    if (dpi) dpi.value = ee.dpi || '300';
+  }
+  // Rebuild the layout.
+  await buildLayout();
+}
+
+// ── Popout bootstrap: detect ?composer=1 and enter popout mode ──
+function _initComposerPopout() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('composer') !== '1') return;
+  isComposerPopout = true;
+  document.body.classList.add('composer-popout');
+  // Hide the loading spinner — the popout doesn't need the main map to load.
+  const loading = document.getElementById('loading');
+  if (loading) loading.style.display = 'none';
+
+  // Set up BroadcastChannel to receive state from the main window.
+  try {
+    composerSyncChannel = new BroadcastChannel(COMPOSER_CHANNEL);
+    composerSyncChannel.onmessage = async (ev) => {
+      const msg = ev.data;
+      if (!msg) return;
+      if (msg.type === 'composer_state') {
+        if (composerAutoUpdate) {
+          await _applyComposerState(msg.state);
+        } else {
+          composerPendingState = msg.state;
+          const banner = document.getElementById('composer-sync-banner');
+          if (banner) banner.classList.add('show');
+        }
+      }
+    };
+  } catch(e) { console.error('BroadcastChannel init failed:', e); }
+
+  // Show the layout modal immediately.
+  document.getElementById('layout-modal').classList.add('show');
+  _restoreScalebarPrefs();
+
+  // Notify the main window that we're ready to receive state.
+  // Retry a few times in case the main window's channel isn't ready yet.
+  let retries = 0;
+  const notifyReady = () => {
+    try {
+      composerSyncChannel.postMessage({ type: 'composer_ready' });
+    } catch(e) {}
+    if (++retries < 5) setTimeout(notifyReady, 500);
+  };
+  notifyReady();
+
+  // Resize listener: when the detached window is resized, adjust the paper
+  // and invalidate Leaflet maps so tiles and vectors re-render to the new size.
+  let _popoutResizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_popoutResizeTimer);
+    _popoutResizeTimer = setTimeout(() => {
+      if (!layoutMap) return;
+      // Capture old paper dimensions before resizing.
+      const paper = document.getElementById('layout-paper');
+      const oldW = paper ? parseFloat(paper.style.width) || paper.offsetWidth : 0;
+      const oldH = paper ? parseFloat(paper.style.height) || paper.offsetHeight : 0;
+      const dims = _fitPaperToWindow();
+      if (paper) {
+        paper.style.width = dims.w + 'px';
+        paper.style.height = dims.h + 'px';
+      }
+      // Proportionally reposition furniture items to new paper size.
+      _rescaleLayoutItems(oldW, oldH, dims.w, dims.h);
+      // Safety: clamp any items that are still outside paper bounds.
+      _clampLayoutItemsToPaper(paper, dims.w, dims.h);
+      // Invalidate both maps so Leaflet re-tiles and re-projects to the new container.
+      if (layoutMap) layoutMap.invalidateSize();
+      if (layoutOverviewMap) layoutOverviewMap.invalidateSize();
+      // Re-position DOM-overlay labels to match the new map projection.
+      if (typeof _repositionLayoutLabels === 'function') _repositionLayoutLabels();
+    }, 150);
+  });
+}
+
+// Calculate paper dimensions that fit the available window space in popout mode.
+// Maintains 16:9 aspect ratio, leaves room for the toolbar above the paper.
+function _fitPaperToWindow() {
+  const box = document.getElementById('layout-box');
+  const availW = window.innerWidth - 24;
+  const availH = window.innerHeight - 80; // toolbar + padding
+  let w = availW;
+  let h = w * 9 / 16;
+  if (h > availH) {
+    h = availH;
+    w = h * 16 / 9;
+  }
+  return { w: Math.round(w), h: Math.round(h) };
+}
+
+// Reposition furniture items proportionally when the paper is resized in
+// popout mode. Items saved at pixel positions relative to the old paper
+// dimensions are scaled to the new dimensions and clamped into view.
+function _rescaleLayoutItems(oldW, oldH, newW, newH) {
+  if (!oldW || !oldH || (oldW === newW && oldH === newH)) return;
+  const sx = newW / oldW;
+  const sy = newH / oldH;
+  LAYOUT_ITEM_CONFIG.forEach(cfg => {
+    const el = document.getElementById(cfg.id);
+    if (!el) return;
+    // Read current pixel position from inline style or computed position.
+    // Items without saved geometry use CSS defaults (e.g. bottom/left) —
+    // resolve their actual position via offsetLeft/offsetTop instead.
+    let left = parseFloat(el.style.left);
+    let top = parseFloat(el.style.top);
+    if (isNaN(left)) left = el.offsetLeft;
+    if (isNaN(top)) top = el.offsetTop;
+    // Scale position proportionally
+    let newLeft = left * sx;
+    let newTop = top * sy;
+    // Scale width/height for resizable items
+    if (cfg.resizable) {
+      const w = parseFloat(el.style.width) || el.offsetWidth;
+      const h = parseFloat(el.style.height) || el.offsetHeight;
+      let newW2 = w * sx;
+      let newH2 = h * sy;
+      // Clamp size to minimums
+      newW2 = Math.max(newW2, LAYOUT_ITEM_MIN_W);
+      newH2 = Math.max(newH2, LAYOUT_ITEM_MIN_H);
+      // Clamp size so item doesn't exceed paper
+      newW2 = Math.min(newW2, newW - 10);
+      newH2 = Math.min(newH2, newH - 10);
+      el.style.width = newW2 + 'px';
+      el.style.height = newH2 + 'px';
+    }
+    // Get item dimensions for clamping (re-read after size change)
+    const iw = el.offsetWidth;
+    const ih = el.offsetHeight;
+    // Clamp position so item stays fully within the paper
+    newLeft = Math.max(2, Math.min(newLeft, newW - iw - 4));
+    newTop = Math.max(2, Math.min(newTop, newH - ih - 4));
+    el.style.left = Math.round(newLeft) + 'px';
+    el.style.top = Math.round(newTop) + 'px';
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -11701,6 +12135,16 @@ function _hideLoading() { document.getElementById('loading').style.display='none
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
 setTimeout(_hideLoading, 2000);
+
+// Multi-monitor composer popout bootstrap — detect ?composer=1
+_initComposerPopout();
+
+// Source-change detection: when the main map's layers or view change, push
+// state to the detached composer window (debounced via _onComposerSourceChange).
+// layeradd/layerremove catches visibility toggles, symbology changes (which
+// remove+re-add layers), and basemap switches. moveend/zoomend catches view changes.
+map.on('layeradd layerremove', _onComposerSourceChange);
+map.on('moveend zoomend', _onComposerSourceChange);
 </script>
 </body>
 </html>
