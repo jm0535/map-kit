@@ -10406,7 +10406,7 @@ function exportLayerGeoJSON() {
   showToast('GeoJSON exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
-function exportLayerShapefile() {
+async function exportLayerShapefile() {
   const layerId = document.getElementById('export-layer-select').value;
   const lyr = uploadedLayers.find(l => l.id === layerId);
   if (!lyr) { showToast('Select a layer first', 'error'); return; }
@@ -10416,8 +10416,9 @@ function exportLayerShapefile() {
   try {
     // shpwrite.download() navigates via `location.href = 'data:application/zip;base64,...'`,
     // which modern browsers block for top-level navigation and silently throw.
-    // Use shpwrite.zip() to get the raw base64 zip payload and download it as a Blob instead.
-    const base64 = shpwrite.zip(gj);
+    // shpwrite.zip() (patched to use JSZip 3.x's generateAsync) returns a Promise
+    // resolving to a base64 zip payload — convert to a Blob and download that instead.
+    const base64 = await shpwrite.zip(gj);
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);

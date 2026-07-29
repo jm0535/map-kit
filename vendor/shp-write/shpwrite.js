@@ -17789,11 +17789,11 @@ module.exports = function(gj, options) {
 
     var generateOptions = { compression:'STORE' };
 
-    if (!process.browser) {
-      generateOptions.type = 'nodebuffer';
-    }
+    // JSZip 3.x removed the synchronous generate() method; use generateAsync()
+    // instead, which returns a Promise. Callers must await/then the result.
+    generateOptions.type = process.browser ? 'base64' : 'nodebuffer';
 
-    return zip.generate(generateOptions);
+    return zip.generateAsync(generateOptions);
 };
 
 }).call(this,require('_process'))
