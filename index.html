@@ -63,6 +63,14 @@
 <script src="vendor/turf-6.5.0.min.js"></script>
 <script src="vendor/geotiff-2.1.3.js"></script>
 
+<!-- Conservation planning modules (load after turf + proj4) -->
+<script src="js/geospax-conservation.js"></script>
+<script src="js/geospax-conservation-m2.js"></script>
+<script src="js/geospax-sdm-fix.js"></script>
+<script src="js/geospax-project.js"></script>
+<script src="js/geospax-raster.js"></script>
+<script src="js/gsx-select.js"></script>
+
 <style>
   /* ── Design tokens ── */
   :root {
@@ -733,7 +741,7 @@
   }
   #analysis-drawer-body .ad-setting-row input,
   #analysis-drawer-body .ad-setting-row select {
-    flex: 1; font-size: 10px; padding: 3px 6px;
+    flex: 1; font-size: 11px; padding: 5px 8px;
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: 4px; color: var(--text);
   }
@@ -783,7 +791,7 @@
   }
   /* Form controls inside analysis tool rows (raster / MCE / SDM sections) */
   #analysis-drawer-body .ad-form-row {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 5px;
   }
   #analysis-drawer-body .ad-form-row > label {
     font-size: 10px; color: var(--text-muted); white-space: nowrap; min-width: 104px;
@@ -792,9 +800,24 @@
   #analysis-drawer-body .ad-form-row input[type=text],
   #analysis-drawer-body .ad-form-row input[type=number],
   #analysis-drawer-body .ad-form-row input[type=file] {
-    flex: 1; min-width: 0; font-size: 10px; padding: 4px 6px;
+    flex: 1; min-width: 120px; font-size: 11px; padding: 5px 8px;
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: 4px; color: var(--text);
+  }
+  #analysis-drawer-body .ad-form-row select,
+  #analysis-drawer-body .ad-setting-row select,
+  #analysis-drawer-body .ad-layer-select,
+  #analysis-drawer-body .gsx-crit select,
+  #analysis-drawer-body .gsx-env-row select {
+    -webkit-appearance: menulist; appearance: menulist; cursor: pointer;
+    position: relative; z-index: 1;
+  }
+  #analysis-drawer-body .ad-form-row select option,
+  #analysis-drawer-body .ad-setting-row select option,
+  #analysis-drawer-body .ad-layer-select option,
+  #analysis-drawer-body .gsx-crit select option,
+  #analysis-drawer-body .gsx-env-row select option {
+    background: var(--surface-3); color: var(--text); padding: 2px 6px;
   }
   #analysis-drawer-body .ad-form-row select:focus,
   #analysis-drawer-body .ad-form-row input:focus {
@@ -824,6 +847,171 @@
   #analysis-drawer-body .ad-status {
     font-size: 9px; color: var(--text-faint); margin-top: 4px; line-height: 1.4;
   }
+  /* ── Conservation module styles ── */
+  .gsx-crit {
+    border-left: 3px solid var(--accent, #97BC62);
+    padding: 6px 0 6px 10px; margin-bottom: 8px;
+  }
+  .gsx-crit .ad-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap;
+  }
+  .gsx-crit .ad-row > label {
+    font-size: 10px; color: var(--text-muted); white-space: nowrap;
+  }
+  .gsx-crit .ad-row input[type=number],
+  .gsx-crit .ad-row input[type=text] {
+    font-size: 10px; padding: 3px 5px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+  }
+  .gsx-crit .ad-row input[type=number]:focus,
+  .gsx-crit .ad-row input[type=text]:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+  .gsx-crit .ad-row select {
+    font-size: 11px; padding: 4px 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); cursor: pointer;
+    appearance: menulist; -webkit-appearance: menulist;
+  }
+  .gsx-crit .ad-row select:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+  .gsx-crit .gsx-c-params { padding-left: 2px; }
+  .gsx-crit .gsx-c-params > span { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+  /* Generic ad-row for dynamically generated forms (provenance meta, etc.) */
+  #analysis-drawer-body .ad-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+  }
+  #analysis-drawer-body .ad-row > label {
+    font-size: 10px; color: var(--text-muted); white-space: nowrap; min-width: 90px;
+  }
+  #analysis-drawer-body .ad-row input[type=text],
+  #analysis-drawer-body .ad-row input[type=number] {
+    flex: 1; min-width: 0; font-size: 10px; padding: 4px 6px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+  }
+  #analysis-drawer-body .ad-row input:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+  #analysis-drawer-body .ad-row .export-btn { flex: none; width: auto; }
+
+  /* Narrow / mid / wide input helpers for analysis drawer */
+  #analysis-drawer-body .gsx-narrow { width: 4em; flex: none; }
+  #analysis-drawer-body .gsx-mid { width: 7em; flex: none; }
+  #analysis-drawer-body .gsx-wide { width: 10em; flex: none; }
+
+  /* Inline button row — button sits inline with inputs, not full-width */
+  #analysis-drawer-body .gsx-inline-btn {
+    flex: none; width: auto; padding: 4px 10px; font-size: 10px;
+  }
+
+  /* Checkbox-row: checkbox + label on same line */
+  #analysis-drawer-body .gsx-check-row {
+    display: flex; align-items: center; gap: 5px; margin-bottom: 5px;
+    font-size: 10px; color: var(--text-muted);
+  }
+  #analysis-drawer-body .gsx-check-row input[type=checkbox] {
+    accent-color: var(--accent); width: auto;
+  }
+
+  /* SDM env variable rows */
+  #analysis-drawer-body .gsx-env-row {
+    display: flex; align-items: center; gap: 6px; padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  #analysis-drawer-body .gsx-env-row input[type=checkbox] {
+    accent-color: var(--accent); width: auto;
+  }
+  #analysis-drawer-body .gsx-env-row label {
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: 10px; color: var(--text-muted);
+  }
+  #analysis-drawer-body .gsx-env-row input[type=text] {
+    width: 70px; flex: none; font-size: 10px; padding: 3px 5px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+  }
+  #analysis-drawer-body .gsx-env-row input[type=text]:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+  #analysis-drawer-body .gsx-env-row select {
+    font-size: 11px; padding: 4px 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); cursor: pointer;
+    appearance: menulist; -webkit-appearance: menulist;
+  }
+  #analysis-drawer-body .gsx-env-row select:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+
+  /* ── Replacement select popup (gsx-select.js) ──
+     Native <select> popups fail to paint on some Linux/GTK browser
+     builds, so the option list is drawn as ordinary DOM instead. The
+     <select> elements themselves are untouched and keep their own
+     styling; only the popup is replaced. Applies app-wide.
+     position: fixed on <body> so no ancestor overflow can clip it. */
+  .gsx-sel-panel {
+    position: fixed; z-index: 20000; overflow-y: auto; overscroll-behavior: contain;
+    padding: 3px; background: var(--surface-1);
+    border: 1px solid var(--border-strong); border-radius: 6px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    font-family: Inter, system-ui, sans-serif; color: var(--text);
+  }
+  .gsx-sel-panel .gsx-sel-opt {
+    padding: 5px 8px; border-radius: 4px; cursor: pointer; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; line-height: 1.45;
+  }
+  .gsx-sel-panel .gsx-sel-opt:hover { background: var(--surface-3); }
+  .gsx-sel-panel .gsx-sel-opt.is-selected {
+    background: var(--accent-bg); color: var(--accent); font-weight: 600;
+  }
+  .gsx-sel-panel .gsx-sel-opt.is-disabled { opacity: .45; cursor: not-allowed; }
+  .gsx-sel-panel .gsx-sel-opt.is-disabled:hover { background: none; }
+  /* Highlight the control whose list is currently showing. */
+  select.gsx-sel-active { border-color: var(--accent) !important; }
+
+  /* Tables */
+  .gsx-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+  .gsx-table th {
+    text-align: left; background: var(--surface-3); padding: 4px 6px;
+    color: var(--text); font-weight: 600; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .gsx-table td {
+    padding: 4px 6px; border-top: 1px solid var(--border); color: var(--text);
+    font-size: 11px;
+  }
+  .gsx-table tr:hover td { background: var(--surface-2); }
+  .gsx-table td.gsx-missing { background: rgba(245, 101, 76, 0.15); color: #fc8184; }
+
+  /* Warning / note boxes */
+  .gsx-warn {
+    background: var(--surface-2); border-left: 3px solid #dd6b20; padding: 8px 10px;
+    margin-top: 8px; font-size: 11px; color: var(--text); border-radius: 0 4px 4px 0;
+  }
+  .gsx-warn ul { margin: 4px 0 0; padding-left: 18px; }
+  .gsx-warn li { margin-bottom: 2px; }
+  .gsx-note {
+    background: var(--surface-2); border-left: 3px solid #3182ce; padding: 8px 10px;
+    margin-top: 8px; font-size: 11px; color: var(--text); border-radius: 0 4px 4px 0;
+  }
+
+  /* Histogram */
+  .gsx-hist { display: flex; align-items: flex-end; gap: 1px; height: 64px; margin: 6px 0; }
+  .gsx-hist span { flex: 1; background: var(--accent, #97BC62); min-width: 2px; border-radius: 1px 1px 0 0; }
+
+  /* Second layer selector */
+  #analysis-layer-select-b {
+    width: 100%; padding: 5px 8px; margin-bottom: 6px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+  }
+  #analysis-layer-select-b:focus { outline: none; box-shadow: 0 0 0 2px var(--accent-bg); }
+
   .analysis-toolbar-btn {
     display: flex; align-items: center; gap: 5px;
     background: var(--accent); color: white;
@@ -2426,6 +2614,9 @@
       <select id="analysis-layer-select" class="ad-layer-select" onchange="refreshAnalysisAttrSelect()">
         <option value="">— Select layer —</option>
       </select>
+      <select id="analysis-layer-select-b" style="display:none">
+        <option value="">— Second layer —</option>
+      </select>
     </div>
 
   <!-- ════ SINGLE-LAYER GEOMETRIC / STATISTICAL TOOLS ════ -->
@@ -2624,7 +2815,7 @@
     <div class="ad-hint">Combine multiple vector layers into composite scores using weighted overlays. Equivalent to ArcGIS Weighted Overlay / QGIS MCDA.</div>
 
     <div class="ad-subhead">Conservation Hotspot Grid</div>
-    <div class="ad-tool-desc" style="padding-left:0">Score a hex or square grid by the number or density of features from each layer — reveals multi-layer biodiversity concentrations.</div>
+    <div class="ad-tool-desc">Score a hex or square grid by the number or density of features from each layer — reveals multi-layer biodiversity concentrations.</div>
     <div class="ad-form-row">
       <label>Grid Type</label>
       <select id="hotspot-grid-type">
@@ -2651,45 +2842,193 @@
       <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
     </div>
 
-    <div class="ad-subhead">Suitability Mapping (WLC)</div>
-    <div class="ad-tool-desc" style="padding-left:0" id="wlc-section">Weighted linear combination across layers — assigns each grid cell a 0–1 composite suitability score. Optionally mask by a constraint polygon layer.</div>
-    <div class="ad-field-label">Layer Weights</div>
-    <div id="wlc-layer-weights" class="ad-layer-weight-table"></div>
+    <!-- Old WLC and SDM panels removed — replaced by GSX module panels below -->
+
+    <!-- ── SECTION 9: Conservation Planning (M1) ── -->
+    <div class="ad-section-title" id="gsx-conservation-section" onclick="toggleAnalysisSection(this)"><span>&#x1F333; Conservation Planning</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-hint">Vector overlay toolkit, protection-gap reporting, and weighted linear combination (WLC) suitability mapping.</div>
+
+    <div class="ad-subhead">Vector Overlay</div>
+    <div class="ad-tool-desc">Union, intersect, or erase the two selected layers (A and B above).</div>
     <div class="ad-form-row">
-      <label>Constraint Layer</label>
-      <select id="wlc-constraint-layer">
-        <option value="">None (optional)</option>
+      <label>Overlay Operation</label>
+      <select id="gsx-overlay-op">
+        <option value="union">Union</option>
+        <option value="intersect">Intersect</option>
+        <option value="erase">Erase (A minus B)</option>
       </select>
     </div>
     <div class="ad-btn-row">
-      <button class="export-btn" onclick="refreshWLCLayerRows()">&#x21BB; Refresh Layers</button>
-      <button class="export-btn primary" onclick="runSuitabilityWLC()">Run WLC Analysis</button>
+      <button class="export-btn primary" onclick="GSX.uiOverlay(document.getElementById('gsx-overlay-op').value)">Run Overlay</button>
     </div>
 
-    <!-- ── SECTION 8: Species Distribution Modelling ── -->
-    <div class="ad-section-title" id="sdm-section" onclick="toggleAnalysisSection(this)"><span>&#x1F98B; Species Distribution Modelling</span><span class="arrow">&#x25BC;</span></div>
-    <div class="ad-hint">Predict species habitat suitability from presence records and environmental variables. Equivalent to MaxEnt, BIOCLIM and Mahalanobis tools in QGIS / biomod2.</div>
-    <div class="ad-form-row">
-      <label>Presence Layer</label>
-      <select id="sdm-presence-layer"></select>
+    <div class="ad-subhead">Protection Gap</div>
+    <div class="ad-tool-desc">Measures how much of layer A (e.g. forest extent) is covered by layer B (e.g. protected areas).</div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" onclick="GSX.uiProtectionGap()">Run Protection Gap</button>
     </div>
-    <div class="ad-field-label">Environmental Variable Layers</div>
-    <div id="sdm-env-layers" class="ad-layer-weight-table"></div>
+
+    <div class="ad-subhead">Suitability Mapping (WLC)</div>
     <div class="ad-form-row">
-      <label>Model Type</label>
-      <select id="sdm-model-type">
-        <option value="bioclim">BIOCLIM Envelope</option>
-        <option value="mahalanobis">Mahalanobis Distance</option>
-        <option value="maxent">MaxEnt (server-side)</option>
+      <label>Cell size (m)</label>
+      <input id="gsx-wlc-cellsize" type="number" value="500" min="50" step="50" class="gsx-mid" oninput="GSX.updateWLCCellCount()">
+      <span id="gsx-wlc-cellcount" class="ad-hint"></span>
+    </div>
+    <div id="gsx-wlc-criteria"></div>
+    <div class="ad-form-row">
+      <label>Constraint layer (forces suitability to 0)</label>
+      <select id="gsx-wlc-constraint"><option value="">— none —</option></select>
+    </div>
+    <div class="ad-btn-row">
+      <button class="export-btn" onclick="GSX.renderWLCPanel()">&#x21BB; Refresh criteria</button>
+      <button class="export-btn primary" onclick="GSX.runSuitabilityWLC()">Run WLC Analysis</button>
+    </div>
+    <div id="gsx-wlc-table"></div>
+
+    <!-- ── SECTION 10: Landscape Metrics (M2) ── -->
+    <div class="ad-section-title" id="gsx-m2-section" onclick="toggleAnalysisSection(this)"><span>&#x1F5FA;&#xFE0F; Landscape Metrics</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-hint">Equal-area reporting, patch fragmentation, connectivity graph, and two-date change detection.</div>
+
+    <div class="ad-subhead">Area Reporting</div>
+    <div class="ad-form-row">
+      <label>Units</label>
+      <select id="gsx-area-unit" onchange="GSX.setAreaUnit(this.value)">
+        <option value="ha" selected>Hectares (ha)</option>
+        <option value="km2">Square kilometres (km²)</option>
+        <option value="m2">Square metres (m²)</option>
       </select>
     </div>
     <div class="ad-form-row">
-      <label>Output Resolution (&#xB0;)</label>
-      <input type="number" id="sdm-resolution" value="0.1" min="0.01" step="0.01">
+      <label>Method</label>
+      <select id="gsx-area-method">
+        <option value="spherical" selected>Spherical (WGS84)</option>
+        <option value="equalarea">Equal-area (LAEA, auto-centred)</option>
+      </select>
+    </div>
+
+    <div class="ad-subhead">Fragmentation &amp; Patch Metrics</div>
+    <div class="ad-form-row">
+      <label>Core-area edge depth (m)</label>
+      <input id="gsx-core-depth" type="number" value="100" min="1" step="10" class="gsx-mid">
+    </div>
+    <div class="gsx-check-row"><input id="gsx-frag-dissolve" type="checkbox"> <label for="gsx-frag-dissolve">Dissolve touching patches first</label></div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" onclick="GSX.uiFragmentation()">Run Patch Metrics</button>
+    </div>
+
+    <div class="ad-subhead">Connectivity</div>
+    <div class="ad-form-row">
+      <label>Link threshold (m)</label>
+      <input id="gsx-conn-threshold" type="number" value="500" min="1" step="100" class="gsx-mid">
     </div>
     <div class="ad-btn-row">
-      <button class="export-btn" onclick="refreshSDMLayerRows()">&#x21BB; Refresh Layers</button>
-      <button class="export-btn primary" onclick="runSDM()">Run SDM</button>
+      <button class="export-btn primary" onclick="GSX.uiConnectivity()">Build Connectivity Graph</button>
+    </div>
+
+    <div class="ad-subhead">Forest Change Detection</div>
+    <div class="ad-tool-desc">Layer 1 = earlier extent (T1). Layer 2 = later extent (T2).</div>
+    <div class="ad-form-row">
+      <label>Year T1</label>
+      <input id="gsx-year-t1" type="number" placeholder="2015" class="gsx-mid">
+      <label>Year T2</label>
+      <input id="gsx-year-t2" type="number" placeholder="2025" class="gsx-mid">
+    </div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" onclick="GSX.uiChangeDetection()">Detect Change</button>
+    </div>
+
+    <!-- ── SECTION 11: SDM (correctness fixes) ── -->
+    <div class="ad-section-title" id="gsx-sdm-section" onclick="toggleAnalysisSection(this)"><span>&#x1F98B; SDM (Corrected)</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-hint">BIOCLIM and Mahalanobis with correct env sampling, guards, and chi-square output.</div>
+    <div class="ad-subhead">Species Distribution Model</div>
+    <div class="ad-form-row">
+      <label>Presence layer (points)</label>
+      <select id="gsx-sdm-presence"></select>
+    </div>
+    <div class="ad-form-row">
+      <label>Cell size (m)</label>
+      <input id="gsx-sdm-cellsize" type="number" value="1000" min="100" step="100" class="gsx-mid">
+    </div>
+    <div id="gsx-sdm-env"></div>
+    <div class="ad-form-row">
+      <label>BIOCLIM mode</label>
+      <select id="gsx-bioclim-mode">
+        <option value="limiting" selected>Limiting factor (true BIOCLIM)</option>
+        <option value="proportion">Proportion in envelope (non-standard)</option>
+      </select>
+    </div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" onclick="GSX.uiBioclim()">Run BIOCLIM</button>
+    </div>
+    <div class="ad-form-row">
+      <label>Mahalanobis output</label>
+      <select id="gsx-maha-output">
+        <option value="chisq" selected>Chi-square probability</option>
+        <option value="index">1/(1+D) index</option>
+      </select>
+    </div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" onclick="GSX.uiMahalanobis()">Run Mahalanobis</button>
+    </div>
+    <div id="gsx-sdm-warnings"></div>
+
+    <!-- ── SECTION 12: Raster Reclassify & Polygonize ── -->
+    <div class="ad-section-title" id="gsx-raster-section" onclick="toggleAnalysisSection(this)"><span>&#x1F4E0; Raster Reclassify &amp; Polygonize</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-hint">Convert a GeoTIFF raster to a binary mask via threshold, then polygonise to vector polygons.</div>
+    <div class="ad-subhead">Raster → Vector</div>
+    <div class="ad-form-row">
+      <label>Raster layer</label>
+      <select id="gsx-raster-layer"></select>
+    </div>
+    <div class="ad-form-row">
+      <label>Band</label>
+      <input id="gsx-raster-band" type="number" value="0" min="0" class="gsx-narrow">
+      <button class="export-btn gsx-inline-btn" onclick="GSX.uiRasterHistogram()">Histogram + Otsu</button>
+    </div>
+    <div id="gsx-raster-hist"></div>
+    <div class="ad-form-row">
+      <label>Threshold</label>
+      <input id="gsx-raster-threshold" type="number" step="any" class="gsx-wide">
+      <select id="gsx-raster-op">
+        <option value=">=" selected>&ge; (at or above)</option>
+        <option value=">">&gt; (above)</option>
+        <option value="<=" >&le; (at or below)</option>
+        <option value="<">&lt; (below)</option>
+      </select>
+    </div>
+    <div class="gsx-check-row"><input id="gsx-raster-dissolve" type="checkbox" checked> <label for="gsx-raster-dissolve">Merge into patches</label></div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" onclick="GSX.uiRasterToPolygons()">Reclassify &amp; Polygonize</button>
+    </div>
+
+    <!-- ── SECTION 13: Provenance & Project ── -->
+    <div class="ad-section-title" id="gsx-project-section" onclick="toggleAnalysisSection(this)"><span>&#x1F4CB; Provenance &amp; Project</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-hint">Track data lineage, export provenance reports, and save/load the entire project as a .gspx file.</div>
+    <div class="ad-subhead">Data Provenance</div>
+    <div id="gsx-prov-table"></div>
+    <div class="ad-btn-row">
+      <button class="export-btn" onclick="GSX.uiExportProvenance('csv')">Export CSV</button>
+      <button class="export-btn" onclick="GSX.uiExportProvenance('md')">Export Markdown</button>
+    </div>
+    <div id="gsx-meta-form"></div>
+    <div class="ad-subhead">Project</div>
+    <div class="ad-form-row">
+      <label>Author name</label><input id="gsx-proj-authorName" type="text" placeholder="Your name">
+    </div>
+    <div class="ad-form-row">
+      <label>Project ID</label><input id="gsx-proj-projectId" type="text" placeholder="Project identifier">
+    </div>
+    <div class="ad-form-row">
+      <label>Subject / topic</label><input id="gsx-proj-subject" type="text" placeholder="e.g. Forest cover change">
+    </div>
+    <div class="ad-form-row">
+      <label>Project title</label><input id="gsx-proj-title" type="text" placeholder="Project title">
+    </div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" onclick="GSX.uiSaveProject()">Save Project (.gspx)</button>
+      <label class="export-btn">Load Project
+        <input type="file" accept=".gspx,.json" style="display:none" onchange="GSX.uiLoadProject(this.files[0])">
+      </label>
     </div>
 
   </div><!-- /analysis-drawer-body -->
@@ -2707,7 +3046,7 @@
   <span class="status-chip" id="visible-count">0 features</span>
   <span class="status-chip" id="status-latlon">--°, --°</span>
   <div style="flex:1;"></div>
-  <span class="status-chip" id="status-copyright">&copy; GeoSpaX &mdash; a product of <a href="https://www.in4metrix.dev" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">in4metrix</a></span>
+  <span class="status-chip" id="status-copyright">&copy; GeoSpaX [v1.1.0] &mdash; a product of <a href="https://www.in4metrix.dev" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">in4metrix</a></span>
 </div>
 
 <!-- Sheet picker modal (XLSX with multiple sheets) -->
@@ -5090,6 +5429,10 @@ function addUploadedGeoJSON(geojson, name, color) {
     geojsonFeatures: geojson.features || [],
   };
   uploadedLayers.unshift(info);
+  // Stamp provenance on import
+  if (typeof GSX !== 'undefined' && GSX.stampImport) {
+    GSX.stampImport(info, name);
+  }
 
   // Zoom to bounds
   try { map.fitBounds(layer.getBounds().pad(0.1)); } catch(e) {}
@@ -6755,9 +7098,10 @@ async function processFile(file) {
           {type:'Raster', bands:georaster.numberOfRasters, width:georaster.width, height:georaster.height,
            xmin:georaster.xmin, ymin:georaster.ymin, xmax:georaster.xmax, ymax:georaster.ymax}
         ],
-        geojsonFeatures: [], isRaster: true,
+        geojsonFeatures: [], isRaster: true, georaster,
       };
       uploadedLayers.unshift(info);
+      if (typeof GSX !== 'undefined' && GSX.stampImport) GSX.stampImport(info, name);
       addLayerToPanel(info);
       updateStats();
       map.fitBounds(layer.getBounds());
@@ -7339,6 +7683,77 @@ function refreshAnalysisLayerSelect() {
     sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
   });
   if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
+
+  // Second layer selector (for overlay, protection gap, change detection)
+  const selB = document.getElementById('analysis-layer-select-b');
+  if (selB) {
+    const prevB = selB.value;
+    selB.innerHTML = '<option value="">— Second layer —</option>';
+    uploadedLayers.forEach(l => {
+      selB.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+    });
+    if (selB.querySelector(`option[value="${prevB}"]`)) selB.value = prevB;
+  }
+
+  // Refresh WLC panel criteria + constraint, SDM env rows, raster layer select
+  if (typeof GSX !== 'undefined') {
+    if (typeof GSX.renderWLCPanel === 'function') GSX.renderWLCPanel();
+    refreshGSXWLCConstraint();
+    refreshGSXSDMLayers();
+    refreshGSXRasterLayerSelect();
+    if (typeof GSX.uiRenderProvenanceTable === 'function') GSX.uiRenderProvenanceTable();
+  }
+}
+
+function refreshGSXWLCConstraint() {
+  const sel = document.getElementById('gsx-wlc-constraint');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— none —</option>';
+  uploadedLayers.forEach(l => {
+    sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+  });
+  if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
+}
+
+function refreshGSXSDMLayers() {
+  const presSel = document.getElementById('gsx-sdm-presence');
+  const envHost = document.getElementById('gsx-sdm-env');
+  if (!presSel || !envHost) return;
+  presSel.innerHTML = '<option value="">— Select presence layer —</option>';
+  envHost.innerHTML = '';
+  if (uploadedLayers.length === 0) {
+    envHost.innerHTML = '<div class="ad-hint">No layers loaded</div>';
+    return;
+  }
+  uploadedLayers.forEach((l, i) => {
+    presSel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+    const row = document.createElement('div');
+    row.className = 'gsx-env-row';
+    row.innerHTML = `
+      <input type="checkbox" id="gsx-env-on-${i}" title="Use as env variable">
+      <label for="gsx-env-on-${i}" title="${escapeHtml(l.name)}">${escapeHtml(l.name)}</label>
+      <input type="text" id="gsx-env-fld-${i}" placeholder="field">
+      <select id="gsx-env-m-${i}">
+        <option value="auto">auto</option>
+        <option value="nearest">nearest</option>
+        <option value="idw">idw</option>
+      </select>`;
+    envHost.appendChild(row);
+  });
+}
+
+function refreshGSXRasterLayerSelect() {
+  const sel = document.getElementById('gsx-raster-layer');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select raster —</option>';
+  uploadedLayers.forEach(l => {
+    if (l.isRaster || l.type === 'raster_points' || l._rasterMeta) {
+      sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+    }
+  });
+  if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
 }
 
 function refreshAnalysisAttrSelect() {
@@ -7620,6 +8035,10 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
   uploadedLayers.unshift(info);
   addLayerToPanel(info);
   buildSymbologyControls(info);
+  // Stamp provenance on derived layers
+  if (typeof GSX !== 'undefined' && GSX.stampDerived) {
+    GSX.stampDerived(info, name, [], {});
+  }
   // Seed legendState BEFORE refresh so the raster gradient shows on first render.
   if (rasterMeta && rasterMeta.isHeat) {
     const paletteObj = HEAT_PALETTES[rasterMeta.paletteKey] || HEAT_PALETTES.thermal;
@@ -7678,7 +8097,7 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
   refreshAnalysisLayerSelect();
   refreshExportLayerSelect();
   refreshAttrLayerSelect();
-  return id;
+  return info;
 }
 
 const HEAT_PALETTES = {
@@ -8685,6 +9104,7 @@ function collapseAllSectionsByDefault() {
   });
   document.querySelectorAll('#analysis-drawer-body .ad-section-title').forEach(title => {
     if (title.classList.contains('collapsed')) return;
+    if (title.id && title.id.indexOf('gsx-') === 0) return;
     title.classList.add('collapsed');
     let el = title.nextElementSibling;
     while (el && !el.classList.contains('ad-section-title')) {
@@ -11952,64 +12372,6 @@ function refreshHotspotLayerRows() {
   });
 }
 
-function refreshWLCLayerRows() {
-  const container = document.getElementById('wlc-layer-weights');
-  const constraintSel = document.getElementById('wlc-constraint-layer');
-  if (!container) return;
-  container.innerHTML = '';
-  if (constraintSel) {
-    constraintSel.innerHTML = '<option value="">None</option>';
-  }
-  if (!uploadedLayers || uploadedLayers.length === 0) {
-    container.innerHTML = '<div style="color:#999;font-size:11px;padding:4px">No layers loaded</div>';
-    return;
-  }
-  uploadedLayers.forEach((layer, idx) => {
-    const row = document.createElement('div');
-    row.className = 'ad-layer-weight-row';
-    row.innerHTML = `
-      <input type="checkbox" id="wlc-chk-${idx}" checked title="Include layer">
-      <label for="wlc-chk-${idx}" title="${layer.name}">${layer.name}</label>
-      <span style="font-size:10px;color:#999">wt:</span>
-      <input type="number" id="wlc-wt-${idx}" value="1" min="0" max="10" step="0.1">
-    `;
-    container.appendChild(row);
-    if (constraintSel) {
-      const opt = document.createElement('option');
-      opt.value = idx;
-      opt.textContent = layer.name;
-      constraintSel.appendChild(opt);
-    }
-  });
-}
-
-function refreshSDMLayerRows() {
-  const presenceSel = document.getElementById('sdm-presence-layer');
-  const envContainer = document.getElementById('sdm-env-layers');
-  if (!presenceSel || !envContainer) return;
-  presenceSel.innerHTML = '';
-  envContainer.innerHTML = '';
-  if (!uploadedLayers || uploadedLayers.length === 0) {
-    presenceSel.innerHTML = '<option value="">No layers</option>';
-    envContainer.innerHTML = '<div style="color:#999;font-size:11px;padding:4px">No layers loaded</div>';
-    return;
-  }
-  uploadedLayers.forEach((layer, idx) => {
-    const opt = document.createElement('option');
-    opt.value = idx;
-    opt.textContent = layer.name;
-    presenceSel.appendChild(opt);
-    const row = document.createElement('div');
-    row.className = 'ad-layer-weight-row';
-    row.innerHTML = `
-      <input type="checkbox" id="sdm-env-chk-${idx}" title="Use as env variable">
-      <label for="sdm-env-chk-${idx}" title="${layer.name}">${layer.name}</label>
-      <input type="text" id="sdm-env-field-${idx}" placeholder="field name" style="width:80px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;font-size:11px">
-    `;
-    envContainer.appendChild(row);
-  });
-}
-
 // ========== GEOTIFF LOADER ==========
 
 async function loadGeoTIFF() {
@@ -12236,129 +12598,10 @@ function hotspotColor(t) {
   return `rgb(${r},${g},0)`;
 }
 
-// ========== SUITABILITY WLC ==========
+// Old WLC and SDM functions removed — replaced by GSX module equivalents
+// (geospax-conservation.js, geospax-sdm-fix.js). See INTEGRATION.md §3.1, §5b.
 
-function runSuitabilityWLC() {
-  if (typeof turf === 'undefined') {
-    showToast('Turf.js not loaded – required for WLC', 'error');
-    return;
-  }
-
-  const selectedLayers = [];
-  uploadedLayers.forEach((layer, idx) => {
-    const chk = document.getElementById(`wlc-chk-${idx}`);
-    const wt = document.getElementById(`wlc-wt-${idx}`);
-    if (chk && chk.checked) {
-      selectedLayers.push({ layer, weight: parseFloat(wt && wt.value || 1) });
-    }
-  });
-
-  if (selectedLayers.length === 0) {
-    showToast('Select at least one layer for WLC', 'error');
-    return;
-  }
-
-  const constraintIdxEl = document.getElementById('wlc-constraint-layer');
-  const constraintIdx = constraintIdxEl && constraintIdxEl.value;
-  const constraintLayer = constraintIdx !== '' && constraintIdx !== undefined ? uploadedLayers[parseInt(constraintIdx)] : null;
-
-  showToast('Running WLC analysis…', 'info');
-
-  try {
-    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
-    selectedLayers.forEach(({ layer }) => {
-      const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
-      features.forEach(f => {
-        const coords = getAllCoords(f.geometry);
-        coords.forEach(([lng, lat]) => {
-          if (lng < minLng) minLng = lng;
-          if (lat < minLat) minLat = lat;
-          if (lng > maxLng) maxLng = lng;
-          if (lat > maxLat) maxLat = lat;
-        });
-      });
-    });
-
-    if (!isFinite(minLng)) {
-      showToast('No valid geometry in selected layers', 'error');
-      return;
-    }
-
-    const buf = 0.1;
-    const bbox = [minLng - buf, minLat - buf, maxLng + buf, maxLat + buf];
-    const cellSizeDeg = 0.2;
-    const grid = turf.squareGrid(bbox, cellSizeDeg * 111, { units: 'kilometers' });
-
-    grid.features.forEach(cell => {
-      let weightedSum = 0;
-      let totalWeight = 0;
-      selectedLayers.forEach(({ layer, weight }) => {
-        const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
-        const points = features.filter(f => f.geometry && f.geometry.type === 'Point');
-        let score = 0;
-        if (points.length > 0) {
-          try {
-            const within = turf.pointsWithinPolygon(turf.featureCollection(points), cell);
-            score = Math.min(1, within.features.length / 5);
-          } catch (e) { score = 0; }
-        } else {
-          let intersects = 0;
-          features.forEach(f => {
-            if (!f.geometry) return;
-            try { if (turf.booleanIntersects(cell, f)) intersects++; } catch (e) {}
-          });
-          score = intersects > 0 ? 1 : 0;
-        }
-        weightedSum += score * weight;
-        totalWeight += weight;
-      });
-
-      let suitability = totalWeight > 0 ? weightedSum / totalWeight : 0;
-
-      if (constraintLayer) {
-        const cf = constraintLayer.geojsonFeatures || (constraintLayer.geojson && constraintLayer.geojson.features) || [];
-        const inConstraint = cf.some(f => {
-          if (!f.geometry) return false;
-          try { return turf.booleanIntersects(cell, f); } catch (e) { return false; }
-        });
-        if (inConstraint) suitability = 0;
-      }
-
-      cell.properties._suitability = Math.min(1, Math.max(0, suitability));
-    });
-
-    const leafletLayer = L.geoJSON(grid, {
-      style: feature => ({
-        fillColor: suitabilityColor(feature.properties._suitability || 0),
-        fillOpacity: 0.7,
-        color: '#555',
-        weight: 0.3
-      }),
-      onEachFeature: (feature, layer) => {
-        const s = ((feature.properties._suitability || 0) * 100).toFixed(1);
-        layer.bindPopup(`<b>Suitability: ${s}%</b>`);
-      }
-    }).addTo(map);
-
-    const info = {
-      id: 'wlc_' + Date.now(),
-      name: 'WLC Suitability ' + new Date().toLocaleTimeString(),
-      geojson: grid,
-      visible: true,
-      color: '#228B22',
-      layer: leafletLayer,
-      type: 'analysis'
-    };
-    uploadedLayers.unshift(info);
-    if (typeof addLayerToPanel === 'function') addLayerToPanel(info);
-    map.fitBounds(leafletLayer.getBounds(), { padding: [20, 20] });
-    showToast('WLC suitability map generated', 'success');
-  } catch (err) {
-    console.error('WLC error:', err);
-    showToast('WLC analysis failed: ' + err.message, 'error');
-  }
-}
-
+// Kept for use by GSX modules and hotspot analysis
 function suitabilityColor(t) {
   if (t < 0.5) {
     const r = 255;
@@ -12371,217 +12614,7 @@ function suitabilityColor(t) {
   }
 }
 
-// ========== SDM DISPATCHER ==========
-
-function runSDM() {
-  const presenceIdxEl = document.getElementById('sdm-presence-layer');
-  const presenceIdx = presenceIdxEl && parseInt(presenceIdxEl.value);
-  const modelTypeEl = document.getElementById('sdm-model-type');
-  const modelType = modelTypeEl && modelTypeEl.value || 'bioclim';
-  const resolutionEl = document.getElementById('sdm-resolution');
-  const resolution = parseFloat(resolutionEl && resolutionEl.value || 0.1);
-
-  if (isNaN(presenceIdx) || !uploadedLayers[presenceIdx]) {
-    showToast('Select a presence layer', 'error');
-    return;
-  }
-  if (isNaN(resolution) || resolution <= 0) {
-    showToast('Invalid resolution', 'error');
-    return;
-  }
-
-  const envLayers = [];
-  uploadedLayers.forEach((layer, idx) => {
-    const chk = document.getElementById(`sdm-env-chk-${idx}`);
-    const field = document.getElementById(`sdm-env-field-${idx}`);
-    if (chk && chk.checked) {
-      envLayers.push({ layer, fieldName: field && field.value && field.value.trim() || 'value' });
-    }
-  });
-
-  const presenceLayer = uploadedLayers[presenceIdx];
-  const presencePoints = (presenceLayer.geojsonFeatures || (presenceLayer.geojson && presenceLayer.geojson.features) || []).filter(f => f.geometry && f.geometry.type === 'Point');
-
-  if (presencePoints.length < 3) {
-    showToast('Need at least 3 presence points', 'error');
-    return;
-  }
-
-  if (modelType === 'bioclim') {
-    runBioclimSDM(presencePoints, envLayers, resolution);
-  } else if (modelType === 'mahalanobis') {
-    runMahalanobisSDM(presencePoints, envLayers, resolution);
-  } else if (modelType === 'maxent') {
-    runMaxEntSDM(presencePoints, envLayers, resolution);
-  }
-}
-
-// ========== BIOCLIM SDM ==========
-
-function runBioclimSDM(presencePoints, envLayers, resolution) {
-  showToast('Running Bioclim SDM…', 'info');
-  try {
-    const envData = extractEnvAtPoints(presencePoints, envLayers);
-    if (Object.keys(envData).length === 0 && envLayers.length > 0) {
-      showToast('Could not extract environmental values at presence points', 'error');
-      return;
-    }
-
-    const envelopes = {};
-    Object.entries(envData).forEach(([varName, vals]) => {
-      const sorted = [...vals].filter(v => v !== null && !isNaN(v)).sort((a, b) => a - b);
-      if (sorted.length === 0) return;
-      const p5idx = Math.floor(sorted.length * 0.05);
-      const p95idx = Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95));
-      envelopes[varName] = { min: sorted[p5idx], max: sorted[p95idx] };
-    });
-
-    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
-    presencePoints.forEach(f => {
-      const [lng, lat] = f.geometry.coordinates;
-      if (lng < minLng) minLng = lng;
-      if (lat < minLat) minLat = lat;
-      if (lng > maxLng) maxLng = lng;
-      if (lat > maxLat) maxLat = lat;
-    });
-    const buf = Math.max(1, (maxLng - minLng) * 0.5);
-    const bufLat = Math.max(1, (maxLat - minLat) * 0.5);
-
-    const grid = generateAnalysisGrid([minLng - buf, minLat - bufLat, maxLng + buf, maxLat + bufLat], resolution);
-    const nVars = Object.keys(envelopes).length;
-
-    grid.features.forEach(cell => {
-      let score = 1.0;
-      const cellCoords = cell.geometry.coordinates;
-      if (nVars > 0) {
-        const envVals = interpolateEnvAtPoint(cellCoords, envLayers);
-        let inEnvelope = 0;
-        Object.entries(envelopes).forEach(([varName, env]) => {
-          const v = envVals[varName];
-          if (v !== undefined && v !== null && !isNaN(v)) {
-            if (v >= env.min && v <= env.max) inEnvelope++;
-          }
-        });
-        score = nVars > 0 ? inEnvelope / nVars : 0.5;
-      } else {
-        let minDist = Infinity;
-        presencePoints.forEach(p => {
-          const d = Math.hypot(cellCoords[0] - p.geometry.coordinates[0], cellCoords[1] - p.geometry.coordinates[1]);
-          if (d < minDist) minDist = d;
-        });
-        score = Math.exp(-minDist * minDist / (2 * buf * buf));
-      }
-      cell.properties._suitability = score;
-    });
-
-    renderSDMResult(grid, 'Bioclim SDM');
-  } catch (err) {
-    console.error('Bioclim SDM error:', err);
-    showToast('Bioclim SDM failed: ' + err.message, 'error');
-  }
-}
-
-// ========== MAHALANOBIS SDM ==========
-
-function runMahalanobisSDM(presencePoints, envLayers, resolution) {
-  showToast('Running Mahalanobis SDM…', 'info');
-  try {
-    const envData = extractEnvAtPoints(presencePoints, envLayers);
-    const varNames = Object.keys(envData);
-
-    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
-    presencePoints.forEach(f => {
-      const [lng, lat] = f.geometry.coordinates;
-      if (lng < minLng) minLng = lng;
-      if (lat < minLat) minLat = lat;
-      if (lng > maxLng) maxLng = lng;
-      if (lat > maxLat) maxLat = lat;
-    });
-    const buf = Math.max(1, (maxLng - minLng) * 0.5);
-    const bufLat = Math.max(1, (maxLat - minLat) * 0.5);
-
-    let matrix, mean, invCov;
-    if (varNames.length >= 2) {
-      matrix = presencePoints.map((_, i) => varNames.map(v => (envData[v][i] !== null && !isNaN(envData[v][i])) ? envData[v][i] : 0));
-      mean = varNames.map((v, vi) => matrix.reduce((s, r) => s + r[vi], 0) / matrix.length);
-      const cov = computeCovariance(matrix, mean);
-      invCov = invertMatrix(cov);
-    } else {
-      matrix = presencePoints.map(p => p.geometry.coordinates);
-      mean = [matrix.reduce((s, r) => s + r[0], 0) / matrix.length, matrix.reduce((s, r) => s + r[1], 0) / matrix.length];
-      const cov = computeCovariance(matrix, mean);
-      invCov = invertMatrix(cov);
-    }
-
-    const grid = generateAnalysisGrid([minLng - buf, minLat - bufLat, maxLng + buf, maxLat + bufLat], resolution);
-
-    grid.features.forEach(cell => {
-      const coords = cell.geometry.coordinates;
-      let x;
-      if (varNames.length >= 2) {
-        x = varNames.map(v => interpolateEnvAtPoint(coords, envLayers)[v] || 0);
-      } else {
-        x = coords;
-      }
-      const d = mahalanobisDistance(x, mean, invCov);
-      cell.properties._suitability = 1 / (1 + d);
-    });
-
-    renderSDMResult(grid, 'Mahalanobis SDM');
-  } catch (err) {
-    console.error('Mahalanobis SDM error:', err);
-    showToast('Mahalanobis SDM failed: ' + err.message, 'error');
-  }
-}
-
-// ========== MAXENT SDM ==========
-
-async function runMaxEntSDM(presencePoints, envLayers, resolution) {
-  showToast('Calling MaxEnt API…', 'info');
-
-  const presences = presencePoints.map(p => p.geometry.coordinates);
-  const env_vars = {};
-  envLayers.forEach(({ layer, fieldName }) => {
-    const vals = presencePoints.map(p => {
-      const envVal = interpolateEnvAtPoint(p.geometry.coordinates, [{ layer, fieldName }]);
-      return envVal[fieldName] !== undefined ? envVal[fieldName] : 0;
-    });
-    env_vars[fieldName || layer.name] = vals;
-  });
-
-  let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
-  presencePoints.forEach(p => {
-    const [lng, lat] = p.geometry.coordinates;
-    if (lng < minLng) minLng = lng;
-    if (lat < minLat) minLat = lat;
-    if (lng > maxLng) maxLng = lng;
-    if (lat > maxLat) maxLat = lat;
-  });
-  const buf = Math.max(1, (maxLng - minLng) * 0.5);
-  const extent = [minLng - buf, minLat - buf * 0.5, maxLng + buf, maxLat + buf * 0.5];
-
-  try {
-    const response = await fetch('/api/sdm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ presences, env_vars, extent, resolution })
-    });
-    if (!response.ok) throw new Error(`API returned ${response.status}`);
-    const geojson = await response.json();
-    if (geojson.error) throw new Error(geojson.error);
-    if (!geojson.features || geojson.features.length === 0) {
-      showToast('MaxEnt returned no results', 'warning');
-      return;
-    }
-    renderSDMResult(geojson, 'MaxEnt SDM');
-  } catch (err) {
-    console.error('MaxEnt API error:', err);
-    showToast('MaxEnt API unavailable: ' + err.message + '. Try Bioclim or Mahalanobis instead.', 'error');
-  }
-}
-
-// ========== HELPER FUNCTIONS ==========
-
+// Kept for use by hotspot analysis
 function getAllCoords(geometry) {
   if (!geometry) return [];
   const coords = [];
@@ -12593,56 +12626,7 @@ function getAllCoords(geometry) {
   return coords;
 }
 
-function generateAnalysisGrid(bbox, cellSizeDeg) {
-  const [minLng, minLat, maxLng, maxLat] = bbox;
-  const features = [];
-  let lng = minLng;
-  while (lng < maxLng) {
-    let lat = minLat;
-    while (lat < maxLat) {
-      features.push({
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [lng + cellSizeDeg / 2, lat + cellSizeDeg / 2] },
-        properties: {}
-      });
-      lat += cellSizeDeg;
-    }
-    lng += cellSizeDeg;
-  }
-  return { type: 'FeatureCollection', features };
-}
-
-function extractEnvAtPoints(points, envLayers) {
-  const envData = {};
-  envLayers.forEach(({ layer, fieldName }) => {
-    const key = fieldName || layer.name;
-    envData[key] = points.map(p => {
-      const pCoords = p.geometry.coordinates;
-      const features = layer.geojsonFeatures || (layer.geojson && layer.geojson.features) || [];
-      let nearest = null, nearestDist = Infinity;
-      features.forEach(f => {
-        if (!f.geometry) return;
-        let fCoords;
-        if (f.geometry.type === 'Point') {
-          fCoords = f.geometry.coordinates;
-        } else {
-          const allC = getAllCoords(f.geometry);
-          if (allC.length === 0) return;
-          fCoords = allC[0];
-        }
-        const d = Math.hypot(pCoords[0] - fCoords[0], pCoords[1] - fCoords[1]);
-        if (d < nearestDist) { nearestDist = d; nearest = f; }
-      });
-      if (nearest) {
-        const val = nearest.properties[fieldName] !== undefined ? nearest.properties[fieldName] : nearest.properties.value;
-        return typeof val === 'number' ? val : null;
-      }
-      return null;
-    });
-  });
-  return envData;
-}
-
+// Helper retained for MaxEnt API path
 function interpolateEnvAtPoint(coords, envLayers) {
   const result = {};
   envLayers.forEach(({ layer, fieldName }) => {
@@ -12670,68 +12654,6 @@ function interpolateEnvAtPoint(coords, envLayers) {
     }
   });
   return result;
-}
-
-function computeCovariance(matrix, mean) {
-  const n = matrix.length;
-  const p = mean.length;
-  const cov = Array.from({ length: p }, () => new Array(p).fill(0));
-  matrix.forEach(row => {
-    for (let i = 0; i < p; i++) {
-      for (let j = 0; j < p; j++) {
-        cov[i][j] += (row[i] - mean[i]) * (row[j] - mean[j]);
-      }
-    }
-  });
-  for (let i = 0; i < p; i++) {
-    for (let j = 0; j < p; j++) {
-      cov[i][j] /= Math.max(1, n - 1);
-    }
-  }
-  for (let i = 0; i < p; i++) cov[i][i] += 1e-6;
-  return cov;
-}
-
-function mahalanobisDistance(x, mean, invCov) {
-  const p = mean.length;
-  const diff = x.map((v, i) => v - mean[i]);
-  let dist = 0;
-  for (let i = 0; i < p; i++) {
-    let sum = 0;
-    for (let j = 0; j < p; j++) {
-      sum += invCov[i][j] * diff[j];
-    }
-    dist += diff[i] * sum;
-  }
-  return Math.sqrt(Math.max(0, dist));
-}
-
-function invertMatrix(m) {
-  const n = m.length;
-  const aug = m.map((row, i) => {
-    const identity = new Array(n).fill(0);
-    identity[i] = 1;
-    return [...row, ...identity];
-  });
-  for (let col = 0; col < n; col++) {
-    let maxRow = col;
-    for (let row = col + 1; row < n; row++) {
-      if (Math.abs(aug[row][col]) > Math.abs(aug[maxRow][col])) maxRow = row;
-    }
-    [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
-    const pivot = aug[col][col];
-    if (Math.abs(pivot) < 1e-10) {
-      return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => i === j ? 1 : 0));
-    }
-    for (let j = 0; j < 2 * n; j++) aug[col][j] /= pivot;
-    for (let row = 0; row < n; row++) {
-      if (row !== col) {
-        const factor = aug[row][col];
-        for (let j = 0; j < 2 * n; j++) aug[row][j] -= factor * aug[col][j];
-      }
-    }
-  }
-  return aug.map(row => row.slice(n));
 }
 
 function renderSDMResult(geojson, modelName) {
@@ -12776,6 +12698,51 @@ function renderSDMResult(geojson, modelName) {
   if (typeof addLayerToPanel === 'function') addLayerToPanel(info);
   try { map.fitBounds(leafletLayer.getBounds(), { padding: [20, 20] }); } catch (e) {}
   showToast(`${modelName} complete: ${geojson.features.length} cells`, 'success');
+}
+
+// MaxEnt SDM (API-based, not replaced by GSX modules)
+async function runMaxEntSDM(presencePoints, envLayers, resolution) {
+  showToast('Calling MaxEnt API…', 'info');
+
+  const presences = presencePoints.map(p => p.geometry.coordinates);
+  const env_vars = {};
+  envLayers.forEach(({ layer, fieldName }) => {
+    const vals = presencePoints.map(p => {
+      const envVal = interpolateEnvAtPoint(p.geometry.coordinates, [{ layer, fieldName }]);
+      return envVal[fieldName] !== undefined ? envVal[fieldName] : 0;
+    });
+    env_vars[fieldName || layer.name] = vals;
+  });
+
+  let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+  presencePoints.forEach(p => {
+    const [lng, lat] = p.geometry.coordinates;
+    if (lng < minLng) minLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lng > maxLng) maxLng = lng;
+    if (lat > maxLat) maxLat = lat;
+  });
+  const buf = Math.max(1, (maxLng - minLng) * 0.5);
+  const extent = [minLng - buf, minLat - buf * 0.5, maxLng + buf, maxLat + buf * 0.5];
+
+  try {
+    const response = await fetch('/api/sdm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ presences, env_vars, extent, resolution })
+    });
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    const geojson = await response.json();
+    if (geojson.error) throw new Error(geojson.error);
+    if (!geojson.features || geojson.features.length === 0) {
+      showToast('MaxEnt returned no results', 'warning');
+      return;
+    }
+    renderSDMResult(geojson, 'MaxEnt SDM');
+  } catch (err) {
+    console.error('MaxEnt API error:', err);
+    showToast('MaxEnt API unavailable: ' + err.message + '. Try Bioclim or Mahalanobis instead.', 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -13116,6 +13083,48 @@ _initComposerPopout();
 // remove+re-add layers), and basemap switches. moveend/zoomend catches view changes.
 map.on('layeradd layerremove', _onComposerSourceChange);
 map.on('moveend zoomend', _onComposerSourceChange);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GSX PROJECT RESTORE & AUTOSAVE
+// ═══════════════════════════════════════════════════════════════════════════
+
+window.gsxRestoreProject = function (project) {
+  // Clear existing layers
+  [...uploadedLayers].forEach(l => removeUploadedLayer(l.id));
+
+  // Restore each layer
+  project.layers.forEach(function (l) {
+    if (l.isRaster) return; // rasters not embedded
+    if (!l.geojson || !l.geojson.features) return;
+    addUploadedGeoJSON(l.geojson, l.name, l.style && l.style.color);
+    var restored = uploadedLayers[0];
+    if (restored && l.meta) restored.meta = l.meta;
+    if (l.visible === false && restored.layer) map.removeLayer(restored.layer);
+  });
+
+  // Restore map view
+  if (project.view) map.setView([project.view.lat, project.view.lng], project.view.zoom);
+
+  // Restore project metadata fields
+  var author = project.author || project.meta || {};
+  ['authorName','projectId','subject','title'].forEach(function (k) {
+    var el = document.getElementById('gsx-proj-' + k);
+    if (el && author[k]) el.value = author[k];
+  });
+
+  refreshAnalysisLayerSelect();
+  if (typeof GSX !== 'undefined' && GSX.uiRenderProvenanceTable) GSX.uiRenderProvenanceTable();
+  showToast('Project restored: ' + (project.layers.length) + ' layers', 'success');
+};
+
+// Start autosave (every 60s) and check for recoverable session
+if (typeof GSX !== 'undefined' && GSX.startAutosave) {
+  GSX.startAutosave(60000);
+  var _gsxAutosave = GSX.hasAutosave ? GSX.hasAutosave() : null;
+  if (_gsxAutosave && confirm('Recover unsaved project from ' + _gsxAutosave.modified + '?')) {
+    GSX.restoreAutosave();
+  }
+}
 </script>
 </body>
 </html>

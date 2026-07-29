@@ -465,6 +465,13 @@ map-kit/                      # Repository name (app is branded "GeoSpaX")
 ├── .editorconfig             # Editor settings
 ├── .gitignore                # Git ignore rules
 ├── .pre-commit-config.yaml   # Pre-commit hooks
+├── js/                       # GeoSpaX JS modules (loaded by index.html)
+│   ├── geospax-conservation.js      # Overlay, protection gap, area units, WLC engine
+│   ├── geospax-conservation-m2.js   # Equal-area, fragmentation, connectivity, change detection
+│   ├── geospax-sdm-fix.js           # BIOCLIM / Mahalanobis SDM with env sampling + guards
+│   ├── geospax-project.js           # Provenance stamping, .gspx project save/load, autosave
+│   ├── geospax-raster.js            # Reclassify, Otsu threshold, polygonize
+│   └── gsx-select.js                # App-wide dropdown popup replacement (see Technical Notes)
 ├── samples/
 │   └── sample_species_richness.geojson   # Demo dataset (see Sample Dataset above)
 ├── vendor/                   # All third-party JS/CSS libraries (no CDN at runtime)
@@ -599,6 +606,16 @@ Results match GeoDa and ArcGIS Pro for well-formed datasets.
 - **IDW**: Does not model spatial autocorrelation; may produce bull's-eye artefacts. Use kriging for production interpolation.
 - **DBSCAN**: Epsilon is auto-derived; for precise cluster control use a dedicated library.
 - **LISA permutation p-values**: Based on 999 permutations; p-values < 0.001 are reported as `< 0.001`.
+
+### Dropdown Rendering
+
+On some Linux/GTK browser builds, clicking a `<select>` focuses the control but the browser never paints its native option popup — the list is simply unreachable, making dropdown-driven tools unusable.
+
+`js/gsx-select.js` works around this by suppressing the native popup and drawing the option list itself as a `position: fixed` panel appended to `<body>` (so no ancestor `overflow` can clip it). It applies to every dropdown in the app via two capture-phase listeners on `document`, which also covers dropdowns created or repopulated at runtime.
+
+The `<select>` elements themselves are left untouched — they remain the visible, natively styled controls and keep rendering their own selected-option text, so all existing styling and `change` handlers are unaffected. The list is keyboard accessible (Enter/Space opens, arrow keys move, Escape closes), exposes ARIA `listbox`/`option` roles, and flips above the control when there is no room below.
+
+To restore the native popup for a single control, add `data-gsx-select="off"` to it.
 
 ### Security
 

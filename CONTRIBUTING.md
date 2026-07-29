@@ -58,6 +58,13 @@ pre-commit run --all-files
 ```text
 map-kit/                    # Repository name (app is branded "GeoSpaX")
 ├── index.html              # Web GIS frontend (standalone, zero-backend)
+├── js/                     # GeoSpaX JS modules (loaded by index.html)
+│   ├── geospax-conservation.js      # Overlay, WLC, gap analysis
+│   ├── geospax-conservation-m2.js   # Fragmentation, connectivity, change detection
+│   ├── geospax-sdm-fix.js           # BIOCLIM / Mahalanobis SDM
+│   ├── geospax-project.js           # Provenance, project save/load
+│   ├── geospax-raster.js            # Reclassify, polygonize
+│   └── gsx-select.js                # Dropdown popup replacement (app-wide)
 ├── src/
 │   ├── make_maps.py        # Legacy script (kept for backward compatibility)
 │   └── geospax/            # Python package
@@ -103,6 +110,7 @@ The Web GIS is a single-file application. When modifying:
 - Use the existing overlay/modal pattern for dialogs (no `prompt()`/`alert()`)
 - Maintain dark/light theme compatibility (add `body.light` rules for new elements)
 - Use toast notifications (`showToast()`) for user feedback
+- Dropdown popups are handled by `js/gsx-select.js` — do not add custom dropdown widgets. New `<select>` elements are covered automatically. Add `data-gsx-select="off"` only if a control must use its native popup
 
 ### Layer Management
 

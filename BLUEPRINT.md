@@ -19,6 +19,56 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 ## Version History
 
+### v1.2.0 (2025-07-29) — Conservation Module Integration
+
+#### Conservation Planning (Milestone 1)
+- **Vector overlay toolkit**: Union, Intersect, Erase operations between two layers (turf.js based)
+- **Protection gap reporting**: Identify unprotected areas within a planning boundary
+- **WLC suitability rework**: Weighted Linear Combination with criteria table, constraint masking, rescale-01 normalisation
+- **Second layer selector**: A/B layer dropdowns for two-layer analysis workflows
+
+#### Conservation Metrics (Milestone 2)
+- **Equal-area reporting**: LAEA projection-based area calculations for accurate polygon area summaries
+- **Fragmentation metrics**: Patch count, mean patch size, edge density, largest patch index
+- **Connectivity analysis**: Nearest-neighbour distances between protected area patches
+- **Change detection**: Compare two polygon layers to identify gains, losses, and persistence
+
+#### SDM Correctness Fixes
+- **Bioclim SDM rewrite**: Percentile-based envelope with proper env sampling via `sampleEnvAt`
+- **Mahalanobis SDM rewrite**: Chi-square survival function for probability, covariance with regularisation
+- **Warning system**: Surfaces user warnings for insufficient data, missing env values, singular covariance
+- Old `runBioclimSDM`, `runMahalanobisSDM`, `runSDM` removed and replaced by `GSX.runBioclimSDM`, `GSX.runMahalanobisSDM`
+- MaxEnt (server-side API) retained as `runMaxEntSDM`
+
+#### Provenance & Project Persistence
+- **Provenance stamping**: `GSX.stampImport` on file import, `GSX.stampDerived` on analysis output
+- **Provenance table**: View/export lineage metadata (source, operation, timestamp, parameters)
+- **Project save/load**: Serialise entire map session to `.geospax` JSON project file
+- **Autosave**: Periodic localStorage autosave with recovery prompt on reload
+- **Project metadata**: Editable title, author, description, CRS fields
+
+#### Raster Tools
+- **Reclassify**: Binary threshold reclassification with Otsu threshold suggestion
+- **Polygonize**: Convert raster masks to vector polygons via run-length encoding
+- **Histogram**: Display raster value distribution with bin count control
+
+#### Dropdown Rendering Fix (`gsx-select.js`)
+- **Problem**: on some Linux/GTK browser builds a `<select>` receives focus on click but the browser never paints its native option popup, leaving every dropdown list unreachable — overlay operation, constraint layer, area units, SDM presence layer, BIOCLIM mode, Mahalanobis output, raster layer/band, and threshold operator among them
+- **Fix**: `js/gsx-select.js` suppresses the native popup (`preventDefault()` on `mousedown`) and draws the option list itself as a `position: fixed` panel appended to `<body>`, so no ancestor `overflow` can clip it
+- **Non-invasive by design**: the `<select>` elements are left untouched and remain the visible, natively styled controls rendering their own selected-option text. Only the popup is replaced, so all existing CSS, `id`s, `.value` reads and `change`/`onchange` handlers keep working unmodified
+- **App-wide via event delegation**: two capture-phase listeners on `document` cover all 38 selects — left sidebar (basemap, per-layer export), bottom bar (profile sort), right panel (attribute table, symbology), analysis drawer, export modal, CSV column mapper, and the layout composer — including selects created or repopulated at runtime, with no per-element registration
+- **Behaviour**: keyboard accessible (Enter/Space opens, arrows move, Escape closes), ARIA `listbox`/`option` roles, flips above the control when short of space below, closes on outside click, scroll, resize or blur, and declines to open for `disabled`, `multiple` and empty selects (matching native behaviour)
+- **Escape hatch**: `data-gsx-select="off"` on any control restores its native popup
+- Drawer select styling also hardened as a no-JS fallback: explicit `appearance: menulist`, larger hit area (26px), and explicit `option` colours
+
+#### Module Architecture
+- Six JS modules in `js/` directory: `geospax-conservation.js`, `geospax-conservation-m2.js`, `geospax-sdm-fix.js`, `geospax-project.js`, `geospax-raster.js`, `gsx-select.js`
+- Global `GSX` object exposes all conservation module functions; `gsx-select.js` is self-contained UI infrastructure exposing `GSXSelect`
+- Pure functions (no DOM access) are unit-testable; UI wrappers at bottom of each module
+- Old inline WLC/SDM functions removed from `index.html`, replaced by module equivalents
+
+---
+
 ### v1.1.0 (2025-07-29)
 
 #### Map Composer Enhancements
@@ -115,7 +165,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 ### v1.2.0 (Planned)
 - [ ] **3D terrain view** — Cesium or MapLibre GL integration for 3D elevation visualization
 - [ ] **Time-series animation** — animate point/layer attributes over a temporal field
-- [ ] **Spatial join** — point-in-polygon, intersect, union operations between layers
+- [x] **Spatial join** — point-in-polygon, intersect, union operations between layers *(v1.2.0 conservation module)*
 - [ ] **Zonal statistics** — summarize raster values within polygon zones
 - [ ] **Layout templates gallery** — preset layouts (A4 portrait, poster, presentation) with one-click apply
 - [ ] **Multi-page composer** — chain multiple layout pages for batch map series
@@ -126,7 +176,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 - [ ] **Point Pattern Analysis** — Ripley's K, kernel density estimation with bandwidth selection
 - [ ] **Raster calculator** — band math and map algebra expressions
 - [ ] **WMS/WMTS layer support** — connect to OGC web map services
-- [ ] **Project save/load** — persist entire map session (layers, styles, layout) as a `.geospax` project file
+- [x] **Project save/load** — persist entire map session (layers, styles, layout) as a `.geospax` project file *(v1.2.0 conservation module)*
 
 ### v1.4.0 (Planned)
 - [ ] **R Console (WebR)** — integrated R terminal in bottom panel via WebR (R compiled to WebAssembly)
@@ -184,6 +234,14 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 │  Leaflet, Chart.js, html2canvas, jsPDF, SheetJS,        │
 │  shpjs, shp-write, toGeoJSON, proj4js, GeoRaster,       │
 │  Leaflet.heat, Leaflet Measure, Leaflet Fullscreen      │
+│                                                         │
+│  js/ — GeoSpaX conservation modules (GSX namespace)     │
+│  geospax-conservation.js  — M1: overlay, WLC, gap       │
+│  geospax-conservation-m2.js — M2: area, fragmentation   │
+│  geospax-sdm-fix.js      — Bioclim/Mahalanobis rewrite  │
+│  geospax-project.js      — provenance, save/load         │
+│  geospax-raster.js       — reclassify, polygonize        │
+│  gsx-select.js           — dropdown popup (app-wide UI)  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -204,6 +262,10 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 | Data I/O | SheetJS, shpjs, shp-write, toGeoJSON |
 | CRS | proj4js 2.11.0 |
 | Raster | GeoRaster + GeoRaster Layer for Leaflet |
+| Conservation | turf.js 6.5.0 (overlay, WLC, fragmentation) |
+| SDM | Bioclim/Mahalanobis (client-side), MaxEnt (server API) |
+| Provenance | GSX module (stampImport/stampDerived, .geospax project) |
+| UI controls | `gsx-select.js` — dropdown popup replacement (no dependencies) |
 | Python pkg | GeoPandas, Matplotlib, Folium, Contextily |
 | Hosting | Vercel (primary) + GitHub Pages (mirror) |
 
