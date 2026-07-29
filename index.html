@@ -1356,9 +1356,10 @@
   #layout-north {
     position: absolute; top: 12px; right: 12px;
     width: 40px; height: 56px;
-    pointer-events: none; z-index: 1000;
+    pointer-events: auto; cursor: move; z-index: 1000;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
   }
+  #layout-paper.exporting #layout-north { cursor: default; }
   #layout-north .na-disc {
     position: absolute; left: 0; top: 8px; width: 40px; height: 40px;
     border-radius: 50%;
@@ -1396,11 +1397,21 @@
   }
   #layout-attribution {
     position: absolute; bottom: 4px; right: 12px;
-    font-size: 8px; color: #2d3748;
-    background: rgba(255,255,255,0.78); padding: 2px 6px; border-radius: 2px;
+    font-size: 8px; color: #1a202c;
+    background: transparent; padding: 0; border-radius: 0;
     pointer-events: none; z-index: 999;
     font-family: Arial, Helvetica, sans-serif;
     max-width: 60%; text-align: right;
+    --halo-w: 1.5px; --halo-c: #ffffff;
+    text-shadow:
+      calc(-1 * var(--halo-w)) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       var(--halo-w) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+      calc(-1 * var(--halo-w))  var(--halo-w) 0 var(--halo-c),
+       var(--halo-w)  var(--halo-w) 0 var(--halo-c),
+       0 calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       0  var(--halo-w) 0 var(--halo-c),
+      calc(-1 * var(--halo-w)) 0 0 var(--halo-c),
+       var(--halo-w) 0 0 var(--halo-c);
   }
   .layout-toggle {
     display: inline-flex; align-items: center; gap: 5px;
@@ -1432,13 +1443,23 @@
   .layout-grid-label {
     position: absolute; z-index: 998; pointer-events: none;
     font-family: Arial, Helvetica, sans-serif; font-size: 9px;
-    color: #2d3748; background: rgba(255,255,255,0.78);
-    padding: 1px 4px; border-radius: 2px; font-weight: 600;
+    color: #1a202c; background: transparent;
+    padding: 0; border-radius: 0; font-weight: 700;
     white-space: nowrap;
+    --halo-w: 1.5px; --halo-c: #ffffff;
+    text-shadow:
+      calc(-1 * var(--halo-w)) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       var(--halo-w) calc(-1 * var(--halo-w)) 0 var(--halo-c),
+      calc(-1 * var(--halo-w))  var(--halo-w) 0 var(--halo-c),
+       var(--halo-w)  var(--halo-w) 0 var(--halo-c),
+       0 calc(-1 * var(--halo-w)) 0 var(--halo-c),
+       0  var(--halo-w) 0 var(--halo-c),
+      calc(-1 * var(--halo-w)) 0 0 var(--halo-c),
+       var(--halo-w) 0 0 var(--halo-c);
   }
   #layout-scale {
     position: absolute; bottom: 12px; right: 12px;
-    font-size: 10px; color: #1a202c; pointer-events: none; z-index: 1000;
+    font-size: 10px; color: #1a202c; pointer-events: auto; cursor: move; z-index: 1000;
     display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
     font-family: Arial, Helvetica, sans-serif;
   }
@@ -1533,16 +1554,30 @@
     font-size: 8px; color: #1a202c; text-align: center;
     height: 14px; line-height: 14px; font-weight: 600;
     font-family: Arial, Helvetica, sans-serif;
+    pointer-events: auto; cursor: move;
   }
   #layout-legend {
     position: absolute; bottom: 12px; left: 12px;
-    max-width: 220px; min-width: 160px; max-height: 240px; overflow: auto;
+    min-width: 160px; overflow: auto;
     background: rgba(255,255,255,0.95); border: 1px solid #1a202c;
     border-radius: 3px; padding: 8px 10px; font-size: 10px; color: #1a202c;
     pointer-events: none; z-index: 1000;
     font-family: Arial, Helvetica, sans-serif;
     box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
+  .layout-legend-handle { pointer-events: auto; }
+
+  /* Resize handle (bottom-right grip) for resizable layout items (legend, overview). */
+  .layout-resize-handle {
+    position: absolute; right: -4px; bottom: -4px;
+    width: 12px; height: 12px;
+    background: var(--accent); border: 1.5px solid #fff;
+    border-radius: 50%; cursor: nwse-resize; z-index: 1001;
+    pointer-events: auto;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+  }
+  #layout-paper.exporting .layout-resize-handle { display: none !important; }
+  .layout-item-dragging, .layout-item-resizing { opacity: 0.85; outline: 1.5px dashed var(--accent); outline-offset: 1px; }
   .layout-actions {
     display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; justify-content: center;
   }
@@ -1649,6 +1684,8 @@
 <!-- Top bar -->
 <div id="topbar">
   <div class="logo">&#x1f5fa; GeoSpaX</div>
+  <div class="sep"></div>
+  <div class="subtitle">Lightweight web mapping. Ship maps in minutes, not hours.</div>
   <div class="spacer"></div>
   <div class="search-box" id="search-box" title="Enter coordinates (lat, lon) or place name">
     <input type="text" id="goto-search" placeholder="Go to XY or search place…" onkeydown="if(event.key==='Enter')doGotoSearch()">
@@ -2447,6 +2484,8 @@
   <span class="status-chip" id="status-zoom">Zoom: --</span>
   <span class="status-chip" id="visible-count">0 features</span>
   <span class="status-chip" id="status-latlon">--°, --°</span>
+  <div style="flex:1;"></div>
+  <span class="status-chip" id="status-copyright">&copy; GeoSpaX &mdash; a product of <a href="https://www.in4metrix.dev" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">in4metrix</a></span>
 </div>
 
 <!-- Sheet picker modal (XLSX with multiple sheets) -->
@@ -9041,6 +9080,128 @@ function closeLayoutModal() {
   _resetLayoutLockState();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYOUT COMPOSER — draggable / resizable furniture items (QGIS-style layout
+// items). North arrow & scale bar are drag-only (fixed proportions); legend
+// & overview inset are drag + resize via a corner handle. All items live
+// inside #layout-paper (position: relative), a fixed 1000×562px canvas, so
+// saved left/top/width/height pixel geometry is stable across sessions.
+// ═══════════════════════════════════════════════════════════════════════════
+const LAYOUT_ITEM_CONFIG = [
+  { id: 'layout-north',         resizable: false },
+  { id: 'layout-scale',         resizable: false },
+  { id: 'layout-legend',        resizable: true, handleSelector: '.layout-legend-handle' },
+  { id: 'layout-overview-wrap', resizable: true, handleSelector: '#layout-overview-label',
+    onResize: el => { if (layoutOverviewMap && layoutOverviewMap.invalidateSize) layoutOverviewMap.invalidateSize(); } },
+];
+const LAYOUT_ITEM_MIN_W = 50, LAYOUT_ITEM_MIN_H = 30;
+
+function _layoutItemStorageKey(id) { return `geospax_layout_item_${id}`; }
+
+function _loadLayoutItemGeom(id) {
+  try {
+    const raw = localStorage.getItem(_layoutItemStorageKey(id));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function _saveLayoutItemGeom(id, geom) {
+  try { localStorage.setItem(_layoutItemStorageKey(id), JSON.stringify(geom)); } catch (e) {}
+}
+
+function _initLayoutItemDrag(paper) {
+  LAYOUT_ITEM_CONFIG.forEach(cfg => {
+    const el = document.getElementById(cfg.id);
+    if (!el || el._layoutDragInit) return;
+    el._layoutDragInit = true;
+
+    const saved = _loadLayoutItemGeom(cfg.id);
+    if (saved) {
+      el.style.left = saved.left + 'px';
+      el.style.top = saved.top + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+      if (cfg.resizable && saved.w != null) {
+        el.style.width = saved.w + 'px';
+        el.style.height = saved.h + 'px';
+      }
+    }
+
+    el.addEventListener('mousedown', e => {
+      if (cfg.handleSelector && !e.target.closest(cfg.handleSelector)) return;
+      if (e.target.closest('.layout-resize-handle')) return;
+      _startLayoutItemDrag(e, el, paper, cfg);
+    });
+
+    if (cfg.resizable) {
+      const rh = document.createElement('div');
+      rh.className = 'layout-resize-handle';
+      rh.title = 'Drag to resize';
+      el.appendChild(rh);
+      rh.addEventListener('mousedown', e => _startLayoutItemResize(e, el, paper, cfg));
+    }
+  });
+}
+
+function _startLayoutItemDrag(e, el, paper, cfg) {
+  e.preventDefault(); e.stopPropagation();
+  const startLeft = el.offsetLeft, startTop = el.offsetTop;
+  const startX = e.clientX, startY = e.clientY;
+  el.style.left = startLeft + 'px';
+  el.style.top = startTop + 'px';
+  el.style.right = 'auto';
+  el.style.bottom = 'auto';
+  el.classList.add('layout-item-dragging');
+
+  function onMove(ev) {
+    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const left = Math.max(0, Math.min(startLeft + dx, paper.clientWidth - w));
+    const top = Math.max(0, Math.min(startTop + dy, paper.clientHeight - h));
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    el.classList.remove('layout-item-dragging');
+    _saveLayoutItemGeom(cfg.id, {
+      left: el.offsetLeft, top: el.offsetTop,
+      w: cfg.resizable ? el.offsetWidth : undefined,
+      h: cfg.resizable ? el.offsetHeight : undefined,
+    });
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function _startLayoutItemResize(e, el, paper, cfg) {
+  e.preventDefault(); e.stopPropagation();
+  const startW = el.offsetWidth, startH = el.offsetHeight;
+  const startX = e.clientX, startY = e.clientY;
+  const left = el.offsetLeft, top = el.offsetTop;
+  el.classList.add('layout-item-resizing');
+
+  function onMove(ev) {
+    let w = Math.max(LAYOUT_ITEM_MIN_W, startW + (ev.clientX - startX));
+    let h = Math.max(LAYOUT_ITEM_MIN_H, startH + (ev.clientY - startY));
+    w = Math.min(w, paper.clientWidth - left);
+    h = Math.min(h, paper.clientHeight - top);
+    el.style.width = w + 'px';
+    el.style.height = h + 'px';
+    if (cfg.onResize) cfg.onResize(el);
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    el.classList.remove('layout-item-resizing');
+    _saveLayoutItemGeom(cfg.id, { left, top, w: el.offsetWidth, h: el.offsetHeight });
+    if (cfg.onResize) cfg.onResize(el);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
 async function buildLayout() {
   const myToken = ++layoutBuildToken;
   const stale = () => myToken !== layoutBuildToken || !layoutMap;
@@ -9059,6 +9220,7 @@ async function buildLayout() {
   if (layoutMap && layoutMap.off) layoutMap.off('move zoomend moveend viewreset', _repositionLayoutLabels);
   paper.style.width = paperW + 'px';
   paper.style.height = paperH + 'px';
+  _initLayoutItemDrag(paper);
 
   // Callers (previewExport / doExport) must add `.show` to #layout-modal
   // before calling buildLayout so the Leaflet container has real dimensions.
@@ -9307,7 +9469,8 @@ async function buildLayout() {
     legendEl.style.display = 'block';
     legendEl.innerHTML = '';
     const head = document.createElement('div');
-    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:var(--text);border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;';
+    head.className = 'layout-legend-handle';
+    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:var(--text);border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;cursor:move;';
     head.textContent = 'Legend';
     legendEl.appendChild(head);
     visibleLayers.forEach(info => {
