@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GeoSpaX — Interactive Web GIS & Spatial Analysis</title>
 <meta name="description" content="GeoSpaX is a modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis.">
-<meta name="author" content="in4metrix">
+<meta name="author" content="Jimmy Moses">
+<meta name="version" content="1.1.0">
 <meta name="theme-color" content="#0f172a">
 
 <!-- Favicon: same map emoji used in the in-app logo -->
@@ -2085,6 +2086,7 @@
         <div id="bottom-tabs" style="display:flex; gap:0; align-items:center;">
           <button class="bottom-tab active" data-tab="elevation" onclick="switchBottomTab('elevation')">Elevation Profile</button>
           <button class="bottom-tab" data-tab="analysis" onclick="switchBottomTab('analysis')">Analysis Results</button>
+          <button class="bottom-tab" data-tab="cite" onclick="switchBottomTab('cite')">How to Cite</button>
         </div>
         <span style="width:1px;height:16px;background:var(--border);margin:0 8px 0 4px;"></span>
         <div class="profile-tabs" id="profile-tabs"></div>
@@ -2116,6 +2118,14 @@
           </div>
           <div id="analysis-results-empty" style="color:var(--text-faint); text-align:center; padding:32px 12px; font-size:12px;">Run a spatial analysis tool from the left panel to see results here.</div>
           <div id="analysis-results-content" style="display:none;"></div>
+        </div>
+      </div>
+      <div id="bottom-tab-cite" class="bottom-tab-content" style="display:none;">
+        <div style="max-width:760px; margin:0 auto; padding:12px 20px; font-size:12px; line-height:1.6; color:var(--text);">
+          <h3 style="font-size:14px; margin:0 0 6px 0; color:var(--accent);">How to Cite GeoSpaX</h3>
+          <p style="color:var(--text-muted); margin:0 0 12px 0;">GeoSpaX (v1.1.0) has been used in PhD and Masters theses. Please cite using the format appropriate for your discipline. Citation format follows <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number and access date.</p>
+          <div id="cite-formats" style="display:flex; flex-direction:column; gap:10px;"></div>
+          <p style="color:var(--text-faint); font-size:11px; margin:14px 0 0 0;">A DOI will be assigned via Zenodo or DataCite for future releases. For now, use the repository URL as the persistent identifier.</p>
         </div>
       </div>
     </div>
@@ -7460,6 +7470,67 @@ function switchBottomTab(tab) {
   document.getElementById('profile-tabs').style.display = tab === 'elevation' ? '' : 'none';
   document.getElementById('profile-hint').style.display = tab === 'elevation' ? '' : 'none';
   if (tab === 'elevation' && profileChart) profileChart.resize();
+  if (tab === 'cite') populateCitationFormats();
+}
+
+function populateCitationFormats() {
+  const container = document.getElementById('cite-formats');
+  if (!container || container.dataset.populated) return;
+  container.dataset.populated = '1';
+
+  const citeUrl = 'https://geospax.in4metrix.dev/';
+  const year = new Date().getFullYear();
+  const accessDate = new Date().toISOString().split('T')[0];
+  const version = '1.1.0';
+  const author = 'Moses, J.';
+  const affiliation = 'School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology';
+
+  const formats = [
+    {
+      label: 'APA (7th ed.)',
+      text: `Moses, J. (${year}). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version ${version}) [Computer software]. ${affiliation}. Retrieved ${accessDate}, from ${citeUrl}`
+    },
+    {
+      label: 'Chicago (17th ed.)',
+      text: `Moses, Jimmy. ${year}. "GeoSpaX: Interactive Web GIS & Spatial Analysis." Version ${version}. ${affiliation}. Accessed ${accessDate}. ${citeUrl}.`
+    },
+    {
+      label: 'Harvard',
+      text: `Moses, J. (${year}) GeoSpaX: Interactive Web GIS & Spatial Analysis, Version ${version}. ${affiliation}. Available at: ${citeUrl} (Accessed: ${accessDate}).`
+    },
+    {
+      label: 'BibTeX',
+      text: `@software{geospax_${year},\n  author       = {Moses, Jimmy},\n  title        = {{GeoSpaX: Interactive Web GIS \\& Spatial Analysis}},\n  year         = ${year},\n  version      = {${version}},\n  organization = {${affiliation}},\n  url          = {${citeUrl}},\n  note         = {Accessed: ${accessDate}}\n}`
+    }
+  ];
+
+  container.innerHTML = '';
+  formats.forEach(f => {
+    const block = document.createElement('div');
+    block.style.cssText = 'background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;';
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;';
+    const lbl = document.createElement('span');
+    lbl.style.cssText = 'font-weight:600;font-size:11px;color:var(--accent);';
+    lbl.textContent = f.label;
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy';
+    copyBtn.style.cssText = 'font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-muted);cursor:pointer;';
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(f.text).then(() => {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+      });
+    };
+    head.appendChild(lbl);
+    head.appendChild(copyBtn);
+    block.appendChild(head);
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.5;color:var(--text);font-family:inherit;';
+    pre.textContent = f.text;
+    block.appendChild(pre);
+    container.appendChild(block);
+  });
 }
 
 function showResult(html) {
