@@ -2169,6 +2169,10 @@
   <div class="coord-display" id="coord-display">Move cursor over map</div>
   <div class="scale-display" id="zoom-display">Zoom: --</div>
   <button id="analysis-drawer-btn" class="analysis-toolbar-btn" onclick="toggleAnalysisDrawer()" title="Open Spatial Analysis tools (A)">&#x1F9EA; Analysis</button>
+  <button class="analysis-toolbar-btn" onclick="GSX.uiSaveProject()" title="Save the entire workspace (all layers, styles, digitized features) as a .gspx project file">&#x1F4BE; Save</button>
+  <label class="analysis-toolbar-btn" title="Load a previously saved .gspx project file" style="cursor:pointer;">&#x1F4C2; Load
+    <input type="file" accept=".gspx,.json" style="display:none" onchange="GSX.uiLoadProject(this.files[0]); this.value=''">
+  </label>
   <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light theme" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:14px;color:var(--text);">&#x1f319;</button>
   <button id="collapse-left-btn" onclick="toggleLeftPanel()" title="Toggle left panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25c0;</button>
   <button id="collapse-right-btn" onclick="toggleRightPanel()" title="Toggle right panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25b6;</button>
