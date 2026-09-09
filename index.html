@@ -12941,11 +12941,13 @@ function _serializeComposerState() {
       maxNativeZoom: basemapLayer.options.maxNativeZoom,
     },
     view: { center: map.getCenter(), zoom: map.getZoom() },
+    // Read from the composer sidebar controls (what the user actually set);
+    // fall back to the legacy export overlay if the sidebar is missing.
     exportSettings: {
       format: exportFormat,
-      extent: document.getElementById('exp-extent').value,
-      includeLegend: document.getElementById('exp-include-legend').checked,
-      dpi: document.getElementById('exp-dpi').value,
+      extent: (document.getElementById('layout-extent') || document.getElementById('exp-extent') || {}).value || 'fit',
+      includeLegend: (document.getElementById('layout-include-legend') || document.getElementById('exp-include-legend') || {}).checked !== false,
+      dpi: (document.getElementById('layout-dpi') || document.getElementById('exp-dpi') || {}).value || '300',
     },
     timestamp: Date.now(),
   };
@@ -13057,16 +13059,31 @@ async function _applyComposerState(state) {
     attr: state.basemap.attribution,
     maxz: state.basemap.maxNativeZoom,
   };
-  // Apply export settings.
+  // Apply export settings. These MUST target the composer sidebar controls
+  // (layout-*) — buildLayout()/layoutExport() read those, not the legacy
+  // export overlay (exp-*) — and keep the legacy overlay in sync for doExport.
   const ee = state.exportSettings;
   if (ee) {
     exportFormat = ee.format || 'png';
-    const ext = document.getElementById('exp-extent');
-    if (ext) ext.value = ee.extent || 'fit';
-    const leg = document.getElementById('exp-include-legend');
-    if (leg) leg.checked = ee.includeLegend !== false;
-    const dpi = document.getElementById('exp-dpi');
-    if (dpi) dpi.value = ee.dpi || '300';
+    const setSel = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
+    setSel('layout-extent', ee.extent || 'fit');
+    setChk('layout-include-legend', ee.includeLegend !== false);
+    setSel('layout-dpi', String(ee.dpi || '300'));
+    setSel('layout-export-format', exportFormat);
+    setSel('exp-extent', ee.extent || 'fit');
+    setChk('exp-include-legend', ee.includeLegend !== false);
+    setSel('exp-dpi', String(ee.dpi || '300'));
+    const layoutBtn = document.getElementById('layout-export-btn');
+    if (layoutBtn) layoutBtn.textContent = exportFormat === 'pdf' ? 'Export PDF' : 'Export PNG';
+  }
+  // Mirror the source map's view onto this window's background map so the
+  // composer's "Current view" extent mode resolves against the source map,
+  // not this popout's freshly-initialized default world view.
+  if (state.view && typeof map !== 'undefined' && map.setView) {
+    try {
+      map.setView([state.view.center.lat, state.view.center.lng], state.view.zoom, { animate: false });
+    } catch (e) { /* non-fatal — fit-to-layers mode doesn't need it */ }
   }
   // Rebuild the layout.
   await buildLayout();
@@ -13089,6 +13106,7 @@ function _initComposerPopout() {
       const msg = ev.data;
       if (!msg) return;
       if (msg.type === 'composer_state') {
+        _gotComposerState = true;
         if (composerAutoUpdate) {
           await _applyComposerState(msg.state);
         } else {
@@ -13105,13 +13123,17 @@ function _initComposerPopout() {
   _restoreScalebarPrefs();
 
   // Notify the main window that we're ready to receive state.
-  // Retry a few times in case the main window's channel isn't ready yet.
+  // Retry a few times in case the main window's channel isn't ready yet,
+  // but stop as soon as state arrives — each 'ready' triggers a full state
+  // push + composer rebuild in this window, so duplicate retries are wasteful.
+  let _gotComposerState = false;
   let retries = 0;
   const notifyReady = () => {
+    if (_gotComposerState) return;
     try {
       composerSyncChannel.postMessage({ type: 'composer_ready' });
     } catch(e) {}
-    if (++retries < 5) setTimeout(notifyReady, 500);
+    if (!_gotComposerState && ++retries < 5) setTimeout(notifyReady, 500);
   };
   notifyReady();
 
