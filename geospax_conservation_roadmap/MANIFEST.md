@@ -3,6 +3,12 @@
 Everything produced in this session. Three folders: teaching materials you can use as-is,
 GeoSpaX code ready to integrate, and the scripts that generated the documents.
 
+> **Update — GeoSpaX v1.2.0 (2026-09-09):** the main app gained a **Calculate field** tool
+> (Analysis → Attributes) that writes a new attribute from existing fields via weighted
+> conditions or a QGIS-style expression, plus project save/load (.gspx) and autosave fixes.
+> Students can compute index/proxy scores from their imported data without leaving the app.
+
+
 ---
 
 ## 1. Teaching materials

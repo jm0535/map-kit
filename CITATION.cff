@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use GeoSpaX in your research or teaching, please cite it as below."
+title: "GeoSpaX: Interactive Web GIS & Spatial Analysis"
+authors:
+  - family-names: Moses
+    given-names: Jimmy
+    affiliation: School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology
+type: software
+repository-code: "https://github.com/jm0535/map-kit"
+url: "https://geospax.in4metrix.dev/"
+version: 1.2.0
+date-released: "2026-09-09"
+keywords:
+  - GIS
+  - spatial-analysis
+  - conservation
+  - web-gis
+  - teaching

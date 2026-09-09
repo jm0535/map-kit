@@ -213,7 +213,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 ### Future Considerations
 - [ ] **DOI assignment** — Zenodo integration for citable software releases
-- [ ] **CITATION.cff** — machine-readable citation metadata file
+- [x] **CITATION.cff** — machine-readable citation metadata file (added v1.2.0)
 - [ ] **CodeMeta.json** — full software metadata for discoverability
 - [ ] **WebAssembly port** — performance-critical spatial algorithms in Rust/WASM
 - [ ] **Vector tiles** — MVT/PBF vector tile layer support
