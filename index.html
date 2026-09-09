@@ -3159,7 +3159,7 @@
 
     <!-- ── SECTION 13: Provenance & Project ── -->
     <div class="ad-section-title" id="gsx-project-section" onclick="toggleAnalysisSection(this)"><span>&#x1F4CB; Provenance &amp; Project</span><span class="arrow">&#x25BC;</span></div>
-    <div class="ad-hint">Track data lineage, export provenance reports, and save/load the entire project as a .gspx file.</div>
+    <div class="ad-hint">Track data lineage and export provenance reports. Save/load the whole project as .gspx from the 💾/📂 buttons in the top bar.</div>
     <div class="ad-subhead">Data Provenance</div>
     <div id="gsx-prov-table"></div>
     <div class="ad-btn-row">
@@ -3179,12 +3179,6 @@
     </div>
     <div class="ad-form-row">
       <label>Project title</label><input id="gsx-proj-title" type="text" placeholder="Project title">
-    </div>
-    <div class="ad-btn-row">
-      <button class="export-btn primary" onclick="GSX.uiSaveProject()">Save Project (.gspx)</button>
-      <label class="export-btn">Load Project
-        <input type="file" accept=".gspx,.json" style="display:none" onchange="GSX.uiLoadProject(this.files[0]); this.value=''">
-      </label>
     </div>
 
   </div><!-- /analysis-drawer-body -->
