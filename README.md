@@ -471,7 +471,8 @@ map-kit/                      # Repository name (app is branded "GeoSpaX")
 │   ├── geospax-sdm-fix.js           # BIOCLIM / Mahalanobis SDM with env sampling + guards
 │   ├── geospax-project.js           # Provenance stamping, .gspx project save/load, autosave
 │   ├── geospax-raster.js            # Reclassify, Otsu threshold, polygonize
-│   └── gsx-select.js                # App-wide dropdown popup replacement (see Technical Notes)
+│   ├── gsx-select.js                # App-wide dropdown popup replacement (see Technical Notes)
+│   └── gsx-calcfield.js             # Calculate field tool (expression parser + weighted conditions)
 ├── samples/
 │   └── sample_species_richness.geojson   # Demo dataset (see Sample Dataset above)
 ├── vendor/                   # All third-party JS/CSS libraries (no CDN at runtime)

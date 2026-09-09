@@ -6,7 +6,7 @@
 <title>GeoSpaX — Interactive Web GIS & Spatial Analysis</title>
 <meta name="description" content="GeoSpaX is a modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis.">
 <meta name="author" content="Jimmy Moses">
-<meta name="version" content="1.1.0">
+<meta name="version" content="1.2.0">
 <meta name="theme-color" content="#0f172a">
 
 <!-- Favicon: same map emoji used in the in-app logo -->
@@ -70,6 +70,7 @@
 <script src="js/geospax-project.js"></script>
 <script src="js/geospax-raster.js"></script>
 <script src="js/gsx-select.js"></script>
+<script src="js/gsx-calcfield.js"></script>
 
 <style>
   /* ── Design tokens ── */
@@ -922,6 +923,79 @@
     display: flex; align-items: center; gap: 6px; padding: 4px 0;
     border-bottom: 1px solid var(--border);
   }
+
+  /* ── Calculate field ── */
+  #analysis-drawer-body .gsx-calc-tabs {
+    display: flex; gap: 4px; flex: 1;
+  }
+  #analysis-drawer-body .gsx-calc-tab {
+    flex: 1; padding: 4px 8px; font-size: 10px; cursor: pointer;
+    background: var(--surface-2); color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 4px;
+  }
+  #analysis-drawer-body .gsx-calc-tab.active {
+    background: var(--accent-bg); color: var(--accent); border-color: var(--accent);
+  }
+  #analysis-drawer-body .gsx-calc-rows-label,
+  #analysis-drawer-body .gsx-calc-gen-label {
+    font-size: 10px; color: var(--text-muted); margin: 6px 0 3px;
+  }
+  #analysis-drawer-body .gsx-calc-row {
+    display: flex; align-items: center; gap: 4px; padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  #analysis-drawer-body .gsx-calc-row select,
+  #analysis-drawer-body .gsx-calc-row input {
+    font-size: 10px; padding: 3px 4px; min-width: 0;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+  }
+  #analysis-drawer-body .gsx-calc-row .gsx-calc-f { flex: 1.4; }
+  #analysis-drawer-body .gsx-calc-row .gsx-calc-t { width: 64px; }
+  #analysis-drawer-body .gsx-calc-row .gsx-calc-a { width: 56px; }
+  #analysis-drawer-body .gsx-calc-row .gsx-calc-b { width: 56px; }
+  #analysis-drawer-body .gsx-calc-row .gsx-calc-w { width: 44px; }
+  #analysis-drawer-body .gsx-calc-x {
+    font-size: 10px; color: var(--text-muted);
+  }
+  #analysis-drawer-body .gsx-calc-del {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 13px; padding: 0 3px; line-height: 1;
+  }
+  #analysis-drawer-body .gsx-calc-del:hover { color: var(--danger, #fc8181); }
+  #analysis-drawer-body .gsx-calc-add {
+    margin-top: 4px; padding: 3px 10px; font-size: 10px; cursor: pointer;
+    background: var(--surface-2); color: var(--text-muted);
+    border: 1px dashed var(--border-strong); border-radius: 4px;
+  }
+  #analysis-drawer-body .gsx-calc-add:hover { color: var(--accent); border-color: var(--accent); }
+  #analysis-drawer-body .gsx-calc-gen,
+  #analysis-drawer-body .gsx-calc-expr {
+    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+    font-size: 10px; color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 5px 6px; word-break: break-all;
+    white-space: pre-wrap; margin-bottom: 4px;
+  }
+  #analysis-drawer-body .gsx-calc-expr {
+    width: 100%; resize: vertical; white-space: pre;
+  }
+  #analysis-drawer-body .gsx-calc-preview {
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 4px 6px; margin-bottom: 4px; background: var(--surface-1);
+  }
+  #analysis-drawer-body .gsx-calc-prev-row {
+    font-size: 10px; padding: 1px 0; color: var(--text-muted);
+  }
+  #analysis-drawer-body .gsx-calc-prev-row b { color: var(--text); }
+  #analysis-drawer-body .gsx-calc-msg {
+    font-size: 10px; min-height: 14px; margin-bottom: 4px; color: var(--text-muted);
+  }
+  #analysis-drawer-body .gsx-calc-msg.err { color: var(--danger, #fc8181); }
+  #analysis-drawer-body #gsx-calc-run:disabled {
+    opacity: 0.45; cursor: not-allowed;
+  }
+
   #analysis-drawer-body .gsx-env-row input[type=checkbox] {
     accent-color: var(--accent); width: auto;
   }
@@ -2311,7 +2385,7 @@
       <div id="bottom-tab-cite" class="bottom-tab-content" style="display:none;">
         <div style="max-width:760px; margin:0 auto; padding:12px 20px; font-size:12px; line-height:1.6; color:var(--text);">
           <h3 style="font-size:14px; margin:0 0 6px 0; color:var(--accent);">How to Cite GeoSpaX</h3>
-          <p style="color:var(--text-muted); margin:0 0 12px 0;">GeoSpaX (v1.1.0) has been used in PhD and Masters theses. Please cite using the format appropriate for your discipline. Citation format follows <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number and access date.</p>
+          <p style="color:var(--text-muted); margin:0 0 12px 0;">GeoSpaX (v1.2.0) has been used in PhD and Masters theses. Please cite using the format appropriate for your discipline. Citation format follows <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number and access date.</p>
           <div id="cite-formats" style="display:flex; flex-direction:column; gap:10px;"></div>
           <p style="color:var(--text-faint); font-size:11px; margin:14px 0 0 0;">A DOI will be assigned via Zenodo or DataCite for future releases. For now, use the repository URL as the persistent identifier.</p>
         </div>
@@ -2498,6 +2572,21 @@
 
         <b>Convex Hull</b><br>
         Smallest convex polygon enclosing all features. Output includes perimeter (km) and area (km²). Useful for comparing species ranges, estimating home ranges, or defining a study boundary.<br><br>
+
+        <b>Calculate field</b><br>
+        Select a layer. Create a new attribute from values already in the table. Two modes write the same kind of field:<br>
+        &bull; <b>Weighted conditions</b> &mdash; each row is a test on a numeric field plus a weight; the score is the sum of weights where tests pass (otherwise 0 unless you set an Otherwise value). 1&ndash;8 rows.
+        &bull; <b>Expression</b> &mdash; type a formula using field names and the functions listed below.
+        <br>Operators: <code>+ - * / % && || ! ? : ( ) > >= < <= == !=</code> (single <code>=</code> also works as equals). Fields: plain names (<code>elevation_m</code>) or double-quoted (<code>"tree_cover_pct"</code>) as in QGIS; single quotes make text literals.<br>
+        Functions: <code>abs min max round(x[,n]) floor ceil sqrt log exp pow coalesce(a,b,…) isnull(x) if(cond,a,b) length(s) concat(a,b,…) lower upper to_int to_num to_text</code>.<br>
+        Nulls: arithmetic with null gives null; division by zero gives null. In weighted-conditions mode a null or non-numeric value simply fails the test (Otherwise applies).<br>
+        QGIS equivalence — <code>CASE WHEN "elev" >= 500 AND "elev" <= 1800 THEN 1 ELSE 0 END</code> becomes <code>(elev >= 500 && elev <= 1800 ? 1 : 0)</code>.<br>
+        Examples:<br>
+        &nbsp;&nbsp;1) Index / proxy score: <code>(elev >= 500 && elev <= 1800 ? 1 : 0) + (cover >= 70 ? 1 : 0) + (rain >= 2500 ? 1 : 0)</code><br>
+        &nbsp;&nbsp;2) Binary flag: <code>(cover >= 80 ? 1 : 0)</code><br>
+        &nbsp;&nbsp;3) Ratio: <code>rain / (elev + 1)</code><br>
+        &nbsp;&nbsp;4) Label: <code>concat(site, ' (', to_text(round(cover,0)), '%)')</code><br>
+        This is not a suitability model and not a distribution model. You choose the tests, weights, and meaning. Copy the expression into your methods and record the GeoSpaX version from the page footer and the access date.<br><br>
 
         <b>Line Lengths</b><br>
         Haversine great-circle length for each line feature. Appends a <code>length_km</code> attribute; total is shown in the results panel.<br><br>
@@ -2794,6 +2883,69 @@
       <div class="ad-tool-desc">Divides the map so every location is assigned to its nearest point. Grid-based approximation (120×120).</div>
     </div>
 
+    <!-- ── SECTION 5b: Attributes ── -->
+    <div class="ad-section-title" id="gsx-calcfield-section" onclick="toggleAnalysisSection(this)"><span>&#x1F9EE; Attributes</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-hint">Write a new attribute from existing fields. Not a distribution or suitability model.</div>
+
+    <div class="ad-form-row" id="gsx-calc-body">
+      <label>Mode</label>
+      <div class="gsx-calc-tabs">
+        <button type="button" id="gsx-calc-tab-weighted" class="gsx-calc-tab active" onclick="GSXCF.toggleMode('weighted')">Weighted conditions</button>
+        <button type="button" id="gsx-calc-tab-expr" class="gsx-calc-tab" onclick="GSXCF.toggleMode('expr')">Edit as expression</button>
+      </div>
+    </div>
+    <div class="ad-form-row">
+      <label>Output field name</label>
+      <input type="text" id="gsx-calc-out" placeholder="e.g. score" oninput="GSXCF.validate()">
+    </div>
+    <div class="ad-form-row">
+      <label>Output type</label>
+      <select id="gsx-calc-type" onchange="GSXCF.validate()">
+        <option value="int">Integer</option>
+        <option value="num">Decimal</option>
+        <option value="text">Text</option>
+      </select>
+    </div>
+
+    <!-- Mode B: weighted conditions -->
+    <div id="gsx-calc-mode-weighted">
+      <div class="gsx-calc-rows-label">Conditions (each row: test on a numeric field × weight)</div>
+      <div id="gsx-calc-rows"></div>
+      <button type="button" class="gsx-calc-add" onclick="GSXCF.addRow()">+ Add condition</button>
+      <div class="ad-form-row" style="margin-top:6px;">
+        <label>Otherwise (failed test)</label>
+        <input type="number" id="gsx-calc-otherwise" step="any" value="0" oninput="GSXCF.validate()">
+      </div>
+      <div class="gsx-calc-gen-label">Generated expression (read-only)</div>
+      <div id="gsx-calc-gen" class="gsx-calc-gen">&mdash;</div>
+    </div>
+
+    <!-- Mode A: expression -->
+    <div id="gsx-calc-mode-expr" style="display:none">
+      <div class="ad-form-row" style="align-items:flex-start;">
+        <label>Expression</label>
+        <textarea id="gsx-calc-expr" class="gsx-calc-expr" rows="3" placeholder="e.g. (a >= 50 ? 2 : 0) + (b >= 10 ? 1 : 0)" oninput="GSXCF.validate()"></textarea>
+      </div>
+      <div class="ad-form-row">
+        <label>Insert field</label>
+        <select id="gsx-calc-fields"></select>
+        <button type="button" class="gsx-calc-add" onclick="GSXCF.insertField()">Insert</button>
+      </div>
+      <div class="gsx-calc-gen-label">Operators: + - * / % &nbsp;&& || ! ? : ( ) > >= < <= == !=</div>
+      <div class="gsx-calc-gen-label">Functions: abs min max round floor ceil sqrt log exp pow coalesce isnull if length concat lower upper to_int to_num to_text</div>
+    </div>
+
+    <div class="gsx-check-row" style="margin-top:6px;">
+      <input type="checkbox" id="gsx-calc-style" checked>
+      <label for="gsx-calc-style">Style layer on this field (graduated if numeric, categorized if text)</label>
+    </div>
+    <div class="gsx-calc-gen-label">Live preview (first 5 features, old &rarr; new)</div>
+    <div id="gsx-calc-preview" class="gsx-calc-preview"></div>
+    <div id="gsx-calc-msg" class="gsx-calc-msg"></div>
+    <div class="ad-btn-row">
+      <button class="export-btn primary" id="gsx-calc-run" onclick="GSXCF.run()">&#x1F9EE; Calculate field</button>
+    </div>
+
     <!-- ── SECTION 6: Raster Analysis ── -->
     <div class="ad-section-title" id="geotiff-section" onclick="toggleAnalysisSection(this)"><span>&#x1F6F0;&#xFE0F; Raster Analysis</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Import GeoTIFF raster files as environmental variable layers for multi-criteria and species distribution analyses.</div>
@@ -3027,7 +3179,7 @@
     <div class="ad-btn-row">
       <button class="export-btn primary" onclick="GSX.uiSaveProject()">Save Project (.gspx)</button>
       <label class="export-btn">Load Project
-        <input type="file" accept=".gspx,.json" style="display:none" onchange="GSX.uiLoadProject(this.files[0])">
+        <input type="file" accept=".gspx,.json" style="display:none" onchange="GSX.uiLoadProject(this.files[0]); this.value=''">
       </label>
     </div>
 
@@ -3046,7 +3198,7 @@
   <span class="status-chip" id="visible-count">0 features</span>
   <span class="status-chip" id="status-latlon">--°, --°</span>
   <div style="flex:1;"></div>
-  <span class="status-chip" id="status-copyright">&copy; GeoSpaX [v1.1.0] &mdash; a product of <a href="https://www.in4metrix.dev" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">in4metrix</a></span>
+  <span class="status-chip" id="status-copyright">&copy; GeoSpaX [v1.2.0] &mdash; a product of <a href="https://www.in4metrix.dev" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">in4metrix</a></span>
 </div>
 
 <!-- Sheet picker modal (XLSX with multiple sheets) -->
@@ -5384,9 +5536,10 @@ const LAYER_COLORS = ['#e6194B','#3cb44b','#ffe119','#4363d8','#f58231','#911eb4
 
 function nextColor() { return LAYER_COLORS[uploadCounter % LAYER_COLORS.length]; }
 
-function addUploadedGeoJSON(geojson, name, color) {
+function addUploadedGeoJSON(geojson, name, color, opts) {
   const id = 'upload-' + (uploadCounter++);
   color = color || nextColor();
+  const silent = opts && opts.silent;   // project restore: no toast / fitBounds spam
 
   let featureCount = 0;
   let geomTypes = new Set();
@@ -5434,8 +5587,8 @@ function addUploadedGeoJSON(geojson, name, color) {
     GSX.stampImport(info, name);
   }
 
-  // Zoom to bounds
-  try { map.fitBounds(layer.getBounds().pad(0.1)); } catch(e) {}
+  // Zoom to bounds (skip during project restore — view is set afterwards)
+  if (!silent) { try { map.fitBounds(layer.getBounds().pad(0.1)); } catch(e) {} }
 
   // Add to layer panel
   addLayerToPanel(info);
@@ -5452,7 +5605,7 @@ function addUploadedGeoJSON(geojson, name, color) {
   refreshAnalysisLayerSelect();
   refreshAttrLayerSelect();
   refreshExportLayerSelect();
-  showToast(`Imported "${name}" — ${featureCount} features (${[...geomTypes].join(', ')})`, 'success');
+  if (!silent) showToast(`Imported "${name}" — ${featureCount} features (${[...geomTypes].join(', ')})`, 'success');
 
   // Register elevation profile if points have elevation data.
   // Priority: `_elevation` (set by importTabularData using the user-picked
@@ -7896,7 +8049,7 @@ function populateCitationFormats() {
   const citeUrl = 'https://geospax.in4metrix.dev/';
   const year = new Date().getFullYear();
   const accessDate = new Date().toISOString().split('T')[0];
-  const version = '1.1.0';
+  const version = '1.2.0';
   const author = 'Moses, J.';
   const affiliation = 'School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology';
 
@@ -13092,18 +13245,31 @@ window.gsxRestoreProject = function (project) {
   // Clear existing layers
   [...uploadedLayers].forEach(l => removeUploadedLayer(l.id));
 
-  // Restore each layer
-  project.layers.forEach(function (l) {
+  // Restore each layer. addUploadedGeoJSON unshifts to the FRONT of the
+  // panel, so add in reverse to preserve the saved layer order exactly.
+  let restoredCount = 0;
+  project.layers.slice().reverse().forEach(function (l) {
     if (l.isRaster) return; // rasters not embedded
     if (!l.geojson || !l.geojson.features) return;
-    addUploadedGeoJSON(l.geojson, l.name, l.style && l.style.color);
-    var restored = uploadedLayers[0];
-    if (restored && l.meta) restored.meta = l.meta;
-    if (l.visible === false && restored.layer) map.removeLayer(restored.layer);
+    addUploadedGeoJSON(l.geojson, l.name, l.color || (l.style && l.style.color), { silent: true });
+    const restored = uploadedLayers[0];
+    if (restored) {
+      if (l.meta) restored.meta = l.meta;
+      if (l.featureCount != null) restored.featureCount = l.featureCount;
+      if (l.visible === false && restored.layer) map.removeLayer(restored.layer);
+    }
+    restoredCount++;
   });
 
   // Restore map view
   if (project.view) map.setView([project.view.lat, project.view.lng], project.view.zoom);
+  else {
+    // fit to whatever was restored
+    try {
+      const g = L.featureGroup(uploadedLayers.filter(l => l.layer && map.hasLayer(l.layer)).map(l => l.layer));
+      if (g.getLayers().length) map.fitBounds(g.getBounds().pad(0.1));
+    } catch (e) {}
+  }
 
   // Restore project metadata fields
   var author = project.author || project.meta || {};
@@ -13113,16 +13279,38 @@ window.gsxRestoreProject = function (project) {
   });
 
   refreshAnalysisLayerSelect();
+  refreshAttrLayerSelect();
+  refreshExportLayerSelect();
+  refreshMapLegend();
   if (typeof GSX !== 'undefined' && GSX.uiRenderProvenanceTable) GSX.uiRenderProvenanceTable();
-  showToast('Project restored: ' + (project.layers.length) + ' layers', 'success');
+  showToast('Project restored: ' + restoredCount + ' layers', 'success');
 };
 
-// Start autosave (every 60s) and check for recoverable session
+// Start autosave (every 60s) and offer to recover an autosaved session.
+// Uses an in-app dialog, not confirm() — see CONTRIBUTING.md UI rules.
 if (typeof GSX !== 'undefined' && GSX.startAutosave) {
   GSX.startAutosave(60000);
   var _gsxAutosave = GSX.hasAutosave ? GSX.hasAutosave() : null;
-  if (_gsxAutosave && confirm('Recover unsaved project from ' + _gsxAutosave.modified + '?')) {
-    GSX.restoreAutosave();
+  if (_gsxAutosave) {
+    var _ov = document.createElement('div');
+    _ov.id = 'gsx-recover-overlay';
+    _ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10000;display:flex;align-items:center;justify-content:center;';
+    _ov.innerHTML =
+      '<div style="background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:18px 22px;max-width:380px;">' +
+      '<h3 style="color:var(--accent);font-size:13px;margin:0 0 6px;">Recover session?</h3>' +
+      '<div style="font-size:12px;color:var(--text-muted);line-height:1.5;">An autosaved project from <b>' + new Date(_gsxAutosave.modified).toLocaleString() + '</b> (' + _gsxAutosave.layerCount + ' layers) was found.</div>' +
+      '<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">' +
+      '<button id="gsx-recover-discard" style="padding:5px 12px;font-size:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;cursor:pointer;">Start fresh</button>' +
+      '<button id="gsx-recover-yes" style="padding:5px 12px;font-size:12px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;">Recover</button></div></div>';
+    document.body.appendChild(_ov);
+    _ov.querySelector('#gsx-recover-yes').onclick = function () {
+      _ov.remove();
+      GSX.restoreAutosave();
+    };
+    _ov.querySelector('#gsx-recover-discard').onclick = function () {
+      _ov.remove();
+      GSX.clearAutosave();   // don't let the timer overwrite with an empty project later
+    };
   }
 }
 </script>

@@ -1,6 +1,6 @@
 # GeoSpaX — Blueprint & Changelog
 
-**Version:** 1.1.0  
+**Version:** 1.2.0  
 **Author:** Jimmy Moses  
 **Affiliation:** School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology  
 **URL:** https://geospax.in4metrix.dev/  
@@ -11,7 +11,7 @@
 
 ## How to Cite
 
-> Moses, J. (2025). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.1.0) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
+> Moses, J. (2025). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.2.0) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
 
 See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, and BibTeX formats with copy-to-clipboard.
 
@@ -19,7 +19,19 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 ## Version History
 
-### v1.2.0 (2025-07-29) — Conservation Module Integration
+### v1.2.0 (2026-09-09) — Calculate Field Tool
+
+- **Calculate field** (`js/gsx-calcfield.js`): write a new attribute on any vector layer from existing fields, entirely client-side
+  - Two modes writing the same field path: **Weighted conditions** (1–8 rows: numeric field + test (>=, >, <=, <, =, !=, between) + weight, optional Otherwise value) and **Expression** (small documented language with field insert, QGIS-style quoted field names)
+  - Expression language: arithmetic (+ - * / %), logic (&& || ! ? :), comparisons (> >= < <= == !=), and functions abs, min, max, round, floor, ceil, sqrt, log, exp, pow, coalesce, isnull, if, length, concat, lower, upper, to_int, to_num, to_text
+  - Null propagation: arithmetic with null → null; division by zero → null; in weighted mode nulls fail the test (Otherwise applies)
+  - Live preview (first 5 features, old → new); Run disabled until field name + valid expression exist
+  - Existing output field is never silently overwritten (auto-renamed `name_2`, reported)
+  - Optional graduated (numeric) / categorized (text) styling on the new field; results panel with n, nulls, min/max/mean, expression, and Copy expression / Copy methods paragraph buttons
+  - QGIS CASE WHEN equivalence documented in the in-app User Guide
+  - This is an attribute calculation — not a distribution, suitability, or interpolation model
+
+### v1.1.0 (2025-07-29) — Conservation Module Integration
 
 #### Conservation Planning (Milestone 1)
 - **Vector overlay toolkit**: Union, Intersect, Erase operations between two layers (turf.js based)

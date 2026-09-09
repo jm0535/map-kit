@@ -21,6 +21,26 @@
   var FORMAT_VERSION = 1;
   var AUTOSAVE_KEY = 'gsx_project_autosave';
 
+  /* `uploadedLayers` and `map` are declared with let/const in the main
+     <script>, so they are NOT properties of window. Resolve them through
+     the global lexical scope at call time instead of via `root`. */
+  function allLayers() {
+    try {
+      if (root.uploadedLayers) return root.uploadedLayers;
+      if (typeof uploadedLayers !== 'undefined') return uploadedLayers || [];
+    } catch (e) {}
+    return [];
+  }
+  function appMap() {
+    // NB: window.map is the <div id="map"> DOM element (named-access on
+    // window), so the lexical Leaflet map must be preferred and validated.
+    try {
+      if (typeof map !== 'undefined' && map && typeof map.hasLayer === 'function') return map;
+    } catch (e) {}
+    if (root.map && typeof root.map.hasLayer === 'function') return root.map;
+    return null;
+  }
+
   /* ===================================================================
      P2-9 — PROVENANCE
      =================================================================== */
@@ -71,7 +91,7 @@
     m.toolParams = params || null;
     if (!m.source) {
       var names = (parentLayerIds || []).map(function (id) {
-        var l = (root.uploadedLayers || []).find(function (x) { return x.id === id; });
+        var l = allLayers().find(function (x) { return x.id === id; });
         return l ? l.name : id;
       });
       m.source = 'Derived: ' + tool + (names.length ? ' from ' + names.join(' + ') : '');
@@ -81,11 +101,12 @@
 
   /** One row per layer, ready for CSV / Markdown / XLSX. */
   GSX.provenanceRows = function () {
-    return (root.uploadedLayers || []).map(function (l) {
+    var _layers = allLayers();
+    return _layers.map(function (l) {
       var m = l.meta || GSX.blankMeta();
       var derived = (m.derivedFrom && m.derivedFrom.length)
         ? m.derivedFrom.map(function (id) {
-            var p = (root.uploadedLayers || []).find(function (x) { return x.id === id; });
+            var p = allLayers().find(function (x) { return x.id === id; });
             return p ? p.name : id;
           }).join('; ')
         : '';
@@ -185,7 +206,7 @@
    */
   GSX.serialiseProject = function () {
     var meta = GSX.getProjectMeta();
-    var layers = (root.uploadedLayers || []).map(function (l) {
+    var layers = allLayers().map(function (l) {
       return {
         id: l.id,
         name: l.name,
@@ -194,7 +215,7 @@
         geomTypes: l.geomTypes || [],
         isAnalysis: !!l.isAnalysis,
         isRaster: !!l.isRaster,
-        visible: (root.map && l.layer) ? root.map.hasLayer(l.layer) : true,
+        visible: (appMap() && l.layer) ? appMap().hasLayer(l.layer) : true,
         style: l.style || null,
         meta: l.meta || GSX.blankMeta(),
         // rasters are not embedded — see note in the return payload
@@ -207,9 +228,10 @@
 
     var view = null;
     try {
-      if (root.map) {
-        var c = root.map.getCenter();
-        view = { lat: c.lat, lng: c.lng, zoom: root.map.getZoom() };
+      var _map = appMap();
+      if (_map) {
+        var c = _map.getCenter();
+        view = { lat: c.lat, lng: c.lng, zoom: _map.getZoom() };
       }
     } catch (e) { /* map not ready */ }
 
@@ -290,7 +312,7 @@
   GSX._download = download;
 
   GSX.uiEditMeta = function (layerId) {
-    var l = (root.uploadedLayers || []).find(function (x) { return x.id === layerId; });
+    var l = allLayers().find(function (x) { return x.id === layerId; });
     if (!l) return;
     var m = GSX.ensureMeta(l);
     var host = document.getElementById('gsx-meta-form');
@@ -307,7 +329,7 @@
   };
 
   GSX.uiSaveMeta = function (layerId) {
-    var l = (root.uploadedLayers || []).find(function (x) { return x.id === layerId; });
+    var l = allLayers().find(function (x) { return x.id === layerId; });
     if (!l) return;
     var m = GSX.ensureMeta(l);
     META_FIELDS.forEach(function (f) {
@@ -396,10 +418,12 @@
         projectId: res.project.projectId,
         created: res.project.created,
         authorName: (res.project.author || {}).name || '',
-        projectId: (res.project.author || {}).id || '',
         subject: (res.project.author || {}).subject || '',
         title: (res.project.author || {}).title || ''
       };
+      // Make the loaded project the autosave recovery point immediately,
+      // instead of waiting up to 60s for the timer.
+      GSX.autosave();
       (res.warnings || []).forEach(function (w) { root.showToast(w, 'error'); });
       root.showToast('Loaded ' + res.layerCount + ' layers — project id ' +
                      res.project.projectId, 'info');
@@ -410,12 +434,22 @@
   /* ---- autosave. Campus power is not reliable; losing a session is worse
      than the cost of a localStorage write. ---- */
 
+  var _autosaveWarned = false;
+
   GSX.autosave = function () {
+    // Never overwrite a recoverable session with an empty project (e.g. the
+    // user dismissed the recovery dialog or removed every layer).
+    if (!allLayers().length) return true;
     try {
       root.localStorage.setItem(AUTOSAVE_KEY, GSX.projectToJSON(false));
       return true;
     } catch (e) {
-      return false;      // quota exceeded on a large project — fail quietly
+      // quota exceeded on a large project — tell the user once, then fail quietly
+      if (!_autosaveWarned) {
+        _autosaveWarned = true;
+        if (root.showToast) root.showToast('Autosave failed — project too large for browser storage. Use Save Project (.gspx).', 'error');
+      }
+      return false;
     }
   };
 
