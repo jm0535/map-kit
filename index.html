@@ -13286,7 +13286,10 @@ window.gsxRestoreProject = function (project) {
 
 // Start autosave (every 60s) and offer to recover an autosaved session.
 // Uses an in-app dialog, not confirm() — see CONTRIBUTING.md UI rules.
-if (typeof GSX !== 'undefined' && GSX.startAutosave) {
+// Skipped in the detached composer popout (?composer=1): it must not show
+// the recovery overlay over the composer, nor autosave from its synced
+// mirror of the main window's layers.
+if (!isComposerPopout && typeof GSX !== 'undefined' && GSX.startAutosave) {
   GSX.startAutosave(60000);
   var _gsxAutosave = GSX.hasAutosave ? GSX.hasAutosave() : null;
   if (_gsxAutosave) {
