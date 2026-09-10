@@ -13186,7 +13186,7 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
     }
   }
   legendState[info.id] = {
-    mode: 'simple',
+    mode: 'raster',
     color: info.color,
     geomType: 'Raster',
     shape: null,
@@ -13194,6 +13194,8 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
     paletteKey: 'thermal',
     minVal, maxVal,
     ramp: _paletteToRamp(HEAT_PALETTES.thermal),
+    attrName: layerName,
+    units: '',
     classification: {
       method: 'continuous',
       classes: 5,
@@ -13210,6 +13212,11 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
   refreshMapLegend();
   updateStats();
   try { map.fitBounds(layer.getBounds()); } catch (e) {}
+  // Refresh the attached composer so the gradient legend appears immediately.
+  // (The detached composer auto-syncs via the map 'layeradd' event.)
+  if (typeof refreshComposer === 'function' && document.getElementById('layout-modal') && document.getElementById('layout-modal').classList.contains('show')) {
+    refreshComposer();
+  }
   showToast(`Raster loaded: ${georaster.width}x${georaster.height}, ${georaster.numberOfRasters} band(s) — style it in the Symbology panel`, 'success');
   return info;
 }
