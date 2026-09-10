@@ -124,7 +124,7 @@ const GSX_OpenData = (function () {
   async function gbifQuery() {
     const taxonInput = document.getElementById('gbif-taxon');
     if (!taxonInput || !taxonInput.value.trim()) {
-      showToast('Enter a scientific name (e.g. Panthera leo)', 'error');
+      showToast('Enter a species name (e.g. lion or Panthera leo)', 'error');
       return;
     }
 
@@ -135,16 +135,67 @@ const GSX_OpenData = (function () {
     showProcessing('Searching GBIF occurrences…');
 
     try {
-      // Step 1: resolve taxon name to GBIF taxon key
+      // Step 1: resolve name to GBIF taxon key
+      // Try scientific name match first, then fall back to full-text search
+      // (which handles common/vernacular names like "lion", "oak", "monarch")
+      let taxonKey = null;
+      let resolvedName = taxonName;
+
+      // 1a: Try exact scientific name match
       const matchResp = await fetch(
         `https://api.gbif.org/v1/species/match?name=${encodeURIComponent(taxonName)}`
       );
-      if (!matchResp.ok) throw new Error('Taxon match failed (HTTP ' + matchResp.status + ')');
-      const matchData = await matchResp.json();
-      const taxonKey = matchData.usageKey;
+      if (matchResp.ok) {
+        const matchData = await matchResp.json();
+        if (matchData.usageKey) {
+          taxonKey = matchData.usageKey;
+          resolvedName = matchData.scientificName || taxonName;
+        }
+      }
+
+      // 1b: If no scientific match, try full-text species search (handles common names)
+      if (!taxonKey) {
+        const searchResp = await fetch(
+          `https://api.gbif.org/v1/species/search?q=${encodeURIComponent(taxonName)}&rank=SPECIES&limit=20&qField=VERNACULAR`
+        );
+        if (searchResp.ok) {
+          const searchData = await searchResp.json();
+          if (searchData.results && searchData.results.length > 0) {
+            // Find the result whose vernacular name best matches the query
+            const qLower = taxonName.toLowerCase();
+            let best = searchData.results[0];
+            for (const r of searchData.results) {
+              const vn = (r.vernacularNames || []).map(v => v.vernacularName.toLowerCase());
+              if (vn.some(n => n === qLower)) { best = r; break; }
+            }
+            // Use nubKey (backbone taxonomy key) for occurrence search, fall back to key
+            taxonKey = best.nubKey || best.key;
+            resolvedName = best.scientificName || taxonName;
+          }
+        }
+      }
+
+      // 1c: Broader search without VERNACULAR field restriction
+      if (!taxonKey) {
+        const searchResp2 = await fetch(
+          `https://api.gbif.org/v1/species/search?q=${encodeURIComponent(taxonName)}&limit=20`
+        );
+        if (searchResp2.ok) {
+          const searchData2 = await searchResp2.json();
+          if (searchData2.results && searchData2.results.length > 0) {
+            // Prefer species-level results
+            const speciesResult = searchData2.results.find(r => r.rank === 'SPECIES');
+            const r = speciesResult || searchData2.results[0];
+            // Use nubKey for backbone taxonomy, fall back to key
+            taxonKey = r.nubKey || r.key;
+            resolvedName = r.scientificName || taxonName;
+          }
+        }
+      }
+
       if (!taxonKey) {
         hideProcessing();
-        showToast('No matching taxon found for: ' + taxonName, 'error');
+        showToast('No matching species found for: ' + taxonName, 'error');
         return;
       }
 
