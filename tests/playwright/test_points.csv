@@ -1,0 +1,6 @@
+lat,lon,elevation,name,category
+12.90,77.50,100,Site A,low
+12.95,77.55,250,Site B,medium
+13.00,77.60,400,Site C,high
+13.05,77.65,150,Site D,low
+13.10,77.70,300,Site E,medium

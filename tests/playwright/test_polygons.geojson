@@ -1,0 +1,5 @@
+{"type":"FeatureCollection","features":[
+{"type":"Feature","properties":{"id":1,"area_ha":50,"category":"A"},"geometry":{"type":"Polygon","coordinates":[[[77.50,12.90],[77.55,12.90],[77.55,12.95],[77.50,12.95],[77.50,12.90]]]}},
+{"type":"Feature","properties":{"id":2,"area_ha":80,"category":"B"},"geometry":{"type":"Polygon","coordinates":[[[77.60,13.00],[77.65,13.00],[77.65,13.05],[77.60,13.05],[77.60,13.00]]]}},
+{"type":"Feature","properties":{"id":3,"area_ha":30,"category":"A"},"geometry":{"type":"Polygon","coordinates":[[[77.70,13.10],[77.75,13.10],[77.75,13.15],[77.70,13.15],[77.70,13.10]]]}}
+]}

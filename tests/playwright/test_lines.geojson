@@ -1,0 +1,4 @@
+{"type":"FeatureCollection","features":[
+{"type":"Feature","properties":{"id":1,"name":"Transect A"},"geometry":{"type":"LineString","coordinates":[[77.50,12.90],[77.55,12.95],[77.60,13.00]]}},
+{"type":"Feature","properties":{"id":2,"name":"Transect B"},"geometry":{"type":"LineString","coordinates":[[77.65,13.05],[77.70,13.10],[77.75,13.15]]}}
+]}
