@@ -2366,7 +2366,7 @@
           </select>
         </label>
         <label id="profile-zero-wrap" class="profile-ctl" style="cursor:pointer;">
-          <input type="checkbox" id="profile-y-zero" checked onchange="rebuildProfileFromCheckboxes()">
+          <input type="checkbox" id="profile-y-zero" checked onclick="rebuildProfileFromCheckboxes()">
           Y from 0
         </label>
         <div style="flex:1"></div>
@@ -7771,7 +7771,7 @@ function rebuildProfileFromCheckboxes() {
       data: built.points.map(pt => ({ x: pt.dist, y: pt.elev })),
       borderColor: p.color,
       backgroundColor: hexToRgba(p.color, 0.25),
-      fill: 'origin',          // fill all the way to Y=0 (terrain silhouette)
+      fill: yFromZero ? 'origin' : 'start',  // fill to Y=0 when "Y from 0" is checked, else to axis min
       tension: 0.3, pointRadius: 3,
       pointBackgroundColor: p.color,
       pointBorderColor: 'white', pointBorderWidth: 1,
@@ -12051,8 +12051,10 @@ function _renderProfileToSVG() {
   profileChart.data.datasets.forEach(ds => {
     const pts = ds.data;
     if (!pts.length) return;
-    // Filled area path (back to Y=0 baseline, clipped to plot)
-    const baselineY = sy(Math.max(yMin, 0));
+    // Filled area path (back to baseline, clipped to plot)
+    // Respect the dataset's fill mode: 'origin' → Y=0, 'start' → yMin (axis bottom)
+    const baselineVal = (ds.fill === 'origin') ? Math.max(yMin, 0) : yMin;
+    const baselineY = sy(baselineVal);
     let path = `M ${sx(pts[0].x)} ${baselineY} `;
     pts.forEach(p => { path += `L ${sx(p.x)} ${sy(p.y)} `; });
     path += `L ${sx(pts[pts.length - 1].x)} ${baselineY} Z`;
@@ -13268,6 +13270,19 @@ function _hideLoading() { document.getElementById('loading').style.display='none
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
 setTimeout(_hideLoading, 2000);
+
+// Robust Y-from-0 toggle: some browsers don't fire `change` on checkboxes
+// inside <label> clicks reliably, so we listen for both `click` and `change`
+// and debounce the rebuild to avoid double-calls.
+(function () {
+  let yZeroTimer = null;
+  const handler = () => {
+    if (yZeroTimer) clearTimeout(yZeroTimer);
+    yZeroTimer = setTimeout(() => { yZeroTimer = null; rebuildProfileFromCheckboxes(); }, 30);
+  };
+  const el = document.getElementById('profile-y-zero');
+  if (el) { el.addEventListener('change', handler); el.addEventListener('click', handler); }
+})();
 
 // Multi-monitor composer popout bootstrap — detect ?composer=1
 _initComposerPopout();
