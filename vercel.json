@@ -3,9 +3,6 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "github": { "silent": true },
-  "rewrites": [
-    { "source": "/google4e0cf157f76f6227.html", "destination": "/google4e0cf157f76f6227.html" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
