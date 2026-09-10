@@ -325,6 +325,30 @@ async def main():
             }""")
             report("GeoTIFF opacity change no crash", opa == 'ok', str(opa)[:100])
 
+            # Symbology panel shows raster controls
+            sym_panel = await page.evaluate("""() => {
+                const r = uploadedLayers.find(l => l.isRaster);
+                const block = document.querySelector(`#symbology-controls [data-sym-id="${r.id}"]`);
+                if (!block) return 'no block';
+                return {
+                    hasBlock: true,
+                    hasContinuousTab: !!block.querySelector('[data-tab="continuous"]'),
+                    hasClassifiedTab: !!block.querySelector('[data-tab="classified"]'),
+                    hasPaletteSelect: !!block.querySelector('select') || !!block.textContent.includes('Reset'),
+                };
+            }""")
+            report("GeoTIFF symbology panel has controls", isinstance(sym_panel, dict) and sym_panel.get('hasBlock'), str(sym_panel)[:100])
+
+            # Attribute table dropdown includes the raster layer
+            attr_dropdown = await page.evaluate("""() => {
+                const r = uploadedLayers.find(l => l.isRaster);
+                const sel = document.getElementById('attr-layer-select');
+                if (!sel) return 'no select';
+                const opt = sel.querySelector(`option[value="${r.id}"]`);
+                return { hasOption: !!opt, text: opt ? opt.textContent : '' };
+            }""")
+            report("GeoTIFF appears in attr table dropdown", isinstance(attr_dropdown, dict) and attr_dropdown.get('hasOption'), str(attr_dropdown)[:100])
+
         # Clean up test file
         try: os.remove(tiff_path)
         except: pass
