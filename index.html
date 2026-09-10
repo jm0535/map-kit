@@ -11336,9 +11336,11 @@ function _waitForTiles(tileLayer, timeoutMs) {
 // Compute meters per screen pixel at the map's center latitude.
 function _metersPerPixel(lmap) {
   const center = lmap.getCenter();
-  // Geodesic distance for a 1° lon step at this latitude (Leaflet built-in).
-  const a = lmap.latLngToContainerPoint(center);
-  const b = lmap.latLngToContainerPoint([center.lat, center.lng + 0.01]);
+  // Use project() (unrounded) instead of latLngToContainerPoint() (which
+  // rounds to integers). At low zoom levels a 0.01° offset is < 1px and
+  // rounds to 0, making the scalebar silently disappear.
+  const a = lmap.project(center);
+  const b = lmap.project(L.latLng(center.lat, center.lng + 0.01));
   const pxDist = Math.abs(b.x - a.x);
   if (pxDist === 0) return null;
   const realMeters = lmap.distance(center, L.latLng(center.lat, center.lng + 0.01));
