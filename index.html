@@ -3532,7 +3532,7 @@ function haversineKm(pts) {
 // ═══════════════════════════════════════════════════════════════════════════
 // MAP INIT
 // ═══════════════════════════════════════════════════════════════════════════
-const map = L.map('map', { center:[-6.0,146.0], zoom:8, zoomControl:false });
+const map = L.map('map', { center:[-6.0,146.0], zoom:8, zoomControl:false, zoomSnap:0.25, zoomDelta:0.25 });
 L.control.zoom({position:'topleft'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 try { L.control.fullscreen({position:'topleft'}).addTo(map); } catch(e) {}
@@ -10000,6 +10000,17 @@ function toggleLayoutLock(target) {
     btn.querySelector('.lock-icon').textContent = mainLocked ? '🔓' : '🔒';
     _setLockHandlers(layoutMap, mainLocked);
     _updateLockBadge('main', mainLocked);
+    // Zoom +/- buttons follow the unlocked state. (Kept out of exports —
+    // layoutExport's ignoreElements strips .leaflet-control-zoom.) Handles
+    // both dynamically added controls and Leaflet's option-created one.
+    if (layoutMap) {
+      if (mainLocked && !layoutMap._gsxZoomControl && !layoutMap.zoomControl) {
+        layoutMap._gsxZoomControl = L.control.zoom().addTo(layoutMap);
+      } else if (!mainLocked) {
+        if (layoutMap._gsxZoomControl) { layoutMap._gsxZoomControl.remove(); layoutMap._gsxZoomControl = null; }
+        if (layoutMap.zoomControl) { layoutMap.zoomControl.remove(); layoutMap.zoomControl = null; }
+      }
+    }
     if (!mainLocked && layoutMap) {
       lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
     }
@@ -10017,6 +10028,15 @@ function toggleLayoutLock(target) {
     btn.querySelector('.lock-icon').textContent = overviewLocked ? '🔓' : '🔒';
     _setLockHandlers(layoutOverviewMap, overviewLocked);
     _updateLockBadge('overview', overviewLocked);
+    // Zoom +/- buttons follow the unlocked state (same as the main map).
+    if (layoutOverviewMap) {
+      if (overviewLocked && !layoutOverviewMap._gsxZoomControl && !layoutOverviewMap.zoomControl) {
+        layoutOverviewMap._gsxZoomControl = L.control.zoom().addTo(layoutOverviewMap);
+      } else if (!overviewLocked) {
+        if (layoutOverviewMap._gsxZoomControl) { layoutOverviewMap._gsxZoomControl.remove(); layoutOverviewMap._gsxZoomControl = null; }
+        if (layoutOverviewMap.zoomControl) { layoutOverviewMap.zoomControl.remove(); layoutOverviewMap.zoomControl = null; }
+      }
+    }
     // Toggle pointer-events on the wrap so the user can actually click/drag
     // the overview inset when it's unlocked for editing.
     const wrap = document.getElementById('layout-overview-wrap');
@@ -10284,6 +10304,7 @@ async function buildLayout() {
     dragging: !!mainLocked, scrollWheelZoom: !!mainLocked,
     doubleClickZoom: !!mainLocked, boxZoom: !!mainLocked,
     touchZoom: !!mainLocked, keyboard: !!mainLocked,
+    zoomSnap: 0.25, zoomDelta: 0.25,   // fine-grained zoom when unlocked for editing
     zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false,
     preferCanvas: true,
     renderer: L.canvas({ padding: 0 })
@@ -10712,6 +10733,7 @@ async function buildLayout() {
     dragging: !!overviewLocked, scrollWheelZoom: !!overviewLocked,
     doubleClickZoom: !!overviewLocked, boxZoom: !!overviewLocked,
     touchZoom: !!overviewLocked, keyboard: !!overviewLocked,
+    zoomSnap: 0.25, zoomDelta: 0.25,   // fine-grained zoom when unlocked for editing
     zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false,
     preferCanvas: true
   });
