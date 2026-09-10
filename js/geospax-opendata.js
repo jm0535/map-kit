@@ -306,10 +306,177 @@ const GSX_OpenData = (function () {
     }
   }
 
+  // ── 4. WWF/RESOLVE Terrestrial Ecoregions ────────────────────────────────
+
+  async function ecoregionsAdd() {
+    showProcessing('Loading WWF/RESOLVE Terrestrial Ecoregions…');
+    try {
+      const resp = await fetch('https://openlayers.org/data/vector/ecoregions.json');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const geojson = await resp.json();
+      hideProcessing();
+
+      if (!geojson.features || geojson.features.length === 0) {
+        showToast('No ecoregion data available', 'info');
+        return;
+      }
+
+      addUploadedGeoJSON(geojson, 'WWF Ecoregions (846)', nextColor());
+      showToast(`Loaded ${geojson.features.length} terrestrial ecoregions`, 'success');
+    } catch (e) {
+      hideProcessing();
+      showToast('Ecoregions load failed: ' + e.message, 'error');
+    }
+  }
+
+  // ── 5. Marine Ecoregions of the World (MEOW) ────────────────────────────
+  // (Now handled by marineAdd() below via the VLIZ WFS layer selector)
+
+  // ── 6. Marine Boundaries (VLIZ/MarineRegions, global, CORS-enabled) ──────
+
+  const VLIZ_BASE = 'https://geo.vliz.be/geoserver/wfs?service=WFS&version=1.0.0' +
+    '&request=GetFeature&outputFormat=application/json&maxFeatures=100';
+
+  const MARINE_LAYERS = {
+    'eez': { name: 'Exclusive Economic Zones (global)', typeName: 'MarineRegions:eez' },
+    'eez_12nm': { name: 'Territorial Seas (12 NM, global)', typeName: 'MarineRegions:eez_12nm' },
+    'eez_24nm': { name: 'Contiguous Zones (24 NM, global)', typeName: 'MarineRegions:eez_24nm' },
+    'eez_boundaries': { name: 'EEZ Boundaries (global)', typeName: 'MarineRegions:eez_boundaries' },
+    'ecoregions': { name: 'Marine Ecoregions (MEOW)', typeName: 'Ecoregions:ecoregions' },
+  };
+
+  async function marineAdd() {
+    const sel = document.getElementById('marine-layer');
+    if (!sel) return;
+    const key = sel.value;
+    const layer = MARINE_LAYERS[key];
+    if (!layer) return;
+
+    showProcessing('Loading Marine Boundaries: ' + layer.name + '…');
+    try {
+      const url = VLIZ_BASE + '&typeName=' + layer.typeName;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const geojson = await resp.json();
+      hideProcessing();
+
+      if (!geojson.features || geojson.features.length === 0) {
+        showToast('No features in layer: ' + layer.name, 'info');
+        return;
+      }
+
+      addUploadedGeoJSON(geojson, 'Marine: ' + layer.name, nextColor());
+      showToast(`Loaded ${geojson.features.length} features from MarineRegions`, 'success');
+    } catch (e) {
+      hideProcessing();
+      showToast('Marine layer load failed: ' + e.message, 'error');
+    }
+  }
+
+  // ── 7. World Bank Indicators ────────────────────────────────────────────
+
+  const WB_INDICATORS = {
+    'SP.POP.TOTL': 'Total Population',
+    'NY.GDP.MKTP.CD': 'GDP (current US$)',
+    'EN.ATM.CO2E.KT': 'CO2 Emissions (kt)',
+    'AG.LND.FRST.ZS': 'Forest Area (% of land area)',
+    'EN.LND.LTSS.ZS': 'Land area below 5m elevation (%)',
+    'ER.LND.PTLD.ZS': 'Protected land area (%)',
+    'AG.LND.AGRI.ZS': 'Agricultural land (%)',
+    'SH.STA.WASH.P5': 'Deaths from unsafe water (per 100k)',
+  };
+
+  async function worldBankQuery() {
+    const indSel = document.getElementById('wb-indicator');
+    if (!indSel) return;
+    const indicatorCode = indSel.value;
+    const indicatorName = WB_INDICATORS[indicatorCode] || indicatorCode;
+
+    showProcessing('Fetching World Bank: ' + indicatorName + '…');
+    try {
+      // Fetch indicator data for all countries (most recent year)
+      const url = 'https://api.worldbank.org/v2/country/all/indicator/' + indicatorCode +
+        '?format=json&per_page=300&date=2020:2024&mrnev=1';
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      hideProcessing();
+
+      // WB API returns [metadata, results array]
+      const results = Array.isArray(data) && data.length >= 2 ? data[1] : null;
+      if (!results || results.length === 0) {
+        showToast('No data for indicator: ' + indicatorName, 'info');
+        return;
+      }
+
+      // Convert to point GeoJSON using country centroid coordinates
+      const features = results
+        .filter(r => r.country && r.value !== null && r.countryiso3code)
+        .map(r => ({
+          type: 'Feature',
+          geometry: null, // Will be set from country geojson if available
+          properties: {
+            country: r.country.value || '',
+            iso3: r.countryiso3code || '',
+            indicator: indicatorName,
+            value: r.value,
+            year: r.date || '',
+            unit: r.unit || '',
+          },
+        }));
+
+      // Fetch country centroids from Natural Earth to geocode
+      const neResp = await fetch(NE_BASE + 'ne_110m_admin_0_countries.geojson');
+      if (neResp.ok) {
+        const neGeo = await neResp.json();
+        const countryCentroids = {};
+        for (const f of neGeo.features) {
+          const props = f.properties || {};
+          const iso3 = props.ISO_A3 || props.iso_a3 || '';
+          if (iso3 && f.geometry) {
+            // Simple centroid from bounds
+            let coords = [];
+            if (f.geometry.type === 'Polygon') coords = f.geometry.coordinates[0];
+            else if (f.geometry.type === 'MultiPolygon') coords = f.geometry.coordinates[0][0];
+            if (coords.length > 0) {
+              let lat = 0, lon = 0;
+              for (const c of coords) { lon += c[0]; lat += c[1]; }
+              lat /= coords.length; lon /= coords.length;
+              countryCentroids[iso3] = [lon, lat];
+            }
+          }
+        }
+        // Assign coordinates to features
+        for (const f of features) {
+          const centroid = countryCentroids[f.properties.iso3];
+          if (centroid) {
+            f.geometry = { type: 'Point', coordinates: centroid };
+          }
+        }
+      }
+
+      const geocoded = features.filter(f => f.geometry !== null);
+      if (geocoded.length === 0) {
+        showToast('No geocodable data for indicator: ' + indicatorName, 'info');
+        return;
+      }
+
+      const geojson = { type: 'FeatureCollection', features: geocoded };
+      addUploadedGeoJSON(geojson, 'WB: ' + indicatorName, nextColor());
+      showToast(`Loaded ${geocoded.length} country records from World Bank`, 'success');
+    } catch (e) {
+      hideProcessing();
+      showToast('World Bank query failed: ' + e.message, 'error');
+    }
+  }
+
   // ── Public API ───────────────────────────────────────────────────────────
   return {
     overpassQuery,
     gbifQuery,
     naturalEarthAdd,
+    ecoregionsAdd,
+    marineAdd,
+    worldBankQuery,
   };
 })();

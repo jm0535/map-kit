@@ -17,6 +17,9 @@ async def main():
             overpassQuery: typeof GSX_OpenData.overpassQuery,
             gbifQuery: typeof GSX_OpenData.gbifQuery,
             naturalEarthAdd: typeof GSX_OpenData.naturalEarthAdd,
+            ecoregionsAdd: typeof GSX_OpenData.ecoregionsAdd,
+            marineAdd: typeof GSX_OpenData.marineAdd,
+            worldBankQuery: typeof GSX_OpenData.worldBankQuery,
         })""")
         for name, ftype in funcs.items():
             report(f"GSX_OpenData.{name} exists", ftype == 'function', ftype)
@@ -41,6 +44,12 @@ async def main():
         limit_min = await page.evaluate("document.getElementById('gbif-limit').min")
         report("GBIF limit min is 1", limit_min == '1', limit_min)
         report("Natural Earth layer select exists", ne_select > 0)
+
+        # Check new connector UI elements
+        marine_select = await page.locator("#marine-layer").count()
+        wb_select = await page.locator("#wb-indicator").count()
+        report("Marine layer select exists", marine_select > 0)
+        report("World Bank indicator select exists", wb_select > 0)
 
         # ── USGS WMS basemaps in selector ──
         has_usgs_topo = await page.evaluate("""() => {
@@ -89,6 +98,56 @@ async def main():
             } catch(e) { return 'error: ' + e.message; }
         }""")
         report("Natural Earth loads features", ne_result and isinstance(ne_result, dict) and ne_result.get('count', 0) > 0, str(ne_result)[:100])
+
+        # ── Test WWF Ecoregions (real fetch) ──
+        eco_result = await page.evaluate("""async () => {
+            try {
+                let captured = null;
+                const orig = window.addUploadedGeoJSON;
+                window.addUploadedGeoJSON = function(geojson, name, color) {
+                    captured = { count: geojson.features.length, name };
+                };
+                await GSX_OpenData.ecoregionsAdd();
+                window.addUploadedGeoJSON = orig;
+                await new Promise(r => setTimeout(r, 10000));
+                return captured || 'no data';
+            } catch(e) { return 'error: ' + e.message; }
+        }""")
+        report("WWF Ecoregions loads features", eco_result and isinstance(eco_result, dict) and eco_result.get('count', 0) > 0, str(eco_result)[:100])
+
+        # ── Test Marine Boundaries EEZ (real fetch) ──
+        marine_result = await page.evaluate("""async () => {
+            try {
+                document.getElementById('marine-layer').value = 'ecoregions';
+                let captured = null;
+                const orig = window.addUploadedGeoJSON;
+                window.addUploadedGeoJSON = function(geojson, name, color) {
+                    captured = { count: geojson.features.length, name };
+                };
+                await GSX_OpenData.marineAdd();
+                window.addUploadedGeoJSON = orig;
+                await new Promise(r => setTimeout(r, 15000));
+                return captured || 'no data';
+            } catch(e) { return 'error: ' + e.message; }
+        }""")
+        report("Marine Ecoregions loads features", marine_result and isinstance(marine_result, dict) and marine_result.get('count', 0) > 0, str(marine_result)[:100])
+
+        # ── Test World Bank indicators (real fetch) ──
+        wb_result = await page.evaluate("""async () => {
+            try {
+                document.getElementById('wb-indicator').value = 'SP.POP.TOTL';
+                let captured = null;
+                const orig = window.addUploadedGeoJSON;
+                window.addUploadedGeoJSON = function(geojson, name, color) {
+                    captured = { count: geojson.features.length, name };
+                };
+                await GSX_OpenData.worldBankQuery();
+                window.addUploadedGeoJSON = orig;
+                await new Promise(r => setTimeout(r, 15000));
+                return captured || 'no data';
+            } catch(e) { return 'error: ' + e.message; }
+        }""")
+        report("World Bank loads indicator data", wb_result and isinstance(wb_result, dict) and wb_result.get('count', 0) > 0, str(wb_result)[:100])
 
         # ── Test Overpass query (real fetch, small area) ──
         # Set map to a small known area with OSM data

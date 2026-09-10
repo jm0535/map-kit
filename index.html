@@ -2267,6 +2267,56 @@
           </div>
         </div>
 
+        <!-- Ecoregions -->
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1F333; Ecoregions</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body hidden" style="padding:8px 10px;">
+            <p style="font-size:10px;color:var(--text-muted);margin:0 0 6px;">Global biogeographic regions for conservation planning (all countries).</p>
+            <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.ecoregionsAdd()">Terrestrial Ecoregions (WWF/RESOLVE)</button>
+          </div>
+        </div>
+
+        <!-- Marine Boundaries -->
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1F30A; Marine Boundaries</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body hidden" style="padding:8px 10px;">
+            <p style="font-size:10px;color:var(--text-muted);margin:0 0 6px;">Global marine boundaries & ecoregions from MarineRegions.org (all countries, including PNG & Pacific).</p>
+            <select id="marine-layer" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;">
+              <option value="eez">Exclusive Economic Zones (global)</option>
+              <option value="eez_12nm">Territorial Seas 12NM (global)</option>
+              <option value="eez_24nm">Contiguous Zones 24NM (global)</option>
+              <option value="eez_boundaries">EEZ Boundaries (global)</option>
+              <option value="ecoregions">Marine Ecoregions (MEOW)</option>
+            </select>
+            <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.marineAdd()">Add Marine Layer</button>
+          </div>
+        </div>
+
+        <!-- World Bank Indicators -->
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1F4CA; World Bank</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body hidden" style="padding:8px 10px;">
+            <p style="font-size:10px;color:var(--text-muted);margin:0 0 6px;">Socioeconomic & environmental indicators for all countries (most recent year).</p>
+            <select id="wb-indicator" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;">
+              <option value="SP.POP.TOTL">Total Population</option>
+              <option value="NY.GDP.MKTP.CD">GDP (current US$)</option>
+              <option value="EN.ATM.CO2E.KT">CO2 Emissions (kt)</option>
+              <option value="AG.LND.FRST.ZS">Forest Area (% of land)</option>
+              <option value="ER.LND.PTLD.ZS">Protected Land Area (%)</option>
+              <option value="AG.LND.AGRI.ZS">Agricultural Land (%)</option>
+              <option value="EN.LND.LTSS.ZS">Land below 5m elevation (%)</option>
+              <option value="SH.STA.WASH.P5">Deaths from unsafe water (per 100k)</option>
+            </select>
+            <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.worldBankQuery()">Fetch Indicator Data</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
