@@ -64,3 +64,6 @@ elevation_profile_*.png
 
 # Claude Flow workspace
 .claude-flow/
+
+# Practical assignment (lecturer-only materials, not for public repo)
+practical_assignment/
