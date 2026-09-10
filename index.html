@@ -10682,6 +10682,43 @@ async function buildLayout() {
   // ── Clone visible GeoJSON layers ──
   let layerBounds = null;
   visibleLayers.forEach(info => {
+    // ── GeoTIFF / GeoRasterLayer: re-create on the composer map ──
+    // GeoRasterLayer has no eachLayer() and no GeoJSON features, so the
+    // heat-layer and vector cloning paths below both skip it. Re-instantiate
+    // it here with the same georaster data and the current colour function.
+    if (info.isRaster && info.georaster) {
+      const opacity = info.layer && info.layer.options && info.layer.options.opacity != null ? info.layer.options.opacity : 0.75;
+      try {
+        const cloneRaster = new GeoRasterLayer({
+          georaster: info.georaster,
+          opacity,
+          resolution: 256,
+          pixelValuesToColorFn: (values) => null, // placeholder — set below
+        });
+        cloneRaster.addTo(layoutMap);
+        layoutLayers.push(cloneRaster);
+        // Apply the current symbology (palette, stretch, classification)
+        // from legendState. In attached mode info.layer is the real layer;
+        // in detached mode info.layer is null so we point it at the clone
+        // temporarily so _applyClassificationToHeatLayer can set its color fn.
+        const prevLayer = info.layer;
+        info.layer = cloneRaster;
+        _applyClassificationToHeatLayer(info.id);
+        info.layer = prevLayer; // restore (don't leak the clone into uploadedLayers)
+        const b = L.latLngBounds(
+          [[info.georaster.ymin, info.georaster.xmin],
+           [info.georaster.ymax, info.georaster.xmax]]
+        );
+        if (b.isValid()) {
+          if (layerBounds) layerBounds.extend(b);
+          else layerBounds = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+        }
+      } catch (e) {
+        console.warn('Composer: failed to clone GeoRasterLayer:', e.message);
+      }
+      return; // Done — don't fall through to heat/vector cloning
+    }
+
     // ── Heat / raster layers: re-create L.heatLayer on the composer map ──
     // Heat layers can't be cloned via GeoJSON — they're rendered from a
     // [lat, lng, intensity] data array, not vector features. Walk the
@@ -13616,6 +13653,10 @@ function _serializeComposerState() {
     type: info.type || 'upload',
     _composerVisible: visibleIds.has(info.id),
     rasterMeta: info.rasterMeta || null,
+    isRaster: !!info.isRaster,
+    // GeoRasterLayer needs the full georaster object (pixel values, bounds,
+    // projection, etc.) to be re-instantiated on the detached composer map.
+    georaster: info.isRaster ? info.georaster : null,
   }));
   // Serialize legendState (symbology) — deep-clone to avoid shared refs.
   const sym = {};
@@ -13738,6 +13779,8 @@ async function _applyComposerState(state) {
     properties: [],
     rasterMeta: l.rasterMeta,
     _composerVisible: l._composerVisible,
+    isRaster: !!l.isRaster,
+    georaster: l.georaster || null,
   }));
   // Restore symbology state.
   for (const k in state.legendState) {
