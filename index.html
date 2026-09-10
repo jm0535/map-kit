@@ -12889,18 +12889,13 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
       const band0 = georaster.values && georaster.values[0];
       if (band0) {
         let realMin = Infinity, realMax = -Infinity;
-        const sampleW = Math.min(georaster.width, 100);
-        const sampleH = Math.min(georaster.height, 100);
-        const stepW = Math.max(1, Math.floor(georaster.width / sampleW));
-        const stepH = Math.max(1, Math.floor(georaster.height / sampleH));
+        const stepW = Math.max(1, Math.floor(georaster.width / 100));
+        const stepH = Math.max(1, Math.floor(georaster.height / 100));
         for (let r = 0; r < georaster.height; r += stepH) {
+          const row = band0[r];
+          if (!row) continue;
           for (let c = 0; c < georaster.width; c += stepW) {
-            let v;
-            if (Array.isArray(band0) && Array.isArray(band0[0])) {
-              v = band0[r] ? band0[r][c] : undefined;
-            } else {
-              v = band0[r * georaster.width + c];
-            }
+            const v = row[c];
             if (v !== undefined && v !== nodata && v !== -32768 && !isNaN(v)) {
               if (v < realMin) realMin = v;
               if (v > realMax) realMax = v;
@@ -12955,8 +12950,9 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
   let validCount = 0;
 
   // Access pixel data — georaster from parseGeoraster stores values as
-  // [band][row][column] (2D per band), while our geotiff.js fallback
-  // stores a flat Float32Array. Normalize to a getPixel(row, col) function.
+  // [band][row][column] where each row may be a TypedArray (Float32Array etc.),
+  // while our geotiff.js fallback stores a flat array. Normalize to a
+  // getPixel(row, col) function.
   let getPixel;
   if (meta && meta.pixelData) {
     // geotiff.js fallback: flat array
@@ -12964,9 +12960,12 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
     getPixel = (row, col) => pd[row * width + col];
   } else if (georaster.values && Array.isArray(georaster.values) && georaster.values[0]) {
     const band0 = georaster.values[0];
-    if (Array.isArray(band0) && Array.isArray(band0[0])) {
-      // parseGeoraster: [band][row][column] 2D array
-      getPixel = (row, col) => band0[row] ? band0[row][col] : undefined;
+    if (Array.isArray(band0) && band0.length === height) {
+      // parseGeoraster: [band][row] where each row is a TypedArray or array
+      getPixel = (row, col) => {
+        const r = band0[row];
+        return r ? r[col] : undefined;
+      };
     } else if (band0.length === width * height) {
       // Flat array fallback
       getPixel = (row, col) => band0[row * width + col];
