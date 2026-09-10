@@ -325,7 +325,14 @@
   function selectedRaster() {
     var el = document.getElementById('gsx-raster-layer');
     if (!el || !el.value) return null;
-    var l = (root.uploadedLayers || []).find(function (x) { return x.id === el.value; });
+    // uploadedLayers may be a `let`/`const` in the page scope (not on window),
+    // so check both root.uploadedLayers and the global eval scope.
+    var layers = root.uploadedLayers;
+    if (!layers) {
+      try { layers = (0, eval)('uploadedLayers'); } catch (e) { layers = null; }
+    }
+    if (!layers) return null;
+    var l = layers.find(function (x) { return x.id === el.value; });
     if (!l) return null;
     return { layerInfo: l, raster: l.georaster || l.raster || null };
   }
