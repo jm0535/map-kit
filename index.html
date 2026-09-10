@@ -7688,6 +7688,8 @@ function hexToRgba(hex, a) {
 }
 
 function registerProfile(id, label, color, latLonElevArray) {
+  // Validate inputs — if no elevation data provided, silently skip.
+  if (!latLonElevArray || !Array.isArray(latLonElevArray) || latLonElevArray.length < 2) return;
   // Store raw points; sort + distance computed at render time so the user
   // can switch sort modes (elevation / W→E / S→N / survey) without re-importing.
   const idx = profileRegistry.findIndex(p => p.id === id);
@@ -7701,6 +7703,7 @@ function registerProfile(id, label, color, latLonElevArray) {
 // currently selected sort mode. Always returns points in the order they
 // should appear left-to-right on the X axis, with cumulative distance recomputed.
 function _buildProfilePoints(profile, sortMode) {
+  if (!profile._latLonElev || !Array.isArray(profile._latLonElev)) return { points: [], latLonElev: [] };
   const raw = profile._latLonElev.slice();
   let ordered;
   if (sortMode === 'elevation') {
@@ -12877,6 +12880,14 @@ function renderSDMResult(geojson, modelName) {
 
 // MaxEnt SDM (API-based, not replaced by GSX modules)
 async function runMaxEntSDM(presencePoints, envLayers, resolution) {
+  if (!presencePoints || !Array.isArray(presencePoints) || presencePoints.length === 0) {
+    showToast('No presence points provided for MaxEnt SDM', 'error');
+    return;
+  }
+  if (!envLayers || !Array.isArray(envLayers) || envLayers.length === 0) {
+    showToast('No environmental layers provided for MaxEnt SDM', 'error');
+    return;
+  }
   showToast('Calling MaxEnt API…', 'info');
 
   const presences = presencePoints.map(p => p.geometry.coordinates);
