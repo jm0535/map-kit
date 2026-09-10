@@ -64,7 +64,9 @@ map-kit/                    # Repository name (app is branded "GeoSpaX")
 │   ├── geospax-sdm-fix.js           # BIOCLIM / Mahalanobis SDM
 │   ├── geospax-project.js           # Provenance, project save/load
 │   ├── geospax-raster.js            # Reclassify, polygonize
-│   └── gsx-select.js                # Dropdown popup replacement (app-wide)
+│   ├── geospax-opendata.js          # Open data connectors (Overpass, GBIF, WWF, World Bank, USGS)
+│   ├── gsx-select.js                # Dropdown popup replacement (app-wide)
+│   └── gsx-calcfield.js             # Calculate field tool (expression parser + weighted conditions)
 ├── src/
 │   ├── make_maps.py        # Legacy script (kept for backward compatibility)
 │   └── geospax/            # Python package
@@ -135,3 +137,30 @@ The Web GIS is a single-file application. When modifying:
 - Use `_csvEscape()` for CSV value escaping (RFC 4180 compliant)
 - Use `_layerToFeatures()` for extracting GeoJSON features from any layer type
 - Per-layer exports read from the `export-layer-select` dropdown
+
+### Raster Layers (GeoTIFF)
+
+- GeoTIFF layers use `GeoRasterLayer` from `georaster-layer-for-leaflet`, not standard Leaflet vector layers
+- Raster pixel values from `parseGeoraster` are nested as `[band][row][column]` — normalize before use
+- Recolouring uses `layer.updateColors()` with a `pixelValuesToColorFn` callback, **not** `setOptions()`
+- `_interpolateColor()` handles `#rgb`, `#rrggbb`, `rgb()`, and CSS named colours — use it for all palette interpolation
+- Raster legend state must use `mode: 'raster'` (not `'simple'`) for the gradient bar to render
+- `buildSymbologyControls()` is idempotent — it removes any existing block before rebuilding to prevent duplicate controls
+- After adding a raster layer, call `refreshAttrLayerSelect()` and `refreshSymbologyLayerSelect()` so the new layer appears in all dropdowns
+- `initLegendState()` must preserve existing raster legend state — check `legendState[id].mode === 'raster'` before overwriting
+
+### Map Composer
+
+- The composer has two modes: **attached** (modal overlay) and **detached** (separate window via `BroadcastChannel`)
+- `buildLayout()` handles three layer types: heat layers (via `eachLayer`), vector layers (via GeoJSON), and raster layers (re-instantiated `GeoRasterLayer`)
+- Detached composer state is serialised by `_serializeComposerState()` and restored by `_applyComposerState()` — include `isRaster` and `georaster` fields for raster layers
+- `_renderScalebar()` uses `_metersPerPixel()` which calls `lmap.project()` (unrounded) — **never** use `latLngToContainerPoint()` which rounds to integers and breaks at low zoom
+- Composer zoom uses 0.25 increments (`zoomSnap: 0.25`) matching the main map
+- `refreshComposer()` preserves the current view and layout state — do not call `buildLayout()` directly for refreshes
+
+### Open Data Connectors
+
+- All open data connectors live in `js/geospax-opendata.js`
+- GBIF searches support both scientific and common names; the record limit is user-configurable with pagination beyond the API's 300-record cap
+- Overpass queries are bounded by the current map extent to avoid oversized responses
+- Natural Earth data is bundled as GeoJSON in the repo (no runtime fetch needed)

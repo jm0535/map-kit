@@ -1,6 +1,6 @@
 # GeoSpaX — Blueprint & Changelog
 
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Author:** Jimmy Moses  
 **Affiliation:** School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology  
 **URL:** https://geospax.in4metrix.dev/  
@@ -11,13 +11,55 @@
 
 ## How to Cite
 
-> Moses, J. (2025). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.2.0) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
+> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.3.0) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
 
 See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, and BibTeX formats with copy-to-clipboard.
 
 ---
 
 ## Version History
+
+### v1.3.0 (2026-09-10) — GeoTIFF Symbology, Open Data Connectors, Composer Fixes
+
+#### GeoTIFF Raster Symbology (QGIS/ArcGIS workflow)
+- **Direct Symbology styling**: GeoTIFF layers are auto-selected in the Symbology panel on load — no need to visit the Analysis panel first
+- **Shared raster controls**: Band selection, Colour ramp (8 palettes including Singleband Gray), Min/Max stretch with reset, Opacity slider
+- **Continuous rendering**: smooth gradient mapping every pixel value to its own colour along the ramp
+- **Classified rendering**: Equal Interval, Quantile, Natural Breaks (Jenks), Manual breaks; 2–10 classes
+- **Live palette switching**: `updateColors()` API for real-time colour function updates on GeoRasterLayer
+- **Robust colour interpolation**: `_interpolateColor` handles `#rgb`, `#rrggbb`, `rgb()`, and CSS named colours
+- **Duplicate control prevention**: `buildSymbologyControls` is idempotent — removes existing block before rebuilding
+- **Band-aware rendering**: correct band index used in `pixelValuesToColorFn` (was hardcoded to band 0)
+- **Gray palette**: true grayscale output for singleband stretch visualisation
+
+#### Raster Legend & Composer
+- **Gradient legend auto-added**: raster legend mode set to `'raster'` (was `'simple'`) so the MapLegend control renders a gradient bar with min/mid/max labels
+- **Composer raster rendering**: GeoRasterLayer re-instantiated on the composer map with current symbology — the raster surface now appears in the composer, not just the legend
+- **Detached composer sync**: georaster data serialised via BroadcastChannel so the detached composer window also renders GeoTIFF surfaces
+- **Scalebar fix**: `_metersPerPixel` now uses `lmap.project()` (unrounded) instead of `latLngToContainerPoint()` (integer-rounded) — fixes scalebar disappearing at low zoom levels where a 0.01° offset is < 1 pixel
+
+#### Open Data Connectors (`js/geospax-opendata.js`)
+- **Overpass / OpenStreetMap**: fetch points, lines, polygons by tag within current map extent
+- **GBIF**: species occurrence records by scientific name or common name; user-controlled record limit with pagination beyond the API's 300-record cap
+- **Natural Earth**: bundled vector data (countries 110m, populated places, physical boundaries)
+- **WWF Terrestrial Ecoregions**: 846 ecoregion polygons with biome classification
+- **Marine Ecoregions (MEOW)**: 232 marine ecoregion polygons
+- **World Bank**: country-level indicators (population, GDP, forest area) via World Bank Open Data API
+- **USGS Basemaps**: Topo, Imagery, and Shaded Relief basemap layers
+
+#### Global Save/Load & UI
+- **Global Save Project / Load Project**: moved to the topbar so users can save/load from anywhere, not just the Analysis panel
+- **Removed duplicate Save/Load**: removed from Analysis and Provenance panels
+- **Fine-grained zoom**: 0.25 zoom increments in the main map and both composer modes (attached + detached)
+- **Elevation profile fix**: Y-axis now starts at zero
+- **GBIF common-name search**: search by common name in addition to scientific name
+- **Google Search Console**: site verification file added
+
+#### Regression Tests
+- 677 tests passing across 19 Playwright test files (test_02–test_20)
+- Full raster symbology, attribute table, composer, and open-data connector coverage
+
+---
 
 ### v1.2.0 (2026-09-09) — Calculate Field Tool
 
@@ -174,15 +216,20 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 ## Roadmap
 
-### v1.2.0 (Planned)
+### v1.3.0 (Planned)
 - [ ] **3D terrain view** — Cesium or MapLibre GL integration for 3D elevation visualization
 - [ ] **Time-series animation** — animate point/layer attributes over a temporal field
 - [x] **Spatial join** — point-in-polygon, intersect, union operations between layers *(v1.2.0 conservation module)*
 - [ ] **Zonal statistics** — summarize raster values within polygon zones
 - [ ] **Layout templates gallery** — preset layouts (A4 portrait, poster, presentation) with one-click apply
 - [ ] **Multi-page composer** — chain multiple layout pages for batch map series
+- [x] **Open data connectors** — Overpass/OSM, GBIF, Natural Earth, WWF ecoregions, World Bank, USGS basemaps *(v1.3.0)*
+- [x] **GeoTIFF direct symbology** — band, palette, stretch, continuous/classified in Symbology panel *(v1.3.0)*
+- [x] **Composer raster rendering** — GeoTIFF surface appears in attached + detached composer *(v1.3.0)*
+- [x] **GBIF common-name search** — search by common name, user-controlled limits with pagination *(v1.3.0)*
+- [x] **Fine-grained zoom** — 0.25 zoom increments in main map and composer *(v1.3.0)*
 
-### v1.3.0 (Planned)
+### v1.4.0 (Planned)
 - [ ] **Kriging interpolation** — ordinary kriging with variogram fitting (replace IDW limitation)
 - [ ] **Geographically Weighted Regression (GWR)** — local regression for spatial non-stationarity
 - [ ] **Point Pattern Analysis** — Ripley's K, kernel density estimation with bandwidth selection
@@ -190,7 +237,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 - [ ] **WMS/WMTS layer support** — connect to OGC web map services
 - [x] **Project save/load** — persist entire map session (layers, styles, layout) as a `.geospax` project file *(v1.2.0 conservation module)*
 
-### v1.4.0 (Planned)
+### v1.5.0 (Planned)
 - [ ] **R Console (WebR)** — integrated R terminal in bottom panel via WebR (R compiled to WebAssembly)
   - Runs entirely client-side — no backend required (fits GeoSpaX zero-backend architecture)
   - ~30MB WASM binary downloaded on first use, cached thereafter
@@ -253,7 +300,9 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 │  geospax-sdm-fix.js      — Bioclim/Mahalanobis rewrite  │
 │  geospax-project.js      — provenance, save/load         │
 │  geospax-raster.js       — reclassify, polygonize        │
+│  geospax-opendata.js     — Overpass, GBIF, WWF, World Bank│
 │  gsx-select.js           — dropdown popup (app-wide UI)  │
+│  gsx-calcfield.js        — calculate field tool           │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -273,10 +322,11 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 | Export | html2canvas 1.4.1, jsPDF 2.5.1 |
 | Data I/O | SheetJS, shpjs, shp-write, toGeoJSON |
 | CRS | proj4js 2.11.0 |
-| Raster | GeoRaster + GeoRaster Layer for Leaflet |
+| Raster | GeoRaster + GeoRaster Layer for Leaflet + geotiff.js (fallback) |
 | Conservation | turf.js 6.5.0 (overlay, WLC, fragmentation) |
 | SDM | Bioclim/Mahalanobis (client-side), MaxEnt (server API) |
 | Provenance | GSX module (stampImport/stampDerived, .geospax project) |
+| Open Data | geospax-opendata.js (Overpass, GBIF, Natural Earth, WWF, World Bank, USGS) |
 | UI controls | `gsx-select.js` — dropdown popup replacement (no dependencies) |
 | Python pkg | GeoPandas, Matplotlib, Folium, Contextily |
 | Hosting | Vercel (primary) + GitHub Pages (mirror) |

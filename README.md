@@ -45,7 +45,7 @@ Open the **Import** panel (left sidebar, folder icon). Drag and drop files direc
 | **GPX** (`.gpx`) | Waypoints, tracks, routes |
 | **Shapefile** (`.zip`) | Zip file containing `.shp`, `.dbf`, `.prj` (and optionally `.shx`); reprojected from `.prj` CRS automatically |
 | **CSV / XLSX** (`.csv`, `.xlsx`) | Must contain latitude and longitude columns; a smart column mapper auto-detects common column names (`lat`, `latitude`, `y`, `lon`, `longitude`, `x`, etc.); optional `elevation` / `z` column for profiles |
-| **GeoTIFF** (`.tif`, `.tiff`) | Raster layers rendered with a colour ramp; single or multi-band |
+| **GeoTIFF** (`.tif`, `.tiff`) | Raster layers rendered with a colour ramp; single or multi-band; styled directly in the Symbology panel (band, palette, stretch, continuous/classified) — no need to visit the Analysis panel first |
 
 After import the layer appears in the **Layers** panel and the map zooms to its extent.
 
@@ -55,7 +55,7 @@ After import the layer appears in the **Layers** panel and the map zooms to its 
 
 | Control | Location | Action |
 | --- | --- | --- |
-| Zoom in / out | Top-left `+` / `−` | Click or keyboard `+` / `−` |
+| Zoom in / out | Top-left `+` / `−` | Click or keyboard `+` / `−`; 0.25 zoom increments for fine-grained control |
 | Fullscreen | Top-right | Toggle browser fullscreen (`F`) |
 | Measurement tool | Toolbar | Draw polyline or polygon to measure distance / area |
 | Minimap | Bottom-right | Overview of current viewport |
@@ -84,12 +84,26 @@ Every imported or analysis-generated layer appears here.
 
 ### Symbology
 
-Click a layer name to open **Symbology** controls.
+Click a layer name to open **Symbology** controls. Newly loaded layers are auto-selected so the Symbology panel is immediately ready — no need to navigate to another panel first (QGIS/ArcGIS workflow).
+
+#### Vector layers
 
 - **Simple Symbol** — fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Marker shapes: circle, square, triangle, diamond, star, cross.
 - **Categorized** — one colour per unique attribute value (16-colour palette). Click legend entries on the map to rename them inline.
 - **Graduated** — numeric attribute divided into 2–10 classes using a colour ramp (Viridis, Heat, Cool, Terrain).
 - **Reset** — returns the layer to default styling.
+
+#### Raster layers (GeoTIFF)
+
+GeoTIFF layers get a dedicated raster symbology panel with QGIS/ArcGIS-style controls:
+
+- **Band selection** — pick which band to render (for multi-band GeoTIFFs).
+- **Colour ramp** — 8 palettes: Singleband Gray, Thermal, Viridis, Inferno, Plasma, Magma, Green→Yellow→Red, Hot.
+- **Min / Max stretch** — manual min/max controls with a reset button to restore data min/max.
+- **Opacity** — slider for raster transparency.
+- **Continuous** — smooth gradient rendering (every pixel value maps to its own colour along the ramp).
+- **Classified** — stepped rendering with Equal Interval, Quantile, Natural Breaks (Jenks), or Manual break methods; 2–10 classes.
+- A **gradient legend** is automatically added to the main map and the map composer showing the colour ramp with min/mid/max labels (continuous) or break-edge ticks (classified).
 
 ---
 
@@ -166,6 +180,51 @@ Before exporting, choose the target coordinate reference system from the **Outpu
 
 - **Export map as PNG** — captures the current viewport with title, legend, north arrow, and scale bar at 72–400 DPI.
 - **Export map as PDF** — same content embedded in a PDF page (A4 portrait or landscape).
+
+---
+
+### Open Data Connectors
+
+The **Open Data** panel provides built-in connectors to free, open GIS and biodiversity datasets. Each connector fetches data directly into the map as a new layer — no manual download or file import needed.
+
+| Connector | Source | What it provides |
+| --- | --- | --- |
+| **Overpass / OSM** | OpenStreetMap via Overpass API | Points, lines, polygons by tag (e.g., `amenity=school`, `natural=water`) within the current map extent |
+| **GBIF** | Global Biodiversity Information Facility | Species occurrence records by scientific name or common name; user-controlled record limit with pagination beyond the API's 300-record cap |
+| **Natural Earth** | Natural Earth (built-in vector) | Countries (110m), populated places, physical boundaries — loaded from bundled GeoJSON |
+| **WWF Ecoregions** | WWF Terrestrial Ecoregions | 846 terrestrial ecoregion polygons with biome classification |
+| **Marine Ecoregions** | Marine Ecoregions of the World (MEOW) | 232 marine ecoregion polygons |
+| **World Bank** | World Bank Open Data API | Country-level indicators (population, GDP, forest area, etc.) as a choropleth-ready layer |
+| **USGS Basemaps** | USGS National Map TNM | Topo, Imagery, and Shaded Relief basemap layers switchable from the Open Data panel |
+
+GBIF searches support both scientific names and common names. The record limit is user-configurable to support rare, endemic, and endangered species with few records.
+
+---
+
+### Map Composer
+
+Open the **Composer** from the toolbar (layout icon) or the Export panel. The composer provides QGIS/ArcGIS-style print layout with:
+
+- **Attached mode** — composer opens as a modal overlay on the main window
+- **Detached mode** — opens in a separate browser window for multi-monitor use; stays synchronized with the main map via BroadcastChannel
+- **Draggable / resizable furniture**: north arrow, scale bar (6 styles: Single Box, Double Alternating, Line + Ticks, Stepped, Hollow, Numeric), legend, overview inset, title, subtitle, scale text, date text, CRS text
+- **Legend**: auto-renders gradient bars for raster layers, category swatches for categorized layers, and ramp bars for graduated layers; editable title/subtitle; toggle/reorder/rename items
+- **Raster rendering**: GeoTIFF layers are re-instantiated on the composer map with the current symbology (palette, stretch, classification) — the raster surface appears in the composer, not just the legend
+- **Fine-grained zoom**: 0.25 zoom increments (matching the main map) for precise layout positioning
+- **Paper sizes**: A4, A3, Letter, Tabloid (portrait/landscape) or custom
+- **Graticule**: coordinate grid with edge labels positioned to avoid overlapping furniture
+- **Export**: PNG (up to 400 DPI) or PDF
+
+---
+
+### Project Save / Load
+
+Use the **Save Project** / **Load Project** buttons in the global topbar to persist the entire map session:
+
+- All layers (vector + raster), symbology, legend state, and view position
+- Provenance metadata (source, operation, timestamp for each layer)
+- Project metadata (title, author, description, CRS)
+- Saved as a `.geospax` JSON file
 
 ---
 
@@ -448,6 +507,8 @@ The chart is interactive: hover a point to see the feature's site name and attri
 6. Run **Moran Scatterplot** → regression slope should match the Global Moran's I value.
 7. Run **IDW Interpolation** on `species_richness` → visualise the continuous richness surface.
 
+**GeoTIFF sample**: `samples/PNG_BIO1_30s.tif` — WorldClim BIO1 (annual mean temperature, °C × 10) for Papua New Guinea at 30-arcsecond resolution. Load it to test raster symbology (band selection, colour ramps, min/max stretch, continuous/classified rendering), the gradient legend, and raster analysis (histogram, Otsu threshold, reclassify, polygonize).
+
 ---
 
 ## Project Structure
@@ -471,10 +532,13 @@ map-kit/                      # Repository name (app is branded "GeoSpaX")
 │   ├── geospax-sdm-fix.js           # BIOCLIM / Mahalanobis SDM with env sampling + guards
 │   ├── geospax-project.js           # Provenance stamping, .gspx project save/load, autosave
 │   ├── geospax-raster.js            # Reclassify, Otsu threshold, polygonize
+│   ├── geospax-opendata.js          # Open data connectors (Overpass, GBIF, Natural Earth, WWF, World Bank, USGS)
 │   ├── gsx-select.js                # App-wide dropdown popup replacement (see Technical Notes)
 │   └── gsx-calcfield.js             # Calculate field tool (expression parser + weighted conditions)
 ├── samples/
-│   └── sample_species_richness.geojson   # Demo dataset (see Sample Dataset above)
+│   ├── sample_species_richness.geojson   # Demo dataset (see Sample Dataset above)
+│   └── PNG_BIO1_30s.tif                  # WorldClim BIO1 (annual mean temp) for Papua New Guinea
+├── google4e0cf157f76f6227.html  # Google Search Console verification
 ├── vendor/                   # All third-party JS/CSS libraries (no CDN at runtime)
 │   ├── leaflet/
 │   ├── leaflet-measure/
@@ -573,9 +637,12 @@ Under **repo Settings → Pages**: *Source = Deploy from a branch*, *Branch = `m
 
 All third-party libraries are vendored in `vendor/`. The app works fully offline after the initial page load. The only runtime network requests are:
 
-- **Map tile servers** (OpenTopoMap, Esri, CartoDB) — for basemap tiles
+- **Map tile servers** (OpenTopoMap, Esri, CartoDB, USGS) — for basemap tiles
 - **Nominatim** (`nominatim.openstreetmap.org`) — for the search/geocoding bar
 - **epsg.io** — for on-demand CRS definitions used by the CRS reprojection panel
+- **Overpass API** (`overpass-api.de`) — for OpenStreetMap data connector
+- **GBIF API** (`api.gbif.org`) — for species occurrence data connector
+- **World Bank API** (`api.worldbank.org`) — for country indicator data connector
 
 ### Coordinate Reference System
 
@@ -643,6 +710,8 @@ To restore the native popup for a single control, add `data-gsx-select="off"` to
 | [GeoRaster](https://github.com/GeoTIFF/georaster) | 1.6.0 | GeoTIFF parsing |
 | [GeoRaster Layer](https://github.com/GeoTIFF/georaster-layer-for-leaflet) | 3.10.0 | GeoTIFF rendering |
 | [Leaflet Heat](https://github.com/Leaflet/Leaflet.heat) | 0.2.0 | Heat map layers |
+| [Turf.js](https://turfjs.org/) | 6.5.0 | Spatial operations (overlay, buffer, simplification) |
+| [geotiff.js](https://github.com/ghgtiss/geotiff.js) | 2.1.3 | GeoTIFF parsing fallback |
 | [Leaflet Measure](https://github.com/ljagis/leaflet-measure) | 3.1.0 | Distance / area measurement |
 | [Leaflet Fullscreen](https://github.com/brunob/leaflet.fullscreen) | 3.0.0 | Fullscreen control |
 | [Inter font](https://rsms.me/inter/) | 4.0 | UI typeface (woff2, latin subset) |
