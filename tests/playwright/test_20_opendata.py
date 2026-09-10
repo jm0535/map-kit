@@ -112,7 +112,7 @@ async def main():
         gbif_result = await page.evaluate("""async () => {
             try {
                 document.getElementById('gbif-taxon').value = 'Panthera leo';
-                document.getElementById('gbif-limit').value = '300';
+                document.getElementById('gbif-limit').value = '50';
                 let captured = null;
                 const orig = window.addUploadedGeoJSON;
                 window.addUploadedGeoJSON = function(geojson, name, color) {
