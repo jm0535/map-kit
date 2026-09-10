@@ -2238,14 +2238,9 @@
             <input type="text" id="gbif-taxon" placeholder="e.g. lion or Panthera leo"
                    style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;">
             <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:4px;">Limit:
-              <select id="gbif-limit" style="background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="300" selected>300</option>
-                <option value="1000">1,000</option>
-                <option value="5000">5,000</option>
-                <option value="10000">10,000</option>
-              </select>
+              <input type="number" id="gbif-limit" value="300" min="1" max="10000" step="1"
+                     style="width:70px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
+              <span style="font-size:9px;color:var(--text-faint);">records (1–10000)</span>
             </label>
             <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.gbifQuery()">Search Occurrences</button>
           </div>

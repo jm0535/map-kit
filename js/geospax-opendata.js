@@ -129,8 +129,10 @@ const GSX_OpenData = (function () {
     }
 
     const taxonName = taxonInput.value.trim();
-    const limitSelect = document.getElementById('gbif-limit');
-    const limit = limitSelect ? parseInt(limitSelect.value) : 300;
+    const limitInput = document.getElementById('gbif-limit');
+    let limit = limitInput ? parseInt(limitInput.value) : 300;
+    if (isNaN(limit) || limit < 1) limit = 1;
+    if (limit > 10000) limit = 10000;
 
     showProcessing('Searching GBIF occurrences…');
 

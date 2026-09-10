@@ -32,7 +32,14 @@ async def main():
         ne_select = await page.locator("#naturalearth-layer").count()
         report("Overpass tag input exists", overpass_input > 0)
         report("GBIF taxon input exists", gbif_input > 0)
-        report("GBIF limit select exists", gbif_limit > 0)
+        report("GBIF limit input exists", gbif_limit > 0)
+
+        # Check it's a number input with min=1
+        limit_type = await page.evaluate("document.getElementById('gbif-limit').type")
+        report("GBIF limit is number input", limit_type == 'number', limit_type)
+
+        limit_min = await page.evaluate("document.getElementById('gbif-limit').min")
+        report("GBIF limit min is 1", limit_min == '1', limit_min)
         report("Natural Earth layer select exists", ne_select > 0)
 
         # ── USGS WMS basemaps in selector ──
