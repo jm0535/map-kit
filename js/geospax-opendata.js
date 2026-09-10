@@ -201,26 +201,43 @@ const GSX_OpenData = (function () {
         return;
       }
 
-      // Step 2: search occurrences within map bbox
+      // Step 2: search occurrences within map bbox (paginate, max 300 per request)
       const bbox = _getMapBBox();
       const bboxStr = `${bbox.west},${bbox.south},${bbox.east},${bbox.north}`;
-      const searchUrl = `https://api.gbif.org/v1/occurrence/search?taxon_key=${taxonKey}` +
-        `&limit=${limit}&offset=0` +
-        `&bbox=${bboxStr}` +
-        `&hasCoordinate=true`;
+      const PAGE_SIZE = 300;
+      let allResults = [];
+      let offset = 0;
+      let total = Infinity;
 
-      const occResp = await fetch(searchUrl);
-      if (!occResp.ok) throw new Error('Occurrence search failed (HTTP ' + occResp.status + ')');
-      const occData = await occResp.json();
+      while (offset < limit && offset < total && offset < 100000) {
+        const pageLen = Math.min(PAGE_SIZE, limit - offset);
+        const pageUrl = `https://api.gbif.org/v1/occurrence/search?taxon_key=${taxonKey}` +
+          `&limit=${pageLen}&offset=${offset}` +
+          `&bbox=${bboxStr}` +
+          `&hasCoordinate=true`;
+
+        const occResp = await fetch(pageUrl);
+        if (!occResp.ok) throw new Error('Occurrence search failed (HTTP ' + occResp.status + ')');
+        const occData = await occResp.json();
+        total = occData.count || 0;
+
+        if (!occData.results || occData.results.length === 0) break;
+        allResults = allResults.concat(occData.results);
+        offset += occData.results.length;
+        if (occData.results.length < pageLen) break; // no more results
+        if (offset < limit && offset < total) {
+          showProcessing(`Fetching GBIF occurrences… ${Math.min(offset, limit)} / ${Math.min(total, limit)}`);
+        }
+      }
       hideProcessing();
 
-      if (!occData.results || occData.results.length === 0) {
+      if (allResults.length === 0) {
         showToast('No occurrences found for ' + taxonName + ' in current view', 'info');
         return;
       }
 
       // Convert to GeoJSON
-      const features = occData.results
+      const features = allResults
         .filter(r => r.decimalLatitude !== undefined && r.decimalLongitude !== undefined)
         .map(r => ({
           type: 'Feature',
@@ -250,7 +267,7 @@ const GSX_OpenData = (function () {
       const geojson = { type: 'FeatureCollection', features };
       const name = 'GBIF: ' + taxonName;
       addUploadedGeoJSON(geojson, name, nextColor());
-      showToast(`Loaded ${features.length} occurrence records from GBIF`, 'success');
+      showToast(`Loaded ${features.length} of ${total} occurrence records from GBIF`, 'success');
     } catch (e) {
       hideProcessing();
       showToast('GBIF query failed: ' + e.message, 'error');
