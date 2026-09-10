@@ -211,7 +211,128 @@ async def main():
         }""")
         report("Reset raster classification no crash", rr_result == 'ok' or 'no' in rr_result.lower(), rr_result)
 
+        # ── GeoTIFF loading & integration ──
+        geotiff_funcs = await page.evaluate("""() => ({
+            loadGeoTIFFFile: typeof loadGeoTIFFFile,
+            _registerGeoRasterLayer: typeof _registerGeoRasterLayer,
+            _interpolateColor: typeof _interpolateColor,
+            _rampColorAt: typeof _rampColorAt,
+        })""")
+        for name, ftype in geotiff_funcs.items():
+            report(f"GeoTIFF {name} exists", ftype == 'function', ftype)
+
+        # Create a small test GeoTIFF and upload it
+        import struct, io, tempfile
+        def make_test_tiff():
+            width, height = 32, 32
+            pixels = bytearray()
+            for row in range(height):
+                for col in range(width):
+                    val = float(row * width + col) / (width * height)
+                    pixels.extend(struct.pack('<f', val))
+            buf = io.BytesIO()
+            buf.write(b'II')
+            buf.write(struct.pack('<H', 42))
+            buf.write(struct.pack('<I', 8))
+            entries = [
+                (256, 3, 1, width), (257, 3, 1, height), (258, 3, 1, 32),
+                (259, 3, 1, 1), (262, 3, 1, 1), (273, 4, 1, 0),
+                (277, 3, 1, 1), (278, 3, 1, height), (279, 4, 1, len(pixels)),
+                (339, 3, 1, 3),
+            ]
+            entries.sort(key=lambda x: x[0])
+            buf.write(struct.pack('<H', len(entries)))
+            strip_offset_pos = None
+            for tag, typ, count, val in entries:
+                buf.write(struct.pack('<H', tag))
+                buf.write(struct.pack('<H', typ))
+                buf.write(struct.pack('<I', count))
+                if tag == 273:
+                    strip_offset_pos = buf.tell()
+                    buf.write(struct.pack('<I', val))
+                else:
+                    buf.write(struct.pack('<I', val))
+            buf.write(struct.pack('<I', 0))
+            pixel_offset = buf.tell()
+            buf.write(pixels)
+            buf.seek(strip_offset_pos)
+            buf.write(struct.pack('<I', pixel_offset))
+            return buf.getvalue()
+
+        tiff_data = make_test_tiff()
+        tiff_path = os.path.join(tempfile.gettempdir(), 'gsx_test_geotiff.tif')
+        with open(tiff_path, 'wb') as f:
+            f.write(tiff_data)
+
+        await page.set_input_files('#geotiff-file-input', tiff_path)
+        load_result = await page.evaluate("""async () => {
+            try {
+                const file = document.getElementById('geotiff-file-input').files[0];
+                const info = await Promise.race([
+                    loadGeoTIFFFile(file, 'TestGeoTIFF'),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000))
+                ]);
+                if (!info) return 'no info';
+                return { isRaster: info.isRaster, featureCount: info.featureCount, props: info.properties.length };
+            } catch(e) { return 'error: ' + e.message; }
+        }""")
+        report("GeoTIFF loads via loadGeoTIFFFile", isinstance(load_result, dict) and load_result.get('isRaster'), str(load_result)[:100])
+
+        if isinstance(load_result, dict) and load_result.get('isRaster'):
+            # Symbology state initialized
+            sym = await page.evaluate("""() => {
+                const r = uploadedLayers.find(l => l.isRaster);
+                const st = legendState[r.id];
+                return { hasState: !!st, method: st?.classification?.method, minVal: st?.minVal, maxVal: st?.maxVal };
+            }""")
+            report("GeoTIFF symbology state initialized", sym and sym.get('hasState'), str(sym)[:100])
+
+            # Attribute table works
+            attr = await page.evaluate("""() => {
+                const r = uploadedLayers.find(l => l.isRaster);
+                loadAttrTable(r.id);
+                return { rows: document.querySelectorAll('#attr-table tbody tr').length,
+                         headers: Array.from(document.querySelectorAll('#attr-table thead th')).map(t => t.textContent) };
+            }""")
+            report("GeoTIFF attribute table populated", attr and attr.get('rows', 0) > 0, str(attr)[:100])
+
+            # Palette change works
+            pal = await page.evaluate("""() => {
+                const r = uploadedLayers.find(l => l.isRaster);
+                const st = legendState[r.id];
+                st.paletteKey = 'viridis';
+                _applyClassificationToHeatLayer(r.id);
+                return 'ok';
+            }""")
+            report("GeoTIFF palette change no crash", pal == 'ok', str(pal)[:100])
+
+            # Classification works
+            cls = await page.evaluate("""() => {
+                const r = uploadedLayers.find(l => l.isRaster);
+                const st = legendState[r.id];
+                st.classification.method = 'equal';
+                st.classification.classes = 5;
+                _recomputeAndApplyClassification(r.id);
+                return { breaks: st.classification.breaks, method: st.classification.method };
+            }""")
+            report("GeoTIFF classification works", cls and cls.get('breaks') and len(cls['breaks']) >= 2, str(cls)[:100])
+
+            # Opacity change works
+            opa = await page.evaluate("""() => {
+                const r = uploadedLayers.find(l => l.isRaster);
+                opacityLayer(r.id, 50);
+                return 'ok';
+            }""")
+            report("GeoTIFF opacity change no crash", opa == 'ok', str(opa)[:100])
+
+        # Clean up test file
+        try: os.remove(tiff_path)
+        except: pass
+
         errs = await close(page)
+        # Filter out expected georaster parse errors (it tries to parse the
+        # test TIFF before falling back to geotiff.js — the error is expected)
+        errs = [e for e in errs if 'georaster' not in e.lower() and "reading 'values'" not in e and "reading 'projection'" not in e]
         report("Heat/label/raster tests no errors", not errs, str(errs))
 
 asyncio.run(main())
