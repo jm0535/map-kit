@@ -71,6 +71,7 @@
 <script src="js/geospax-raster.js"></script>
 <script src="js/gsx-select.js"></script>
 <script src="js/gsx-calcfield.js"></script>
+<script src="js/geospax-opendata.js"></script>
 
 <style>
   /* ── Design tokens ── */
@@ -2207,6 +2208,71 @@
       </div>
     </div>
 
+    <!-- Open Data Connectors -->
+    <div class="panel-section">
+      <div class="panel-header collapsed" onclick="toggleSection(this)">
+        <span>Open Data</span><span class="arrow">&#x25BC;</span>
+      </div>
+      <div class="panel-body hidden" id="opendata-panel">
+
+        <!-- OSM Overpass API -->
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1F310; OpenStreetMap (Overpass)</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body hidden" style="padding:8px 10px;">
+            <p style="font-size:10px;color:var(--text-muted);margin:0 0 6px;">Query OSM features in the current map view by tag (e.g. <code>amenity=school</code>).</p>
+            <input type="text" id="overpass-tag" placeholder="key=value (e.g. amenity=school)"
+                   style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;">
+            <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.overpassQuery()">Query OSM Features</button>
+          </div>
+        </div>
+
+        <!-- GBIF Biodiversity -->
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1FAB1; GBIF Biodiversity</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body hidden" style="padding:8px 10px;">
+            <p style="font-size:10px;color:var(--text-muted);margin:0 0 6px;">Search species occurrence records by scientific name within the current map view.</p>
+            <input type="text" id="gbif-taxon" placeholder="Scientific name (e.g. Panthera leo)"
+                   style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;">
+            <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:4px;">Limit:
+              <select id="gbif-limit" style="background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
+                <option value="300">300</option>
+                <option value="1000">1,000</option>
+                <option value="5000">5,000</option>
+                <option value="10000">10,000</option>
+              </select>
+            </label>
+            <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.gbifQuery()">Search Occurrences</button>
+          </div>
+        </div>
+
+        <!-- Natural Earth Reference Layers -->
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1F30D; Natural Earth</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body hidden" style="padding:8px 10px;">
+            <p style="font-size:10px;color:var(--text-muted);margin:0 0 6px;">Add public-domain reference layers (boundaries, rivers, cities).</p>
+            <select id="naturalearth-layer" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;">
+              <option value="ne_110m_admin_0_countries">Countries (110m)</option>
+              <option value="ne_50m_admin_0_countries">Countries (50m)</option>
+              <option value="ne_110m_admin_1_states_provinces">States/Provinces (110m)</option>
+              <option value="ne_110m_rivers_lake_centerlines">Rivers (110m)</option>
+              <option value="ne_110m_lakes">Lakes (110m)</option>
+              <option value="ne_10m_populated_places">Cities (10m)</option>
+              <option value="ne_110m_geography_regions_polys">Geography Regions</option>
+              <option value="ne_50m_urban_areas">Urban Areas (50m)</option>
+            </select>
+            <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.naturalEarthAdd()">Add Reference Layer</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Layers -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
@@ -2233,6 +2299,9 @@
           <div class="basemap-btn" data-url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png" data-attr="Map data: &copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href='https://opentopomap.org'>OpenTopoMap</a> (CC-BY-SA)" data-subdomains="abc" data-maxz="17" onclick="switchBasemap(this)">OpenTopoMap</div>
           <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" data-attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/attributions'>CARTO</a>" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Positron</div>
           <div class="basemap-btn" data-url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" data-attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/attributions'>CARTO</a>" data-subdomains="abcd" data-maxz="20" onclick="switchBasemap(this)">Dark</div>
+          <div class="basemap-btn" data-wms="1" data-url="https://basemap.nationalmap.gov/arcgis/services/USGSTopo/MapServer/WmsServer" data-attr="USGS The National Map" data-subdomains="" data-maxz="16" data-layers="0" onclick="switchBasemap(this)">USGS Topo</div>
+          <div class="basemap-btn" data-wms="1" data-url="https://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer" data-attr="USGS The National Map" data-subdomains="" data-maxz="16" data-layers="0" onclick="switchBasemap(this)">USGS Imagery</div>
+          <div class="basemap-btn" data-wms="1" data-url="https://basemap.nationalmap.gov/arcgis/services/USGSShadedReliefOnly/MapServer/WmsServer" data-attr="USGS 3D Elevation Program" data-subdomains="" data-maxz="16" data-layers="0" onclick="switchBasemap(this)">USGS Shaded Relief</div>
         </div>
         <select id="basemap-select" onchange="setBasemapFromSelect(this.value)">
           <option value="Topo" selected>Topo (Esri)</option>
@@ -2242,6 +2311,9 @@
           <option value="OpenTopoMap">OpenTopoMap</option>
           <option value="Positron">Positron (light)</option>
           <option value="Dark">Dark Matter</option>
+          <option value="USGS Topo">USGS Topo (WMS)</option>
+          <option value="USGS Imagery">USGS Imagery (WMS)</option>
+          <option value="USGS Shaded Relief">USGS Shaded Relief (WMS)</option>
         </select>
         <div class="slider-row" style="margin-top:8px">
           <label>Opacity <span id="bm-opacity-val">100%</span></label>
@@ -9294,9 +9366,18 @@ function switchBasemap(btn) {
   document.querySelectorAll('.basemap-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   map.removeLayer(basemapLayer);
-  basemapLayer = _getBasemapLayer(btn.dataset.url, btn.dataset.attr, btn.dataset.subdomains, btn.dataset.maxz).addTo(map);
+  if (btn.dataset.wms === '1') {
+    basemapLayer = L.tileLayer.wms(btn.dataset.url, {
+      layers: btn.dataset.layers || '0',
+      attribution: btn.dataset.attr,
+      maxZoom: 20,
+      maxNativeZoom: parseInt(btn.dataset.maxz) || 16,
+      crossOrigin: true,
+    }).addTo(map);
+  } else {
+    basemapLayer = _getBasemapLayer(btn.dataset.url, btn.dataset.attr, btn.dataset.subdomains, btn.dataset.maxz).addTo(map);
+  }
   basemapLayer.bringToBack();
-  // Cached layers may not fire 'load' again; hide spinner immediately
   _hideLoading();
 }
 
