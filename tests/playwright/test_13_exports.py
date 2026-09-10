@@ -22,7 +22,7 @@ async def main():
                 return 'blob:mock';
             };
             try { exportProfile('png'); } catch(e) { URL.createObjectURL = orig; return 'error: ' + e.message; }
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 2000));
             URL.createObjectURL = orig;
             return captured ? 'ok' : 'no data';
         }""")
@@ -37,7 +37,7 @@ async def main():
                 return 'blob:mock';
             };
             try { exportProfile('svg'); } catch(e) { URL.createObjectURL = orig; return 'error: ' + e.message; }
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 2000));
             URL.createObjectURL = orig;
             return captured || 'no data';
         }""")
@@ -53,7 +53,7 @@ async def main():
                 return 'blob:mock';
             };
             try { exportProfile('pdf'); } catch(e) { URL.createObjectURL = orig; return 'error: ' + e.message; }
-            await new Promise(r => setTimeout(r, 3000));
+            await new Promise(r => setTimeout(r, 5000));
             URL.createObjectURL = orig;
             return captured ? 'ok (' + captured + ' bytes)' : 'no data';
         }""")
@@ -124,7 +124,7 @@ async def main():
                 if (fmt) fmt.value = 'png';
                 await layoutExport('png');
             } catch(e) { HTMLAnchorElement.prototype.click = origClick; return 'error: ' + e.message; }
-            await new Promise(r => setTimeout(r, 3000));
+            await new Promise(r => setTimeout(r, 5000));
             HTMLAnchorElement.prototype.click = origClick;
             return captured || 'no data';
         }""")
