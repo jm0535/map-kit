@@ -779,6 +779,45 @@ Fill in the provenance table with:
 
 ---
 
+## Optional: Loading and Reclassifying Raster Data
+
+The four required maps use environmental fields already embedded in your species GeoJSON, so you do not need to load rasters. However, if you want to produce a raster backdrop (e.g. a temperature or tree-cover surface) for context or for an extra map, follow these steps.
+
+### Loading a GeoTIFF
+
+1. Open the **Analysis drawer** (click **Analysis** in the top toolbar).
+2. Expand the **Raster Analysis** section.
+3. Click **Select GeoTIFF** and choose a `.tif` file (e.g. `PNG_BIO1_30s.tif` from the shared data package).
+4. Enter a **Layer Name** (e.g. `BIO1 Temperature`).
+5. Click **Load GeoTIFF**.
+
+The raster appears on the map with a default colour ramp. Use the **Symbology** panel (right panel) to change the band, colour ramp, min/max, and switch between continuous and classified mode.
+
+> **![screenshots/raster_loaded.png](screenshots/raster_loaded.png)**
+> A GeoTIFF (WorldClim BIO1 annual mean temperature) loaded and styled on the map.
+
+### Reclassify and Polygonize
+
+To convert a raster to vector polygons (e.g. identify all areas above a temperature threshold):
+
+1. In the Analysis drawer, expand the **Raster Reclassify & Polygonize** section.
+2. Select the **Raster layer** from the dropdown.
+3. Set the **Band** (0 for single-band rasters).
+4. Click **Histogram + Otsu** to view the value distribution and get an auto-suggested threshold.
+5. Set the **Threshold** value and choose the comparison operator (>=, >, <=, <).
+6. Tick **Merge into patches** to dissolve adjacent cells into single polygons.
+7. Click **Reclassify & Polygonize**.
+
+The output is a new vector polygon layer added to the Layers panel.
+
+> **![screenshots/raster_reclassify_histogram.png](screenshots/raster_reclassify_histogram.png)**
+> Raster Reclassify section showing the histogram with Otsu threshold.
+
+> **![screenshots/raster_polygonized.png](screenshots/raster_polygonized.png)**
+> Polygonized output: raster cells above the threshold converted to vector polygons.
+
+---
+
 ## Quick Reference: GeoSpaX Tools Used
 
 | Map | Tool | Where in GeoSpaX |
