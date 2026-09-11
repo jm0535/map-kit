@@ -75,46 +75,102 @@
 <script src="js/geospax-opendata.js"></script>
 
 <style>
-  /* ── Design tokens ── */
+  /* ── Design tokens ──
+     Enterprise-grade palette: consistent accent across themes, WCAG-AA
+     contrast for text on surfaces, perceptually-uniform elevation steps. */
   :root {
-    --bg:           #13151a;
-    --surface-1:    #1a1d24;
-    --surface-2:    #21252e;
-    --surface-3:    #2a2f3a;
+    /* Surfaces — stepped elevation (dark) */
+    --bg:           #0f1115;
+    --surface-1:    #161922;
+    --surface-2:    #1e222c;
+    --surface-3:    #282d39;
     scroll-behavior: smooth;
-    --border:       #2d3340;
-    --border-strong:#3a4150;
-    --text:         #e5e7eb;
-    --text-muted:   #9ca3af;
+    /* Borders */
+    --border:       #2e3441;
+    --border-strong:#3d4452;
+    /* Text — AA contrast on all surfaces */
+    --text:         #e8eaed;
+    --text-muted:   #a8b0bd;
     --text-faint:   #6b7280;
-    --accent:       #4f98a3;
-    --accent-hover: #5fb3c0;
-    --accent-bg:    rgba(79,152,163,0.12);
-    --success:      #6daa45;
+    /* Accent — consistent teal across both themes */
+    --accent:       #3d9ba8;
+    --accent-hover: #4fb3c0;
+    --accent-bg:    rgba(61,155,168,0.14);
+    --accent-glow:  rgba(61,155,168,0.25);
+    /* Semantic */
+    --success:      #5fa83f;
     --warning:      #d97706;
-    --error:        #d163a7;
-    --shadow:       0 1px 2px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
+    --error:        #e0557a;
+    --info:         #5b9bd5;
+    /* Shadows — layered for depth */
+    --shadow:       0 1px 3px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.25);
+    --shadow-lg:    0 4px 6px rgba(0,0,0,0.4), 0 10px 28px rgba(0,0,0,0.35);
+    --shadow-glow:  0 0 0 3px var(--accent-glow);
+    /* Scrollbar */
+    --scroll-track: transparent;
+    --scroll-thumb: #3a4150;
+    --scroll-thumb-hover: #4a5263;
   }
   body.light {
-    --bg:           #f7f6f2;
+    /* Surfaces — stepped elevation (light) */
+    --bg:           #f5f4f0;
     --surface-1:    #ffffff;
-    --surface-2:    #f9f8f5;
-    --surface-3:    #eeece6;
-    --border:       #d4d1ca;
-    --border-strong:#bab8b0;
-    --text:         #28251d;
-    --text-muted:   #6b6961;
+    --surface-2:    #f8f7f4;
+    --surface-3:    #edebe5;
+    /* Borders */
+    --border:       #d8d5cd;
+    --border-strong:#c4c1b8;
+    /* Text — AA contrast */
+    --text:         #1f1d18;
+    --text-muted:   #5f5d56;
     --text-faint:   #9a9892;
-    --accent:       #01696f;
-    --accent-hover: #0c4e54;
-    --accent-bg:    rgba(1,105,111,0.10);
-    --success:      #437a22;
-    --warning:      #964219;
-    --error:        #a12c7b;
-    --shadow:       0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06);
+    /* Accent — same teal, slightly deeper for contrast on white */
+    --accent:       #0a7177;
+    --accent-hover: #085a60;
+    --accent-bg:    rgba(10,113,119,0.10);
+    --accent-glow:  rgba(10,113,119,0.18);
+    /* Semantic */
+    --success:      #3d7a1e;
+    --warning:      #8a4215;
+    --error:        #b03057;
+    --info:         #2b6cb0;
+    /* Shadows — softer in light */
+    --shadow:       0 1px 2px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-lg:    0 4px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+    --shadow-glow:  0 0 0 3px var(--accent-glow);
+    /* Scrollbar */
+    --scroll-track: transparent;
+    --scroll-thumb: #c8c5be;
+    --scroll-thumb-hover: #b0ada5;
+  }
+
+  /* ── Smooth theme transition ──
+     Applies a brief color/background transition so switching themes
+     doesn't flash. Excludes transform/box-shadow for performance. */
+  body, body * {
+    transition: background-color 0.25s ease, border-color 0.25s ease,
+                color 0.25s ease, box-shadow 0.25s ease;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Scrollbar styling (enterprise) ── */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--scroll-track); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb); border-radius: 4px;
+    border: 2px solid transparent; background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
+  * { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
+
+  /* ── Focus-visible for accessibility ── */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-radius: 2px;
+  }
+
   body {
     font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     background: var(--bg);
@@ -141,6 +197,31 @@
   #topbar .sep { width: 1px; height: 20px; background: var(--border); }
   #topbar .subtitle { font-size: 11px; color: var(--text-muted); }
   #topbar .spacer { flex: 1; }
+
+  /* Topbar icon buttons — consistent enterprise styling */
+  .topbar-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 9px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    min-height: 28px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .topbar-btn:hover {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .topbar-btn:active { transform: translateY(1px); }
+  .topbar-btn.theme-toggle-btn { font-size: 15px; }
   #topbar .coord-display {
     font-size: 11px; font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--text-muted);
     background: var(--surface-2); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
@@ -2179,9 +2260,9 @@
   <label class="analysis-toolbar-btn" title="Load a previously saved .gspx project file" style="cursor:pointer;">&#x1F4C2; Load
     <input type="file" accept=".gspx,.json" style="display:none" onchange="GSX.uiLoadProject(this.files[0]); this.value=''">
   </label>
-  <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light theme" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:14px;color:var(--text);">&#x1f319;</button>
-  <button id="collapse-left-btn" onclick="toggleLeftPanel()" title="Toggle left panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25c0;</button>
-  <button id="collapse-right-btn" onclick="toggleRightPanel()" title="Toggle right panel" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--text-muted);">&#x25b6;</button>
+  <button id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light theme" class="topbar-btn theme-toggle-btn">&#x1f319;</button>
+  <button id="collapse-left-btn" onclick="toggleLeftPanel()" title="Toggle left panel" class="topbar-btn">&#x25c0;</button>
+  <button id="collapse-right-btn" onclick="toggleRightPanel()" title="Toggle right panel" class="topbar-btn">&#x25b6;</button>
 </div>
 
 <!-- Main -->
@@ -10048,14 +10129,14 @@ function showToast(msg, type) {
 function toggleTheme() {
   document.body.classList.toggle('light');
   const light = document.body.classList.contains('light');
-  document.getElementById('theme-toggle').textContent = light ? '\u2600' : '\uD83C\uDF19';
+  document.getElementById('theme-toggle').textContent = light ? '\u2600\uFE0F' : '\uD83C\uDF19';
   try { localStorage.setItem('geospax_theme', light ? 'light' : 'dark'); } catch(e){}
 }
 // Restore theme on load
 try {
   if (localStorage.getItem('geospax_theme') === 'light') {
     document.body.classList.add('light');
-    document.getElementById('theme-toggle').textContent = '\u2600';
+    document.getElementById('theme-toggle').textContent = '\u2600\uFE0F';
   }
 } catch(e){}
 

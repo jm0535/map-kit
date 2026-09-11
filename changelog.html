@@ -6,19 +6,38 @@
 <title>GeoSpaX Changelog</title>
 <style>
 :root {
-  --bg: #0f1117; --fg: #e0e0e0; --accent: #4a9eff; --muted: #999;
-  --sidebar-bg: #161821; --border: #2a2d3a; --code-bg: #1a1a2e;
-  --card-bg: #1a1c28; --table-stripe: #14161e; --table-header: #1e2030;
+  --bg: #0f1115; --fg: #e8eaed; --accent: #3d9ba8; --muted: #a8b0bd;
+  --sidebar-bg: #161922; --border: #2e3441; --code-bg: #1e222c;
+  --card-bg: #1e222c; --table-stripe: #161922; --table-header: #282d39;
   --badge-new: #16a34a; --badge-fix: #2563eb; --badge-enh: #d97706;
   --badge-dep: #dc2626; --badge-sec: #7c3aed;
+  --shadow: 0 1px 3px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.25);
+  --scroll-thumb: #3a4150; --scroll-thumb-hover: #4a5263;
 }
 body.light {
-  --bg: #ffffff; --fg: #1a1a1a; --accent: #2563eb; --muted: #666;
-  --sidebar-bg: #f6f8fa; --border: #e1e4e8; --code-bg: #f0f0f0;
-  --card-bg: #f9f9fb; --table-stripe: #f6f8fa; --table-header: #eef1f4;
+  --bg: #f5f4f0; --fg: #1f1d18; --accent: #0a7177; --muted: #5f5d56;
+  --sidebar-bg: #ffffff; --border: #d8d5cd; --code-bg: #f0efeb;
+  --card-bg: #ffffff; --table-stripe: #f8f7f4; --table-header: #edebe5;
+  --badge-new: #15803d; --badge-fix: #1d4ed8; --badge-enh: #b45309;
+  --badge-dep: #b91c1c; --badge-sec: #6d28d9;
+  --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.05);
+  --scroll-thumb: #c8c5be; --scroll-thumb-hover: #b0ada5;
 }
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
+* { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) transparent; }
+
+/* Smooth theme transition */
+body, body * { transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease; }
+
+/* Focus-visible */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
   background: var(--bg); color: var(--fg); line-height: 1.7; font-size: 15px;
@@ -123,8 +142,13 @@ body {
 
 <nav class="cl-sidebar" id="cl-sidebar">
   <div class="cl-sidebar-header">
-    <h1>&#x1F9EA; GeoSpaX</h1>
-    <div class="version">Changelog</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div>
+        <h1>&#x1F9EA; GeoSpaX</h1>
+        <div class="version">Changelog</div>
+      </div>
+      <button id="cl-theme-toggle" onclick="clToggleTheme()" title="Toggle dark/light theme" style="background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:15px;color:var(--muted);line-height:1;transition:all .15s;">&#x1F319;</button>
+    </div>
     <a href="userguide.html" class="back-link">&#x25C0; Back to User Guide</a>
   </div>
   <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
@@ -185,6 +209,7 @@ body {
     <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Student guide</b>: All 30 figures and 9 tables labelled with numbered captions. Figures have descriptive captions below; tables have descriptive captions above.</span></div>
     <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Sample datasets panel</b>: Compact dropdown selector replaces the grid of 14 buttons, saving vertical space in the left panel.</span></div>
     <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>User Guide</b>: Added geodesic callout in CRS section, updated FAQ and glossary, added Karney (2013) citation to references table.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Theme polish</b>: Dark and light themes refined to enterprise standards — consistent teal accent across both themes, WCAG-AA text contrast, stepped surface elevation, layered shadows, smooth 0.25s color transitions on theme switch, styled scrollbars, focus-visible outlines for accessibility, and polished topbar icon buttons. Theme toggle added to User Guide and Changelog pages with localStorage persistence.</span></div>
   </div>
 </div>
 
@@ -516,10 +541,22 @@ body {
 </main>
 
 <script>
-// Theme detection from URL parameter
+// Theme detection from URL parameter or localStorage, plus toggle
+function clToggleTheme() {
+  document.body.classList.toggle('light');
+  var light = document.body.classList.contains('light');
+  document.getElementById('cl-theme-toggle').textContent = light ? '\u2600\uFE0F' : '\uD83C\uDF19';
+  try { localStorage.setItem('geospax_theme', light ? 'light' : 'dark'); } catch(e){}
+}
 (function() {
   var params = new URLSearchParams(window.location.search);
-  if (params.get('theme') === 'light') document.body.classList.add('light');
+  var theme = params.get('theme');
+  if (!theme) { try { theme = localStorage.getItem('geospax_theme') || 'dark'; } catch(e) { theme = 'dark'; } }
+  if (theme === 'light') {
+    document.body.classList.add('light');
+    var btn = document.getElementById('cl-theme-toggle');
+    if (btn) btn.textContent = '\u2600\uFE0F';
+  }
 })();
 
 // Search filter
