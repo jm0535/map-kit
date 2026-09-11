@@ -9705,7 +9705,6 @@ function collapseAllSectionsByDefault() {
   });
   document.querySelectorAll('#analysis-drawer-body .ad-section-title').forEach(title => {
     if (title.classList.contains('collapsed')) return;
-    if (title.id && title.id.indexOf('gsx-') === 0) return;
     title.classList.add('collapsed');
     let el = title.nextElementSibling;
     while (el && !el.classList.contains('ad-section-title')) {
