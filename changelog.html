@@ -130,7 +130,8 @@ body {
   <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
   <div class="cl-nav" id="cl-nav">
     <div class="cl-nav-group">Releases</div>
-    <a href="#v1.3.2" class="cl-nav-item">v1.3.2 <span class="badge latest">Latest</span></a>
+    <a href="#v1.4.0" class="cl-nav-item">v1.4.0 <span class="badge latest">Latest</span></a>
+    <a href="#v1.3.2" class="cl-nav-item">v1.3.2</a>
     <a href="#v1.3.1" class="cl-nav-item">v1.3.1</a>
     <a href="#v1.3.0" class="cl-nav-item">v1.3.0</a>
     <a href="#v1.2.0" class="cl-nav-item">v1.2.0</a>
@@ -160,12 +161,39 @@ body {
   <div class="cl-legend-item"><span class="cl-entry-label sec">Sec</span> Security</div>
 </div>
 
+<!-- v1.4.0 -->
+<div class="cl-release" id="v1.4.0">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.4.0</span>
+    <span class="cl-release-date">12 September 2026</span>
+    <span class="cl-release-tag latest">Latest</span>
+  </div>
+  <div class="cl-release-title">Geodesic Accuracy, In-App Sample Datasets, Open Data Screenshots</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Karney's geodesic algorithms</b> (GeographicLib): All measurement, line-length, and polygon-area calculations now use true WGS84 ellipsoidal geodesic computations instead of Haversine (spherical) or spherical-excess formulas. Sub-millimetre accuracy anywhere on Earth. Same algorithm used by PostGIS, PROJ, and QGIS. Cite: Karney (2013), <i>Journal of Geodesy</i>, 87(1), 43-55.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>In-app Sample Datasets</b>: 14 ready-made sample datasets accessible from a grouped dropdown in the Data Sources panel. Categories: Species Occurrence (Bird-of-paradise, Species Richness, Butterfly, Vine Host Plants), Tabular (CSV, XLSX), Boundaries & Protected Areas (PNG Provinces, Protected Areas), Polygons & Grids (Forest Patches, Habitat Grid, Water Sources), and Rasters (BIO1 Temperature, BIO12 Precipitation, Tree Cover %).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>CSV and XLSX sample data</b>: 128 species occurrence rows in both CSV and Excel format with lat/lon columns, so users can test the column mapper import workflow without needing their own file.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Open Data connector screenshots</b> in the User Guide: panel overview, OSM Overpass query, GBIF biodiversity search, and World Bank indicator fetch.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Training screenshots</b> in the User Guide: 12 screenshots covering sample loading, convex hull, graduated symbology, Gi*, calculate field, protection gap, raster analysis, and map composer workflows using the Emperor Bird-of-paradise sample data.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label enh">Enh</span> Enhancements</div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Conservation module</b>: Protection Gap and Priority Area Identification now use geodesic distance and area (GeographicLib) instead of turf.distance/turf.area (Haversine/spherical).</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Student guide</b>: All 30 figures and 9 tables labelled with numbered captions. Figures have descriptive captions below; tables have descriptive captions above.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Sample datasets panel</b>: Compact dropdown selector replaces the grid of 14 buttons, saving vertical space in the left panel.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>User Guide</b>: Added geodesic callout in CRS section, updated FAQ and glossary, added Karney (2013) citation to references table.</span></div>
+  </div>
+</div>
+
 <!-- v1.3.2 -->
 <div class="cl-release" id="v1.3.2">
   <div class="cl-release-header">
     <span class="cl-release-version">v1.3.2</span>
     <span class="cl-release-date">11 September 2026</span>
-    <span class="cl-release-tag latest">Latest</span>
+    <span class="cl-release-tag stable">Stable</span>
   </div>
   <div class="cl-release-title">Interactive Minimap, Save Workspace Dialog, Documentation</div>
 

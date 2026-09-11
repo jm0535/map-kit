@@ -649,6 +649,7 @@ map-kit/                      # Repository name (app is branded "GeoSpaX")
 │   ├── leaflet-heat/
 │   ├── xlsx/
 │   ├── proj4/
+│   ├── geographiclib/        # Karney's geodesic algorithms (WGS84 ellipsoid)
 │   ├── shpjs/
 │   ├── togeojson/
 │   ├── chartjs/
@@ -753,10 +754,11 @@ All data is handled in **EPSG:4326** (WGS 84) internally. Imported data in other
 
 ### Distance & Area Calculations
 
-- Distances use the **haversine formula** (R = 6,371,000 m)
-- Polygon areas use the **spherical excess formula** (Chamberlain & Duquette, 2009)
+- Distances use **Karney's geodesic algorithms** (GeographicLib) on the WGS84 ellipsoid — sub-millimetre accuracy
+- Polygon areas use **Karney's geodesic polygon area** (GeographicLib) on the WGS84 ellipsoid
 - Centroids for polygons use the **area-weighted shoelace** method
 - Inferential statistics distances use **auto-UTM projected coordinates** (via proj4js) for accuracy
+- Legacy Haversine/spherical-excess formulas remain as fallbacks if GeographicLib is unavailable
 
 ### Spatial Statistics Implementation
 
@@ -810,6 +812,7 @@ To restore the native popup for a single control, add `data-gsx-select="off"` to
 | [shpjs](https://github.com/calvinmetcalf/shpjs) | 6.1.0 | Shapefile import |
 | [toGeoJSON](https://github.com/mapbox/togeojson) | 0.16.0 | KML / GPX import |
 | [proj4js](https://github.com/proj4js/proj4js) | 2.11.0 | CRS reprojection |
+| [GeographicLib](https://github.com/geographiclib/geographiclib-js) | 2.2.0 | Geodesic distance & area (WGS84 ellipsoid) |
 | [GeoRaster](https://github.com/GeoTIFF/georaster) | 1.6.0 | GeoTIFF parsing |
 | [GeoRaster Layer](https://github.com/GeoTIFF/georaster-layer-for-leaflet) | 3.10.0 | GeoTIFF rendering |
 | [Leaflet Heat](https://github.com/Leaflet/Leaflet.heat) | 0.2.0 | Heat map layers |

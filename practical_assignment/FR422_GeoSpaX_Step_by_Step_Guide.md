@@ -141,15 +141,15 @@ Species most likely to span mainland and islands: Students 01, 03, 07, 09, 11, 1
 >
 > **![screenshots/filter_hull_western.png](screenshots/filter_hull_western.png)**
 >
-> **Figure 2.** Convex hull computed on the mainland subset (stateProvince = Western), showing the hull boundary around filtered occurrence points.
+> **Figure 2.** Convex hull computed on the mainland subset, showing the hull boundary around filtered occurrence points in Morobe Province.
 >
 > **![screenshots/filter_hull_wnb.png](screenshots/filter_hull_wnb.png)**
 >
-> **Figure 3.** Convex hull computed on the West New Britain subset, demonstrating the island-only analysis path.
+> **Figure 3.** Convex hull computed on the Morobe Province subset (Huon Peninsula area near Lae), demonstrating the field filter applied to isolate a single province before running the hull.
 >
 > **![screenshots/filter_hull_all.png](screenshots/filter_hull_all.png)**
 >
-> **Figure 4.** Convex hull computed on all points without a filter, showing how mainland-plus-island points produce a hull that includes ocean.
+> **Figure 4.** Convex hull computed on all points without a filter, showing the hull boundary around the full set of occurrence points.
 
 ### Open GeoSpaX
 
