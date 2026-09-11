@@ -2,13 +2,13 @@ Five test datasets pushed. Here's exactly how to use each one to test every new 
 
 ---
 
-### **Files in `samples/` — download from GitHub or drag straight into GeoSpaX**
+### **Files in `samples/` - download from GitHub or drag straight into GeoSpaX**
 
 | File | Features | Purpose |
 | ----- | ----- | ----- |
 | `butterfly_presences.geojson` | 40 pts | Presence layer for all 3 SDMs |
-| `vine_host_plants.geojson` | 53 pts | Host plant layer — Hotspot Grid \+ WLC |
-| `habitat_survey_grid.geojson` | 90 pts | Environmental variable grid — all SDMs |
+| `vine_host_plants.geojson` | 53 pts | Host plant layer - Hotspot Grid \+ WLC |
+| `habitat_survey_grid.geojson` | 90 pts | Environmental variable grid - all SDMs |
 | `forest_patches.geojson` | 35 pts | WLC criterion \+ constraint layer |
 | `stream_water_sources.geojson` | 28 pts | Additional WLC/env layer |
 
@@ -36,7 +36,7 @@ Five test datasets pushed. Here's exactly how to use each one to test every new 
 2. SDM → Presence \= butterflies, Env layer \= habitat grid, Field \= `elevation_m`  
 3. Add second env layer \= habitat grid, Field \= `rainfall_mm`  
 4. Model \= Bioclim, Resolution \= 0.08°  
-5. Expected: green band at 200–600m (lowland colony) \+ 900–1400m (montane colony)
+5. Expected: green band at 200-600m (lowland colony) \+ 900-1400m (montane colony)
 
 **Mahalanobis SDM**
 
@@ -46,6 +46,6 @@ Five test datasets pushed. Here's exactly how to use each one to test every new 
 **MaxEnt (server)**
 
 * Same setup, Model \= MaxEnt  
-* Calls `/api/sdm` on Vercel — requires the live deployment to be running  
+* Calls `/api/sdm` on Vercel - requires the live deployment to be running  
 * Expected: probability surface similar to Mahalanobis but with regularised logistic-regression boundary
 

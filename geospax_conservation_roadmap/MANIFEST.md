@@ -1,9 +1,9 @@
-# FR422 / GeoSpaX — Complete File Manifest
+# FR422 / GeoSpaX - Complete File Manifest
 
 Everything produced in this session. Three folders: teaching materials you can use as-is,
 GeoSpaX code ready to integrate, and the scripts that generated the documents.
 
-> **Update — GeoSpaX v1.2.0 (2026-09-09):** the main app gained a **Calculate field** tool
+> **Update - GeoSpaX v1.2.0 (2026-09-09):** the main app gained a **Calculate field** tool
 > (Analysis → Attributes) that writes a new attribute from existing fields via weighted
 > conditions or a QGIS-style expression, plus project save/load (.gspx) and autosave fixes.
 > Students can compute index/proxy scores from their imported data without leaving the app.
@@ -15,9 +15,9 @@ GeoSpaX code ready to integrate, and the scripts that generated the documents.
 
 | File | What it is |
 |---|---|
-| `FR422_Ch1_Wildlife_Management.pptx` | **Chapter 1** (Weeks 1–2) — 25 slides. Definitions, why it matters for PNG forests, New Guinea's rich and prehistoric wildlife. Real CC-licensed wildlife photographs. |
-| `FR422_Ch2_Wildlife_Management_PNG.pptx` | **Chapter 2** (Week 3) — 29 slides. Rebuilt from your own lecture PDF, reusing your source screenshots (CEPA, JICA, PNGFA, CBD, TKCP, NBSAP, parks table) at larger type. |
-| `FR422_Ch2_Comparison_Slide.pptx` | Single slide — WMA vs Conservation Area vs Protected Area. Insert after your Conservation Areas slide. |
+| `FR422_Ch1_Wildlife_Management.pptx` | **Chapter 1** (Weeks 1-2) - 25 slides. Definitions, why it matters for PNG forests, New Guinea's rich and prehistoric wildlife. Real CC-licensed wildlife photographs. |
+| `FR422_Ch2_Wildlife_Management_PNG.pptx` | **Chapter 2** (Week 3) - 29 slides. Rebuilt from your own lecture PDF, reusing your source screenshots (CEPA, JICA, PNGFA, CBD, TKCP, NBSAP, parks table) at larger type. |
+| `FR422_Ch2_Comparison_Slide.pptx` | Single slide - WMA vs Conservation Area vs Protected Area. Insert after your Conservation Areas slide. |
 | `FR422_Conservation_Instruments_Handout.docx` | One-page student handout, editable. |
 | `FR422_Conservation_Instruments_Handout.pdf` | Same handout, print/Classroom ready. |
 | `*_preview.pdf` | PDF renders of each deck for quick viewing without PowerPoint. |
@@ -26,24 +26,24 @@ GeoSpaX code ready to integrate, and the scripts that generated the documents.
 
 Flagged because they change what students are taught:
 
-1. **"Wildlife Protection Act"** — no PNG statute of that name. Replaced with the
+1. **"Wildlife Protection Act"** - no PNG statute of that name. Replaced with the
    **Fauna (Protection and Control) Act 1966**. Your Conservation Areas Act 1978 and
    National Parks Act 1982 were correct and are retained.
-2. **World Heritage** — Kuk (2008) is PNG's **only** inscribed site. Parliament House is not one.
+2. **World Heritage** - Kuk (2008) is PNG's **only** inscribed site. Parliament House is not one.
    Kuk now has its own slide; the seven tentative-list sites have another.
-3. **National parks table** — Tonda and Maza, the two largest entries, are WMAs rather than
+3. **National parks table** - Tonda and Maza, the two largest entries, are WMAs rather than
    national parks. Your table image is retained with a note.
 
-The Protected Areas Act 2023 was also added — it post-dates your original deck.
+The Protected Areas Act 2023 was also added - it post-dates your original deck.
 
 **Still open:** the title slides say "Semester 2, 2026" per your instruction, but the lesson plan
 on file is Semester 2/2025 (prepared 3 July 2025). Confirm once a 2026 revision is approved.
 
 ---
 
-## 2. GeoSpaX — conservation planning modules
+## 2. GeoSpaX - conservation planning modules
 
-### `modules/` — load in this order
+### `modules/` - load in this order
 
 ```html
 <script src="vendor/turf-6.5.0.min.js"></script>
@@ -63,11 +63,11 @@ on file is Semester 2/2025 (prepared 3 July 2025). Confirm once a 2026 revision 
 | `geospax-sdm-fix.js` | SDM fallback guards, correct env sampling, chi-square Mahalanobis | 48 |
 | `geospax-project.js` | Provenance metadata, `.gspx` project save/load, autosave | 47 |
 | `geospax-raster.js` | Reclassify, Otsu threshold, polygonize (closes A1) | 42 |
-| `gsx-select.js` | Dropdown popup replacement (app-wide UI, no deps) | — |
+| `gsx-select.js` | Dropdown popup replacement (app-wide UI, no deps) | - |
 
-No new dependencies — turf 6.5 and proj4 are already vendored in your repo.
+No new dependencies - turf 6.5 and proj4 are already vendored in your repo.
 
-### `tests/` — 302 assertions
+### `tests/` - 302 assertions
 
 ```bash
 cd 2_geospax/tests
@@ -76,13 +76,13 @@ GEOSPAX_ROOT=/path/to/map-kit node test-m2.js             # 46
 GEOSPAX_ROOT=/path/to/map-kit node test-sdm.js            # 48
 GEOSPAX_ROOT=/path/to/map-kit node test-project.js        # 47
 GEOSPAX_ROOT=/path/to/map-kit node test-raster.js         # 42
-GEOSPAX_ROOT=/path/to/map-kit node test-ui.js             # 72 — real DOM, needs jsdom
+GEOSPAX_ROOT=/path/to/map-kit node test-ui.js             # 72 - real DOM, needs jsdom
 ```
 
 `GEOSPAX_ROOT` points at the repo so the vendored libraries resolve. If you drop the modules into
 `src/` and the tests into `tests/` inside the repo, the default path works without the variable.
 
-### `fixtures/` — polygon test data
+### `fixtures/` - polygon test data
 
 **Every dataset in your `samples/` folder is Points**, including `forest_patches.geojson`, which
 stores `patch_area_ha` as an attribute on a centroid. There was no polygon geometry anywhere in
@@ -91,8 +91,8 @@ Markham Valley / Lae hinterland:
 
 | File | Contents |
 |---|---|
-| `forest_extent_t1.geojson` | 3 forest blocks, 2015 — 58,207 ha |
-| `forest_extent_t2.geojson` | Same blocks 2025, two clearings carved out, one regrowth patch — 48,240 ha |
+| `forest_extent_t1.geojson` | 3 forest blocks, 2015 - 58,207 ha |
+| `forest_extent_t2.geojson` | Same blocks 2025, two clearings carved out, one regrowth patch - 48,240 ha |
 | `protected_areas.geojson` | Wampit WMA + Markham Conservation Area |
 | `forest_patches_poly.geojson` | 7 patches with three deliberate edge cases |
 
@@ -125,7 +125,7 @@ Included so you can regenerate or modify the documents yourself rather than aski
 Run with `NODE_PATH=/usr/local/lib/node_modules_global node <script>`. The deck builders expect
 `pptxgenjs`; the handout builder expects `docx`.
 
-The Chapter 2 builder reads images from `photos/ch2/` — those are extracted from your own lecture
+The Chapter 2 builder reads images from `photos/ch2/` - those are extracted from your own lecture
 PDF via `pdfimages -png`, so re-extract them if you rebuild from a different source.
 
 ---
@@ -139,8 +139,8 @@ PDF via `pdfimages -png`, so re-extract them if you rebuild from a different sou
 | A3 Protected-area overlay + gap | ✅ Complete |
 | A4 Multi-criteria suitability | ✅ Complete and defensible |
 | A5 Fragmentation / connectivity | ✅ Complete |
-| Deliverable 4 — provenance table | ✅ Complete |
-| Deliverable 5 — project file | ✅ Complete |
+| Deliverable 4 - provenance table | ✅ Complete |
+| Deliverable 5 - project file | ✅ Complete |
 
 **Everything on the roadmap is done except P3-11**, the optional one-click report.
 
@@ -150,7 +150,7 @@ PDF via `pdfimages -png`, so re-extract them if you rebuild from a different sou
 
 **UI wrappers are now tested in a real DOM.** `test-ui.js` drives every `ui*` function through
 jsdom with a mocked Leaflet, and asserts that both SDM guards refuse *and draw nothing*. What
-jsdom cannot cover is real Leaflet rendering, CSS layout and browser performance —
+jsdom cannot cover is real Leaflet rendering, CSS layout and browser performance - 
 `INTEGRATION.md` §6 lists eight checks to run once in the live app.
 
 **One correction the DOM tests caught:** the change-detection figure I quoted earlier
@@ -162,7 +162,7 @@ states both so a correct result is not mistaken for a fault.
 
 1. **"Semester 2, 2026"** on the title slides. You asked for it, but the lesson plan on file is
    Semester 2/2025 (prepared 3 July 2025). Whether a 2026 revision has been approved is an
-   institutional fact I have no way to check — change it or leave it as you see fit.
+   institutional fact I have no way to check - change it or leave it as you see fit.
 2. **Protected Areas Act 2023 regulations** were still being developed after the Act passed in
    February 2024. The slides, handout and roadmap all carry that caveat, but confirm current CEPA
    procedure before teaching it as settled.

@@ -11,7 +11,7 @@ A modern geospatial web application that combines interactive mapping capabiliti
 ### Web GIS
 
 ```bash
-# Serve locally (recommended — avoids CORS for local file loading)
+# Serve locally (recommended - avoids CORS for local file loading)
 make serve
 # then open http://localhost:8000
 
@@ -19,7 +19,7 @@ make serve
 open index.html
 ```
 
-**Try the sample dataset** — drag `samples/sample_species_richness.geojson` onto the map (or use **Import → Choose file**). It contains 41 species-richness survey points across two Papua New Guinea montane transects and is designed to produce clear hot-spot and autocorrelation results straight away.
+**Try the sample dataset** - drag `samples/sample_species_richness.geojson` onto the map (or use **Import → Choose file**). It contains 41 species-richness survey points across two Papua New Guinea montane transects and is designed to produce clear hot-spot and autocorrelation results straight away.
 
 ### Python Package
 
@@ -32,7 +32,7 @@ geospax --output-dir docs/ --dpi 300 --verbose
 
 ---
 
-## User Guide — Web GIS
+## User Guide - Web GIS
 
 ### Importing Data
 
@@ -45,7 +45,7 @@ Open the **Import** panel (left sidebar, folder icon). Drag and drop files direc
 | **GPX** (`.gpx`) | Waypoints, tracks, routes |
 | **Shapefile** (`.zip`) | Zip file containing `.shp`, `.dbf`, `.prj` (and optionally `.shx`); reprojected from `.prj` CRS automatically |
 | **CSV / XLSX** (`.csv`, `.xlsx`) | Must contain latitude and longitude columns; a smart column mapper auto-detects common column names (`lat`, `latitude`, `y`, `lon`, `longitude`, `x`, etc.); optional `elevation` / `z` column for profiles |
-| **GeoTIFF** (`.tif`, `.tiff`) | Raster layers rendered with a colour ramp; single or multi-band; styled directly in the Symbology panel (band, palette, stretch, continuous/classified) — no need to visit the Analysis panel first |
+| **GeoTIFF** (`.tif`, `.tiff`) | Raster layers rendered with a colour ramp; single or multi-band; styled directly in the Symbology panel (band, palette, stretch, continuous/classified) - no need to visit the Analysis panel first |
 
 After import the layer appears in the **Layers** panel and the map zooms to its extent.
 
@@ -60,7 +60,7 @@ After import the layer appears in the **Layers** panel and the map zooms to its 
 | Measurement tool | Toolbar | Draw polyline or polygon to measure distance / area |
 | Minimap | Bottom-right | Overview of current viewport |
 | Basemap selector | Left panel | Switch between 6 free basemaps (see below) |
-| Basemap opacity | Left panel | Slider 0–100% |
+| Basemap opacity | Left panel | Slider 0-100% |
 
 **Basemaps**: OpenTopoMap (Topo), Esri World Imagery (Satellite), OpenStreetMap (Streets), Esri Shaded Relief (Relief), Esri World Topo (Terrain), CartoDB Dark Matter (Dark).
 
@@ -84,25 +84,25 @@ Every imported or analysis-generated layer appears here.
 
 ### Symbology
 
-Click a layer name to open **Symbology** controls. Newly loaded layers are auto-selected so the Symbology panel is immediately ready — no need to navigate to another panel first (QGIS/ArcGIS workflow).
+Click a layer name to open **Symbology** controls. Newly loaded layers are auto-selected so the Symbology panel is immediately ready - no need to navigate to another panel first (QGIS/ArcGIS workflow).
 
 #### Vector layers
 
-- **Simple Symbol** — fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Marker shapes: circle, square, triangle, diamond, star, cross.
-- **Categorized** — one colour per unique attribute value (16-colour palette). Click legend entries on the map to rename them inline.
-- **Graduated** — numeric attribute divided into 2–10 classes using a colour ramp (Viridis, Heat, Cool, Terrain).
-- **Reset** — returns the layer to default styling.
+- **Simple Symbol** - fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Marker shapes: circle, square, triangle, diamond, star, cross.
+- **Categorized** - one colour per unique attribute value (16-colour palette). Click legend entries on the map to rename them inline.
+- **Graduated** - numeric attribute divided into 2-10 classes using a colour ramp (Viridis, Heat, Cool, Terrain).
+- **Reset** - returns the layer to default styling.
 
 #### Raster layers (GeoTIFF)
 
 GeoTIFF layers get a dedicated raster symbology panel with QGIS/ArcGIS-style controls:
 
-- **Band selection** — pick which band to render (for multi-band GeoTIFFs).
-- **Colour ramp** — 8 palettes: Singleband Gray, Thermal, Viridis, Inferno, Plasma, Magma, Green→Yellow→Red, Hot.
-- **Min / Max stretch** — manual min/max controls with a reset button to restore data min/max.
-- **Opacity** — slider for raster transparency.
-- **Continuous** — smooth gradient rendering (every pixel value maps to its own colour along the ramp).
-- **Classified** — stepped rendering with Equal Interval, Quantile, Natural Breaks (Jenks), or Manual break methods; 2–10 classes.
+- **Band selection** - pick which band to render (for multi-band GeoTIFFs).
+- **Colour ramp** - 8 palettes: Singleband Gray, Thermal, Viridis, Inferno, Plasma, Magma, Green→Yellow→Red, Hot.
+- **Min / Max stretch** - manual min/max controls with a reset button to restore data min/max.
+- **Opacity** - slider for raster transparency.
+- **Continuous** - smooth gradient rendering (every pixel value maps to its own colour along the ramp).
+- **Classified** - stepped rendering with Equal Interval, Quantile, Natural Breaks (Jenks), or Manual break methods; 2-10 classes.
 - A **gradient legend** is automatically added to the main map and the map composer showing the colour ramp with min/mid/max labels (continuous) or break-edge ticks (classified).
 
 ---
@@ -153,7 +153,7 @@ Layers with an elevation attribute (column named `elevation`, `elev`, `alt`, `z`
 
 ### Export
 
-Open the **Export** panel. All layers — imported, drawn, and analysis outputs — are available.
+Open the **Export** panel. All layers - imported, drawn, and analysis outputs - are available.
 
 #### Output CRS selector
 
@@ -178,20 +178,20 @@ Before exporting, choose the target coordinate reference system from the **Outpu
 
 #### Map image exports
 
-- **Export map as PNG** — captures the current viewport with title, legend, north arrow, and scale bar at 72–400 DPI.
-- **Export map as PDF** — same content embedded in a PDF page (A4 portrait or landscape).
+- **Export map as PNG** - captures the current viewport with title, legend, north arrow, and scale bar at 72-400 DPI.
+- **Export map as PDF** - same content embedded in a PDF page (A4 portrait or landscape).
 
 ---
 
 ### Open Data Connectors
 
-The **Open Data** panel provides built-in connectors to free, open GIS and biodiversity datasets. Each connector fetches data directly into the map as a new layer — no manual download or file import needed.
+The **Open Data** panel provides built-in connectors to free, open GIS and biodiversity datasets. Each connector fetches data directly into the map as a new layer - no manual download or file import needed.
 
 | Connector | Source | What it provides |
 | --- | --- | --- |
 | **Overpass / OSM** | OpenStreetMap via Overpass API | Points, lines, polygons by tag (e.g., `amenity=school`, `natural=water`) within the current map extent |
 | **GBIF** | Global Biodiversity Information Facility | Species occurrence records by scientific name or common name; user-controlled record limit with pagination beyond the API's 300-record cap |
-| **Natural Earth** | Natural Earth (built-in vector) | Countries (110m), populated places, physical boundaries — loaded from bundled GeoJSON |
+| **Natural Earth** | Natural Earth (built-in vector) | Countries (110m), populated places, physical boundaries - loaded from bundled GeoJSON |
 | **WWF Ecoregions** | WWF Terrestrial Ecoregions | 846 terrestrial ecoregion polygons with biome classification |
 | **Marine Ecoregions** | Marine Ecoregions of the World (MEOW) | 232 marine ecoregion polygons |
 | **World Bank** | World Bank Open Data API | Country-level indicators (population, GDP, forest area, etc.) as a choropleth-ready layer |
@@ -205,11 +205,11 @@ GBIF searches support both scientific names and common names. The record limit i
 
 Open the **Composer** from the toolbar (layout icon) or the Export panel. The composer provides QGIS/ArcGIS-style print layout with:
 
-- **Attached mode** — composer opens as a modal overlay on the main window
-- **Detached mode** — opens in a separate browser window for multi-monitor use; stays synchronized with the main map via BroadcastChannel
+- **Attached mode** - composer opens as a modal overlay on the main window
+- **Detached mode** - opens in a separate browser window for multi-monitor use; stays synchronized with the main map via BroadcastChannel
 - **Draggable / resizable furniture**: north arrow, scale bar (6 styles: Single Box, Double Alternating, Line + Ticks, Stepped, Hollow, Numeric), legend, overview inset, title, subtitle, scale text, date text, CRS text
 - **Legend**: auto-renders gradient bars for raster layers, category swatches for categorized layers, and ramp bars for graduated layers; editable title/subtitle; toggle/reorder/rename items
-- **Raster rendering**: GeoTIFF layers are re-instantiated on the composer map with the current symbology (palette, stretch, classification) — the raster surface appears in the composer, not just the legend
+- **Raster rendering**: GeoTIFF layers are re-instantiated on the composer map with the current symbology (palette, stretch, classification) - the raster surface appears in the composer, not just the legend
 - **Fine-grained zoom**: 0.25 zoom increments (matching the main map) for precise layout positioning
 - **Paper sizes**: A4, A3, Letter, Tabloid (portrait/landscape) or custom
 - **Graticule**: coordinate grid with edge labels positioned to avoid overlapping furniture
@@ -255,9 +255,9 @@ Minimum axis-aligned rectangle enclosing all features.
 
 Compares observed mean nearest-neighbor distances with expected distances under complete spatial randomness (Clark & Evans 1954).
 
-**NNI < 1** — features are **clustered** (observed spacing is smaller than random).
-**NNI ≈ 1** — features are **randomly distributed**.
-**NNI > 1** — features are **dispersed** (regularly spaced, e.g., planted trees, grid surveys).
+**NNI < 1** - features are **clustered** (observed spacing is smaller than random).
+**NNI ≈ 1** - features are **randomly distributed**.
+**NNI > 1** - features are **dispersed** (regularly spaced, e.g., planted trees, grid surveys).
 
 The associated z-score and p-value test whether the pattern differs significantly from random. A p < 0.05 with NNI < 1 is strong evidence of non-random clustering.
 
@@ -301,13 +301,13 @@ Point at the geometric centre of each feature.
 
 Creates a circular buffer of a user-specified radius (metres) around each point or along each line vertex. The result is a 24-sided polygon approximation.
 
-> For production-grade buffers — especially for irregular shapes, lines, or polygons — use QGIS (Vector → Geoprocessing → Buffer) or PostGIS `ST_Buffer`.
+> For production-grade buffers - especially for irregular shapes, lines, or polygons - use QGIS (Vector → Geoprocessing → Buffer) or PostGIS `ST_Buffer`.
 
 ---
 
 #### Simplify (Douglas-Peucker)
 
-Reduces vertex count while preserving shape. Set **Tolerance (°)** — higher values simplify more aggressively.
+Reduces vertex count while preserving shape. Set **Tolerance (°)** - higher values simplify more aggressively.
 
 **Use it when**: exporting to a web map and file size matters; polygon has more detail than is visible at the target scale.
 
@@ -398,14 +398,14 @@ When **Apply FDR correction** is checked (default), significance thresholds are 
 
 #### Interpreting Gi* results for ecology
 
-- A **hot spot** does not mean the individual values are extreme — it means the local neighbourhood average is significantly higher than the global average.
+- A **hot spot** does not mean the individual values are extreme - it means the local neighbourhood average is significantly higher than the global average.
 - In species-richness surveys, a 95% hot spot cluster at mid-elevation likely marks a **refugium, optimal habitat, or resource concentration** worth prioritising for conservation.
 - A **cold spot** cluster (consistently low richness) may indicate habitat degradation, edge effects, or unsuitable microclimate.
-- **Not significant** features may simply have too few neighbours within the band — try increasing the distance band or switching to KNN.
+- **Not significant** features may simply have too few neighbours within the band - try increasing the distance band or switching to KNN.
 
 ---
 
-### Local Moran's I — LISA (Cluster & Outlier Analysis)
+### Local Moran's I - LISA (Cluster & Outlier Analysis)
 
 **Reference**: Anselin (1995), *Geographical Analysis* 27(2).
 
@@ -417,20 +417,20 @@ Significance is assessed by conditional permutation (999 random re-labellings of
 
 | Colour | Type | Focal value | Neighbour values | Interpretation |
 | --- | --- | --- | --- | --- |
-| Red | **HH** (High-High) | High | High | Core of a spatial cluster — a hot spot surrounded by hot spots |
-| Blue | **LL** (Low-Low) | Low | Low | Core of a spatial cluster — a cold spot surrounded by cold spots |
-| Orange | **HL** (High-Low) | High | Low | **Spatial outlier** — a high-value feature surrounded by low-value neighbours |
-| Light blue | **LH** (Low-High) | Low | High | **Spatial outlier** — a low-value feature surrounded by high-value neighbours |
-| Grey | Not significant | — | — | No evidence of significant local autocorrelation |
+| Red | **HH** (High-High) | High | High | Core of a spatial cluster - a hot spot surrounded by hot spots |
+| Blue | **LL** (Low-Low) | Low | Low | Core of a spatial cluster - a cold spot surrounded by cold spots |
+| Orange | **HL** (High-Low) | High | Low | **Spatial outlier** - a high-value feature surrounded by low-value neighbours |
+| Light blue | **LH** (Low-High) | Low | High | **Spatial outlier** - a low-value feature surrounded by high-value neighbours |
+| Grey | Not significant | - | - | No evidence of significant local autocorrelation |
 
 > *High* and *Low* are relative to the global mean; the boundary is at the mean value.
 
 #### Interpreting LISA results for ecology
 
-- **HH clusters** identify the core of biodiversity hot spots — prioritise these sites for protection.
+- **HH clusters** identify the core of biodiversity hot spots - prioritise these sites for protection.
 - **LL clusters** identify consistently depauperate areas. Investigate whether the cause is anthropogenic or environmental.
-- **HL outliers** are unexpectedly species-rich patches within a low-richness landscape — often micro-refugia, stream courses, or protected remnant patches. These are high conservation value per unit area.
-- **LH outliers** are unexpectedly poor patches within a rich landscape — potential habitat degradation signals worth investigating on the ground.
+- **HL outliers** are unexpectedly species-rich patches within a low-richness landscape - often micro-refugia, stream courses, or protected remnant patches. These are high conservation value per unit area.
+- **LH outliers** are unexpectedly poor patches within a rich landscape - potential habitat degradation signals worth investigating on the ground.
 
 ---
 
@@ -447,20 +447,20 @@ Global Moran's I summarises the degree of spatial autocorrelation across the *en
 | **Moran's I** | Observed index (range approximately −1 to +1, but not strictly bounded) |
 | **Expected I** | −1/(n − 1); the mean under the null hypothesis of no autocorrelation |
 | **Variance** | Cliff & Ord (1981) randomization variance; accounts for the actual distribution of values |
-| **z-score** | (I − E[I]) / √Var(I) — standard normal deviate |
+| **z-score** | (I − E[I]) / √Var(I) - standard normal deviate |
 | **p-value** | Two-tailed probability under H₀: no spatial autocorrelation |
 
 #### Interpreting Global Moran's I
 
 | I | Pattern |
 | --- | --- |
-| I >> E[I], z > 1.96, p < 0.05 | **Positive autocorrelation** — similar values cluster in space (e.g., high-richness sites near other high-richness sites) |
-| I ≈ E[I] | **Random** — no detectable spatial structure |
-| I << E[I], z < −1.96, p < 0.05 | **Negative autocorrelation** — dissimilar values are neighbours (checkerboard pattern) |
+| I >> E[I], z > 1.96, p < 0.05 | **Positive autocorrelation** - similar values cluster in space (e.g., high-richness sites near other high-richness sites) |
+| I ≈ E[I] | **Random** - no detectable spatial structure |
+| I << E[I], z < −1.96, p < 0.05 | **Negative autocorrelation** - dissimilar values are neighbours (checkerboard pattern) |
 
 A significant positive I confirms that spatial analysis tools (Gi*, LISA) are operating on genuinely autocorrelated data, which is a prerequisite for meaningful hot-spot results.
 
-A non-significant I does **not** mean all hot spots are absent — it means on average there is no global trend. Local clusters can still exist even when the global index is near zero.
+A non-significant I does **not** mean all hot spots are absent - it means on average there is no global trend. Local clusters can still exist even when the global index is near zero.
 
 ---
 
@@ -469,7 +469,7 @@ A non-significant I does **not** mean all hot spots are absent — it means on a
 A diagnostic chart that visualises Global Moran's I and helps identify which features are driving autocorrelation.
 
 **X-axis**: standardised attribute value (z-score) for each feature.
-**Y-axis**: spatial lag — the mean standardised value of that feature's neighbours.
+**Y-axis**: spatial lag - the mean standardised value of that feature's neighbours.
 
 The slope of the regression line through the scatter equals the Global Moran's I.
 
@@ -477,10 +477,10 @@ The slope of the regression line through the scatter equals the Global Moran's I
 
 | Quadrant | X | Spatial lag Y | Cluster type |
 | --- | --- | --- | --- |
-| **Upper-right (HH)** | High | High | Positive autocorrelation — high values surrounded by high neighbours |
-| **Lower-left (LL)** | Low | Low | Positive autocorrelation — low values surrounded by low neighbours |
-| **Upper-left (LH)** | Low | High | Negative autocorrelation — low value with high neighbours |
-| **Lower-right (HL)** | High | Low | Negative autocorrelation — high value with low neighbours |
+| **Upper-right (HH)** | High | High | Positive autocorrelation - high values surrounded by high neighbours |
+| **Lower-left (LL)** | Low | Low | Positive autocorrelation - low values surrounded by low neighbours |
+| **Upper-left (LH)** | Low | High | Negative autocorrelation - low value with high neighbours |
+| **Lower-right (HL)** | High | Low | Negative autocorrelation - high value with low neighbours |
 
 Points far from the origin in HH or LL quadrants are the strongest contributors to positive Moran's I and correspond to LISA HH/LL clusters. Points far from the origin in LH or HL quadrants are spatial outliers.
 
@@ -490,9 +490,9 @@ The chart is interactive: hover a point to see the feature's site name and attri
 
 ## Sample Dataset
 
-`samples/sample_species_richness.geojson` — 41 fictional but ecologically realistic species-richness survey points across two montane transects in Papua New Guinea:
+`samples/sample_species_richness.geojson` - 41 fictional but ecologically realistic species-richness survey points across two montane transects in Papua New Guinea:
 
-- **YUS transect** (Huon Peninsula, ~146°E): 26 sites from 50 m to 3190 m elevation. Richness peaks at ~1800–2000 m (mid-elevation hump), producing a clear hot-spot cluster detectable by Gi* and LISA.
+- **YUS transect** (Huon Peninsula, ~146°E): 26 sites from 50 m to 3190 m elevation. Richness peaks at ~1800-2000 m (mid-elevation hump), producing a clear hot-spot cluster detectable by Gi* and LISA.
 - **Wilhelm transect** (Chimbu Province, ~145°E): 15 sites from 2620 m to 4509 m. Uniformly low richness at high elevation; forms a cold-spot cluster.
 
 **Attributes**: `site`, `transect`, `elevation_m`, `species_richness`, `tree_cover_pct`, `rainfall_mm`, `surveyed`.
@@ -502,12 +502,12 @@ The chart is interactive: hover a point to see the feature's site name and attri
 1. Import the file (drag onto map).
 2. Run **Graduated** symbology on `species_richness` (Viridis, 6 classes) to see the elevational pattern.
 3. Run **Global Moran's I** → expect significant positive I (~0.8) confirming strong spatial autocorrelation.
-4. Run **Getis-Ord Gi*** with KNN (k = 6) → mid-elevation YUS sites should appear as 95–99% hot spots; upper Wilhelm sites as cold spots.
+4. Run **Getis-Ord Gi*** with KNN (k = 6) → mid-elevation YUS sites should appear as 95-99% hot spots; upper Wilhelm sites as cold spots.
 5. Run **LISA** → HH cluster at the richness peak, LL cluster near the summit, HL/LH outliers at transitions.
 6. Run **Moran Scatterplot** → regression slope should match the Global Moran's I value.
 7. Run **IDW Interpolation** on `species_richness` → visualise the continuous richness surface.
 
-**GeoTIFF sample**: `samples/PNG_BIO1_30s.tif` — WorldClim BIO1 (annual mean temperature, °C × 10) for Papua New Guinea at 30-arcsecond resolution. Load it to test raster symbology (band selection, colour ramps, min/max stretch, continuous/classified rendering), the gradient legend, and raster analysis (histogram, Otsu threshold, reclassify, polygonize).
+**GeoTIFF sample**: `samples/PNG_BIO1_30s.tif` - WorldClim BIO1 (annual mean temperature, °C × 10) for Papua New Guinea at 30-arcsecond resolution. Load it to test raster symbology (band selection, colour ramps, min/max stretch, continuous/classified rendering), the gradient legend, and raster analysis (histogram, Otsu threshold, reclassify, polygonize).
 
 ---
 
@@ -607,7 +607,7 @@ make clean             # Remove generated files
 
 GeoSpaX is a single static file (`index.html`) with all libraries vendored under `vendor/`, so it deploys to any static host with no build step.
 
-### Vercel (primary — `geospax.in4metrix.dev`)
+### Vercel (primary - `geospax.in4metrix.dev`)
 
 The repo includes `vercel.json` (static config + security headers + immutable cache for `/vendor/*`) and `.vercelignore` (excludes the Python pipeline from the deployment).
 
@@ -625,7 +625,7 @@ The repo includes `vercel.json` (static config + security headers + immutable ca
 
    SSL is issued automatically once DNS propagates (~5 minutes). Every push to `main` auto-deploys.
 
-### GitHub Pages (mirror — `jm0535.github.io/map-kit/`)
+### GitHub Pages (mirror - `jm0535.github.io/map-kit/`)
 
 Under **repo Settings → Pages**: *Source = Deploy from a branch*, *Branch = `main` / `/ (root)`*. Both hosts serve the same `index.html` from `main` and stay in sync on every push.
 
@@ -637,12 +637,12 @@ Under **repo Settings → Pages**: *Source = Deploy from a branch*, *Branch = `m
 
 All third-party libraries are vendored in `vendor/`. The app works fully offline after the initial page load. The only runtime network requests are:
 
-- **Map tile servers** (OpenTopoMap, Esri, CartoDB, USGS) — for basemap tiles
-- **Nominatim** (`nominatim.openstreetmap.org`) — for the search/geocoding bar
-- **epsg.io** — for on-demand CRS definitions used by the CRS reprojection panel
-- **Overpass API** (`overpass-api.de`) — for OpenStreetMap data connector
-- **GBIF API** (`api.gbif.org`) — for species occurrence data connector
-- **World Bank API** (`api.worldbank.org`) — for country indicator data connector
+- **Map tile servers** (OpenTopoMap, Esri, CartoDB, USGS) - for basemap tiles
+- **Nominatim** (`nominatim.openstreetmap.org`) - for the search/geocoding bar
+- **epsg.io** - for on-demand CRS definitions used by the CRS reprojection panel
+- **Overpass API** (`overpass-api.de`) - for OpenStreetMap data connector
+- **GBIF API** (`api.gbif.org`) - for species occurrence data connector
+- **World Bank API** (`api.worldbank.org`) - for country indicator data connector
 
 ### Coordinate Reference System
 
@@ -677,11 +677,11 @@ Results match GeoDa and ArcGIS Pro for well-formed datasets.
 
 ### Dropdown Rendering
 
-On some Linux/GTK browser builds, clicking a `<select>` focuses the control but the browser never paints its native option popup — the list is simply unreachable, making dropdown-driven tools unusable.
+On some Linux/GTK browser builds, clicking a `<select>` focuses the control but the browser never paints its native option popup - the list is simply unreachable, making dropdown-driven tools unusable.
 
 `js/gsx-select.js` works around this by suppressing the native popup and drawing the option list itself as a `position: fixed` panel appended to `<body>` (so no ancestor `overflow` can clip it). It applies to every dropdown in the app via two capture-phase listeners on `document`, which also covers dropdowns created or repopulated at runtime.
 
-The `<select>` elements themselves are left untouched — they remain the visible, natively styled controls and keep rendering their own selected-option text, so all existing styling and `change` handlers are unaffected. The list is keyboard accessible (Enter/Space opens, arrow keys move, Escape closes), exposes ARIA `listbox`/`option` roles, and flips above the control when there is no room below.
+The `<select>` elements themselves are left untouched - they remain the visible, natively styled controls and keep rendering their own selected-option text, so all existing styling and `change` handlers are unaffected. The list is keyboard accessible (Enter/Space opens, arrow keys move, Escape closes), exposes ARIA `listbox`/`option` roles, and flips above the control when there is no room below.
 
 To restore the native popup for a single control, add `data-gsx-select="off"` to it.
 

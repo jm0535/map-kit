@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoSpaX — Interactive Web GIS & Spatial Analysis</title>
+<title>GeoSpaX - Interactive Web GIS & Spatial Analysis</title>
 <meta name="description" content="GeoSpaX is a modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis.">
 <meta name="author" content="Jimmy Moses">
 <meta name="version" content="1.3.0">
@@ -18,14 +18,14 @@
 <!-- Open Graph / social -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="GeoSpaX">
-<meta property="og:title" content="GeoSpaX — Interactive Web GIS & Spatial Analysis">
+<meta property="og:title" content="GeoSpaX - Interactive Web GIS & Spatial Analysis">
 <meta property="og:description" content="A modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis.">
 <meta property="og:url" content="https://geospax.in4metrix.dev/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="GeoSpaX — Interactive Web GIS & Spatial Analysis">
+<meta name="twitter:title" content="GeoSpaX - Interactive Web GIS & Spatial Analysis">
 <meta name="twitter:description" content="A modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis.">
 
-<!-- Inter font (vendored locally — no CDN) -->
+<!-- Inter font (vendored locally - no CDN) -->
 <link rel="stylesheet" href="vendor/fonts/inter.css">
 
 <!-- Leaflet -->
@@ -190,7 +190,7 @@
   .panel-body { padding: 10px 12px; }
   .panel-body.hidden { display: none !important; }
 
-  /* Nested collapsible sub-groups (e.g. inside the Export panel) — reuses
+  /* Nested collapsible sub-groups (e.g. inside the Export panel) - reuses
      .panel-header/.panel-body base rules (incl. toggleSection() and the
      arrow-rotation CSS) with a lighter, indented visual treatment. */
   .panel-subsection { border-top: 1px solid var(--border); }
@@ -251,7 +251,7 @@
   .map-legend-raster-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .map-legend-empty { color: var(--text-faint); text-align: center; padding: 8px 0; font-size: 10px; }
 
-  /* Digitizing toolbar — horizontal bar at top of map */
+  /* Digitizing toolbar - horizontal bar at top of map */
   .digitize-toolbar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: row; gap: 3px; padding: 3px 6px; border-radius: 8px; background: rgba(0,0,0,0.25); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.28s cubic-bezier(.4,0,.2,1); }
   .digitize-btn { width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.15s; }
   .digitize-btn:hover { background: var(--surface-3); color: var(--text); border-color: var(--border-strong); }
@@ -297,7 +297,7 @@
   }
   .layer-label-btn:hover { opacity: 0.8; }
   .layer-label-btn.active { opacity: 1; color: var(--accent); }
-  /* Label popover — uses position:fixed so it escapes panel overflow clipping */
+  /* Label popover - uses position:fixed so it escapes panel overflow clipping */
   .label-popover {
     position: fixed; z-index: 2200;
     background: var(--surface-1); border: 1px solid var(--border-strong); border-radius: 8px;
@@ -531,7 +531,7 @@
   }
 
   /* ── Symbology Panel (QGIS Layer Styling style) ─────────────────────── */
-  /* Layer header card — always visible at the top of the symbology panel so
+  /* Layer header card - always visible at the top of the symbology panel so
      the user knows which layer they're editing. Clicking it cycles to the
      next layer (a quick switch when only 2-3 layers exist). */
   .sym-layer-card {
@@ -560,7 +560,7 @@
   }
   .sym-layer-card select.sym-layer-switch:hover { color: var(--accent); }
 
-  /* Renderer tabs — segmented control like QGIS's renderer dropdown.
+  /* Renderer tabs - segmented control like QGIS's renderer dropdown.
      Only one renderer is active at a time; the active tab's body shows. */
   .sym-tabs {
     display: flex; gap: 0; margin-bottom: 8px;
@@ -580,7 +580,7 @@
     background: var(--accent); color: #fff; font-weight: 600;
   }
 
-  /* Renderer body — only the active tab's body is shown. */
+  /* Renderer body - only the active tab's body is shown. */
   .sym-body { display: none; }
   .sym-body.active { display: block; }
   .sym-body .sym-section-label {
@@ -588,7 +588,7 @@
     letter-spacing: 0.05em; margin: 0 0 6px 0;
   }
 
-  /* Footer actions row — primary Apply + subdued Reset. */
+  /* Footer actions row - primary Apply + subdued Reset. */
   .sym-actions {
     display: flex; align-items: center; gap: 8px;
     margin-top: 10px; padding-top: 8px;
@@ -615,7 +615,7 @@
   }
   .sym-hint b { color: var(--accent); font-style: normal; font-weight: 600; }
 
-  /* Form rows inside renderer bodies — consistent label + input layout. */
+  /* Form rows inside renderer bodies - consistent label + input layout. */
   .sym-field {
     display: flex; align-items: center; gap: 8px; margin: 6px 0;
     font-size: 11px; color: var(--text-muted);
@@ -760,7 +760,7 @@
     margin-bottom: 6px;
   }
   .ad-layer-weight-table:empty::before {
-    content: "No layers loaded — import data, then Refresh Layers.";
+    content: "No layers loaded - import data, then Refresh Layers.";
     display: block; font-size: 9px; color: var(--text-faint);
     font-style: italic; padding: 4px 0;
   }
@@ -906,7 +906,7 @@
   #analysis-drawer-body .gsx-mid { width: 7em; flex: none; }
   #analysis-drawer-body .gsx-wide { width: 10em; flex: none; }
 
-  /* Inline button row — button sits inline with inputs, not full-width */
+  /* Inline button row - button sits inline with inputs, not full-width */
   #analysis-drawer-body .gsx-inline-btn {
     flex: none; width: auto; padding: 4px 10px; font-size: 10px;
   }
@@ -1377,7 +1377,7 @@
     font-family: Inter, system-ui, sans-serif !important;
     white-space: nowrap;
     pointer-events: none;
-    /* Halo via text-shadow stack — 8 directions for clean outline */
+    /* Halo via text-shadow stack - 8 directions for clean outline */
     --halo-w: 2px;
     --halo-c: #ffffff;
     text-shadow:
@@ -1598,7 +1598,7 @@
     border-radius: 3px; transition: color .15s, background .15s;
   }
   .composer-sidebar-collapse:hover { color: var(--accent); background: rgba(255,255,255,0.06); }
-  /* Expand button — hidden by default, shown when sidebar is collapsed */
+  /* Expand button - hidden by default, shown when sidebar is collapsed */
   .composer-sidebar-expand {
     display: none; background: var(--surface-2); border: 1px solid var(--border);
     border-left: none; color: var(--text-muted); font-size: 14px;
@@ -1893,13 +1893,13 @@
     display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
     font-family: Arial, Helvetica, sans-serif;
   }
-  /* Background-card variant — wraps the bar in a translucent box (default). */
+  /* Background-card variant - wraps the bar in a translucent box (default). */
   #layout-scale.has-card {
     background: rgba(255,255,255,0.92); border: 1px solid #1a202c;
     border-radius: 3px; padding: 4px 8px 6px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.18);
   }
-  /* No-card variant — bar floats directly on the basemap. Add a soft text
+  /* No-card variant - bar floats directly on the basemap. Add a soft text
      halo so numbers stay readable against any tile (QGIS "plain" style). */
   #layout-scale.no-card {
     text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff;
@@ -1907,7 +1907,7 @@
   #layout-scale .sb-row { display: flex; justify-content: space-between; width: 100%; color: #1a202c; }
   #layout-scale .sb-rf { opacity: 0.85; font-size: 9px; color: #1a202c; }
 
-  /* — Scalebar style variants (QGIS / ArcGIS conventions) —
+  /* - Scalebar style variants (QGIS / ArcGIS conventions) - 
      Each .sb-bar carries one of the .sb-* style classes below. */
 
   /* Single Box (default): black→white split, like QGIS "Single Box". */
@@ -1939,7 +1939,7 @@
     position: absolute; top: 0; bottom: 0; left: 50%; width: 1.5px; background: #1a202c; transform: translateX(-50%);
   }
   /* Stepped Line (ArcGIS "Stepped Line"): baseline runs full width; left half
-     has a tall riser, right half is just the baseline — visually a step. */
+     has a tall riser, right half is just the baseline - visually a step. */
   #layout-scale .sb-bar.sb-stepped {
     position: relative; height: 10px; background: transparent;
     border-bottom: 1.5px solid #1a202c;
@@ -2001,7 +2001,7 @@
     text-transform: none; letter-spacing: 0; margin-top: 1px;
   }
 
-  /* Resize handle — standard enterprise corner grip (triangular dots). */
+  /* Resize handle - standard enterprise corner grip (triangular dots). */
   .layout-resize-handle {
     position: absolute; right: 0; bottom: 0;
     width: 14px; height: 14px; z-index: 1001;
@@ -2029,7 +2029,7 @@
     right: 0; bottom: 0;
   }
   .layout-item-dragging, .layout-item-resizing { opacity: 0.85; outline: 1.5px dashed var(--accent); outline-offset: 1px; }
-  /* Legacy: layout-actions no longer used — buttons moved to sidebar footer */
+  /* Legacy: layout-actions no longer used - buttons moved to sidebar footer */
 
   /* ── Detached composer window (opened via "Detach", URL ?composer=1) ──
      The composer becomes the entire window so the user can drag it to a
@@ -2117,7 +2117,7 @@
     .digitize-btn { width: 30px; height: 30px; font-size: 15px; }
   }
 
-  /* ── Tablet landscape & small desktop (1024–1366px) ─────────────────────── */
+  /* ── Tablet landscape & small desktop (1024-1366px) ─────────────────────── */
   @media (max-width: 1366px) {
     /* Narrower side panels */
     #left-panel  { width: 230px; min-width: 180px; }
@@ -2256,7 +2256,7 @@
             <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:4px;">Limit:
               <input type="number" id="gbif-limit" value="300" min="1" max="10000" step="1"
                      style="width:70px;background:var(--surface-2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:1px 3px;">
-              <span style="font-size:9px;color:var(--text-faint);">records (1–10000)</span>
+              <span style="font-size:9px;color:var(--text-faint);">records (1-10000)</span>
             </label>
             <button class="btn-primary" style="width:100%;font-size:11px;padding:4px;" onclick="GSX_OpenData.gbifQuery()">Search Occurrences</button>
           </div>
@@ -2464,7 +2464,7 @@
       <button class="digitize-btn" id="dig-line" onclick="startDigitize('line')" title="Draw line" aria-label="Draw line">&#x2500;</button>
       <button class="digitize-btn" id="dig-polygon" onclick="startDigitize('polygon')" title="Draw polygon" aria-label="Draw polygon">&#x2B1F;</button>
       <div class="digitize-sep" role="separator"></div>
-      <button class="digitize-btn" id="dig-edit" onclick="startEditMode()" title="Edit vertices — drag to reshape, drag body to move, double-click vertex to delete" aria-label="Edit feature vertices">&#x270f;</button>
+      <button class="digitize-btn" id="dig-edit" onclick="startEditMode()" title="Edit vertices - drag to reshape, drag body to move, double-click vertex to delete" aria-label="Edit feature vertices">&#x270f;</button>
       <button class="digitize-btn" id="dig-select-rect" onclick="startSelectMode('rect')" title="Rectangle select" aria-label="Rectangle select">&#x25fb;</button>
       <button class="digitize-btn" id="dig-select-circle" onclick="startSelectMode('circle')" title="Circle select" aria-label="Circle select">&#x25ef;</button>
       <button class="digitize-btn" id="dig-duplicate" onclick="duplicateSelectedFeatures()" title="Duplicate selected features (Ctrl+D)" aria-label="Duplicate selected features" disabled>&#x2398;</button>
@@ -2554,7 +2554,7 @@
       </div>
       <div class="panel-body hidden" style="padding:6px 8px;">
         <select id="attr-layer-select" onchange="loadAttrTable(this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px;margin-bottom:6px;">
-          <option value="">— Select layer —</option>
+          <option value=""> - Select layer - </option>
         </select>
         <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:6px;">
           <span id="attr-count"></span>
@@ -2581,15 +2581,15 @@
       </div>
       <div class="panel-body hidden" id="symbology-panel">
         <div id="symbology-empty" style="font-size:11px;color:var(--text-faint);text-align:center;padding:12px 0;">Import data to configure symbology</div>
-        <!-- Header card — always-visible reminder of which layer is active.
+        <!-- Header card - always-visible reminder of which layer is active.
              The hidden select below stays in the DOM so existing code paths
              that call refreshSymbologyLayerSelect()/selectSymbologyLayer()
              keep working unchanged. -->
         <div id="symbology-header" class="sym-layer-card" style="display:none;">
           <div class="sym-layer-icon" id="sym-layer-icon">●</div>
           <div class="sym-layer-meta">
-            <div class="sym-layer-name" id="sym-layer-name">—</div>
-            <div class="sym-layer-type" id="sym-layer-type">—</div>
+            <div class="sym-layer-name" id="sym-layer-name">-</div>
+            <div class="sym-layer-type" id="sym-layer-type">-</div>
           </div>
           <select id="symbology-layer-select" class="sym-layer-switch" onchange="selectSymbologyLayer(this.value)" title="Switch layer">
             <option value="">Switch ▾</option>
@@ -2632,7 +2632,7 @@
         <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;margin-top:2px;">&#x25B6; Getting Started</div>
         Drag &amp; drop any supported file onto the map, or click the <b>Import</b> panel and use <b>Choose file</b>.<br>
         Supported formats: <b>GeoJSON</b>, <b>KML/KMZ</b>, <b>GPX</b>, <b>Shapefile (.zip)</b>, <b>CSV</b>, <b>XLSX</b>, <b>GeoTIFF</b>.<br>
-        CSV and XLSX files open a column mapper — pick the latitude, longitude, optional label, and elevation columns, and set the source CRS if your coordinates are projected (e.g. UTM).<br>
+        CSV and XLSX files open a column mapper - pick the latitude, longitude, optional label, and elevation columns, and set the source CRS if your coordinates are projected (e.g. UTM).<br>
         Try the built-in sample: drag <code>samples/sample_species_richness.geojson</code> onto the map to explore all analysis tools with ready-made data.<br><br>
 
         <!-- ── MAP NAVIGATION ── -->
@@ -2662,7 +2662,7 @@
         <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Symbology</div>
         <b>Simple Symbol</b> &mdash; fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Shapes: circle, square, triangle, diamond, star, cross.<br>
         <b>Categorized</b> &mdash; one colour per unique value of a chosen attribute. Click legend entries on the map to rename them.<br>
-        <b>Graduated</b> &mdash; numeric attribute divided into 2–10 classes along a colour ramp (Viridis, Heat, Cool, Terrain).<br>
+        <b>Graduated</b> &mdash; numeric attribute divided into 2-10 classes along a colour ramp (Viridis, Heat, Cool, Terrain).<br>
         <b>Reset</b> returns the layer to its default style.<br><br>
 
         <!-- ── DIGITIZING ── -->
@@ -2696,12 +2696,12 @@
         &bull; <b>KML</b> &mdash; OGC KML 2.2 (Google Earth, ArcGIS Earth)<br>
         &bull; <b>GPX</b> &mdash; GPX 1.1 (GPS devices, Garmin, OsmAnd)<br><br>
         <u>Map image exports</u><br>
-        &bull; <b>Export map as PNG</b> &mdash; current viewport at 72–400 DPI with title, legend, north arrow, scale bar<br>
+        &bull; <b>Export map as PNG</b> &mdash; current viewport at 72-400 DPI with title, legend, north arrow, scale bar<br>
         &bull; <b>Export map as PDF</b> &mdash; same content as a PDF page<br>
         &bull; <b>Map Layout Composer</b> &mdash; full print-layout tool with adjustable inset, gridlines, scale bar styles, and north arrow<br><br>
 
         <!-- ── ANALYSIS: GEOMETRIC ── -->
-        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Spatial Analysis — Geometric &amp; Descriptive</div>
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Spatial Analysis - Geometric &amp; Descriptive</div>
         Select a layer and run any tool. Results appear in the panel and are added as exportable layers.<br><br>
 
         <b>Mean Center &amp; Standard Distance</b><br>
@@ -2727,7 +2727,7 @@
         <br>Operators: <code>+ - * / % && || ! ? : ( ) > >= < <= == !=</code> (single <code>=</code> also works as equals). Fields: plain names (<code>elevation_m</code>) or double-quoted (<code>"tree_cover_pct"</code>) as in QGIS; single quotes make text literals.<br>
         Functions: <code>abs min max round(x[,n]) floor ceil sqrt log exp pow coalesce(a,b,…) isnull(x) if(cond,a,b) length(s) concat(a,b,…) lower upper to_int to_num to_text</code>.<br>
         Nulls: arithmetic with null gives null; division by zero gives null. In weighted-conditions mode a null or non-numeric value simply fails the test (Otherwise applies).<br>
-        QGIS equivalence — <code>CASE WHEN "elev" >= 500 AND "elev" <= 1800 THEN 1 ELSE 0 END</code> becomes <code>(elev >= 500 && elev <= 1800 ? 1 : 0)</code>.<br>
+        QGIS equivalence - <code>CASE WHEN "elev" >= 500 AND "elev" <= 1800 THEN 1 ELSE 0 END</code> becomes <code>(elev >= 500 && elev <= 1800 ? 1 : 0)</code>.<br>
         Examples:<br>
         &nbsp;&nbsp;1) Index / proxy score: <code>(elev >= 500 && elev <= 1800 ? 1 : 0) + (cover >= 70 ? 1 : 0) + (rain >= 2500 ? 1 : 0)</code><br>
         &nbsp;&nbsp;2) Binary flag: <code>(cover >= 80 ? 1 : 0)</code><br>
@@ -2755,10 +2755,10 @@
         Each point gets a <code>cluster</code> attribute. Use DBSCAN first to explore groupings, then run Gi* or LISA for significance-tested hot spots.<br><br>
 
         <b>IDW Interpolation</b><br>
-        Inverse Distance Weighting surface (Shepard 1968, p = 2) on a 50 × 50 grid. Estimates values at unsampled locations by weighting nearby observations more heavily. Good for a quick continuous surface (e.g. species richness, rainfall). Note: IDW can produce "bull's-eye" artefacts around isolated extreme values — consider this exploratory.<br><br>
+        Inverse Distance Weighting surface (Shepard 1968, p = 2) on a 50 × 50 grid. Estimates values at unsampled locations by weighting nearby observations more heavily. Good for a quick continuous surface (e.g. species richness, rainfall). Note: IDW can produce "bull's-eye" artefacts around isolated extreme values - consider this exploratory.<br><br>
 
         <b>Point Density</b><br>
-        Counts points within a moving kernel window on a 50 × 50 grid — a simple heat map of concentration. Not a significance test. Use Gi* for statistically tested hot spots.<br><br>
+        Counts points within a moving kernel window on a 50 × 50 grid - a simple heat map of concentration. Not a significance test. Use Gi* for statistically tested hot spots.<br><br>
 
         <b>Weighted Density</b><br>
         Same as Point Density but each point is weighted by a numeric attribute (e.g. richness, abundance). Shows where high-value features concentrate in space.<br><br>
@@ -2779,27 +2779,27 @@
         <!-- Gi* -->
         <b>Getis-Ord Gi* Hot Spot Analysis</b> <span style="color:var(--text-muted)">(Ord &amp; Getis 1995)</span><br>
         For each feature, asks: "Is this feature's value, together with its neighbours', unusually high or low compared with the global mean?" Each feature receives a z-score and p-value. Features are coloured by confidence level:<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#b30000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Deep red — 99% hot spot</b> (z ≥ 2.58): extremely strong evidence of a high-value cluster<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#e60000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Red — 95% hot spot</b> (z ≥ 1.96): strong evidence<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#ff6600;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Orange — 90% hot spot</b> (z ≥ 1.65): moderate evidence<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#888;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Grey — not significant</b>: no evidence of unusual clustering<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#add8e6;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Light blue — 90% cold spot</b> (z ≤ &minus;1.65)<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#0000e6;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Blue — 95% cold spot</b> (z ≤ &minus;1.96)<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#000080;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Dark blue — 99% cold spot</b> (z ≤ &minus;2.58): extremely strong evidence of a low-value cluster<br><br>
-        <i>How to use results:</i> A 95%+ hot spot cluster indicates a zone where high values are not random — likely a refugium, optimal habitat, or resource concentration worth prioritising for conservation. A cold spot cluster may indicate habitat degradation or harsh microclimate. Features marked "not significant" may simply lack enough neighbours — try increasing the band distance or switching to KNN.<br><br>
+        <span style="display:inline-block;width:10px;height:10px;background:#b30000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Deep red - 99% hot spot</b> (z ≥ 2.58): extremely strong evidence of a high-value cluster<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#e60000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Red - 95% hot spot</b> (z ≥ 1.96): strong evidence<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#ff6600;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Orange - 90% hot spot</b> (z ≥ 1.65): moderate evidence<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#888;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Grey - not significant</b>: no evidence of unusual clustering<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#add8e6;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Light blue - 90% cold spot</b> (z ≤ &minus;1.65)<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#0000e6;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Blue - 95% cold spot</b> (z ≤ &minus;1.96)<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#000080;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Dark blue - 99% cold spot</b> (z ≤ &minus;2.58): extremely strong evidence of a low-value cluster<br><br>
+        <i>How to use results:</i> A 95%+ hot spot cluster indicates a zone where high values are not random - likely a refugium, optimal habitat, or resource concentration worth prioritising for conservation. A cold spot cluster may indicate habitat degradation or harsh microclimate. Features marked "not significant" may simply lack enough neighbours - try increasing the band distance or switching to KNN.<br><br>
 
         <!-- LISA -->
-        <b>Local Moran's I — LISA Cluster &amp; Outlier Analysis</b> <span style="color:var(--text-muted)">(Anselin 1995)</span><br>
+        <b>Local Moran's I - LISA Cluster &amp; Outlier Analysis</b> <span style="color:var(--text-muted)">(Anselin 1995)</span><br>
         LISA classifies each feature into a cluster or outlier type based on its own value relative to its neighbours. Significance is assessed by conditional permutation (999 randomisations).<br><br>
-        <span style="display:inline-block;width:10px;height:10px;background:#e60000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>HH — High-High</b>: high value surrounded by high neighbours → core of a spatial hot spot. Prioritise for protection.<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#0000cc;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>LL — Low-Low</b>: low value surrounded by low neighbours → core of a spatial cold spot. Investigate cause (degradation, edge effect, microclimate).<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#ff8800;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>HL — High-Low</b>: high value surrounded by low neighbours → <i>spatial outlier</i>. Often a micro-refugium or remnant patch; high conservation value per unit area.<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#88aaff;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>LH — Low-High</b>: low value surrounded by high neighbours → <i>spatial outlier</i>. Unexpectedly depauperate patch within a rich landscape; potential degradation signal.<br>
-        <span style="display:inline-block;width:10px;height:10px;background:#888;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Grey — not significant</b>: pseudo-p &gt; 0.05 (or FDR threshold).<br><br>
-        <i>High / Low are relative to the global mean.</i> The pseudo-p-value comes from conditional permutation — how often a random re-labelling of neighbours produces a more extreme local Moran's I than the observed value.<br><br>
+        <span style="display:inline-block;width:10px;height:10px;background:#e60000;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>HH - High-High</b>: high value surrounded by high neighbours → core of a spatial hot spot. Prioritise for protection.<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#0000cc;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>LL - Low-Low</b>: low value surrounded by low neighbours → core of a spatial cold spot. Investigate cause (degradation, edge effect, microclimate).<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#ff8800;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>HL - High-Low</b>: high value surrounded by low neighbours → <i>spatial outlier</i>. Often a micro-refugium or remnant patch; high conservation value per unit area.<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#88aaff;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>LH - Low-High</b>: low value surrounded by high neighbours → <i>spatial outlier</i>. Unexpectedly depauperate patch within a rich landscape; potential degradation signal.<br>
+        <span style="display:inline-block;width:10px;height:10px;background:#888;border-radius:2px;margin-right:3px;vertical-align:middle;"></span><b>Grey - not significant</b>: pseudo-p &gt; 0.05 (or FDR threshold).<br><br>
+        <i>High / Low are relative to the global mean.</i> The pseudo-p-value comes from conditional permutation - how often a random re-labelling of neighbours produces a more extreme local Moran's I than the observed value.<br><br>
 
         <!-- Global Moran's I -->
-        <b>Global Moran's I — Spatial Autocorrelation Test</b> <span style="color:var(--text-muted)">(Cliff &amp; Ord 1981)</span><br>
+        <b>Global Moran's I - Spatial Autocorrelation Test</b> <span style="color:var(--text-muted)">(Cliff &amp; Ord 1981)</span><br>
         Summarises the degree of spatial autocorrelation across the entire layer in a single index and tests whether it differs from zero.<br><br>
         Results table:<br>
         &bull; <b>Moran's I</b> &mdash; observed index (roughly &minus;1 to +1, but not strictly bounded)<br>
@@ -2808,10 +2808,10 @@
         &bull; <b>z-score</b> &mdash; (I &minus; E[I]) / &radic;Var(I)<br>
         &bull; <b>p-value</b> &mdash; two-tailed probability under H&#x2080;: no spatial autocorrelation<br><br>
         <i>Interpretation:</i><br>
-        &bull; I &gt;&gt; E[I], z &gt; 1.96, p &lt; 0.05 &rarr; <b>positive autocorrelation</b> — similar values cluster together (e.g. high-richness sites near other high-richness sites). This confirms that Gi* and LISA results are meaningful.<br>
-        &bull; I ≈ E[I] &rarr; <b>random</b> — no global spatial structure detected.<br>
-        &bull; I &lt;&lt; E[I], z &lt; &minus;1.96, p &lt; 0.05 &rarr; <b>negative autocorrelation</b> — dissimilar values are neighbours (checkerboard pattern).<br>
-        A non-significant I does not rule out local hot spots — local clusters can exist even when the global average is near zero.<br><br>
+        &bull; I &gt;&gt; E[I], z &gt; 1.96, p &lt; 0.05 &rarr; <b>positive autocorrelation</b> - similar values cluster together (e.g. high-richness sites near other high-richness sites). This confirms that Gi* and LISA results are meaningful.<br>
+        &bull; I ≈ E[I] &rarr; <b>random</b> - no global spatial structure detected.<br>
+        &bull; I &lt;&lt; E[I], z &lt; &minus;1.96, p &lt; 0.05 &rarr; <b>negative autocorrelation</b> - dissimilar values are neighbours (checkerboard pattern).<br>
+        A non-significant I does not rule out local hot spots - local clusters can exist even when the global average is near zero.<br><br>
 
         <!-- Moran Scatterplot -->
         <b>Moran Scatterplot</b><br>
@@ -2839,7 +2839,7 @@
     </div>
   </div>
 
-  <!-- Analysis Drawer — flex sibling of right-panel, pushes map rather than overlaying -->
+  <!-- Analysis Drawer - flex sibling of right-panel, pushes map rather than overlaying -->
   <div id="analysis-drawer" role="dialog" aria-label="Spatial Analysis">
   <div id="analysis-drawer-inner">
   <div id="analysis-drawer-header">
@@ -2852,14 +2852,14 @@
     <div style="margin-bottom:2px;">
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">Select the layer to analyse, then click any tool below.</div>
       <select id="analysis-layer-select" class="ad-layer-select" onchange="refreshAnalysisAttrSelect(); refreshAnalysisFilter()">
-        <option value="">— Select layer —</option>
+        <option value=""> - Select layer - </option>
       </select>
       <select id="analysis-layer-select-b" style="display:none">
-        <option value="">— Second layer —</option>
+        <option value=""> - Second layer - </option>
       </select>
       <div id="analysis-filter-wrapper" style="margin-top:4px; display:none;">
         <select id="analysis-filter-field" class="ad-layer-select" style="margin-bottom:4px; font-size:11px;" onchange="refreshAnalysisFilterValues()" title="Select the field to filter by">
-          <option value="">— Filter by field —</option>
+          <option value=""> - Filter by field - </option>
         </select>
         <div style="position:relative;">
           <div id="analysis-filter-toggle" class="ad-layer-select" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleFilterDropdown(event)" title="Filter features by the selected field before analysis">
@@ -2942,10 +2942,10 @@
     <div class="ad-tool-row">
       <button class="export-btn primary" onclick="runAnalysis('lisa')">&#x1F5FA; LISA Cluster &amp; Outlier Map</button>
       <div class="ad-tool-desc">
-        <b>HH</b> (red) = high surrounded by high — hot-spot core.<br>
-        <b>LL</b> (blue) = low surrounded by low — cold-spot core.<br>
-        <b>HL</b> (orange) = high outlier in a low area — micro-refugium.<br>
-        <b>LH</b> (light blue) = low outlier in a high area — degradation signal.
+        <b>HH</b> (red) = high surrounded by high - hot-spot core.<br>
+        <b>LL</b> (blue) = low surrounded by low - cold-spot core.<br>
+        <b>HL</b> (orange) = high outlier in a low area - micro-refugium.<br>
+        <b>LH</b> (light blue) = low outlier in a high area - degradation signal.
       </div>
     </div>
     <div class="ad-tool-row">
@@ -2959,7 +2959,7 @@
 
     <!-- ── SECTION 3: Interpolation & Density ── -->
     <div class="ad-section-title" onclick="toggleAnalysisSection(this)"><span>&#x1F321; Interpolation &amp; Density</span><span class="arrow">&#x25BC;</span></div>
-    <div class="ad-hint">Visualise continuous surfaces from point data. Exploratory — not significance-tested.</div>
+    <div class="ad-hint">Visualise continuous surfaces from point data. Exploratory - not significance-tested.</div>
 
     <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;margin-bottom:8px;">
       <div class="ad-setting-row">
@@ -2997,7 +2997,7 @@
     </div>
     <div class="ad-tool-row">
       <button class="export-btn" onclick="runAnalysis('density')">&#x1F7E1; Point Density</button>
-      <div class="ad-tool-desc">Count of points within a kernel window — a simple heat map of concentration. No significance test.</div>
+      <div class="ad-tool-desc">Count of points within a kernel window - a simple heat map of concentration. No significance test.</div>
     </div>
     <div class="ad-tool-row">
       <button class="export-btn" onclick="runAnalysis('hotspot')">&#x1F7E0; Weighted Density Map</button>
@@ -3015,7 +3015,7 @@
 
     <!-- ── SECTION 5: Lines & Polygons ── -->
     <div class="ad-section-title" onclick="toggleAnalysisSection(this)"><span>&#x1F4D0; Lines &amp; Polygons</span><span class="arrow">&#x25BC;</span></div>
-    <div class="ad-hint">Geometric operations — work on any geometry type.</div>
+    <div class="ad-hint">Geometric operations - work on any geometry type.</div>
 
     <div class="ad-tool-row">
       <button class="export-btn" onclick="runAnalysis('lengths')">&#x1F4CF; Line Lengths</button>
@@ -3112,7 +3112,7 @@
 
     <!-- ── SECTION 6: Raster Analysis ── -->
     <div class="ad-section-title" id="geotiff-section" onclick="toggleAnalysisSection(this)"><span>&#x1F6F0;&#xFE0F; Raster Analysis</span><span class="arrow">&#x25BC;</span></div>
-    <div class="ad-hint">Optional import path for GeoTIFFs. You can also drop a .tif on the map or use the main <b>Import</b> button — either way, style the raster (band, colour ramp, min/max, continuous or classified) in the <b>Symbology</b> panel, and use <b>Raster Reclassify &amp; Polygonize</b> below for thresholding.</div>
+    <div class="ad-hint">Optional import path for GeoTIFFs. You can also drop a .tif on the map or use the main <b>Import</b> button - either way, style the raster (band, colour ramp, min/max, continuous or classified) in the <b>Symbology</b> panel, and use <b>Raster Reclassify &amp; Polygonize</b> below for thresholding.</div>
     <div class="ad-form-row">
       <label>Select GeoTIFF</label>
       <input type="file" id="geotiff-file-input" accept=".tif,.tiff">
@@ -3131,7 +3131,7 @@
     <div class="ad-hint">Combine multiple vector layers into composite scores using weighted overlays. Equivalent to ArcGIS Weighted Overlay / QGIS MCDA.</div>
 
     <div class="ad-subhead">Conservation Hotspot Grid</div>
-    <div class="ad-tool-desc">Score a hex or square grid by the number or density of features from each layer — reveals multi-layer biodiversity concentrations.</div>
+    <div class="ad-tool-desc">Score a hex or square grid by the number or density of features from each layer - reveals multi-layer biodiversity concentrations.</div>
     <div class="ad-form-row">
       <label>Grid Type</label>
       <select id="hotspot-grid-type">
@@ -3158,7 +3158,7 @@
       <button class="export-btn primary" onclick="runHotspotGrid()">Run Hotspot Grid</button>
     </div>
 
-    <!-- Old WLC and SDM panels removed — replaced by GSX module panels below -->
+    <!-- Old WLC and SDM panels removed - replaced by GSX module panels below -->
 
     <!-- ── SECTION 9: Conservation Planning (M1) ── -->
     <div class="ad-section-title" id="gsx-conservation-section" onclick="toggleAnalysisSection(this)"><span>&#x1F333; Conservation Planning</span><span class="arrow">&#x25BC;</span></div>
@@ -3188,11 +3188,11 @@
     <div class="ad-tool-desc">Find high-quality habitat points (based on a score field) that fall OUTSIDE existing protected areas. These are the sites most in need of new conservation action.</div>
     <div class="ad-form-row">
       <label>Habitat layer</label>
-      <select id="gsx-priority-hab" onchange="GSX.refreshPriorityFields()"><option value="">— select habitat layer —</option></select>
+      <select id="gsx-priority-hab" onchange="GSX.refreshPriorityFields()"><option value=""> - select habitat layer - </option></select>
     </div>
     <div class="ad-form-row">
       <label>Protected areas layer</label>
-      <select id="gsx-priority-pa"><option value="">— select protected areas —</option></select>
+      <select id="gsx-priority-pa"><option value=""> - select protected areas - </option></select>
     </div>
     <div class="ad-form-row">
       <label>Score field</label>
@@ -3216,7 +3216,7 @@
     <div id="gsx-wlc-criteria"></div>
     <div class="ad-form-row">
       <label>Constraint layer (forces suitability to 0)</label>
-      <select id="gsx-wlc-constraint"><option value="">— none —</option></select>
+      <select id="gsx-wlc-constraint"><option value=""> - none - </option></select>
     </div>
     <div class="ad-btn-row">
       <button class="export-btn" onclick="GSX.renderWLCPanel()">&#x21BB; Refresh criteria</button>
@@ -3733,7 +3733,7 @@ const map = L.map('map', { center:[-6.0,146.0], zoom:8, zoomControl:false, zoomS
 L.control.zoom({position:'topleft'}).addTo(map);
 L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 try { L.control.fullscreen({position:'topleft'}).addTo(map); } catch(e) {}
-// Custom measurement tool (distance + area) — replaces the leaflet-measure
+// Custom measurement tool (distance + area) - replaces the leaflet-measure
 // vendor plugin for a UI that matches the app theme and never covers the
 // zoom/fullscreen controls. All distances are geodesic (Leaflet spherical);
 // areas use the spherical-excess ringArea() helper.
@@ -3780,7 +3780,7 @@ function createMeasureTool(map) {
       <button class="measure-close" title="Close (Esc)">&times;</button>
     </div>
     <div class="measure-readout">
-      <div class="measure-primary">—</div>
+      <div class="measure-primary">-</div>
       <div class="measure-secondary"></div>
     </div>
     <div class="measure-hint">Click the map to add points. Double-click or press Enter to finish · Esc to exit.</div>
@@ -3803,11 +3803,11 @@ function createMeasureTool(map) {
 
   // ── Formatting helpers ────────────────────────────────────────────────
   function fmtDist(m) {
-    if (!isFinite(m)) return '—';
+    if (!isFinite(m)) return '-';
     return m < 1000 ? `${m.toFixed(m < 10 ? 2 : 0)} m` : `${(m / 1000).toFixed(2)} km`;
   }
   function fmtArea(a) {
-    if (!isFinite(a) || a <= 0) return '—';
+    if (!isFinite(a) || a <= 0) return '-';
     if (a < 1e4) return `${a.toFixed(0)} m²`;
     if (a < 1e6) return `${(a / 1e4).toFixed(2)} ha`;
     return `${(a / 1e6).toFixed(3)} km²`;
@@ -3878,12 +3878,12 @@ function createMeasureTool(map) {
     const live = (!finished && hover) ? hover : null;
     if (mode === 'distance') {
       const d = totalDist(live);
-      els.primary.textContent = pts.length > 0 ? fmtDist(d) : '—';
+      els.primary.textContent = pts.length > 0 ? fmtDist(d) : '-';
       els.secondary.textContent = `${pts.length} point${pts.length === 1 ? '' : 's'}`
         + (pts.length >= 2 ? ` · ${pts.length - 1} segment${pts.length - 1 === 1 ? '' : 's'}` : '');
     } else {
       const hasArea = pts.length >= 3 || (pts.length >= 2 && live);
-      els.primary.textContent = hasArea ? fmtArea(areaOf(live)) : '—';
+      els.primary.textContent = hasArea ? fmtArea(areaOf(live)) : '-';
       els.secondary.textContent = pts.length >= 2 ? `Perimeter ${fmtDist(perimeter(live))}` : `${pts.length} point${pts.length === 1 ? '' : 's'}`;
     }
     const minPts = mode === 'area' ? 3 : 2;
@@ -3922,7 +3922,7 @@ function createMeasureTool(map) {
   // Leaflet 1.9 fires two `click` events before every `dblclick`. Debounce
   // clicks by 220 ms and cancel the pending add if a dblclick arrives first.
   function onClick(e) {
-    if (_clickTimer) return; // second click of a dblclick — ignore
+    if (_clickTimer) return; // second click of a dblclick - ignore
     _clickTimer = setTimeout(() => { _clickTimer = null; addPoint(e.latlng); }, 220);
   }
   function onMove(e) { if (!finished) { hover = e.latlng; refresh(); } }
@@ -4061,7 +4061,7 @@ const MapLegend = L.Control.extend({
       html += `<div class="map-legend-layer-title" style="font-weight:600;">${name}</div>`;
       html += this._renderRaster(st.ramp, st.minVal, st.maxVal, st.attrName, st.units, st.classification);
     } else {
-      // Simple: inline symbol in title — no redundant "Point" row
+      // Simple: inline symbol in title - no redundant "Point" row
       html += `<div class="map-legend-layer-title">${this._inlineSymbol(st.geomType, color, st.shape)}${name}</div>`;
     }
     html += '</div>';
@@ -4099,7 +4099,7 @@ const MapLegend = L.Control.extend({
       ? `<div class="map-legend-raster-attr">${escapeHtml(attrName)}</div>` : '';
 
     // Continuous render mode: smooth gradient + min/mid/max labels.
-    // Skips break computation entirely — used for purely numeric attributes
+    // Skips break computation entirely - used for purely numeric attributes
     // (species richness, abundance) where stepped bands would mask gradient detail.
     const isContinuous = classification && classification.method === 'continuous';
     if (isContinuous) {
@@ -4146,7 +4146,7 @@ const MapLegend = L.Control.extend({
       return html;
     }
 
-    // Legacy fallback (no classification info — shouldn't happen for new
+    // Legacy fallback (no classification info - shouldn't happen for new
     // raster layers, kept for safety).
     const colors = ramp.join(',');
     const gradient = `linear-gradient(to right, ${colors})`;
@@ -4255,7 +4255,7 @@ function _detectGeomType(info) {
 }
 
 function initLegendState(info) {
-  // Don't overwrite raster legend state — it's set up by _registerGeoRasterLayer
+  // Don't overwrite raster legend state - it's set up by _registerGeoRasterLayer
   if (info.isRaster && legendState[info.id] && legendState[info.id].isRaster) {
     refreshMapLegend();
     return;
@@ -4293,7 +4293,7 @@ function _rampColorAt(ramp, t) {
 
 // ── Classification break algorithms ──────────────────────────────────────
 // All three accept `values` (array of numbers) and `n` (number of classes,
-// 2–10) and return an ascending array of n+1 break edges: [min, b1, ..., max].
+// 2-10) and return an ascending array of n+1 break edges: [min, b1, ..., max].
 //
 // Equal Interval: divides the value range into n equal-width bins.
 function _classifyEqualInterval(values, n) {
@@ -4382,7 +4382,7 @@ function _classifyJenks(values, n) {
 }
 
 // Dispatch by method name. `manualBreaks` is required for method === 'manual'.
-// 'continuous' is a render-mode marker, not an algorithm — callers handle it
+// 'continuous' is a render-mode marker, not an algorithm - callers handle it
 // separately by skipping break computation and drawing a smooth gradient.
 function computeClassificationBreaks(method, values, n, manualBreaks) {
   if (method === 'manual' && Array.isArray(manualBreaks) && manualBreaks.length >= 2) {
@@ -4408,7 +4408,7 @@ function _classIndexForValue(v, breaks) {
 //   • Few distinct integer values (≤12, all integers, dominantly discrete)
 //     → Quantile is most informative (count-like data: abundance, counts).
 //   • Highly skewed continuous (mean/median ratio > 2.5 or skew > 1.5)
-//     → Natural Breaks (Jenks) — handles long-tail distributions well.
+//     → Natural Breaks (Jenks) - handles long-tail distributions well.
 //   • Otherwise (continuous, roughly even spread) → Equal Interval.
 // Returns { method, reason } so the UI can surface why the suggestion was made.
 function _recommendClassificationMethod(values) {
@@ -4421,7 +4421,7 @@ function _recommendClassificationMethod(values) {
   const uniq = new Set(finite);
   const allInt = finite.every(v => Math.abs(v - Math.round(v)) < 1e-9);
   if (allInt && uniq.size <= 12) {
-    return { method: 'quantile', reason: 'discrete counts — Quantile evens class sizes' };
+    return { method: 'quantile', reason: 'discrete counts - Quantile evens class sizes' };
   }
   const n = finite.length;
   const mean = finite.reduce((a, b) => a + b, 0) / n;
@@ -4433,7 +4433,7 @@ function _recommendClassificationMethod(values) {
     : 0;
   const ratio = median !== 0 ? Math.abs(mean / median) : 1;
   if (Math.abs(skew) > 1.5 || ratio > 2.5) {
-    return { method: 'jenks', reason: 'skewed distribution — Natural Breaks reveals clusters' };
+    return { method: 'jenks', reason: 'skewed distribution - Natural Breaks reveals clusters' };
   }
   return { method: 'equal', reason: 'continuous, evenly spread' };
 }
@@ -4587,7 +4587,7 @@ function _applyFeatureMutation(layerId, index, newFeature) {
     const sub = _buildSubLayerForFeature(info, info.geojsonFeatures[index], index);
     if (sub) info.layer.addLayer(sub);
   } else {
-    // Delete — leave a hole (null) so other indices remain stable
+    // Delete - leave a hole (null) so other indices remain stable
     info.geojsonFeatures[index] = null;
     if (info.properties) info.properties[index] = null;
   }
@@ -4794,7 +4794,7 @@ function duplicateSelectedFeatures() {
   updateStats(); updateFeatureCount();
   const countEl = document.querySelector(`[data-layer-id="${info.id}"] .layer-count`);
   if (countEl) countEl.textContent = info.featureCount;
-  showToast(`Duplicated ${count} feature${count !== 1 ? 's' : ''} — offset ~1 km NE`, 'success');
+  showToast(`Duplicated ${count} feature${count !== 1 ? 's' : ''} - offset ~1 km NE`, 'success');
 }
 
 function startDigitize(mode) {
@@ -4825,7 +4825,7 @@ function startDigitize(mode) {
   map.on('dblclick', _onDigDblClick);
   if (mode !== 'point') map.on('mousemove', _onDigMouseMove);
 
-  showToast(`Drawing ${mode} — click to add vertices, double-click or Enter to finish`, 'info');
+  showToast(`Drawing ${mode} - click to add vertices, double-click or Enter to finish`, 'info');
 }
 
 function cancelDigitize() {
@@ -4997,10 +4997,10 @@ function _showAttrForm(feature, geomType) {
   // Store pending feature
   window._pendingDigFeature = feature;
 
-  // Focus name input — use rAF so the overlay is painted first
+  // Focus name input - use rAF so the overlay is painted first
   requestAnimationFrame(() => { const inp = document.getElementById('af-name'); if (inp) inp.focus(); });
 
-  // Enter/Escape — listen on document so keys work regardless of which input has focus
+  // Enter/Escape - listen on document so keys work regardless of which input has focus
   function _afKeydown(e) {
     if (e.key === 'Enter') { e.preventDefault(); _confirmAttrForm(); }
     if (e.key === 'Escape') { overlay.remove(); window._pendingDigFeature = null; document.removeEventListener('keydown', _afKeydown); }
@@ -5032,7 +5032,7 @@ function _confirmAttrForm() {
   const isDupe = info.geojsonFeatures.some(f => f && f.geometry &&
     f.geometry.type === feature.geometry.type &&
     JSON.stringify(f.geometry.coordinates) === newCoordsStr);
-  if (isDupe) { showToast('Duplicate geometry — feature not added', 'warning'); return; }
+  if (isDupe) { showToast('Duplicate geometry - feature not added', 'warning'); return; }
   const newIndex = info.geojsonFeatures.length;
   info.geojsonFeatures.push(feature);
   info.properties.push(feature.properties);
@@ -5076,7 +5076,7 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     toggleAnalysisDrawer();
   } else if (!isText && (e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey) {
-    // F — toggle fullscreen
+    // F - toggle fullscreen
     e.preventDefault();
     if (map._container && typeof map.toggleFullscreen === 'function') {
       map.toggleFullscreen();
@@ -5086,15 +5086,15 @@ document.addEventListener('keydown', e => {
       else el.requestFullscreen && el.requestFullscreen();
     }
   } else if (!isText && (e.key === 'l' || e.key === 'L') && !e.ctrlKey && !e.metaKey) {
-    // L — toggle left panel
+    // L - toggle left panel
     e.preventDefault();
     toggleLeftPanel();
   } else if (!isText && (e.key === '+' || e.key === '=') && !e.ctrlKey && !e.metaKey) {
-    // + — zoom in
+    // + - zoom in
     e.preventDefault();
     map.zoomIn();
   } else if (!isText && (e.key === '-' || e.key === '_') && !e.ctrlKey && !e.metaKey) {
-    // - — zoom out
+    // - - zoom out
     e.preventDefault();
     map.zoomOut();
   }
@@ -5182,7 +5182,7 @@ function _setupEdit(leafletLayer, info) {
     leafletLayer._mkFeatureIndex = idx;
   }
   // Snapshot pre-edit state once per editing session for this feature.
-  // _setupEdit is re-called after midpoint inserts — don't clobber baseline.
+  // _setupEdit is re-called after midpoint inserts - don't clobber baseline.
   if (info && typeof leafletLayer._mkFeatureIndex === 'number') {
     const idx = leafletLayer._mkFeatureIndex;
     if (_editPreLayerId !== info.id || _editPreIndex !== idx || !_editPreSnapshot) {
@@ -5843,7 +5843,7 @@ function addUploadedGeoJSON(geojson, name, color, opts) {
     GSX.stampImport(info, name);
   }
 
-  // Zoom to bounds (skip during project restore — view is set afterwards)
+  // Zoom to bounds (skip during project restore - view is set afterwards)
   if (!silent) { try { map.fitBounds(layer.getBounds().pad(0.1)); } catch(e) {} }
 
   // Add to layer panel
@@ -5861,7 +5861,7 @@ function addUploadedGeoJSON(geojson, name, color, opts) {
   refreshAnalysisLayerSelect();
   refreshAttrLayerSelect();
   refreshExportLayerSelect();
-  if (!silent) showToast(`Imported "${name}" — ${featureCount} features (${[...geomTypes].join(', ')})`, 'success');
+  if (!silent) showToast(`Imported "${name}" - ${featureCount} features (${[...geomTypes].join(', ')})`, 'success');
 
   // Register elevation profile if points have elevation data.
   // Priority: `_elevation` (set by importTabularData using the user-picked
@@ -5917,7 +5917,7 @@ function addLayerToPanel(info) {
     <div class="label-popover" id="lp-${info.id}"></div>
   `;
   // Clicking anywhere on the row (not on a control button/checkbox) selects
-  // this layer in the symbology panel — so users can pick which layer to
+  // this layer in the symbology panel - so users can pick which layer to
   // style without hunting for the dropdown.
   el.addEventListener('click', (e) => {
     if (e.target.closest('button, input, .layer-eye, .layer-drag-handle, .label-popover')) return;
@@ -5929,12 +5929,12 @@ function addLayerToPanel(info) {
     openLayerContextMenu(info.id, e.clientX, e.clientY);
   });
   initLayerDrag(el);
-  // New layers go to the TOP of the panel (QGIS convention) — they are the
+  // New layers go to the TOP of the panel (QGIS convention) - they are the
   // most recently added to the map so they naturally draw on top.
   document.getElementById('uploaded-layers-list').prepend(el);
   initLegendState(info);
   // Build symbology controls for this layer and make it the active layer in
-  // the Symbology panel — QGIS/ArcGIS convention: load a raster, open
+  // the Symbology panel - QGIS/ArcGIS convention: load a raster, open
   // Symbology, style it. No detour through the Analysis panel required.
   if (typeof buildSymbologyControls === 'function') buildSymbologyControls(info);
   if (typeof refreshSymbologyLayerSelect === 'function') refreshSymbologyLayerSelect();
@@ -5955,7 +5955,7 @@ function zoomToLayer(id) {
     if (info.layer.getBounds) {
       map.fitBounds(info.layer.getBounds().pad(0.1));
     } else {
-      // LayerGroup — collect bounds from sub-layers
+      // LayerGroup - collect bounds from sub-layers
       const bounds = L.latLngBounds([]);
       info.layer.eachLayer(sub => {
         if (sub.getBounds) bounds.extend(sub.getBounds());
@@ -6029,7 +6029,7 @@ function toggleUploadedLayer(id, on) {
   if (typeof on !== 'boolean') on = !map.hasLayer(info.layer);
   if (on) {
     info.layer.addTo(map);
-    // Restore the layer's stack position — addTo always puts it on top,
+    // Restore the layer's stack position - addTo always puts it on top,
     // which would break the panel's z-order (top of list = top of map).
     applyLayerZOrder();
   } else {
@@ -6157,9 +6157,9 @@ function getLabelAttr(layerId) {
 function getFeatureLabelText(props, attr) {
   if (attr && props[attr] !== undefined && props[attr] !== null) {
     const v = String(props[attr]).trim();
-    return v; // empty string is allowed — empty values get NO label
+    return v; // empty string is allowed - empty values get NO label
   }
-  // No attribute specified — try common fallbacks but DO NOT use "Feature N"
+  // No attribute specified - try common fallbacks but DO NOT use "Feature N"
   const fallback = props.site || props.Site || props.name || props.Name || props.label || props.id || props.ID;
   return fallback ? String(fallback).trim() : '';
 }
@@ -6220,7 +6220,7 @@ function openLabelPopover(id, btn) {
       <div class="lp-section-title">Label Attribute</div>
       <div class="lp-row"><label>Field</label>
         <select id="lp-attr-${id}" onchange="changeLabelAttribute('${id}', this.value)">
-          <option value="">— none —</option>
+          <option value=""> - none - </option>
           ${attrs.map(a => `<option value="${a}"${a===currentAttr?' selected':''}>${escapeHtml(a)}</option>`).join('')}
         </select>
       </div>
@@ -6304,7 +6304,7 @@ function openLabelPopover(id, btn) {
       <div class="lp-row"><label>Show top N</label><input type="number" min="0" max="9999" value="${style.topN}" oninput="updateLabelStyle('${id}','topN',+this.value)" style="width:60px;"><span class="lp-val" style="width:auto;">0 = all</span></div>
       <div class="lp-row"><label>Rank by</label>
         <select onchange="updateLabelStyle('${id}','topNAttr',this.value)">
-          <option value="">— feature order —</option>
+          <option value=""> - feature order - </option>
           ${attrs.map(a => `<option value="${a}"${a===style.topNAttr?' selected':''}>${escapeHtml(a)}</option>`).join('')}
         </select>
       </div>`;
@@ -6717,7 +6717,7 @@ function _symbologyTypeBadge(info) {
 // Build the QGIS-style tabbed symbology block for one layer. Vector layers get
 // Simple / Categorized / Graduated tabs; raster layers get Continuous /
 // Classified tabs (driven by the existing raster classification helpers).
-// Only one tab body is visible at a time — switching tabs is local DOM only,
+// Only one tab body is visible at a time - switching tabs is local DOM only,
 // no JS state changes, so this is safe to call repeatedly when layers update.
 function buildSymbologyControls(info) {
   const container = document.getElementById('symbology-controls');
@@ -6742,7 +6742,7 @@ function buildSymbologyControls(info) {
 }
 
 // Switch which renderer tab is active inside a layer's symbology block.
-// CSS-only — we just toggle .active on the tab buttons and bodies.
+// CSS-only - we just toggle .active on the tab buttons and bodies.
 function setSymbologyTab(layerId, tabName) {
   const block = document.querySelector(`#symbology-controls [data-sym-id="${layerId}"]`);
   if (!block) return;
@@ -6754,7 +6754,7 @@ function setSymbologyTab(layerId, tabName) {
   });
 }
 
-// Vector-layer tabbed body — Simple / Categorized / Graduated.
+// Vector-layer tabbed body - Simple / Categorized / Graduated.
 function _buildVectorSymbologyBody(info) {
   const hasPoints = info.geomTypes.some(g => g.includes('Point'));
   const hasLines = info.geomTypes.some(g => g.includes('Line'));
@@ -6823,7 +6823,7 @@ function _buildVectorSymbologyBody(info) {
         <label class="sym-label">Column</label>
         <select id="cat-attr-${id}" style="flex:1;">${attrOpts}</select>
       </div>
-      <p class="sym-hint">Color each feature by a <b>unique value</b> of the chosen column — best for categorical attributes (species, type, region).</p>
+      <p class="sym-hint">Color each feature by a <b>unique value</b> of the chosen column - best for categorical attributes (species, type, region).</p>
       <div class="sym-actions">
         <button class="sym-btn-primary" onclick="applyCategorized('${id}')">Apply</button>
         <button class="sym-btn-reset" onclick="resetSymbology('${id}')">Reset</button>
@@ -6847,7 +6847,7 @@ function _buildVectorSymbologyBody(info) {
           <option value="terrain">Terrain</option>
         </select>
       </div>
-      <p class="sym-hint">Color features along a ramp using <b>numeric value bands</b> — best for ordinal data (richness, abundance, elevation).</p>
+      <p class="sym-hint">Color features along a ramp using <b>numeric value bands</b> - best for ordinal data (richness, abundance, elevation).</p>
       <div class="sym-actions">
         <button class="sym-btn-primary" onclick="applyGraduated('${id}')">Apply</button>
         <button class="sym-btn-reset" onclick="resetSymbology('${id}')">Reset</button>
@@ -6884,7 +6884,7 @@ function _buildRasterSymbologyBody(info) {
               : m === 'quantile' ? 'Quantile'
               : m === 'jenks' ? 'Natural Breaks (Jenks)'
               : 'Manual';
-    return m === recMethod ? `${base} — recommended` : base;
+    return m === recMethod ? `${base} - recommended` : base;
   };
   const opt = m => `<option value="${m}"${method === m ? ' selected' : ''}>${labelFor(m)}</option>`;
   const manualHidden = method === 'manual' ? '' : 'display:none;';
@@ -6941,15 +6941,15 @@ function _buildRasterSymbologyBody(info) {
       <button class="sym-tab ${classActive}" data-tab="classified" onclick="setRasterRenderMode('${id}','classified')">Classified</button>
     </div>
 
-    <!-- Continuous body — smooth gradient, no break controls. -->
+    <!-- Continuous body - smooth gradient, no break controls. -->
     <div class="sym-body ${contActive}" data-tab="continuous">
-      <p class="sym-hint"><b>Smooth gradient</b> (QGIS "Singleband pseudocolor · Linear"). Every value maps to its own colour along the ramp between Min and Max — best for continuous surfaces (temperature, elevation, density).</p>
+      <p class="sym-hint"><b>Smooth gradient</b> (QGIS "Singleband pseudocolor · Linear"). Every value maps to its own colour along the ramp between Min and Max - best for continuous surfaces (temperature, elevation, density).</p>
       <div class="sym-actions">
         <button class="sym-btn-reset" onclick="resetRasterClassification('${id}')">Reset to recommended</button>
       </div>
     </div>
 
-    <!-- Classified body — method / classes / manual breaks + Apply. -->
+    <!-- Classified body - method / classes / manual breaks + Apply. -->
     <div class="sym-body ${classActive}" data-tab="classified">
       <div class="sym-field">
         <label class="sym-label">Method</label>
@@ -7007,7 +7007,7 @@ function setRasterPalette(id, paletteKey) {
   _recomputeAndApplyClassification(id);
 }
 
-// Read a single pixel from a georaster for band `b` — handles both the
+// Read a single pixel from a georaster for band `b` - handles both the
 // parseGeoraster [band][row](TypedArray) layout and flat fallback arrays.
 function _rasterPixelReader(georaster, b) {
   const band = georaster.values && georaster.values[b];
@@ -7078,7 +7078,7 @@ function resetRasterStretch(id) {
 }
 
 // Switch between Continuous (smooth gradient) and Classified (stepped bands).
-// Continuous bypasses the break algorithms entirely — used for ordinal
+// Continuous bypasses the break algorithms entirely - used for ordinal
 // numeric attributes where stepped bands would hide gradient detail.
 // When flipping back to Classified, we keep the previously-chosen method
 // (or fall back to the layer's recommendation) so users don't lose state.
@@ -7127,7 +7127,7 @@ function setRasterManualBreaks(id, text) {
     .filter(v => isFinite(v))
     .sort((a, b) => a - b);
   st.classification.manualBreaks = parsed.length >= 2 ? parsed : null;
-  // Don't auto-apply here — user may still be typing. Apply on Apply button.
+  // Don't auto-apply here - user may still be typing. Apply on Apply button.
 }
 
 function applyRasterClassification(id) {
@@ -7153,7 +7153,7 @@ function applyRasterClassification(id) {
 function resetRasterClassification(id) {
   const st = legendState[id];
   if (!st || !st.classification) return;
-  // Reset to the attribute-aware recommendation — not always Equal Interval.
+  // Reset to the attribute-aware recommendation - not always Equal Interval.
   const recommended = _recommendClassificationMethod(st.classification.rawValues || []).method;
   st.classification.method = recommended;
   st.classification._priorMethod = recommended;
@@ -7174,7 +7174,7 @@ function resetRasterClassification(id) {
 
 // Recompute breaks for one layer, sync legend + heat surface, and update the
 // manual-breaks textarea (handy when the user switches from Equal/Quantile/
-// Jenks to Manual — the textarea is pre-filled with the current breaks).
+// Jenks to Manual - the textarea is pre-filled with the current breaks).
 function _recomputeAndApplyClassification(id) {
   const st = legendState[id];
   if (!st || !st.classification) return;
@@ -7200,7 +7200,7 @@ function _recomputeAndApplyClassification(id) {
     : [st.minVal, st.maxVal];
   const breaks = computeClassificationBreaks(cls.method, values, cls.classes, cls.manualBreaks);
   if (!breaks || breaks.length < 2) {
-    showToast('Could not compute breaks — check inputs', 'error');
+    showToast('Could not compute breaks - check inputs', 'error');
     return;
   }
   cls.breaks = breaks;
@@ -7259,7 +7259,7 @@ function _applyClassificationToHeatLayer(id) {
         return palette[paletteKeys[paletteKeys.length - 1]];
       };
     } else {
-      // Classified (stepped) — assign one color per class
+      // Classified (stepped) - assign one color per class
       const bandColors = [];
       for (let i = 0; i < breaks.length - 1; i++) {
         const t = (i / (breaks.length - 2 || 1));
@@ -7315,7 +7315,7 @@ function _applyClassificationToHeatLayer(id) {
   for (let i = 0; i < bandColors.length; i++) {
     const startT = Math.max(0, Math.min(1, (breaks[i]     - mn) / span));
     const endT   = Math.max(0, Math.min(1, (breaks[i + 1] - mn) / span));
-    // Two stops per band — start and (just before) end — produce hard steps.
+    // Two stops per band - start and (just before) end - produce hard steps.
     grad[startT.toFixed(4)] = bandColors[i];
     // Nudge the inner stop slightly inside the next break so adjacent bands
     // don't blend. Use endT directly for the final band so 1.0 maps to top colour.
@@ -7664,7 +7664,7 @@ async function processFile(file) {
   const ext = name.split('.').pop().toLowerCase();
 
   if (ext === 'shp' || ext === 'shx' || ext === 'dbf') {
-    showToast('A .shp file alone can\'t be read — it has no attribute table (.dbf) or spatial index (.shx). Please upload the full Shapefile .zip bundle instead.', 'error');
+    showToast('A .shp file alone can\'t be read - it has no attribute table (.dbf) or spatial index (.shx). Please upload the full Shapefile .zip bundle instead.', 'error');
     return;
   }
   if (ext === 'geojson' || (ext === 'json' && name.includes('geo'))) {
@@ -7799,7 +7799,7 @@ function handleXlsxWorkbook(wb, fileName) {
     </label>`;
   }).join('');
   document.getElementById('sp-filename').textContent =
-    `${fileName} — ${names.length} sheets. Pre-selected the most data-like sheet.`;
+    `${fileName} - ${names.length} sheets. Pre-selected the most data-like sheet.`;
   document.getElementById('sheet-picker-overlay').style.display = 'flex';
 }
 
@@ -7837,16 +7837,16 @@ const ELEV_NAMES  = ['elev','elevation','alt','altitude','elevation_m','elev_m',
 // proj4js ships EPSG:4326 and EPSG:4269 by default; everything else is registered here.
 // Each preset: { code, label, def, kind: 'geographic' | 'projected' }
 const CRS_PRESETS = [
-  { code: 'EPSG:4326', label: 'WGS 84 — lat/lon (raw GPS, EPSG:4326)', def: '+proj=longlat +datum=WGS84 +no_defs', kind: 'geographic' },
+  { code: 'EPSG:4326', label: 'WGS 84 - lat/lon (raw GPS, EPSG:4326)', def: '+proj=longlat +datum=WGS84 +no_defs', kind: 'geographic' },
   { code: 'EPSG:3857', label: 'Web Mercator (EPSG:3857)', def: '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +no_defs', kind: 'projected' },
-  // Papua New Guinea — UTM zones (Southern hemisphere)
-  { code: 'EPSG:32754', label: 'UTM Zone 54S / WGS 84 (PNG west — EPSG:32754)', def: '+proj=utm +zone=54 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
-  { code: 'EPSG:32755', label: 'UTM Zone 55S / WGS 84 (PNG central — EPSG:32755)', def: '+proj=utm +zone=55 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
-  { code: 'EPSG:32756', label: 'UTM Zone 56S / WGS 84 (PNG east — EPSG:32756)', def: '+proj=utm +zone=56 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
+  // Papua New Guinea - UTM zones (Southern hemisphere)
+  { code: 'EPSG:32754', label: 'UTM Zone 54S / WGS 84 (PNG west - EPSG:32754)', def: '+proj=utm +zone=54 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
+  { code: 'EPSG:32755', label: 'UTM Zone 55S / WGS 84 (PNG central - EPSG:32755)', def: '+proj=utm +zone=55 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
+  { code: 'EPSG:32756', label: 'UTM Zone 56S / WGS 84 (PNG east - EPSG:32756)', def: '+proj=utm +zone=56 +south +datum=WGS84 +units=m +no_defs', kind: 'projected' },
   // AGD66 / PNGMG94 (legacy PNG datums sometimes seen on old maps)
   { code: 'EPSG:5825', label: 'PNG94 / PNGMG94 Lambert (EPSG:5825)', def: '+proj=lcc +lat_1=-7 +lat_2=-5 +lat_0=-6 +lon_0=144 +x_0=500000 +y_0=10000000 +datum=WGS84 +units=m +no_defs', kind: 'projected' },
   // Common worldwide projected
-  { code: 'EPSG:4269', label: 'NAD83 — lat/lon (EPSG:4269)', def: '+proj=longlat +datum=NAD83 +no_defs', kind: 'geographic' },
+  { code: 'EPSG:4269', label: 'NAD83 - lat/lon (EPSG:4269)', def: '+proj=longlat +datum=NAD83 +no_defs', kind: 'geographic' },
   { code: '__custom__', label: 'Custom EPSG code / proj4 string…', def: null, kind: 'custom' },
 ];
 
@@ -7895,7 +7895,7 @@ function guessCol(cols, candidates) {
   return '';
 }
 
-// RFC 4180-style CSV/TSV line parser — respects quoted fields containing the delimiter,
+// RFC 4180-style CSV/TSV line parser - respects quoted fields containing the delimiter,
 // embedded newlines (within a single quoted field), and escaped quotes ("").
 function parseDelimitedText(text, delim) {
   const rows = [];
@@ -7961,7 +7961,7 @@ function parseTabular(csvText, fileName, type) {
 }
 
 function showColumnMapper(headers, latGuess, lonGuess, labelGuess, elevGuess, fileName, rows) {
-  document.getElementById('cm-filename').textContent = `${fileName} — ${rows.length} rows, ${headers.length} columns`;
+  document.getElementById('cm-filename').textContent = `${fileName} - ${rows.length} rows, ${headers.length} columns`;
 
   // Preview
   const preview = headers.join(' | ') + '\n' + rows.slice(0,3).map(r => headers.map(h=>r[h]||'').join(' | ')).join('\n');
@@ -7970,7 +7970,7 @@ function showColumnMapper(headers, latGuess, lonGuess, labelGuess, elevGuess, fi
   // Populate selects
   ['cm-lat','cm-lon','cm-label','cm-elev'].forEach(id => {
     const sel = document.getElementById(id);
-    sel.innerHTML = '<option value="">— none —</option>' + headers.map(h => `<option value="${h}">${h}</option>`).join('');
+    sel.innerHTML = '<option value=""> - none - </option>' + headers.map(h => `<option value="${h}">${h}</option>`).join('');
   });
   if (latGuess) document.getElementById('cm-lat').value = latGuess;
   if (lonGuess) document.getElementById('cm-lon').value = lonGuess;
@@ -8066,7 +8066,7 @@ function importTabularData(rows, headers, latCol, lonCol, labelCol, elevCol, fil
         lon = outLon; lat = outLat;
       } catch (e) { skipped++; return; }
     } else if (needsReproj) {
-      // Geographic but not WGS84 (e.g. NAD83) — reproject lat/lon
+      // Geographic but not WGS84 (e.g. NAD83) - reproject lat/lon
       try {
         const [outLon, outLat] = proj4(srcCode, 'EPSG:4326', [b, a]);
         lon = outLon; lat = outLat;
@@ -8121,7 +8121,7 @@ function updateStats() {
 
   const allGeomTypes = new Set();
   uploadedLayers.forEach(l => l.geomTypes.forEach(g => allGeomTypes.add(g)));
-  const geomSummary = allGeomTypes.size > 0 ? [...allGeomTypes].join(', ') : '—';
+  const geomSummary = allGeomTypes.size > 0 ? [...allGeomTypes].join(', ') : '-';
 
   grid.innerHTML = `
     <div class="stat-card"><div class="val">${total}</div><div class="lbl">Total features</div></div>
@@ -8151,7 +8151,7 @@ function hexToRgba(hex, a) {
 }
 
 function registerProfile(id, label, color, latLonElevArray) {
-  // Validate inputs — if no elevation data provided, silently skip.
+  // Validate inputs - if no elevation data provided, silently skip.
   if (!latLonElevArray || !Array.isArray(latLonElevArray) || latLonElevArray.length < 2) return;
   // Store raw points; sort + distance computed at render time so the user
   // can switch sort modes (elevation / W→E / S→N / survey) without re-importing.
@@ -8294,7 +8294,7 @@ let analysisOverlays = [];
 function refreshAnalysisLayerSelect() {
   const sel = document.getElementById('analysis-layer-select');
   const prev = sel.value;
-  sel.innerHTML = '<option value="">— Select layer —</option>';
+  sel.innerHTML = '<option value=""> - Select layer - </option>';
   sel.innerHTML += '<option value="__all__">All visible features</option>';
   uploadedLayers.forEach(l => {
     sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
@@ -8305,7 +8305,7 @@ function refreshAnalysisLayerSelect() {
   const selB = document.getElementById('analysis-layer-select-b');
   if (selB) {
     const prevB = selB.value;
-    selB.innerHTML = '<option value="">— Second layer —</option>';
+    selB.innerHTML = '<option value=""> - Second layer - </option>';
     uploadedLayers.forEach(l => {
       selB.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
     });
@@ -8353,7 +8353,7 @@ function refreshGSXWLCConstraint() {
   const sel = document.getElementById('gsx-wlc-constraint');
   if (!sel) return;
   const prev = sel.value;
-  sel.innerHTML = '<option value="">— none —</option>';
+  sel.innerHTML = '<option value=""> - none - </option>';
   uploadedLayers.forEach(l => {
     sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
   });
@@ -8364,7 +8364,7 @@ function refreshGSXSDMLayers() {
   const presSel = document.getElementById('gsx-sdm-presence');
   const envHost = document.getElementById('gsx-sdm-env');
   if (!presSel || !envHost) return;
-  presSel.innerHTML = '<option value="">— Select presence layer —</option>';
+  presSel.innerHTML = '<option value=""> - Select presence layer - </option>';
   envHost.innerHTML = '';
   if (uploadedLayers.length === 0) {
     envHost.innerHTML = '<div class="ad-hint">No layers loaded</div>';
@@ -8391,7 +8391,7 @@ function refreshGSXRasterLayerSelect() {
   const sel = document.getElementById('gsx-raster-layer');
   if (!sel) return;
   const prev = sel.value;
-  sel.innerHTML = '<option value="">— Select raster —</option>';
+  sel.innerHTML = '<option value=""> - Select raster - </option>';
   uploadedLayers.forEach(l => {
     if (l.isRaster || l.type === 'raster_points' || l._rasterMeta) {
       sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
@@ -8412,7 +8412,7 @@ function refreshAnalysisFilter() {
   list.innerHTML = '';
   list.style.display = 'none';
   label.textContent = 'All features (no filter)';
-  fieldSel.innerHTML = '<option value="">— Filter by field —</option>';
+  fieldSel.innerHTML = '<option value=""> - Filter by field - </option>';
   if (!layerId || layerId === '__all__') { wrapper.style.display = 'none'; return; }
   const ul = uploadedLayers.find(l => l.id === layerId);
   if (!ul || !ul.geojsonFeatures) { wrapper.style.display = 'none'; return; }
@@ -8623,7 +8623,7 @@ function confirmBuffer() {
     });
   });
   addAnalysisLayer(`Buffer ${distKm}km`, bufferCircles, null);
-  showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features — added as layer<br><span style="color:var(--text-muted)">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
+  showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features - added as layer<br><span style="color:var(--text-muted)">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
 }
 
 function switchBottomTab(tab) {
@@ -8795,7 +8795,7 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
     const ramp = _paletteToRamp(paletteObj);
     // QGIS/ArcGIS-style default: render as a single continuous gradient for
     // numeric attributes (richness, abundance, density). The user can flip
-    // to Classified at any time — we still pre-compute breaks using the
+    // to Classified at any time - we still pre-compute breaks using the
     // attribute-type-aware recommendation so the switch is instant.
     const DEFAULT_METHOD = 'continuous';
     const DEFAULT_CLASSES = 5;
@@ -8821,7 +8821,7 @@ function addAnalysisLayer(name, leafletLayers, geojsonFC, rasterMeta) {
       units: rasterMeta.units || null,
       // Classification state (saved per-layer for the life of the session).
       classification: {
-        method: DEFAULT_METHOD,           // 'continuous' by default — smooth gradient
+        method: DEFAULT_METHOD,           // 'continuous' by default - smooth gradient
         _priorMethod: recommended,        // restored if user flips Continuous → Classified
         classes: DEFAULT_CLASSES,
         breaks,
@@ -8961,15 +8961,15 @@ function clearAnalysisResults() {
 // ---------------------------------------------------------------------------
 // These follow the standard formulations used by ArcGIS Pro (Hot Spot
 // Analysis), GeoDa and PySAL/esda so results are directly comparable:
-//   • Getis-Ord Gi*  — Ord & Getis (1995), analytical z-score + two-tailed p.
-//   • Local Moran's I — Anselin (1995) LISA, conditional-permutation pseudo-p.
-//   • Global Moran's I — Cliff & Ord randomization-assumption z-score + p.
+//   • Getis-Ord Gi*  - Ord & Getis (1995), analytical z-score + two-tailed p.
+//   • Local Moran's I - Anselin (1995) LISA, conditional-permutation pseudo-p.
+//   • Global Moran's I - Cliff & Ord randomization-assumption z-score + p.
 // Spatial weights use a binary distance band. When no band is supplied we use
 // the ArcGIS default: the smallest distance at which every feature has at
 // least one neighbour ("min-threshold distance").
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Standard normal CDF (Abramowitz & Stegun 7.1.26) — accurate to ~7e-8.
+// Standard normal CDF (Abramowitz & Stegun 7.1.26) - accurate to ~7e-8.
 function _normCdf(z) {
   const t = 1 / (1 + 0.2316419 * Math.abs(z));
   const d = 0.3989422804014327 * Math.exp(-z * z / 2);
@@ -9083,7 +9083,7 @@ function _weightDesc(r) {
     : `distance band = ${(r.band / 1000).toFixed(2)} km${proj}`;
 }
 
-// Getis-Ord Gi* — per-feature z-scores and two-tailed p-values (Ord & Getis
+// Getis-Ord Gi* - per-feature z-scores and two-tailed p-values (Ord & Getis
 // 1995). Binary weights include the focal feature (self-neighbour).
 function getisOrdGiStar(pts, x, wopts) {
   const n = pts.length;
@@ -9308,10 +9308,10 @@ function runAnalysis(tool) {
     const sig = isFinite(r.p) && r.p < 0.05;
     const sign = r.I > r.E ? 'Positive' : 'Negative';
     const interp = !sig
-      ? 'Not statistically significant — the pattern is indistinguishable from spatial randomness (CSR).'
+      ? 'Not statistically significant - the pattern is indistinguishable from spatial randomness (CSR).'
       : (r.I > r.E
-          ? 'Statistically significant <b>positive</b> autocorrelation — similar values cluster together.'
-          : 'Statistically significant <b>negative</b> autocorrelation — dissimilar values are adjacent (checkerboard).');
+          ? 'Statistically significant <b>positive</b> autocorrelation - similar values cluster together.'
+          : 'Statistically significant <b>negative</b> autocorrelation - dissimilar values are adjacent (checkerboard).');
     showResult(
       `<b>Global Moran's I</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
       `<table style="margin-top:6px;font-size:11px;border-collapse:collapse">` +
@@ -9511,7 +9511,7 @@ function runAnalysis(tool) {
       units: null,
       rawValues: vals.slice(),
     });
-    showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} – ${Math.max(...vals).toFixed(1)}<br><span style="color:var(--text-muted)">Blue=low, Red=high</span>`);
+    showResult(`<b>IDW Interpolation</b> (${escapeHtml(attr)})<br>Grid: ${gridRes}×${gridRes} cells<br>Value range: ${Math.min(...vals).toFixed(1)} - ${Math.max(...vals).toFixed(1)}<br><span style="color:var(--text-muted)">Blue=low, Red=high</span>`);
     break;
   }
 
@@ -9563,7 +9563,7 @@ function runAnalysis(tool) {
       rawValues: hotVals.slice(),
     });
     const sum = hotVals.reduce((a,b)=>a+b,0);
-    showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} – ${Math.max(...hotVals).toFixed(1)}<br><span style="color:var(--text-muted)">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
+    showResult(`<b>Weighted Density Map</b> weighted by <b>${escapeHtml(hotAttr)}</b><br>${pts.length} points<br>Total: ${sum.toFixed(1)}<br>Range: ${Math.min(...hotVals).toFixed(1)} - ${Math.max(...hotVals).toFixed(1)}<br><span style="color:var(--text-muted)">Note: This is a weighted density surface, not a statistical hotspot analysis (Getis-Ord Gi*).</span>`);
     break;
   }
 
@@ -9699,7 +9699,7 @@ function runAnalysis(tool) {
           lon = cx / (6 * totalArea);
           lat = cy / (6 * totalArea);
         } else {
-          // Degenerate polygon — fall back to coordinate mean
+          // Degenerate polygon - fall back to coordinate mean
           const allC = [];
           const extractCoords = (c, type) => {
             if (type === 'Point') allC.push(c);
@@ -9713,7 +9713,7 @@ function runAnalysis(tool) {
           lat = allC.reduce((s,c)=>s+c[1],0) / allC.length;
         }
       } else {
-        // Points / Lines — coordinate mean center
+        // Points / Lines - coordinate mean center
         const allC = [];
         const extractCoords = (c, type) => {
           if (type === 'Point') allC.push(c);
@@ -9876,7 +9876,7 @@ function toggleSection(header) {
   if (body) body.classList.toggle('hidden');
   // If the section itself was set to flex-grow (e.g. Attribute Table fills
   // the remaining panel space), don't let it keep grabbing space when
-  // collapsed — that creates a big empty gap before the next section.
+  // collapsed - that creates a big empty gap before the next section.
   const section = header.parentElement;
   if (section && section.classList.contains('panel-section')) {
     const collapsed = header.classList.contains('collapsed');
@@ -10042,7 +10042,7 @@ function closeAnalysisDrawer() {
 function refreshAttrLayerSelect() {
   const sel = document.getElementById('attr-layer-select');
   const prev = sel.value;
-  sel.innerHTML = '<option value="">— Select layer —</option>';
+  sel.innerHTML = '<option value=""> - Select layer - </option>';
   uploadedLayers.forEach(l => {
     sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)} (${l.featureCount})</option>`;
   });
@@ -10186,14 +10186,14 @@ function syncLayerListDom() {
 
 // QGIS/ArcGIS convention: the layer at the TOP of the panel list draws ON TOP
 // of the map. Leaflet's bringToFront stacks last-call-on-top, so iterate the
-// list bottom-up — the index-0 (top of panel) layer is raised last.
+// list bottom-up - the index-0 (top of panel) layer is raised last.
 function applyLayerZOrder() {
   for (let i = uploadedLayers.length - 1; i >= 0; i--) {
     const info = uploadedLayers[i];
     if (map.hasLayer(info.layer) && info.layer.bringToFront) {
       info.layer.bringToFront();
     } else if (map.hasLayer(info.layer) && info.layer.eachLayer) {
-      // LayerGroup — raise each sub-layer
+      // LayerGroup - raise each sub-layer
       info.layer.eachLayer(sub => sub.bringToFront && sub.bringToFront());
     }
   }
@@ -10271,16 +10271,16 @@ function closeLayerContextMenu() {
   document.removeEventListener('keydown', _lcmKey, true);
 }
 
-// WorldClim BIOCLIM variables (bio1–bio19) — standard definitions from
-// https://www.worldclim.org/data/bioclim.html — used worldwide, not PNG-specific.
+// WorldClim BIOCLIM variables (bio1-bio19) - standard definitions from
+// https://www.worldclim.org/data/bioclim.html - used worldwide, not PNG-specific.
 const WORLCLIM_BIOCLIM = {
   bio1:  'Annual mean temperature (°C)',
-  bio2:  'Mean diurnal range (mean of monthly max–min temp, °C)',
+  bio2:  'Mean diurnal range (mean of monthly max-min temp, °C)',
   bio3:  'Isothermality (BIO2/BIO7 × 100, dimensionless)',
   bio4:  'Temperature seasonality (standard deviation × 100)',
   bio5:  'Max temperature of warmest month (°C)',
   bio6:  'Min temperature of coldest month (°C)',
-  bio7:  'Temperature annual range (BIO5–BIO6, °C)',
+  bio7:  'Temperature annual range (BIO5-BIO6, °C)',
   bio8:  'Mean temperature of wettest quarter (°C)',
   bio9:  'Mean temperature of driest quarter (°C)',
   bio10: 'Mean temperature of warmest quarter (°C)',
@@ -10295,7 +10295,7 @@ const WORLCLIM_BIOCLIM = {
   bio19: 'Precipitation of coldest quarter (mm)'
 };
 
-// ESA WorldCover 2021 class codes — global land-cover legend
+// ESA WorldCover 2021 class codes - global land-cover legend
 // https://esa-worldcover.org/en/data-access
 const WORLDCOVER_CODES = {
   10: 'Tree cover (forest, canopy > 30%)',
@@ -10342,11 +10342,11 @@ const FIELD_METADATA = {
   catalogNumber: { desc: 'Catalog number', source: 'GBIF' },
   institutionCode: { desc: 'Institution code', source: 'GBIF' },
   institution: { desc: 'Institution code (from GBIF occurrence API)', source: 'GBIF' },
-  // year/month/day — used by GBIF, World Bank, and other time-series sources
+  // year/month/day - used by GBIF, World Bank, and other time-series sources
   year:  { desc: 'Year', sources: { 'GBIF:': 'Year the occurrence was recorded', 'WB:': 'Year of the indicator value', DEFAULT: 'Year' } },
   month: { desc: 'Month the occurrence was recorded', source: 'GBIF' },
   day:   { desc: 'Day of the month the occurrence was recorded', source: 'GBIF' },
-  // country — used by GBIF and World Bank
+  // country - used by GBIF and World Bank
   country: { desc: 'Country name', sources: { 'GBIF:': 'GBIF', 'WB:': 'World Bank', DEFAULT: 'Layer attribute' } },
 
   // ── World Bank indicator fields ──
@@ -10381,7 +10381,7 @@ const FIELD_METADATA = {
   width: { desc: 'Width in metres (OSM tag, e.g. road width)', source: 'OpenStreetMap' },
   lanes: { desc: 'Number of lanes (OSM tag)', source: 'OpenStreetMap' },
   operator: { desc: 'Operator or managing entity (OSM tag)', source: 'OpenStreetMap' },
-  protect_class: { desc: 'OSM protection class code (e.g. 1–6 for IUCN categories)', source: 'OpenStreetMap' },
+  protect_class: { desc: 'OSM protection class code (e.g. 1-6 for IUCN categories)', source: 'OpenStreetMap' },
   protection_title: { desc: 'OSM protection title (e.g. National Park, Nature Reserve)', source: 'OpenStreetMap' },
   start_date: { desc: 'Start date of construction or operation (OSM tag)', source: 'OpenStreetMap' },
   maxspeed: { desc: 'Maximum speed limit in km/h (OSM tag)', source: 'OpenStreetMap' },
@@ -10435,11 +10435,11 @@ const FIELD_METADATA = {
   ecoregion: { desc: 'MEOW ecoregion name (VLIZ)', source: 'MarineRegions (VLIZ)' },
   placetype: { desc: 'Place type (e.g. MEOW ecoregion) (VLIZ)', source: 'MarineRegions (VLIZ)' },
 
-  // ── FR422 enriched fields — fixed names in the assignment data ──
+  // ── FR422 enriched fields - fixed names in the assignment data ──
   // Source cannot be inferred from the name alone:
   rainfall_mm: { desc: 'Annual precipitation in millimetres (WorldClim BIO12)', source: 'WorldClim 2.1 BIO12 (30 arc-second) raster sampled at each point' },
   elevation_m: { desc: 'Elevation above sea level in metres', source: 'WorldClim 2.1 elevation (2.5 arc-minute) raster sampled at each point' },
-  tree_cover_pct: { desc: 'Percentage tree-cover proxy (0–100), derived from ESA WorldCover class 10', source: 'Derived from ESA WorldCover 2021 class 10, sampled at each point' },
+  tree_cover_pct: { desc: 'Percentage tree-cover proxy (0-100), derived from ESA WorldCover class 10', source: 'Derived from ESA WorldCover 2021 class 10, sampled at each point' },
   worldcover_class: {
     desc: 'ESA WorldCover 2021 v200 land-cover class code. See the code reference table below.',
     source: 'Sampled from ESA WorldCover 2021 v200 (10 m) raster at each point',
@@ -10448,11 +10448,11 @@ const FIELD_METADATA = {
   worldcover_label: { desc: 'Human-readable ESA WorldCover 2021 land-cover label (e.g. Tree cover, Grassland, Built-up, Water)', source: 'Derived from worldcover_class' }
 };
 
-// Generic field-name pattern matchers — recognise fields by name pattern,
+// Generic field-name pattern matchers - recognise fields by name pattern,
 // not by exact match, so any dataset with these naming conventions is
 // automatically described. Patterns are checked in order; first match wins.
 const FIELD_PATTERNS = [
-  // WorldClim BIOCLIM variables: bio1–bio19 (with optional prefix/suffix)
+  // WorldClim BIOCLIM variables: bio1-bio19 (with optional prefix/suffix)
   { test: k => /^bio([1-9]|1[0-9])$/.test(k),
     meta: k => ({ desc: WORLCLIM_BIOCLIM[k], source: 'WorldClim 2.1 BIOCLIM raster sampled at each point' }) },
   // Elevation
@@ -10986,7 +10986,7 @@ function _repositionLayoutLabels() {
 let layoutBuildToken = 0;
 let mainLocked = false;
 let overviewLocked = false;
-let _composerRefresh = false; // true during a refresh — preserves current view
+let _composerRefresh = false; // true during a refresh - preserves current view
 let layoutBasemapOverride = null; // {url, attr, maxz} when user picks one
 let lockedMainState = null;       // {center, zoom} preserved across rebuilds
 let lockedOverviewState = null;   // {center, zoom}
@@ -11047,13 +11047,13 @@ function toggleLayoutLock(target) {
     mainLocked = !mainLocked;
     const btn = document.getElementById('lock-main-btn');
     btn.classList.toggle('locked', mainLocked);
-    // mainLocked === true means the map is UNLOCKED (editable) — the variable is
+    // mainLocked === true means the map is UNLOCKED (editable) - the variable is
     // legacy-named after the CSS class .locked which marks the "unlocked-for-editing"
     // state. Show open-padlock when editable, closed-padlock when synced to source.
     btn.querySelector('.lock-icon').textContent = mainLocked ? '🔓' : '🔒';
     _setLockHandlers(layoutMap, mainLocked);
     _updateLockBadge('main', mainLocked);
-    // Zoom +/- buttons follow the unlocked state. (Kept out of exports —
+    // Zoom +/- buttons follow the unlocked state. (Kept out of exports - 
     // layoutExport's ignoreElements strips .leaflet-control-zoom.) Handles
     // both dynamically added controls and Leaflet's option-created one.
     if (layoutMap) {
@@ -11069,7 +11069,7 @@ function toggleLayoutLock(target) {
     }
     if (mainLocked && layoutMap) {
       // Capture user's edits when re-locking after editing.
-      // Note: no zoom buttons added — pan/scroll-zoom is enabled via
+      // Note: no zoom buttons added - pan/scroll-zoom is enabled via
       // _setLockHandlers, and a clean professional map should have no UI chrome.
       lockedMainState = { center: layoutMap.getCenter(), zoom: layoutMap.getZoom() };
     }
@@ -11137,7 +11137,7 @@ function _resetLayoutLockState() {
 }
 
 function closeLayoutModal() {
-  if (isComposerPopout) return; // can't close — the popout IS the composer
+  if (isComposerPopout) return; // can't close - the popout IS the composer
   document.getElementById('layout-modal').classList.remove('show');
   if (layoutMap) {
     if (layoutMap.off) layoutMap.off('move zoomend moveend viewreset', _repositionLayoutLabels);
@@ -11153,7 +11153,7 @@ function closeLayoutModal() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LAYOUT COMPOSER — draggable / resizable furniture items (QGIS-style layout
+// LAYOUT COMPOSER - draggable / resizable furniture items (QGIS-style layout
 // items). North arrow & scale bar are drag-only (fixed proportions); legend
 // & overview inset are drag + resize via a corner handle. All items live
 // inside #layout-paper (position: relative), a fixed 1000×562px canvas, so
@@ -11391,7 +11391,7 @@ async function buildLayout() {
           georaster: info.georaster,
           opacity,
           resolution: 256,
-          pixelValuesToColorFn: (values) => null, // placeholder — set below
+          pixelValuesToColorFn: (values) => null, // placeholder - set below
         });
         cloneRaster.addTo(layoutMap);
         layoutLayers.push(cloneRaster);
@@ -11414,11 +11414,11 @@ async function buildLayout() {
       } catch (e) {
         console.warn('Composer: failed to clone GeoRasterLayer:', e.message);
       }
-      return; // Done — don't fall through to heat/vector cloning
+      return; // Done - don't fall through to heat/vector cloning
     }
 
     // ── Heat / raster layers: re-create L.heatLayer on the composer map ──
-    // Heat layers can't be cloned via GeoJSON — they're rendered from a
+    // Heat layers can't be cloned via GeoJSON - they're rendered from a
     // [lat, lng, intensity] data array, not vector features. Walk the
     // analysis group, find each heat sub-layer (identified by gradient
     // option), look up its data from heatLayerData, and re-instantiate it
@@ -11451,7 +11451,7 @@ async function buildLayout() {
             else layerBounds = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
           }
         });
-        return; // Done with this layer — don't fall through to vector cloning
+        return; // Done with this layer - don't fall through to vector cloning
       }
       // If no heat sub-layer was found, fall through to vector cloning so
       // analysis layers that are actually polygon overlays (buffers, hulls)
@@ -11517,8 +11517,8 @@ async function buildLayout() {
     layoutLayers.push(newLayer);
 
     // ── Harvest permanent labels (text + latlng + kind + style) for DOM overlay ──
-    // `feature` = user-toggled enterprise labels (.feature-label class) — use halo style + per-layer state.
-    // `chip`    = cluster/mean-center/centroid labels (.site-tooltip class) — keep boxed look.
+    // `feature` = user-toggled enterprise labels (.feature-label class) - use halo style + per-layer state.
+    // `chip`    = cluster/mean-center/centroid labels (.site-tooltip class) - keep boxed look.
     if (info.layer && info.layer.eachLayer) {
       info.layer.eachLayer(sub => {
         const tt = sub.getTooltip && sub.getTooltip();
@@ -11583,7 +11583,7 @@ async function buildLayout() {
   }
 
   // ── Build legend BEFORE awaiting tiles ──
-  // The legend doesn't depend on tile loading — it only needs visibleLayers
+  // The legend doesn't depend on tile loading - it only needs visibleLayers
   // and legendState, which are available now. Building it before the await
   // ensures it's always populated even if a newer buildLayout() call makes
   // this one stale during the tile wait.
@@ -11725,7 +11725,7 @@ async function buildLayout() {
         range.style.cssText = 'font-size:9px;color:#4a5568;';
         const lo = sym.minVal != null ? Number(sym.minVal).toFixed(1) : '';
         const hi = sym.maxVal != null ? Number(sym.maxVal).toFixed(1) : '';
-        range.textContent = (lo || hi) ? `${lo} – ${hi}` : '';
+        range.textContent = (lo || hi) ? `${lo} - ${hi}` : '';
         right.appendChild(range);
         block.appendChild(right);
         legendEl.appendChild(block);
@@ -11763,7 +11763,7 @@ async function buildLayout() {
         });
       }
     });
-    // Re-append resize handle — buildLayout's innerHTML='' above wipes the
+    // Re-append resize handle - buildLayout's innerHTML='' above wipes the
     // handle that _initLayoutItemDrag added, so we must restore it.
     if (!legendEl.querySelector('.layout-resize-handle')) {
       const rh = document.createElement('div');
@@ -11864,7 +11864,7 @@ async function buildLayout() {
   if (layoutOverviewMap) layoutOverviewMap.invalidateSize(false);
 
   // ── Static attribution / source label in the bottom-right corner of the paper ──
-  // (the live Leaflet attribution control is hidden by CSS — we render a
+  // (the live Leaflet attribution control is hidden by CSS - we render a
   // clean static copy so cartographic credit is preserved in PNG/PDF exports.)
   const attrEl = document.getElementById('layout-attribution');
   if (attrEl) {
@@ -11968,7 +11968,7 @@ function _clampLayoutItemsToPaper(paper, paperW, paperH) {
   LAYOUT_ITEM_CONFIG.forEach(cfg => {
     const el = document.getElementById(cfg.id);
     if (!el) return;
-    // Resolve current position — prefer inline style, fall back to offset.
+    // Resolve current position - prefer inline style, fall back to offset.
     let left = parseFloat(el.style.left);
     let top = parseFloat(el.style.top);
     if (isNaN(left)) left = el.offsetLeft;
@@ -12010,7 +12010,7 @@ function _waitForTiles(tileLayer, timeoutMs) {
     const onLoading = () => { hasStarted = true; };
     const onLoad = () => {
       // 'load' fires when all queued tiles finished. If loading hasn't
-      // started yet, ignore — we'll wait for the next batch.
+      // started yet, ignore - we'll wait for the next batch.
       if (hasStarted) finish();
     };
     tileLayer.on('loading', onLoading);
@@ -12018,7 +12018,7 @@ function _waitForTiles(tileLayer, timeoutMs) {
     tileLayer.on('tileerror', onLoad);
     // Give Leaflet a tick to start fetching tiles. If after the tick
     // the layer reports no in-flight requests AND none started, it's
-    // genuinely idle (all tiles already cached) — resolve.
+    // genuinely idle (all tiles already cached) - resolve.
     setTimeout(() => {
       if (resolved) return;
       const loading = tileLayer._loading;
@@ -12055,22 +12055,22 @@ function _representativeFraction(lmap) {
   return Math.round(rf / digits) * digits;
 }
 
-// — Composer scalebar renderer (QGIS/ArcGIS style options) —
+// - Composer scalebar renderer (QGIS/ArcGIS style options) - 
 // Reads the chosen style + card toggle from the toolbar, persists them to
 // localStorage so they survive a composer reopen, and rebuilds #layout-scale.
 //
 // Six styles match QGIS Print Composer / ArcGIS Pro:
-//   single-box   — black→white halved bar (default, most common)
-//   double-alt   — 4 alternating black/white cells (precision)
-//   line-ticks   — baseline + start/mid/end vertical ticks (minimal)
-//   stepped      — stepped baseline crossing at midpoint (ArcGIS)
-//   hollow       — outline-only rectangle (publication clean)
-//   numeric      — no bar; just the distance label + RF (compact)
+//   single-box   - black→white halved bar (default, most common)
+//   double-alt   - 4 alternating black/white cells (precision)
+//   line-ticks   - baseline + start/mid/end vertical ticks (minimal)
+//   stepped      - stepped baseline crossing at midpoint (ArcGIS)
+//   hollow       - outline-only rectangle (publication clean)
+//   numeric      - no bar; just the distance label + RF (compact)
 function _renderScalebar(lmap) {
   const scaleEl = document.getElementById('layout-scale');
   if (!scaleEl) return;
   scaleEl.innerHTML = '';
-  // Read toolbar prefs (default Single Box + Card on — matches previous behaviour).
+  // Read toolbar prefs (default Single Box + Card on - matches previous behaviour).
   const styleSel = document.getElementById('layout-scalebar-style');
   const cardChk  = document.getElementById('layout-scalebar-card');
   const style    = (styleSel && styleSel.value) || 'single-box';
@@ -12096,7 +12096,7 @@ function _renderScalebar(lmap) {
     mid.className = 'sb-mid-tick';
     barDiv.appendChild(mid);
   }
-  // Label row: 0 — mid — distance. For numeric-only we still want the
+  // Label row: 0 - mid - distance. For numeric-only we still want the
   // distance prominently visible since there is no bar.
   const row = document.createElement('div');
   row.className = 'sb-row';
@@ -12104,13 +12104,13 @@ function _renderScalebar(lmap) {
     // Compact form: just the full distance, centered.
     row.style.justifyContent = 'flex-end';
     const v = document.createElement('span');
-    v.textContent = `0 — ${bar.label}`;
+    v.textContent = `0 - ${bar.label}`;
     v.style.fontWeight = '600';
     row.appendChild(v);
   } else {
     const left  = document.createElement('span'); left.textContent  = '0';
     const right = document.createElement('span'); right.textContent = bar.label;
-    // For Double Alternating, surface a midpoint label too — matches QGIS.
+    // For Double Alternating, surface a midpoint label too - matches QGIS.
     if (style === 'double-alt') {
       row.style.position = 'relative';
       const midLabel = document.createElement('span');
@@ -12201,7 +12201,7 @@ function _formatCoord(value, isLat, format) {
   return `${value.toFixed(4)}°`;
 }
 
-// Pick a "nice" graticule step in degrees that gives ~4–8 lines across the span.
+// Pick a "nice" graticule step in degrees that gives ~4-8 lines across the span.
 function _niceGridStep(spanDeg) {
   if (!spanDeg || !isFinite(spanDeg) || spanDeg <= 0) return null;
   const target = spanDeg / 5;
@@ -12318,7 +12318,7 @@ function _renderGraticule(lmap, paperEl, format, intervalOverride) {
       }
     }
     if (!placed) {
-      // Could not find a clear spot — drop the label rather than overlap.
+      // Could not find a clear spot - drop the label rather than overlap.
       lbl.remove();
       return;
     }
@@ -12374,10 +12374,10 @@ function onLayoutGridChange() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COMPOSER SIDEBAR — new enterprise feature handlers
+// COMPOSER SIDEBAR - new enterprise feature handlers
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Paper size change — triggers a rebuild to apply new dimensions
+// Paper size change - triggers a rebuild to apply new dimensions
 function onLayoutPaperChange() {
   if (layoutMap || isComposerPopout) {
     refreshComposer();
@@ -12391,7 +12391,7 @@ function onLayoutPaperBgChange() {
   if (paper && bg) paper.style.background = bg.value;
 }
 
-// Snap-to-grid toggle — shows/hides visual grid and enables snapping
+// Snap-to-grid toggle - shows/hides visual grid and enables snapping
 function onLayoutSnapGridChange() {
   const paper = document.getElementById('layout-paper');
   const chk = document.getElementById('layout-snap-grid');
@@ -12496,7 +12496,7 @@ function onLayoutCrsTextChange() {
   }
 }
 
-// Legend title — live update of the legend header text
+// Legend title - live update of the legend header text
 function onLegendTitleChange() {
   const head = document.querySelector('#layout-legend .layout-legend-handle');
   if (!head) return;
@@ -12508,7 +12508,7 @@ function onLegendTitleChange() {
   if (sub) head.appendChild(sub);
 }
 
-// Legend subtitle — live update of the legend subtitle text
+// Legend subtitle - live update of the legend subtitle text
 function onLegendSubtitleChange() {
   const head = document.querySelector('#layout-legend .layout-legend-handle');
   if (!head) return;
@@ -12544,7 +12544,7 @@ function onLayoutGridIntervalChange() {
   onLayoutGridChange();
 }
 
-// Attribution toggle — show/hide without full rebuild
+// Attribution toggle - show/hide without full rebuild
 function onLayoutAttributionChange() {
   const attrEl = document.getElementById('layout-attribution');
   const chk = document.getElementById('layout-show-attribution');
@@ -12552,7 +12552,7 @@ function onLayoutAttributionChange() {
   attrEl.style.display = chk.checked ? 'block' : 'none';
 }
 
-// Export format change — update the footer button label
+// Export format change - update the footer button label
 function onLayoutExportFormatChange() {
   const sel = document.getElementById('layout-export-format');
   if (!sel) return;
@@ -12792,7 +12792,7 @@ function toggleComposerSidebar() {
 
 async function refreshComposer() {
   if (!layoutMap && !isComposerPopout) {
-    // Composer not open — just preview
+    // Composer not open - just preview
     return previewExport();
   }
   _composerRefresh = true;
@@ -12967,7 +12967,7 @@ function _profileExportMeta() {
 }
 
 // Render the profile to a print-quality canvas at the requested DPI.
-// IMPORTANT: we do NOT upscale the on-screen chart — that just blurs pixels.
+// IMPORTANT: we do NOT upscale the on-screen chart - that just blurs pixels.
 // Instead we rebuild a fresh Chart.js instance into a hidden offscreen DOM
 // sized at the full target pixel resolution so every line, dot, and label
 // is drawn natively at high res.
@@ -13182,7 +13182,7 @@ function _renderProfileToSVG() {
 
 async function exportProfile(fmt) {
   if (!profileChart) {
-    showToast('No elevation profile to export — import a point layer with elevations first.', 'error');
+    showToast('No elevation profile to export - import a point layer with elevations first.', 'error');
     return;
   }
   try {
@@ -13352,7 +13352,7 @@ function refreshExportLayerSelect() {
 }
 
 /** Auto-detect the correct UTM zone for the selected export layer and show a hint.
- *  Works for any location worldwide — computes centroid lon/lat, determines the
+ *  Works for any location worldwide - computes centroid lon/lat, determines the
  *  UTM zone and hemisphere, and dynamically adds the EPSG option if needed. */
 function _updateExportCrsHint() {
   const sel = document.getElementById('export-layer-select');
@@ -13523,7 +13523,7 @@ async function exportLayerShapefile() {
     // shpwrite.download() navigates via `location.href = 'data:application/zip;base64,...'`,
     // which modern browsers block for top-level navigation and silently throw.
     // shpwrite.zip() (patched to use JSZip 3.x's generateAsync) returns a Promise
-    // resolving to a base64 zip payload — convert to a Blob and download that instead.
+    // resolving to a base64 zip payload - convert to a Blob and download that instead.
     // `options.types` maps geometry types to the layer name so the .shp/.shx/.dbf/.prj
     // files are named after the layer instead of the generic "POINT"/"POLYLINE"/"POLYGON".
     const base64 = await shpwrite.zip(gj, {
@@ -13544,7 +13544,7 @@ async function exportLayerShapefile() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// KML / GPX EXPORT (OGC / GPS interchange — no extra deps, hand-rolled writers)
+// KML / GPX EXPORT (OGC / GPS interchange - no extra deps, hand-rolled writers)
 // All in-app geometry is WGS84 (EPSG:4326), which is exactly what KML and GPX
 // require, so no reprojection is needed on the way out.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -13769,13 +13769,13 @@ async function loadGeoTIFFFile(file, name) {
     return null;
   }
   const layerName = (name || file.name || 'raster').replace(/\.tiff?$/i, '');
-  // Create two copies of the buffer — parseGeoraster may detach/transfer
+  // Create two copies of the buffer - parseGeoraster may detach/transfer
   // its input, so the geotiff.js fallback needs its own copy.
   const bufOriginal = await file.arrayBuffer();
   const bufForGeoraster = bufOriginal.slice(0);
   const bufForGeotiff = bufOriginal.slice(0);
 
-  // ── Path 1: try georaster (preferred — used by GeoRasterLayer) ──
+  // ── Path 1: try georaster (preferred - used by GeoRasterLayer) ──
   if (typeof parseGeoraster === 'function') {
     try {
       const georaster = await Promise.race([
@@ -13819,7 +13819,7 @@ async function loadGeoTIFFFile(file, name) {
     // We normalize to a single-band Float32Array for rendering.
     let pixelData;
     if (Array.isArray(rasters) && rasters.length > 0 && rasters[0] instanceof Uint8Array) {
-      // Per-band arrays — take band 0
+      // Per-band arrays - take band 0
       pixelData = rasters[0];
     } else {
       pixelData = rasters; // already interleaved
@@ -13937,7 +13937,7 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
 
   const id = 'raster-' + (++uploadCounter);
 
-  // Build properties for the attribute table — sample up to 5000 points
+  // Build properties for the attribute table - sample up to 5000 points
   const width = georaster.width, height = georaster.height;
   const xmin = georaster.xmin, ymin = georaster.ymin, xmax = georaster.xmax, ymax = georaster.ymax;
   const stepX = (xmax - xmin) / width;
@@ -13946,7 +13946,7 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
   const properties = [];
   let validCount = 0;
 
-  // Access pixel data — georaster from parseGeoraster stores values as
+  // Access pixel data - georaster from parseGeoraster stores values as
   // [band][row][column] where each row may be a TypedArray (Float32Array etc.),
   // while our geotiff.js fallback stores a flat array. Normalize to a
   // getPixel(row, col) function.
@@ -14030,7 +14030,7 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
   if (typeof GSX !== 'undefined' && GSX.stampImport) GSX.stampImport(info, layerName);
 
   // Initialize legend state with raster classification support BEFORE
-  // addLayerToPanel (which calls initLegendState — but initLegendState
+  // addLayerToPanel (which calls initLegendState - but initLegendState
   // now preserves existing raster state instead of overwriting it).
   const rawValues = [];
   if (properties.length > 0 && typeof properties[0].value === 'number') {
@@ -14070,7 +14070,7 @@ function _registerGeoRasterLayer(georaster, layerName, meta) {
   if (typeof refreshComposer === 'function' && document.getElementById('layout-modal') && document.getElementById('layout-modal').classList.contains('show')) {
     refreshComposer();
   }
-  showToast(`Raster loaded: ${georaster.width}x${georaster.height}, ${georaster.numberOfRasters} band(s) — style it in the Symbology panel`, 'success');
+  showToast(`Raster loaded: ${georaster.width}x${georaster.height}, ${georaster.numberOfRasters} band(s) - style it in the Symbology panel`, 'success');
   return info;
 }
 
@@ -14133,7 +14133,7 @@ async function loadGeoTIFF() {
 
 function runHotspotGrid() {
   if (typeof turf === 'undefined') {
-    showToast('Turf.js not loaded – required for Hotspot Grid', 'error');
+    showToast('Turf.js not loaded - required for Hotspot Grid', 'error');
     return;
   }
   const gridType = document.getElementById('hotspot-grid-type') && document.getElementById('hotspot-grid-type').value || 'hex';
@@ -14284,7 +14284,7 @@ function hotspotColor(t) {
   return `rgb(${r},${g},0)`;
 }
 
-// Old WLC and SDM functions removed — replaced by GSX module equivalents
+// Old WLC and SDM functions removed - replaced by GSX module equivalents
 // (geospax-conservation.js, geospax-sdm-fix.js). See INTEGRATION.md §3.1, §5b.
 
 // Kept for use by GSX modules and hotspot analysis
@@ -14474,7 +14474,7 @@ function _serializeComposerState() {
     // projection, etc.) to be re-instantiated on the detached composer map.
     georaster: info.isRaster ? info.georaster : null,
   }));
-  // Serialize legendState (symbology) — deep-clone to avoid shared refs.
+  // Serialize legendState (symbology) - deep-clone to avoid shared refs.
   const sym = {};
   for (const k in legendState) {
     try { sym[k] = JSON.parse(JSON.stringify(legendState[k])); } catch(e) {}
@@ -14513,11 +14513,11 @@ function detachComposerWindow() {
     showToast('Pop-up blocked. Allow pop-ups for this site to detach the composer.', 'error');
     return;
   }
-  // Close the in-page modal — the detached window takes over.
+  // Close the in-page modal - the detached window takes over.
   closeLayoutModal();
   showToast('Composer detached. Drag the new window to your second monitor.', 'success');
 
-  // Poll for popout close — when detected, reopen the in-page composer
+  // Poll for popout close - when detected, reopen the in-page composer
   // so the user seamlessly returns to the attached layout view.
   const _popoutCloseWatcher = setInterval(() => {
     if (composerPopoutWindow && composerPopoutWindow.closed) {
@@ -14610,8 +14610,8 @@ async function _applyComposerState(state) {
     maxz: state.basemap.maxNativeZoom,
   };
   // Apply export settings. These MUST target the composer sidebar controls
-  // (layout-*) — buildLayout()/layoutExport() read those, not the legacy
-  // export overlay (exp-*) — and keep the legacy overlay in sync for doExport.
+  // (layout-*) - buildLayout()/layoutExport() read those, not the legacy
+  // export overlay (exp-*) - and keep the legacy overlay in sync for doExport.
   const ee = state.exportSettings;
   if (ee) {
     exportFormat = ee.format || 'png';
@@ -14633,7 +14633,7 @@ async function _applyComposerState(state) {
   if (state.view && typeof map !== 'undefined' && map.setView) {
     try {
       map.setView([state.view.center.lat, state.view.center.lng], state.view.zoom, { animate: false });
-    } catch (e) { /* non-fatal — fit-to-layers mode doesn't need it */ }
+    } catch (e) { /* non-fatal - fit-to-layers mode doesn't need it */ }
   }
   // Rebuild the layout.
   await buildLayout();
@@ -14645,7 +14645,7 @@ function _initComposerPopout() {
   if (params.get('composer') !== '1') return;
   isComposerPopout = true;
   document.body.classList.add('composer-popout');
-  // Hide the loading spinner — the popout doesn't need the main map to load.
+  // Hide the loading spinner - the popout doesn't need the main map to load.
   const loading = document.getElementById('loading');
   if (loading) loading.style.display = 'none';
 
@@ -14674,7 +14674,7 @@ function _initComposerPopout() {
 
   // Notify the main window that we're ready to receive state.
   // Retry a few times in case the main window's channel isn't ready yet,
-  // but stop as soon as state arrives — each 'ready' triggers a full state
+  // but stop as soon as state arrives - each 'ready' triggers a full state
   // push + composer rebuild in this window, so duplicate retries are wasteful.
   let _gotComposerState = false;
   let retries = 0;
@@ -14744,7 +14744,7 @@ function _rescaleLayoutItems(oldW, oldH, newW, newH) {
     const el = document.getElementById(cfg.id);
     if (!el) return;
     // Read current pixel position from inline style or computed position.
-    // Items without saved geometry use CSS defaults (e.g. bottom/left) —
+    // Items without saved geometry use CSS defaults (e.g. bottom/left) - 
     // resolve their actual position via offsetLeft/offsetTop instead.
     let left = parseFloat(el.style.left);
     let top = parseFloat(el.style.top);
@@ -14841,7 +14841,7 @@ setTimeout(_hideLoading, 2000);
   if (el) { el.addEventListener('change', handler); el.addEventListener('click', handler); }
 })();
 
-// Multi-monitor composer popout bootstrap — detect ?composer=1
+// Multi-monitor composer popout bootstrap - detect ?composer=1
 _initComposerPopout();
 
 // Source-change detection: when the main map's layers or view change, push
@@ -14901,7 +14901,7 @@ window.gsxRestoreProject = function (project) {
 };
 
 // Start autosave (every 60s) and offer to recover an autosaved session.
-// Uses an in-app dialog, not confirm() — see CONTRIBUTING.md UI rules.
+// Uses an in-app dialog, not confirm() - see CONTRIBUTING.md UI rules.
 // Skipped in the detached composer popout (?composer=1): it must not show
 // the recovery overlay over the composer, nor autosave from its synced
 // mirror of the main window's layers.
