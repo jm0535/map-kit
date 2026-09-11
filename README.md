@@ -562,6 +562,13 @@ The chart is interactive: hover a point to see the feature's site name and attri
 
 All sample datasets are available directly from the app: open **Data Sources** in the left panel and click any button in the **Sample Datasets** section. No file browsing needed.
 
+### Tabular samples (CSV / XLSX)
+
+| File | Description |
+|------|-------------|
+| `species_occurrences.csv` | 128 species occurrence rows in CSV format with lat/lon columns - opens the column mapper on import |
+| `species_occurrences.xlsx` | Same data in Excel format - opens the sheet picker then column mapper |
+
 ### Vector samples
 
 | File | Description |

@@ -2218,6 +2218,11 @@
             <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('butterfly_presences.geojson', 'Butterfly Presences')" title="Butterfly occurrence points for SDM practice">Butterfly</button>
             <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('vine_host_plants.geojson', 'Vine Host Plants')" title="Vine host plant locations">Vine Host Plants</button>
           </div>
+          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Tabular (CSV / XLSX) - test the column mapper</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('species_occurrences.csv', 'Species Occurrences (CSV)')" title="128 species occurrence rows in CSV format with lat/lon columns - opens the column mapper">&#x1F4CA; Occurrences CSV</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('species_occurrences.xlsx', 'Species Occurrences (XLSX)')" title="128 species occurrence rows in Excel format with lat/lon columns - opens the sheet picker then column mapper">&#x1F4D5; Occurrences XLSX</button>
+          </div>
           <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Boundaries & Protected Areas</div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
             <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('png_provinces.geojson', 'PNG Provinces')" title="22 PNG province boundary polygons (EPSG:4326)">&#x1F5FA; PNG Provinces</button>
