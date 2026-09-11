@@ -5971,6 +5971,60 @@ function addUploadedGeoJSON(geojson, name, color, opts) {
   color = color || nextColor();
   const silent = opts && opts.silent;   // project restore: no toast / fitBounds spam
 
+  // Detect and reproject non-WGS84 GeoJSON (e.g. UTM export re-imported)
+  // Leaflet's L.geoJSON always assumes EPSG:4326, so a GeoJSON with a `crs`
+  // member (pre-RFC7946 style) must be reprojected to WGS84 first.
+  if (geojson.crs && geojson.crs.properties && geojson.crs.properties.name) {
+    let srcCode = geojson.crs.properties.name;
+    // Normalise urn:ogc:def:crs:EPSG::32755 → EPSG:32755
+    const m = srcCode.match(/EPSG(?:::|:)(\d+)/i);
+    if (m) srcCode = 'EPSG:' + m[1];
+    if (srcCode !== 'EPSG:4326' && typeof proj4 !== 'undefined') {
+      try {
+        if (!proj4.defs(srcCode)) {
+          // Try to construct a UTM zone definition locally (no network needed)
+          const utmMatch = srcCode.match(/EPSG:(327|326)(\d{2})/);
+          if (utmMatch) {
+            const zone = parseInt(utmMatch[2], 10);
+            const south = utmMatch[1] === '327';
+            const def = `+proj=utm +zone=${zone} ${south ? '+south ' : ''}+datum=WGS84 +units=m +no_defs`;
+            proj4.defs(srcCode, def);
+          } else {
+            // Fall back to epsg.io async lookup - but addUploadedGeoJSON is sync,
+            // so we skip and warn. User can import via the CRS-aware import dialog.
+            console.warn('Could not resolve CRS definition for', srcCode, '(no network lookup in sync path)');
+          }
+        }
+        if (proj4.defs(srcCode)) {
+          const reprojGeom = geom => {
+            if (!geom) return geom;
+            const rp = c => {
+              const [lon, lat] = proj4(srcCode, 'EPSG:4326', [c[0], c[1]]);
+              return [lon, lat].concat(c.slice(2));
+            };
+            const clone = JSON.parse(JSON.stringify(geom));
+            switch (clone.type) {
+              case 'Point': clone.coordinates = rp(clone.coordinates); break;
+              case 'MultiPoint': clone.coordinates = clone.coordinates.map(rp); break;
+              case 'LineString': clone.coordinates = clone.coordinates.map(rp); break;
+              case 'MultiLineString': clone.coordinates = clone.coordinates.map(r => r.map(rp)); break;
+              case 'Polygon': clone.coordinates = clone.coordinates.map(r => r.map(rp)); break;
+              case 'MultiPolygon': clone.coordinates = clone.coordinates.map(p => p.map(r => r.map(rp))); break;
+              case 'GeometryCollection': clone.geometries = clone.geometries.map(reprojGeom); break;
+            }
+            return clone;
+          };
+          (geojson.features || []).forEach(f => { if (f.geometry) f.geometry = reprojGeom(f.geometry); });
+          delete geojson.crs;  // now WGS84, remove the crs member
+          if (!silent) showToast(`Reprojected from ${srcCode} to WGS 84 for display`, 'success');
+        }
+      } catch (e) {
+        console.warn('CRS reprojection on import failed:', e);
+        if (!silent) showToast(`Could not reproject from ${srcCode} - coordinates may be wrong`, 'error');
+      }
+    }
+  }
+
   let featureCount = 0;
   let geomTypes = new Set();
   let allProps = [];
