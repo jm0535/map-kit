@@ -418,7 +418,8 @@
           ? '<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">' +
             'Click Save to choose where to save this file on your computer.</p>'
           : '<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">' +
-            'The file will be saved to your browser\'s default download folder.</p>') +
+            'The file will be saved to your browser\'s Downloads folder. ' +
+            'To choose a save location, use Chrome or Edge.</p>') +
         '<div class="attr-form-actions">' +
           '<button class="btn-cancel" onclick="this.closest(\'.attr-form-overlay\').remove();">Cancel</button>' +
           '<button class="btn-ok" onclick="_gsxConfirmSave()">Save</button>' +
