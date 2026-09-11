@@ -130,7 +130,8 @@ body {
   <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
   <div class="cl-nav" id="cl-nav">
     <div class="cl-nav-group">Releases</div>
-    <a href="#v1.3.1" class="cl-nav-item">v1.3.1 <span class="badge latest">Latest</span></a>
+    <a href="#v1.3.2" class="cl-nav-item">v1.3.2 <span class="badge latest">Latest</span></a>
+    <a href="#v1.3.1" class="cl-nav-item">v1.3.1</a>
     <a href="#v1.3.0" class="cl-nav-item">v1.3.0</a>
     <a href="#v1.2.0" class="cl-nav-item">v1.2.0</a>
     <a href="#v1.1.0" class="cl-nav-item">v1.1.0</a>
@@ -159,12 +160,37 @@ body {
   <div class="cl-legend-item"><span class="cl-entry-label sec">Sec</span> Security</div>
 </div>
 
+<!-- v1.3.2 -->
+<div class="cl-release" id="v1.3.2">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.3.2</span>
+    <span class="cl-release-date">11 September 2026</span>
+    <span class="cl-release-tag latest">Latest</span>
+  </div>
+  <div class="cl-release-title">Interactive Minimap, Save Workspace Dialog, Documentation</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Interactive overview minimap</b>: click anywhere on the minimap in the right panel Overview section to pan the main map to that location. Double-click to zoom in one level. The blue rectangle tracks the main map viewport automatically. Cursor changed to crosshair to indicate interactivity.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Save Workspace dialog</b>: clicking the &#x1F4BE; Save button now shows a filename dialog (pre-filled with <code>projectId_subject.gspx</code>, text pre-selected for quick renaming) before saving. In Chrome and Edge, the browser's native Save As dialog then opens so the user can choose the save folder via the File System Access API. Firefox and Safari fall back to saving to the Downloads folder.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Changelog page</b> (<code>changelog.html</code>): standalone enterprise-style page with sidebar navigation, search, scroll-spy, color-coded entry badges (New, Enhancement, Fix, Deprecation, Security), 5 release entries, roadmap, upgrade guide, and deprecation policy.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>FAQ section</b> in the User Guide: 27 questions across 7 categories (Getting started, Data and formats, CRS, Analysis and statistics, Conservation, Export and projects, Performance, Citation and licensing).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>References section</b> in the User Guide: 27 peer-reviewed citations covering all spatial statistics, geometry algorithms, SDM, conservation planning, landscape ecology, and software citation.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Licenses &amp; Attribution section</b> in the User Guide: MIT license for GeoSpaX, 17 vendored JS libraries, 10 basemap attributions, 8 open data connectors, 7 Python package dependencies.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>In-app Changelog link</b>: Changelog button added to the User Guide panel header in the app.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label enh">Enh</span> Enhancements</div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Comprehensive User Guide</b> expanded from 727 to 1422 lines covering all 34 feature sections including Open Data connectors, Map Composer, Raster Analysis, MCE, Conservation Planning, Landscape Metrics, SDM, Raster Reclassify, Provenance, How to Cite, FAQ, References, and Licenses.</span></div>
+  </div>
+</div>
+
 <!-- v1.3.1 -->
 <div class="cl-release" id="v1.3.1">
   <div class="cl-release-header">
     <span class="cl-release-version">v1.3.1</span>
     <span class="cl-release-date">11 September 2026</span>
-    <span class="cl-release-tag latest">Latest</span>
   </div>
   <div class="cl-release-title">UI Fixes, Keyboard Shortcuts, Documentation</div>
 

@@ -318,7 +318,19 @@ body {
 <div class="ug-section" id="overview">
   <div class="ug-section-title"><span class="ug-ico">&#x1F9ED;</span> Overview Map</div>
   <div class="ug-section-body">
-    <p>Open the <b>Overview</b> section in the right panel to show a small minimap. The minimap displays the full layer extent with a rectangle indicating the current main map viewport. Click inside the minimap to pan the main map.</p>
+    <p>Open the <b>Overview</b> section in the right panel to show a small minimap. The minimap displays the full layer extent with a blue rectangle indicating the current main map viewport.</p>
+    <table class="ug-table">
+      <thead><tr><th>Action</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td><b>Pan the main map</b></td><td>Click anywhere on the minimap. The main map recenters to the clicked location.</td></tr>
+        <tr><td><b>Zoom in</b></td><td>Double-click on the minimap. The main map zooms in one level at the clicked location.</td></tr>
+        <tr><td><b>Track viewport</b></td><td>The blue rectangle updates automatically as you pan or zoom the main map.</td></tr>
+      </tbody>
+    </table>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Tip</div>
+      The minimap cursor is a crosshair, indicating it is interactive. Use it to navigate quickly across large study areas without scrolling the main map.
+    </div>
   </div>
 </div>
 
@@ -1117,10 +1129,14 @@ body {
     <table class="ug-table">
       <thead><tr><th>Action</th><th>How</th></tr></thead>
       <tbody>
-        <tr><td>&#x1F4BE; Save project</td><td>Click &#x1F4BE; in the top bar. Downloads a <code>.gspx</code> file (e.g. <code>Surname_lab.gspx</code>).</td></tr>
+        <tr><td>&#x1F4BE; Save project</td><td>Click &#x1F4BE; in the top bar. A dialog appears with a filename input (pre-filled with <code>projectId_subject.gspx</code>). Edit the name and click <b>Save</b>. In Chrome and Edge, the browser's native Save As dialog then opens so you can choose the folder. In Firefox and Safari, the file is saved to your Downloads folder.</td></tr>
         <tr><td>&#x1F4C2; Load project</td><td>Click &#x1F4C2; in the top bar and choose a <code>.gspx</code> or <code>.json</code> file.</td></tr>
       </tbody>
     </table>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Browser support for folder selection</div>
+      The native Save As dialog (choose folder) uses the File System Access API, supported in Chrome 86+, Edge 86+, and Opera 72+. Firefox and Safari do not support this API and will save to the Downloads folder. To choose a save location, use Chrome or Edge.
+    </div>
     <h3>Provenance &amp; Project metadata</h3>
     <p>Open the <b>&#x1F4CB; Provenance &amp; Project</b> section in the Analysis drawer.</p>
     <table class="ug-table">
@@ -1275,6 +1291,12 @@ body {
 
     <p><b>Q: What is a .gspx file?</b></p>
     <p>A <code>.gspx</code> file is a GeoSpaX project file. It is a JSON file containing all layers, symbology, digitized features, bookmarks, and analysis results. Use the &#x1F4BE; Save button in the topbar to download one, and the &#x1F4C2; Load button to restore a session. <code>.json</code> files are also accepted for loading.</p>
+
+    <p><b>Q: Can I choose where to save my workspace file?</b></p>
+    <p>In Chrome and Edge, clicking &#x1F4BE; Save shows a filename dialog, then the browser's native Save As dialog opens so you can choose the folder. In Firefox and Safari, the file is saved to your Downloads folder because these browsers do not support the File System Access API. To choose a save location, use Chrome or Edge.</p>
+
+    <p><b>Q: Is the overview minimap interactive?</b></p>
+    <p>Yes. Click anywhere on the minimap in the right panel's Overview section to pan the main map to that location. Double-click to zoom in one level. The blue rectangle tracks the main map viewport automatically.</p>
 
     <p><b>Q: How do I get a publication-quality map?</b></p>
     <p>Use the <b>Map Layout Composer</b> (click &#x1F4D0; in the topbar or press the Composer button). Add a title, graticule, scale bar, north arrow, legend, and overview inset. Set the paper size and DPI (300 or 600). Export as PNG or PDF. See the <a href="#map-composer">Map Layout Composer</a> section for full instructions.</p>

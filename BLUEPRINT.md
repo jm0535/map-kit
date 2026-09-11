@@ -1,6 +1,6 @@
 # GeoSpaX - Blueprint & Changelog
 
-**Version:** 1.3.1  
+**Version:** 1.3.2
 **Author:** Jimmy Moses  
 **Affiliation:** School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology  
 **URL:** https://geospax.in4metrix.dev/  
@@ -11,13 +11,37 @@
 
 ## How to Cite
 
-> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.3.1) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
+> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.3.2) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
 
 See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, and BibTeX formats with copy-to-clipboard.
 
 ---
 
 ## Version History
+
+### v1.3.2 (2026-09-11) - Interactive Minimap, Save Workspace Dialog, Documentation
+
+#### Interactive Overview Minimap
+- **Click to pan**: single click on the minimap in the right panel Overview section recenters the main map to the clicked location
+- **Double-click to zoom**: double-click on the minimap zooms the main map in one level at the clicked location
+- **Crosshair cursor**: cursor changed to crosshair to indicate the minimap is interactive
+- The blue viewport rectangle continues to track the main map automatically
+
+#### Save Workspace Dialog
+- **Filename dialog**: clicking the Save button now shows an in-app dialog with a filename input pre-filled with `projectId_subject.gspx` (text pre-selected for quick renaming)
+- **Native Save As (Chrome/Edge)**: after entering the filename, the browser's native Save As dialog opens via the File System Access API (`showSaveFilePicker`) so the user can choose the save folder
+- **Fallback (Firefox/Safari)**: file is saved to the Downloads folder with a note in the dialog explaining the limitation
+- Enter key confirms, Escape key cancels
+
+#### Documentation
+- **Standalone Changelog page** (`changelog.html`): enterprise-style page with sidebar navigation, search, scroll-spy, color-coded badges, 5 release entries, roadmap, upgrade guide, deprecation policy
+- **FAQ section** in User Guide: 27 questions across 7 categories
+- **References section** in User Guide: 27 peer-reviewed citations
+- **Licenses & Attribution section** in User Guide: all vendored libraries, basemaps, data connectors, Python packages
+- **Comprehensive User Guide** expanded to 34 sections covering all features
+- **In-app Changelog link** added to User Guide panel header
+
+---
 
 ### v1.3.1 (2026-09-11) - UI Fixes, Keyboard Shortcuts, Documentation
 

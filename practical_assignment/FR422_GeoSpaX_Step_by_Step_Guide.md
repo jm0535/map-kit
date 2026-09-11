@@ -149,7 +149,7 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 | Location | Panels / sections | What you do here |
 |----------|-------------------|------------------|
 | **Left panel** | Data Sources, Open Data, Layers, Basemap, Export (🗺️ Map Image, 📄 Per-Layer Export, 📈 Elevation Profile, 📦 Bulk Data Export) | Import files, manage layers, change basemap, export map as PNG/PDF (via Map Composer), export layer data |
-| **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks | Inspect feature properties, view/edit attribute table, style layers, see overview map |
+| **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks | Inspect feature properties, view/edit attribute table, style layers, see overview map (click minimap to pan main map, double-click to zoom) |
 | **Analysis drawer** (right side, opens on demand) | 🧪 Analysis drawer with 13 sections: 📍 Point Pattern, 📊 Inferential Hotspots & Autocorrelation, 🌡️ Interpolation & Density, 🧩 Clustering, 📐 Lines & Polygons, 🧮 Attributes, 🛰️ Raster Analysis, ⚖️ Multi-Criteria Evaluation, 🌳 Conservation Planning, 🗺️ Landscape Metrics, 🦌 SDM, 📠 Raster Reclassify & Polygonize, 📋 Provenance & Project | Click the 🧪 **Analysis** button in the top toolbar to open this drawer. Contains all analysis tools. The drawer is hidden by default and slides in next to the right panel when opened. |
 | **Bottom panel** | Elevation Profile, Analysis Results, How to Cite | View analysis results (after running a tool), elevation profiles, and citation formats. Switch tabs at the top of the panel. |
 
@@ -741,8 +741,10 @@ In Part B of your report:
 ### Save the project
 
 1. Click the **💾 Save** button in the topbar.
-2. This saves all layers, symbology, and view state as a `.gspx` file.
-3. Name it `Surname_lab.gspx`.
+2. A dialog appears with a filename input pre-filled with `project_geospax.gspx`. Edit the name to `Surname_lab.gspx`.
+3. Click **Save**.
+4. In Chrome or Edge, the browser's native Save As dialog opens so you can choose where to save the file. In Firefox, the file is saved to your Downloads folder.
+5. This saves all layers, symbology, digitized features, bookmarks, and analysis results as a `.gspx` file.
 
 > **![screenshots/30_save_project.png](screenshots/30_save_project.png)**
 

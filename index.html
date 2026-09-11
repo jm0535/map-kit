@@ -6,7 +6,7 @@
 <title>GeoSpaX - Interactive Web GIS & Spatial Analysis</title>
 <meta name="description" content="GeoSpaX is a modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis.">
 <meta name="author" content="Jimmy Moses">
-<meta name="version" content="1.3.1">
+<meta name="version" content="1.3.2">
 <meta name="theme-color" content="#0f172a">
 
 <!-- Favicon: same map emoji used in the in-app logo -->
@@ -2527,7 +2527,7 @@
       <div id="bottom-tab-cite" class="bottom-tab-content" style="display:none; flex:1; overflow-y:auto;">
         <div style="max-width:760px; margin:0 auto; padding:12px 20px 32px 20px; font-size:12px; line-height:1.6; color:var(--text);">
           <h3 style="font-size:14px; margin:0 0 6px 0; color:var(--accent);">How to Cite GeoSpaX</h3>
-          <p style="color:var(--text-muted); margin:0 0 12px 0;">GeoSpaX (v1.3.1) has been used in PhD and Masters theses. Please cite using the format appropriate for your discipline. Citation format follows <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number and access date.</p>
+          <p style="color:var(--text-muted); margin:0 0 12px 0;">GeoSpaX (v1.3.2) has been used in PhD and Masters theses. Please cite using the format appropriate for your discipline. Citation format follows <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number and access date.</p>
           <div id="cite-formats" style="display:flex; flex-direction:column; gap:10px;"></div>
           <p style="color:var(--text-faint); font-size:11px; margin:14px 0 0 0;">A DOI will be assigned via Zenodo or DataCite for future releases. For now, use the repository URL as the persistent identifier.</p>
         </div>
@@ -2642,7 +2642,7 @@
         <b>Scroll</b> to zoom - <b>drag</b> to pan - <b>double-click</b> to zoom in.<br>
         <b>+ / &minus;</b> buttons top-left, or keyboard <b>+</b> / <b>&minus;</b>.<br>
         <b>F</b> toggles fullscreen - <b>L</b> toggles the left panel - <b>A</b> toggles the Analysis drawer.<br>
-        The <b>minimap</b> (bottom-right) shows your current viewport in context.<br>
+        The <b>minimap</b> (right panel, Overview section) shows your current viewport in context. Click it to pan the main map; double-click to zoom in.<br>
         The <b>status bar</b> shows current zoom level, cursor coordinates, and visible feature count.<br><br>
 
         <!-- ── BASEMAPS ── -->
@@ -2838,7 +2838,16 @@
         &bull; <b>Enter</b> - confirm inline layer rename<br>
         &bull; <b>Ctrl+Z</b> - undo (digitizing edits)<br>
         &bull; <b>Ctrl+Y / Ctrl+Shift+Z</b> - redo<br>
-        &bull; <b>Ctrl+D</b> - duplicate selected features<br>
+        &bull; <b>Ctrl+D</b> - duplicate selected features<br><br>
+
+        <!-- ── PROJECTS & PROVENANCE ── -->
+        <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Projects & Provenance</div>
+        <b>Save Workspace</b> - click the <b>&#x1F4BE; Save</b> button in the top toolbar (next to Analysis). A filename dialog opens first so you can name the project (a <code>.gspx</code> extension is added automatically if missing).<br>
+        &bull; <b>Chrome / Edge</b> - after naming, the browser's native Save As dialog lets you choose the folder.<br>
+        &bull; <b>Firefox / Safari</b> - the File System Access API is not supported, so the file is saved to your Downloads folder using the name you entered.<br>
+        A <code>.gspx</code> project file stores all loaded layers, symbology, digitized features, bookmarks, current view, and provenance metadata as JSON. It does <b>not</b> store the raw source files (e.g. GeoTIFFs, shapefiles) - keep those alongside the project.<br>
+        <b>Load</b> - click the <b>&#x1F4C2; Load</b> button and pick a <code>.gspx</code> (or <code>.json</code>) file to restore the full workspace.<br>
+        <b>Provenance</b> - the Provenance & Project section in the Analysis drawer tracks data lineage for every layer and can export a CSV or Markdown provenance report. Include the GeoSpaX version (page footer) and access date in your methods.<br><br>
       </div>
     </div>
   </div>
@@ -3346,7 +3355,7 @@
 
     <!-- ── SECTION 13: Provenance & Project ── -->
     <div class="ad-section-title" id="gsx-project-section" onclick="toggleAnalysisSection(this)"><span>&#x1F4CB; Provenance &amp; Project</span><span class="arrow">&#x25BC;</span></div>
-    <div class="ad-hint">Track data lineage and export provenance reports. Save/load the whole project as .gspx from the 💾/📂 buttons in the top bar.</div>
+    <div class="ad-hint">Track data lineage and export provenance reports. Save/load the whole project as .gspx from the 💾/📂 buttons in the top bar. Clicking 💾 Save shows a filename dialog first, then the native Save As dialog (Chrome/Edge) or Downloads folder (Firefox/Safari).</div>
     <div class="ad-subhead">Data Provenance</div>
     <div id="gsx-prov-table"></div>
     <div class="ad-btn-row">
@@ -3383,7 +3392,7 @@
   <span class="status-chip" id="visible-count">0 features</span>
   <span class="status-chip" id="status-latlon">--°, --°</span>
   <div style="flex:1;"></div>
-  <span class="status-chip" id="status-copyright">&copy; GeoSpaX [v1.3.1] - a product of <a href="https://www.in4metrix.dev" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">in4metrix</a></span>
+  <span class="status-chip" id="status-copyright">&copy; GeoSpaX [v1.3.2] - a product of <a href="https://www.in4metrix.dev" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;">in4metrix</a></span>
 </div>
 
 <!-- Sheet picker modal (XLSX with multiple sheets) -->
@@ -8653,7 +8662,7 @@ function populateCitationFormats() {
   const citeUrl = 'https://geospax.in4metrix.dev/';
   const year = new Date().getFullYear();
   const accessDate = new Date().toISOString().split('T')[0];
-  const version = '1.3.1';
+  const version = '1.3.2';
   const author = 'Moses, J.';
   const affiliation = 'School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology';
 

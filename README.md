@@ -69,7 +69,7 @@ After import the layer appears in the **Layers** panel and the map zooms to its 
 | Zoom in / out | Top-left `+` / `−` | Click or keyboard `+` / `−`; 0.25 zoom increments for fine-grained control |
 | Fullscreen | Top-left | Toggle browser fullscreen (`F`) |
 | Measurement tool | Toolbar | Draw polyline or polygon to measure distance / area |
-| Minimap | Bottom-right | Overview of current viewport |
+| Minimap | Right panel (Overview section) | Overview of current viewport. Click to pan main map, double-click to zoom in |
 | Basemap selector | Left panel | Switch between 6 free basemaps (see below) |
 | Basemap opacity | Left panel | Slider 0-100% |
 
@@ -248,6 +248,8 @@ Use the **Save Project** / **Load Project** buttons in the global topbar to pers
 - Provenance metadata (source, operation, timestamp for each layer)
 - Project metadata (title, author, description, CRS)
 - Saved as a `.gspx` JSON file
+
+Clicking **Save** shows a filename dialog (pre-filled with `projectId_subject.gspx`). In Chrome and Edge, the browser's native Save As dialog then opens so you can choose the save folder. In Firefox and Safari, the file is saved to the Downloads folder (these browsers do not support the File System Access API).
 
 ---
 
