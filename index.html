@@ -2823,11 +2823,13 @@
     <!-- Layer selector -->
     <div style="margin-bottom:2px;">
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">Select the layer to analyse, then click any tool below.</div>
-      <select id="analysis-layer-select" class="ad-layer-select" onchange="refreshAnalysisAttrSelect()">
+      <select id="analysis-layer-select" class="ad-layer-select" onchange="refreshAnalysisAttrSelect(); refreshAnalysisFilter()">
         <option value="">— Select layer —</option>
       </select>
       <select id="analysis-layer-select-b" style="display:none">
         <option value="">— Second layer —</option>
+      </select>
+      <select id="analysis-filter-select" class="ad-layer-select" style="margin-top:4px; display:none;" onchange="refreshAnalysisAttrSelect()" title="Filter features by province/region before analysis">
       </select>
     </div>
 
@@ -8199,6 +8201,17 @@ function refreshAnalysisLayerSelect() {
     refreshGSXRasterLayerSelect();
     if (typeof GSX.uiRenderProvenanceTable === 'function') GSX.uiRenderProvenanceTable();
   }
+
+  // Preserve province filter if same layer is still selected
+  const filterSel = document.getElementById('analysis-filter-select');
+  if (filterSel && filterSel.value) {
+    // Rebuild filter options for the current layer, then restore the value
+    const prevFilter = filterSel.value;
+    refreshAnalysisFilter();
+    if (prevFilter && Array.from(filterSel.options).some(o => o.value === prevFilter)) {
+      filterSel.value = prevFilter;
+    }
+  }
 }
 
 function refreshGSXWLCConstraint() {
@@ -8252,6 +8265,27 @@ function refreshGSXRasterLayerSelect() {
   if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
 }
 
+function refreshAnalysisFilter() {
+  const layerId = document.getElementById('analysis-layer-select').value;
+  const filterSel = document.getElementById('analysis-filter-select');
+  filterSel.innerHTML = '';
+  if (!layerId || layerId === '__all__') { filterSel.style.display = 'none'; return; }
+  const ul = uploadedLayers.find(l => l.id === layerId);
+  if (!ul || !ul.geojsonFeatures) { filterSel.style.display = 'none'; return; }
+  // Collect unique stateProvince values
+  const provinces = new Set();
+  ul.geojsonFeatures.forEach(f => {
+    const v = f.properties && f.properties.stateProvince;
+    if (v !== null && v !== '' && v !== undefined) provinces.add(String(v).trim());
+  });
+  if (provinces.size < 2) { filterSel.style.display = 'none'; return; }
+  filterSel.style.display = '';
+  filterSel.innerHTML = '<option value="">All features (no filter)</option>';
+  Array.from(provinces).sort().forEach(p => {
+    filterSel.innerHTML += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
+  });
+}
+
 function refreshAnalysisAttrSelect() {
   const layerId = document.getElementById('analysis-layer-select').value;
   const attrSel = document.getElementById('analysis-attr-select');
@@ -8271,13 +8305,24 @@ function refreshAnalysisAttrSelect() {
 
 function getAnalysisFeatures(layerId) {
   if (!layerId) return [];
+  let features;
   if (layerId === '__all__') {
-    const all = [];
-    uploadedLayers.forEach(l => { if (l.geojsonFeatures) all.push(...l.geojsonFeatures); });
-    return all;
+    features = [];
+    uploadedLayers.forEach(l => { if (l.geojsonFeatures) features.push(...l.geojsonFeatures); });
+  } else {
+    const ul = uploadedLayers.find(l => l.id === layerId);
+    features = ul && ul.geojsonFeatures ? ul.geojsonFeatures : [];
   }
-  const ul = uploadedLayers.find(l => l.id === layerId);
-  return ul && ul.geojsonFeatures ? ul.geojsonFeatures : [];
+  // Apply province filter if set
+  const filterSel = document.getElementById('analysis-filter-select');
+  if (filterSel && filterSel.value) {
+    const prov = filterSel.value;
+    features = features.filter(f => {
+      const v = f.properties && f.properties.stateProvince;
+      return v !== null && v !== undefined && String(v).trim() === prov;
+    });
+  }
+  return features;
 }
 
 function pointsFromFeatures(features) {
@@ -8967,6 +9012,10 @@ function runAnalysis(tool) {
   clearAnalysisOverlays();
   const features = getAnalysisFeatures(layerId);
   if (features.length === 0) { showToast('No features in selected layer', 'error'); return; }
+  const filterSel = document.getElementById('analysis-filter-select');
+  if (filterSel && filterSel.value) {
+    showToast(`Filter active: ${features.length} features in ${filterSel.value}`, 'info');
+  }
 
   const pts = pointsFromFeatures(features);
   const lines = linesFromFeatures(features);
@@ -9379,9 +9428,11 @@ function runAnalysis(tool) {
     for (let i = 1; i < hull.length; i++) perimeter += haversineDist(hull[i-1], hull[i]);
     perimeter += haversineDist(hull[hull.length-1], hull[0]);
     const hullCoords = hull.map(p=>[p.lon,p.lat]); hullCoords.push(hullCoords[0]);
+    const filterSel = document.getElementById('analysis-filter-select');
+    const filterNote = (filterSel && filterSel.value) ? ` <span style="color:var(--text-muted)">(${pts.length} points filtered to ${escapeHtml(filterSel.value)})</span>` : ` <span style="color:var(--text-muted)">(${pts.length} points)</span>`;
     const gj = {type:'FeatureCollection',features:[{type:'Feature',geometry:{type:'Polygon',coordinates:[hullCoords]},properties:{vertices:hull.length,perimeter_km:+(perimeter/1000).toFixed(2)}}]};
     addAnalysisLayer('Convex Hull', [poly], gj);
-    showResult(`<b>Convex Hull</b><br><b>Vertices:</b> ${hull.length}<br><b>Perimeter:</b> ${(perimeter/1000).toFixed(2)} km`);
+    showResult(`<b>Convex Hull</b>${filterNote}<br><b>Vertices:</b> ${hull.length}<br><b>Perimeter:</b> ${(perimeter/1000).toFixed(2)} km`);
     break;
   }
 
