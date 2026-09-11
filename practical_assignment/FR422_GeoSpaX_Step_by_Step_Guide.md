@@ -150,7 +150,7 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 |----------|-------------------|------------------|
 | **Left panel** | Data Sources, Open Data, Layers, Basemap, Export (🗺️ Map Image, 📄 Per-Layer Export, 📈 Elevation Profile, 📦 Bulk Data Export) | Import files, manage layers, change basemap, export map as PNG/PDF (via Map Composer), export layer data |
 | **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks | Inspect feature properties, view/edit attribute table, style layers, see overview map |
-| **Analysis drawer** (right side, opens on demand) | 🧪 Analysis drawer with sections: 📍 Point Pattern, 📊 Inferential Hotspots & Autocorrelation, 🌡️ Interpolation & Density, 🧩 Clustering, 📐 Lines & Polygons, 🧮 Attributes, 🌳 Conservation Planning, 📋 Provenance & Project | Click the 🧪 **Analysis** button in the top toolbar to open this drawer. Contains all analysis tools. The drawer is hidden by default and slides in next to the right panel when opened. |
+| **Analysis drawer** (right side, opens on demand) | 🧪 Analysis drawer with 13 sections: 📍 Point Pattern, 📊 Inferential Hotspots & Autocorrelation, 🌡️ Interpolation & Density, 🧩 Clustering, 📐 Lines & Polygons, 🧮 Attributes, 🛰️ Raster Analysis, ⚖️ Multi-Criteria Evaluation, 🌳 Conservation Planning, 🗺️ Landscape Metrics, 🦌 SDM, 📠 Raster Reclassify & Polygonize, 📋 Provenance & Project | Click the 🧪 **Analysis** button in the top toolbar to open this drawer. Contains all analysis tools. The drawer is hidden by default and slides in next to the right panel when opened. |
 | **Bottom panel** | Elevation Profile, Analysis Results, How to Cite | View analysis results (after running a tool), elevation profiles, and citation formats. Switch tabs at the top of the panel. |
 
 **To open the Analysis drawer:** Click the 🧪 **Analysis** button in the top toolbar. The drawer slides in on the right side, next to the Feature Info panel. Click the ✕ button to close it.
@@ -174,7 +174,7 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 **What it means in real-world conservation:** Data verification is the first step in any GIS workflow. In a real conservation project, you would check the coordinate system, the date range of records, the taxonomy (is the species identification correct?), and the spatial coverage (are there gaps or clustering artefacts?). The GBIF data in your file are teaching extracts - they are not a complete census of the species' occurrence. Understanding what is in your data (and what is not) is essential for honest interpretation of all subsequent maps.
 
 1. In the **left panel**, open **Data Sources** (click the section header to expand it) or simply **drag your issued species file onto the map**.
-2. If using the file picker, click **Choose file** and select the `<Species>_occurrences.geojson` file the lecturer sent you via Google Drive. If you are practising in the Week 9 lab, use `lab_Paradisaea_guilielmi_occurrences.geojson` from Google Classroom instead.
+2. If using the file picker, click the **Drag & drop files here** zone and select the `<Species>_occurrences.geojson` file the lecturer sent you via Google Drive. If you are practising in the Week 9 lab, use `lab_Paradisaea_guilielmi_occurrences.geojson` from Google Classroom instead.
 3. The map zooms to your species points. The layer appears in the **Layers** panel (left side).
 4. **Checkpoint:** Open **Attribute Table** (right panel, "Attribute Table" section header). Select your layer from the dropdown. Confirm the feature count matches your issued file. Check the fields are present: `site`, `gbifID`, `elevation_m`, `tree_cover_pct`, `rainfall_mm`, `bio1`, `worldcover_label`, `year`. The table shows 50 rows per page with **Prev** and **Next** buttons at the bottom. Use the **Search** box to filter rows by any text (for example, type a province name to see only records from that province).
    - **Alternative:** Right-click the layer in the **Layers** section (left panel) and select **📄 View Fields** to see all field names, types, descriptions, and sample values in a single table.
@@ -248,7 +248,7 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 ### Step 1: Run Convex Hull
 
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
-2. Select your species layer from the **Layer** dropdown at the top of the analysis panel.
+2. Select your species layer from the **Layer** dropdown at the top of the Analysis drawer.
 3. Find the **📍 Point Pattern** section and click the **⬡ Convex Hull** button.
 4. A new "Convex Hull" layer appears on the map and in the Layers panel.
 5. The results panel (bottom panel, **Analysis Results** tab) shows:
@@ -674,7 +674,7 @@ This step is optional for the four required maps but strongly recommended for Pa
 
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
 2. Scroll to the **🌳 Conservation Planning** section.
-3. In the **Protection Gap** subsection, the tool uses Layer A and Layer B from the top of the analysis panel.
+3. In the **Protection Gap** subsection, the tool uses Layer A and Layer B from the top of the Analysis drawer.
 4. Set **Layer A** to your species layer (or your convex hull layer - the hull is the planning region).
 5. Set **Layer B** to the protected-areas layer.
 6. Click **Run Protection Gap**.
@@ -702,12 +702,13 @@ Use the **Priority Area Identification** tool to find sites that are both high-q
 1. In the **🌳 Conservation Planning** section, find the **Priority Area Identification** subsection.
 2. Set **Habitat layer** to your species layer (the one with `habitat_score`).
 3. Set **Protected areas layer** to the protected-areas layer.
-4. Set **Minimum habitat score** to the threshold you want (e.g., 2 out of 3, meaning sites meeting at least 2 of your 3 criteria).
-5. Click **Identify Priority Areas**.
-6. The tool creates a new layer showing points that are:
+4. Set **Score field** to `habitat_score` (this is the default).
+5. Set **Minimum habitat score** to the threshold you want (e.g., 2 out of 3, meaning sites meeting at least 2 of your 3 criteria).
+6. Click **Identify Priority Areas**.
+7. The tool creates a new layer showing points that are:
    - High habitat quality (score >= your threshold), AND
    - Outside existing protected areas (the gap)
-7. These are your **priority conservation areas** - the sites most in need of new protection.
+8. These are your **priority conservation areas** - the sites most in need of new protection.
 
 > **![screenshots/priority_area_map.png](screenshots/priority_area_map.png)**
 >
@@ -739,7 +740,7 @@ In Part B of your report:
 
 ### Save the project
 
-1. Click **Save Project** in the topbar.
+1. Click the **💾 Save** button in the topbar.
 2. This saves all layers, symbology, and view state as a `.geospax` file.
 3. Name it `Surname_lab.geospax`.
 
