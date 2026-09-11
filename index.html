@@ -10226,12 +10226,12 @@ const WORLDCOVER_CODES = {
   100: 'Moss and lichen'
 };
 
-// Exact-match metadata for fields with fixed names (GBIF, common names,
-// and FR422-specific enriched fields whose source cannot be inferred from
-// the field name alone — e.g. rainfall_mm is WorldClim BIO12 renamed,
-// elevation_m is WorldClim 2.1 elevation, tree_cover_pct is derived from
-// ESA WorldCover class 10).
+// Exact-match metadata for fields with fixed names.
+// Fields that come from a specific connector use a `sources` map so the
+// displayed source adapts to the loaded layer's origin (e.g. "year" from
+// GBIF vs from World Bank). Fields with a single source use `source`.
 const FIELD_METADATA = {
+  // ── GBIF occurrence fields (used by GBIF connector and FR422 data) ──
   site: { desc: 'GBIF occurrence record identifier (prefixed with GBIF_)', source: 'GBIF' },
   gbifID: { desc: 'GBIF numeric record ID', source: 'GBIF' },
   scientificName: { desc: 'Full scientific name with author citation', source: 'GBIF taxonomy' },
@@ -10240,15 +10240,12 @@ const FIELD_METADATA = {
   family: { desc: 'Family name', source: 'GBIF taxonomy' },
   kingdom: { desc: 'Kingdom', source: 'GBIF taxonomy' },
   phylum: { desc: 'Phylum', source: 'GBIF taxonomy' },
+  'class': { desc: 'Taxonomic class (e.g. Aves, Mammalia)', source: 'GBIF taxonomy' },
   order: { desc: 'Order', source: 'GBIF taxonomy' },
   taxonKey: { desc: 'GBIF taxon key', source: 'GBIF taxonomy' },
-  year: { desc: 'Year the occurrence was recorded', source: 'GBIF' },
-  month: { desc: 'Month the occurrence was recorded', source: 'GBIF' },
-  day: { desc: 'Day of the month the occurrence was recorded', source: 'GBIF' },
   basisOfRecord: { desc: 'How the record was observed (e.g. HUMAN_OBSERVATION, PRESERVED_SPECIMEN, MATERIAL_SAMPLE)', source: 'GBIF' },
   locality: { desc: 'Specific location description (may be empty)', source: 'GBIF' },
   stateProvince: { desc: 'Province or region (e.g. Western, West New Britain, Bougainville)', source: 'GBIF' },
-  country: { desc: 'Country of the occurrence', source: 'GBIF' },
   countryCode: { desc: 'ISO country code', source: 'GBIF' },
   decimalLatitude: { desc: 'Latitude in decimal degrees', source: 'GBIF' },
   decimalLongitude: { desc: 'Longitude in decimal degrees', source: 'GBIF' },
@@ -10259,8 +10256,81 @@ const FIELD_METADATA = {
   collectionCode: { desc: 'Collection code', source: 'GBIF' },
   catalogNumber: { desc: 'Catalog number', source: 'GBIF' },
   institutionCode: { desc: 'Institution code', source: 'GBIF' },
-  // FR422 enriched fields — these have fixed names in the assignment data
-  // but their source cannot be inferred from the name alone:
+  institution: { desc: 'Institution code (from GBIF occurrence API)', source: 'GBIF' },
+  // year/month/day — used by GBIF, World Bank, and other time-series sources
+  year:  { desc: 'Year', sources: { 'GBIF:': 'Year the occurrence was recorded', 'WB:': 'Year of the indicator value', DEFAULT: 'Year' } },
+  month: { desc: 'Month the occurrence was recorded', source: 'GBIF' },
+  day:   { desc: 'Day of the month the occurrence was recorded', source: 'GBIF' },
+  // country — used by GBIF and World Bank
+  country: { desc: 'Country name', sources: { 'GBIF:': 'GBIF', 'WB:': 'World Bank', DEFAULT: 'Layer attribute' } },
+
+  // ── World Bank indicator fields ──
+  iso3: { desc: 'ISO 3-letter country code', source: 'World Bank' },
+  indicator: { desc: 'World Bank indicator name', source: 'World Bank' },
+  value: { desc: 'Indicator value', sources: { 'WB:': 'World Bank indicator value', DEFAULT: 'Layer attribute' } },
+  unit: { desc: 'Unit of measurement', source: 'World Bank' },
+
+  // ── OSM / Overpass fields ──
+  name: { desc: 'Feature name (from OpenStreetMap tags)', sources: { 'OSM:': 'OpenStreetMap', DEFAULT: 'Layer attribute' } },
+  amenity: { desc: 'OSM amenity tag (e.g. school, hospital, restaurant)', source: 'OpenStreetMap' },
+  highway: { desc: 'OSM highway tag (road classification)', source: 'OpenStreetMap' },
+  building: { desc: 'OSM building tag', source: 'OpenStreetMap' },
+  shop: { desc: 'OSM shop tag (type of shop)', source: 'OpenStreetMap' },
+  tourism: { desc: 'OSM tourism tag (e.g. hotel, attraction)', source: 'OpenStreetMap' },
+  natural: { desc: 'OSM natural tag (e.g. tree, water, peak)', source: 'OpenStreetMap' },
+  waterway: { desc: 'OSM waterway tag (e.g. river, stream, canal)', source: 'OpenStreetMap' },
+  landuse: { desc: 'OSM landuse tag (e.g. residential, forest, farmland)', source: 'OpenStreetMap' },
+  place: { desc: 'OSM place tag (e.g. city, town, village)', source: 'OpenStreetMap' },
+  boundary: { desc: 'OSM boundary tag (e.g. administrative)', source: 'OpenStreetMap' },
+  admin_level: { desc: 'OSM administrative level (e.g. 2=country, 4=state)', source: 'OpenStreetMap' },
+
+  // ── Natural Earth reference fields ──
+  ADMIN: { desc: 'Country or admin-0 name (Natural Earth)', source: 'Natural Earth' },
+  ADM0_A3: { desc: 'ISO 3-letter country code (Natural Earth)', source: 'Natural Earth' },
+  ISO_A3: { desc: 'ISO 3-letter country code (Natural Earth)', source: 'Natural Earth' },
+  ISO_A2: { desc: 'ISO 2-letter country code (Natural Earth)', source: 'Natural Earth' },
+  CONTINENT: { desc: 'Continent name (Natural Earth)', source: 'Natural Earth' },
+  REGION_UN: { desc: 'UN region name (Natural Earth)', source: 'Natural Earth' },
+  SUBREGION: { desc: 'UN subregion name (Natural Earth)', source: 'Natural Earth' },
+  POP_EST: { desc: 'Estimated population (Natural Earth)', source: 'Natural Earth' },
+  GDP_MD_EST: { desc: 'Estimated GDP in millions USD (Natural Earth)', source: 'Natural Earth' },
+  ECONOMY: { desc: 'Economy tier (Natural Earth)', source: 'Natural Earth' },
+  INCOME_GRP: { desc: 'Income group (Natural Earth)', source: 'Natural Earth' },
+  FEATURECLA: { desc: 'Feature class (Natural Earth)', source: 'Natural Earth' },
+  scalerank: { desc: 'Scale rank for display generalisation (Natural Earth)', source: 'Natural Earth' },
+  LABELRANK: { desc: 'Label rank for display (Natural Earth)', source: 'Natural Earth' },
+  SOVEREIGNT: { desc: 'Sovereign country name (Natural Earth)', source: 'Natural Earth' },
+  TYPE: { desc: 'Admin type (e.g. Sovereign country, Dependency)', source: 'Natural Earth' },
+
+  // ── WWF/RESOLVE Ecoregion fields ──
+  ECO_NAME: { desc: 'Ecoregion name (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+  BIOME_NAME: { desc: 'Biome name (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+  REALM: { desc: 'Biogeographic realm (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+  NNH: { desc: 'Nature Needs Half status code (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+  NNH_NAME: { desc: 'Nature Needs Half status description (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+  COLOR: { desc: 'Display colour for the ecoregion (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+  COLOR_BIO: { desc: 'Display colour for the biome (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+  COLOR_NNH: { desc: 'Display colour for the NNH status (WWF/RESOLVE)', source: 'WWF/RESOLVE Terrestrial Ecoregions' },
+
+  // ── Marine Regions (VLIZ) fields ──
+  mrgid: { desc: 'MarineRegions geographic identifier (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  mrgid_eez: { desc: 'MarineRegions EEZ identifier (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  mrgid_sov1: { desc: 'MarineRegions sovereign identifier 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  mrgid_ter1: { desc: 'MarineRegions territory identifier 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  geoname: { desc: 'Geographic name of the marine feature (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  pol_type: { desc: 'Polygon type (e.g. 200NM, 12NM, 24NM) (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  iso_sov1: { desc: 'ISO code of sovereign 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  iso_ter1: { desc: 'ISO code of territory 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  sovereign1: { desc: 'Sovereign country name 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  territory1: { desc: 'Territory name 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  un_sov1: { desc: 'UN code of sovereign 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  un_ter1: { desc: 'UN code of territory 1 (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  eco_code: { desc: 'MEOW ecoregion code (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  ecoregion: { desc: 'MEOW ecoregion name (VLIZ)', source: 'MarineRegions (VLIZ)' },
+  placetype: { desc: 'Place type (e.g. MEOW ecoregion) (VLIZ)', source: 'MarineRegions (VLIZ)' },
+
+  // ── FR422 enriched fields — fixed names in the assignment data ──
+  // Source cannot be inferred from the name alone:
   rainfall_mm: { desc: 'Annual precipitation in millimetres (WorldClim BIO12)', source: 'WorldClim 2.1 BIO12 (30 arc-second) raster sampled at each point' },
   elevation_m: { desc: 'Elevation above sea level in metres', source: 'WorldClim 2.1 elevation (2.5 arc-minute) raster sampled at each point' },
   tree_cover_pct: { desc: 'Percentage tree-cover proxy (0–100), derived from ESA WorldCover class 10', source: 'Derived from ESA WorldCover 2021 class 10, sampled at each point' },
@@ -10329,8 +10399,31 @@ const FIELD_PATTERNS = [
 ];
 
 // Resolve field metadata: exact match first, then pattern match, then fallback.
-function resolveFieldMeta(fieldName) {
-  if (FIELD_METADATA[fieldName]) return FIELD_METADATA[fieldName];
+// `layerName` is the uploaded layer's display name (e.g. "GBIF: lion", "WB: GDP",
+// "OSM: amenity=school") and is used to pick the right source when a field
+// can come from multiple connectors.
+// `fieldMap` is the set of all field names in the layer, used to infer
+// provenance when the layer name doesn't have a connector prefix (e.g.
+// FR422 assignment data loaded as a file).
+function resolveFieldMeta(fieldName, layerName, fieldMap) {
+  const meta = FIELD_METADATA[fieldName];
+  if (meta) {
+    // If the field has a `sources` map, pick the source that matches the
+    // layer-name prefix; otherwise use the single `source` string.
+    if (meta.sources) {
+      const prefix = layerName ? layerName.split(':')[0].trim() + ':' : '';
+      let matched = meta.sources[prefix];
+      // If no prefix match, try to infer from the field set
+      if (!matched && fieldMap) {
+        if (fieldMap['gbifID'] || fieldMap['basisOfRecord'] || fieldMap['scientificName']) {
+          matched = meta.sources['GBIF:'];
+        }
+      }
+      if (matched) return { desc: meta.desc, source: matched };
+      return { desc: meta.desc, source: meta.sources.DEFAULT || 'Layer attribute' };
+    }
+    return meta;
+  }
   for (const p of FIELD_PATTERNS) {
     if (p.test(fieldName)) return p.meta(fieldName);
   }
@@ -10377,14 +10470,14 @@ function showLayerFields(id) {
         if (!isNaN(parseFloat(firstVal)) && isFinite(parseFloat(firstVal))) type = 'number';
         else if (firstVal === 'true' || firstVal === 'false') type = 'boolean';
       }
-      const meta = resolveFieldMeta(k);
+      const meta = resolveFieldMeta(k, info.name, fieldMap);
       const desc = meta ? escapeHtml(meta.desc) : '<span style="color:var(--text-faint);font-style:italic;">No built-in description</span>';
       const source = meta ? escapeHtml(meta.source) : '<span style="color:var(--text-faint);font-style:italic;">User-loaded data</span>';
       html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 8px;color:var(--text-faint);">${i + 1}</td><td style="padding:5px 8px;font-weight:600;">${escapeHtml(k)}</td><td style="padding:5px 8px;color:var(--text-muted);">${type}</td><td style="padding:5px 8px;">${desc}</td><td style="padding:5px 8px;color:var(--text-muted);font-size:10px;">${source}</td><td style="padding:5px 8px;color:var(--text-muted);">${sample}</td></tr>`;
     });
     html += '</tbody></table>';
     // If any field has WorldCover codes attached, show the code reference table
-    const wcField = Object.keys(fieldMap).find(k => { const m = resolveFieldMeta(k); return m && m.codes === WORLDCOVER_CODES; });
+    const wcField = Object.keys(fieldMap).find(k => { const m = resolveFieldMeta(k, info.name, fieldMap); return m && m.codes === WORLDCOVER_CODES; });
     if (wcField) {
       const codes = WORLDCOVER_CODES;
       html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:8px;">ESA WorldCover 2021 Class Codes</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;color:var(--accent);">Code</th><th style="text-align:left;padding:4px 8px;color:var(--accent);">Land Cover Type</th></tr></thead><tbody>';
