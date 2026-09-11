@@ -10263,8 +10263,8 @@ function showLayerFields(id) {
         else if (firstVal === 'true' || firstVal === 'false') type = 'boolean';
       }
       const meta = FIELD_METADATA[k];
-      const desc = meta ? escapeHtml(meta.desc) : '<span style="color:var(--text-faint);">No description available</span>';
-      const source = meta ? escapeHtml(meta.source) : '<span style="color:var(--text-faint);">Unknown</span>';
+      const desc = meta ? escapeHtml(meta.desc) : '<span style="color:var(--text-faint);font-style:italic;">No built-in description</span>';
+      const source = meta ? escapeHtml(meta.source) : '<span style="color:var(--text-faint);font-style:italic;">User-loaded data</span>';
       html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 8px;color:var(--text-faint);">${i + 1}</td><td style="padding:5px 8px;font-weight:600;">${escapeHtml(k)}</td><td style="padding:5px 8px;color:var(--text-muted);">${type}</td><td style="padding:5px 8px;">${desc}</td><td style="padding:5px 8px;color:var(--text-muted);font-size:10px;">${source}</td><td style="padding:5px 8px;color:var(--text-muted);">${sample}</td></tr>`;
     });
     html += '</tbody></table>';
@@ -10277,8 +10277,11 @@ function showLayerFields(id) {
       });
       html += '</tbody></table></div>';
     }
-    // Add a note about data enrichment
-    html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);line-height:1.5;">This layer contains GBIF species occurrence records enriched with environmental data sampled at each point location. GBIF fields (site, gbifID, scientificName, species, year, basisOfRecord, locality, stateProvince) come from the original occurrence record. Environmental fields (elevation_m, tree_cover_pct, rainfall_mm, bio1, bio15, worldcover_class, worldcover_label) were added by sampling raster datasets at each point coordinate. Null values mean the raster had no data at that location.</div>';
+    // Only show the GBIF enrichment note when GBIF fields are actually present
+    const hasGbif = fieldMap['gbifID'] || fieldMap['scientificName'] || fieldMap['basisOfRecord'];
+    if (hasGbif) {
+      html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);line-height:1.5;">This layer contains GBIF species occurrence records enriched with environmental data sampled at each point location. GBIF fields (site, gbifID, scientificName, species, year, basisOfRecord, locality, stateProvince) come from the original occurrence record. Environmental fields (elevation_m, tree_cover_pct, rainfall_mm, bio1, bio15, worldcover_class, worldcover_label) were added by sampling raster datasets at each point coordinate. Null values mean the raster had no data at that location.</div>';
+    }
     content.innerHTML = html;
   }
   overlay.style.display = 'flex';
