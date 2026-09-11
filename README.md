@@ -19,7 +19,7 @@ make serve
 open index.html
 ```
 
-**Try the sample datasets** - open **Data Sources** in the left panel and click any button in the **Sample Datasets** section to load ready-made data (species richness, butterfly presences, forest patches, habitat grid, water sources, vine host plants, and a WorldClim BIO1 GeoTIFF). The species richness sample contains 41 survey points across two Papua New Guinea montane transects and is designed to produce clear hot-spot and autocorrelation results straight away.
+**Try the sample datasets** - open **Data Sources** in the left panel and click any button in the **Sample Datasets** section to load ready-made data. The datasets are grouped by category: species occurrence (Emperor Bird-of-paradise, species richness, butterfly, vine host plants), boundaries (PNG provinces, protected areas), polygons and grids (forest patches, habitat grid, water sources), and rasters (BIO1 temperature, BIO12 precipitation, tree cover %). The Emperor Bird-of-paradise sample (128 GBIF records with environmental fields) is designed for the full FR422 workflow: convex hull, graduated symbology, Gi*, calculate field, and protection gap analysis.
 
 ### Python Package
 
@@ -566,18 +566,23 @@ All sample datasets are available directly from the app: open **Data Sources** i
 
 | File | Description |
 |------|-------------|
+| `paradisaea_occurrences.geojson` | 128 GBIF Emperor Bird-of-paradise occurrence records with environmental fields (elevation, tree cover, rainfall, BIO1, BIO15, WorldCover) - full FR422 workflow training |
 | `sample_species_richness.geojson` | 41 species-richness survey points across two PNG montane transects (YUS + Wilhelm) |
 | `butterfly_presences.geojson` | Butterfly occurrence points for SDM practice |
 | `forest_patches.geojson` | Forest patch polygons for landscape metrics |
 | `habitat_survey_grid.geojson` | Hexagonal survey grid for MCE practice |
 | `stream_water_sources.geojson` | Stream and water source points |
 | `vine_host_plants.geojson` | Vine host plant locations |
+| `png_provinces.geojson` | 22 PNG province boundary polygons (EPSG:4326) for boundary overlay and context |
+| `png_protected_areas.geojson` | 50 WDPA protected-area polygons for gap analysis |
 
 ### Raster samples
 
 | File | Description |
 |------|-------------|
 | `PNG_BIO1_30s.tif` | WorldClim BIO1 (annual mean temperature) for PNG at 30-arcsecond resolution |
+| `PNG_BIO12_precip.tif` | WorldClim BIO12 (annual precipitation) for PNG at 30-arcsecond resolution |
+| `PNG_tree_cover_pct.tif` | Tree-cover percentage (0-100) derived from ESA WorldCover for PNG |
 
 ### Species richness sample details
 

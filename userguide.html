@@ -202,6 +202,10 @@ body {
       <div class="label">&#x1F4A1; Tip</div>
       Try the built-in sample datasets: open <b>Data Sources</b> in the left panel and click any button in the <b>Sample Datasets</b> section to load ready-made data (species richness, butterfly presences, forest patches, habitat grid, water sources, vine host plants, and a WorldClim BIO1 GeoTIFF).
     </div>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_sample_panel.png" alt="Data Sources panel with Sample Datasets section">
+      <div class="caption">&#x1F4C1; The Sample Datasets section in the Data Sources panel, grouped by category: Species Occurrence, Boundaries & Protected Areas, Polygons & Grids, and Rasters.</div>
+    </div>
   </div>
 </div>
 
@@ -355,6 +359,14 @@ body {
       <div class="label">&#x1F4A1; Tip</div>
       You can also drop a GeoTIFF directly onto the map (no need to open the panel).
     </div>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_bop_loaded.png" alt="Emperor Bird-of-paradise occurrences loaded from sample data">
+      <div class="caption">&#x1F426; Emperor Bird-of-paradise (128 GBIF records) loaded from the Sample Datasets section. The layer appears in the Layers panel and the map zooms to the data extent.</div>
+    </div>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_provinces_loaded.png" alt="PNG provinces boundary overlay loaded from sample data">
+      <div class="caption">&#x1F5FA; PNG Provinces boundary layer loaded from the Sample Datasets section, overlaid with the species occurrence points for context.</div>
+    </div>
   </div>
 </div>
 
@@ -470,6 +482,10 @@ body {
       </tbody>
     </table>
     <p><b>&#x21BB; Reset</b> returns the layer to its default style.</p>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_graduated_symbology.png" alt="Graduated symbology on tree_cover_pct field">
+      <div class="caption">&#x1F7E1; Graduated symbology applied to the tree_cover_pct field on the Emperor Bird-of-paradise sample data, showing 5 classes along the Viridis colour ramp.</div>
+    </div>
     <h3>Raster symbology</h3>
     <p>For GeoTIFF layers, the Symbology panel offers:</p>
     <table class="ug-table">
@@ -678,6 +694,10 @@ body {
     <div class="ug-callout">
       <div class="label">&#x1F4A1; Lock vs. Unlock</div>
       When a map element is <b>locked</b>, it mirrors the source map. When <b>unlocked</b>, you can pan and zoom it independently. Use unlock to create inset maps or to fine-tune the layout without affecting the main map view.
+    </div>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_map_composer.png" alt="Map Layout Composer with map elements">
+      <div class="caption">&#x1F4D0; Map Layout Composer showing the Emperor Bird-of-paradise sample data with title, legend, scale bar, north arrow, and CRS text. The collapsible sidebar controls all map furniture elements.</div>
     </div>
   </div>
 </div>
@@ -938,6 +958,10 @@ body {
       </tbody>
     </table>
     <div class="ug-tool-desc">This is not a suitability model and not a distribution model. You choose the tests, weights, and meaning. Copy the expression into your methods and record the GeoSpaX version from the page footer and the access date.</div>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_calcfield_results.png" alt="Calculate Field results showing habitat_score output">
+      <div class="caption">&#x1F9EE; Calculate Field (Weighted conditions mode) producing a habitat_score from elevation, tree cover, and rainfall on the Emperor Bird-of-paradise sample data. The results panel shows feature count, min/max/mean, and the exact expression used.</div>
+    </div>
   </div>
 </div>
 
@@ -959,6 +983,10 @@ body {
     <div class="ug-screenshot">
       <img src="practical_assignment/screenshots/raster_symbology.png" alt="Raster symbology panel showing band, colour ramp, and min/max controls">
       <div class="caption">&#x1F3A8; Symbology panel for a raster layer: choose the band, colour ramp, min/max, and continuous or classified mode.</div>
+    </div>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_treecover_raster.png" alt="Tree cover percentage raster loaded from sample data">
+      <div class="caption">&#x1F332; Tree cover percentage raster (PNG_tree_cover_pct.tif) loaded from the Sample Datasets section, styled with the Viridis colour ramp.</div>
     </div>
   </div>
 </div>
@@ -1027,6 +1055,10 @@ body {
       </tbody>
     </table>
     <p>Click <b>Run WLC Analysis</b>. Output is a suitability raster layer.</p>
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/ug_protection_gap.png" alt="Protection Gap analysis results">
+      <div class="caption">&#x1F333; Protection Gap analysis using the Emperor Bird-of-paradise sample data (Layer A) and PNG Protected Areas sample (Layer B). The results panel shows total habitat area, protected area, gap area, and gap percentage.</div>
+    </div>
   </div>
 </div>
 

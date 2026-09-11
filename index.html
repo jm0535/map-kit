@@ -2210,15 +2210,30 @@
           <span id="processing-text">Processing file...</span>
         </div>
         <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
-          <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">&#x1F4C1; Sample Datasets</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; font-weight:600;">&#x1F4C1; Sample Datasets</div>
+          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Species Occurrence</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('paradisaea_occurrences.geojson', 'Emperor Bird-of-paradise (128 pts)')" title="128 GBIF occurrence records with environmental fields (elevation, tree cover, rainfall, BIO1, BIO15, WorldCover) - full FR422 workflow training">&#x1F426; Bird-of-paradise</button>
             <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('sample_species_richness.geojson', 'Species Richness (41 pts)')" title="41 species-richness survey points across two PNG montane transects">Species Richness</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('butterfly_presences.geojson', 'Butterfly Presences')" title="Butterfly occurrence points for SDM practice">Butterfly Presences</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('butterfly_presences.geojson', 'Butterfly Presences')" title="Butterfly occurrence points for SDM practice">Butterfly</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('vine_host_plants.geojson', 'Vine Host Plants')" title="Vine host plant locations">Vine Host Plants</button>
+          </div>
+          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Boundaries & Protected Areas</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('png_provinces.geojson', 'PNG Provinces')" title="22 PNG province boundary polygons (EPSG:4326)">&#x1F5FA; PNG Provinces</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('png_protected_areas.geojson', 'PNG Protected Areas')" title="50 WDPA protected-area polygons for gap analysis">&#x1F6E1; Protected Areas</button>
+          </div>
+          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Polygons & Grids</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
             <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('forest_patches.geojson', 'Forest Patches')" title="Forest patch polygons for landscape metrics">Forest Patches</button>
             <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('habitat_survey_grid.geojson', 'Habitat Survey Grid')" title="Hexagonal survey grid for MCE practice">Habitat Grid</button>
             <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('stream_water_sources.geojson', 'Stream Water Sources')" title="Stream and water source points">Water Sources</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('vine_host_plants.geojson', 'Vine Host Plants')" title="Vine host plant locations">Vine Host Plants</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px; grid-column:1 / -1;" onclick="loadSampleData('PNG_BIO1_30s.tif', 'BIO1 Temperature')" title="WorldClim BIO1 annual mean temperature raster for PNG">&#x1F6F0; BIO1 Temperature (GeoTIFF)</button>
+          </div>
+          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Rasters (GeoTIFF)</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('PNG_BIO1_30s.tif', 'BIO1 Temperature')" title="WorldClim BIO1 annual mean temperature raster for PNG">&#x1F6F0; BIO1 Temperature</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('PNG_BIO12_precip.tif', 'BIO12 Precipitation')" title="WorldClim BIO12 annual precipitation raster for PNG">&#x1F327; BIO12 Precipitation</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('PNG_tree_cover_pct.tif', 'Tree Cover %')" title="Tree-cover percentage raster (0-100) derived from ESA WorldCover">&#x1F332; Tree Cover %</button>
           </div>
         </div>
       </div>
