@@ -2430,7 +2430,9 @@
             <span>&#x1f4c4; Per-Layer Export</span><span class="arrow">&#x25BC;</span>
           </div>
           <div class="panel-body sub">
-            <select id="export-layer-select" onchange="_updateExportCrsHint()" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+            <select id="export-layer-select" onchange="_updateExportCrsHint();_prefillExportName()" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+            <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Output filename (without extension)</div>
+            <input type="text" id="export-layer-name" placeholder="e.g. Surname_lab" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;" oninput="_exportNameTouched=true;">
             <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Output CRS (CSV / GeoJSON / Shapefile)</div>
             <select id="export-crs-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
             <div id="export-crs-hint" style="font-size:10px;color:var(--text-muted);margin:0 0 6px 0;display:none;"></div>
@@ -13237,7 +13239,7 @@ function exportLayerCSV() {
   const rows = _featureRowsWithCrs(features, crsCode);
   const keys = [...new Set(rows.flatMap(Object.keys))];
   const csv = [keys.join(','), ...rows.map(f => keys.map(k => _csvEscape(f[k])).join(','))].join('\n');
-  _downloadBlob(new Blob([csv], {type: 'text/csv'}), _safeName(lyr.name) + '.csv');
+  _downloadBlob(new Blob([csv], {type: 'text/csv'}), _exportFileName() + '.csv');
   showToast('CSV exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
@@ -13251,7 +13253,7 @@ function exportLayerXLSX() {
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, lyr.name.slice(0, 31));
-  XLSX.writeFile(wb, _safeName(lyr.name) + '.xlsx');
+  XLSX.writeFile(wb, _exportFileName() + '.xlsx');
   showToast('XLSX exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
@@ -13445,7 +13447,7 @@ function exportLayerGeoJSON() {
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
   const crsCode = _exportCrsCode();
   const gj = _geoJSONWithCrs(features, crsCode);
-  _downloadBlob(new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'}), _safeName(lyr.name) + '.geojson');
+  _downloadBlob(new Blob([JSON.stringify(gj, null, 2)], {type: 'application/json'}), _exportFileName() + '.geojson');
   showToast('GeoJSON exported' + (crsCode !== 'EPSG:4326' ? ` (${crsCode})` : ''), 'success');
 }
 
@@ -13456,7 +13458,7 @@ async function exportLayerShapefile() {
   const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
   const gj = {type: 'FeatureCollection', features};
-  const safeName = lyr.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safeName = _exportFileName();
   try {
     // shpwrite.download() navigates via `location.href = 'data:application/zip;base64,...'`,
     // which modern browsers block for top-level navigation and silently throw.
@@ -13588,6 +13590,26 @@ function _safeName(name) {
   return (name || 'layer').replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+var _exportNameTouched = false;
+
+/** Prefill the export filename from the selected layer name (only if user hasn't typed). */
+function _prefillExportName() {
+  if (_exportNameTouched) return;
+  const lyr = _selectedExportLayer();
+  const input = document.getElementById('export-layer-name');
+  if (!input || !lyr) return;
+  input.value = _safeName(lyr.name);
+}
+
+/** Get the user-specified export filename, falling back to the layer name. */
+function _exportFileName() {
+  const input = document.getElementById('export-layer-name');
+  const val = input ? input.value.trim() : '';
+  if (val) return _safeName(val);
+  const lyr = _selectedExportLayer();
+  return _safeName(lyr ? lyr.name : 'layer');
+}
+
 function _selectedExportLayer() {
   const layerId = document.getElementById('export-layer-select').value;
   return uploadedLayers.find(l => l.id === layerId);
@@ -13599,7 +13621,7 @@ function exportLayerKML() {
   const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
   const kml = _featuresToKml(features, lyr.name);
-  _downloadBlob(new Blob([kml], {type: 'application/vnd.google-earth.kml+xml'}), _safeName(lyr.name) + '.kml');
+  _downloadBlob(new Blob([kml], {type: 'application/vnd.google-earth.kml+xml'}), _exportFileName() + '.kml');
   showToast('KML exported', 'success');
 }
 
@@ -13609,7 +13631,7 @@ function exportLayerGPX() {
   const features = _layerToFeatures(lyr);
   if (features.length === 0) { showToast('No exportable features in this layer', 'error'); return; }
   const gpx = _featuresToGpx(features, lyr.name);
-  _downloadBlob(new Blob([gpx], {type: 'application/gpx+xml'}), _safeName(lyr.name) + '.gpx');
+  _downloadBlob(new Blob([gpx], {type: 'application/gpx+xml'}), _exportFileName() + '.gpx');
   showToast('GPX exported', 'success');
 }
 
