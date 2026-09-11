@@ -134,7 +134,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 #### Provenance & Project Persistence
 - **Provenance stamping**: `GSX.stampImport` on file import, `GSX.stampDerived` on analysis output
 - **Provenance table**: View/export lineage metadata (source, operation, timestamp, parameters)
-- **Project save/load**: Serialise entire map session to `.geospax` JSON project file
+- **Project save/load**: Serialise entire map session to `.gspx` JSON project file
 - **Autosave**: Periodic localStorage autosave with recovery prompt on reload
 - **Project metadata**: Editable title, author, description, CRS fields
 
@@ -272,7 +272,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 - [ ] **Point Pattern Analysis** - Ripley's K, kernel density estimation with bandwidth selection
 - [ ] **Raster calculator** - band math and map algebra expressions
 - [ ] **WMS/WMTS layer support** - connect to OGC web map services
-- [x] **Project save/load** - persist entire map session (layers, styles, layout) as a `.geospax` project file *(v1.2.0 conservation module)*
+- [x] **Project save/load** - persist entire map session (layers, styles, layout) as a `.gspx` project file *(v1.2.0 conservation module)*
 
 ### v1.5.0 (Planned)
 - [ ] **R Console (WebR)** - integrated R terminal in bottom panel via WebR (R compiled to WebAssembly)
@@ -369,7 +369,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 | Raster | GeoRaster + GeoRaster Layer for Leaflet + geotiff.js (fallback) |
 | Conservation | turf.js 6.5.0 (overlay, WLC, fragmentation) |
 | SDM | Bioclim/Mahalanobis (client-side), MaxEnt (server API) |
-| Provenance | GSX module (stampImport/stampDerived, .geospax project) |
+| Provenance | GSX module (stampImport/stampDerived, .gspx project) |
 | Open Data | geospax-opendata.js (Overpass, GBIF, Natural Earth, WWF, World Bank, USGS) |
 | UI controls | `gsx-select.js` - dropdown popup replacement (no dependencies) |
 | Python pkg | GeoPandas, Matplotlib, Folium, Contextily |

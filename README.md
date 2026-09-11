@@ -247,7 +247,7 @@ Use the **Save Project** / **Load Project** buttons in the global topbar to pers
 - All layers (vector + raster), symbology, legend state, and view position
 - Provenance metadata (source, operation, timestamp for each layer)
 - Project metadata (title, author, description, CRS)
-- Saved as a `.geospax` JSON file
+- Saved as a `.gspx` JSON file
 
 ---
 

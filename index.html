@@ -9987,27 +9987,9 @@ function toggleProfilePanel() {
 
 function openUserGuideTab(e) {
   if (e) e.stopPropagation();
-  var body = document.getElementById('user-guide-body');
-  if (!body) return;
-  var isLight = document.body.classList.contains('light');
-  var bg = isLight ? '#ffffff' : '#0f1117';
-  var fg = isLight ? '#1a1a1a' : '#e0e0e0';
-  var accent = '#4a9eff';
-  var muted = isLight ? '#666' : '#999';
-  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>GeoSpaX User Guide</title><style>'
-    + 'body{font-family:system-ui,-apple-system,sans-serif;max-width:780px;margin:0 auto;padding:30px 20px;background:' + bg + ';color:' + fg + ';line-height:1.7;font-size:14px;}'
-    + 'h1{color:' + accent + ';font-size:22px;border-bottom:1px solid ' + (isLight ? '#ddd' : '#333') + ';padding-bottom:8px;}'
-    + 'b{color:' + fg + ';}code{background:' + (isLight ? '#f0f0f0' : '#1a1a2e') + ';padding:1px 4px;border-radius:3px;font-size:13px;}'
-    + 'div[style*="color:var(--accent)"]{color:' + accent + ' !important;font-size:15px !important;font-weight:700;margin-top:18px;margin-bottom:6px;}'
-    + 'span[style*="display:inline-block;width:10px"]{vertical-align:middle;}'
-    + 'a{color:' + accent + ';}'
-    + '</style></head><body>'
-    + '<h1>GeoSpaX User Guide</h1>'
-    + body.innerHTML
-    + '</body></html>';
-  var w = window.open('', '_blank');
-  if (w) { w.document.open(); w.document.write(html); w.document.close(); }
-  else { showToast('Pop-up blocked. Allow pop-ups to open the User Guide in a new tab.', 'error'); }
+  var url = 'userguide' + (document.body.classList.contains('light') ? '?theme=light' : '');
+  var w = window.open(url, '_blank');
+  if (!w) { showToast('Pop-up blocked. Allow pop-ups to open the User Guide in a new tab.', 'error'); }
 }
 
 function toggleAnalysisDrawer() {

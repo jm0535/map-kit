@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeoSpaX User Guide</title>
+<style>
+:root {
+  --bg: #0f1117; --fg: #e0e0e0; --accent: #4a9eff; --muted: #999;
+  --sidebar-bg: #161821; --border: #2a2d3a; --code-bg: #1a1a2e;
+  --card-bg: #1a1c28; --table-stripe: #14161e; --table-header: #1e2030;
+  --swatch-border: rgba(255,255,255,0.15);
+}
+body.light {
+  --bg: #ffffff; --fg: #1a1a1a; --accent: #2563eb; --muted: #666;
+  --sidebar-bg: #f6f8fa; --border: #e1e4e8; --code-bg: #f0f0f0;
+  --card-bg: #f9f9fb; --table-stripe: #f6f8fa; --table-header: #eef1f4;
+  --swatch-border: rgba(0,0,0,0.15);
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--bg); color: var(--fg); line-height: 1.7; font-size: 15px;
+  display: flex; min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.ug-sidebar {
+  width: 280px; min-width: 280px; background: var(--sidebar-bg);
+  border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0;
+  overflow-y: auto; z-index: 100;
+}
+.ug-sidebar-header { padding: 28px 24px 18px; border-bottom: 1px solid var(--border); }
+.ug-sidebar-header h1 { font-size: 20px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+.ug-sidebar-header .version { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.ug-search {
+  margin: 14px 18px 10px; padding: 8px 12px; width: calc(100% - 36px);
+  border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg);
+  font-size: 13px; outline: none; transition: border-color 0.15s;
+}
+.ug-search:focus { border-color: var(--accent); }
+.ug-nav { padding: 8px 0 24px; }
+.ug-nav-group { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); padding: 12px 24px 4px; }
+.ug-nav-item {
+  display: block; padding: 7px 24px; font-size: 13px; color: var(--muted);
+  text-decoration: none; transition: all 0.12s; border-left: 3px solid transparent;
+}
+.ug-nav-item:hover { color: var(--fg); background: var(--table-header); }
+.ug-nav-item.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+
+/* ── Main content ── */
+.ug-main { margin-left: 280px; flex: 1; }
+.ug-content { max-width: 880px; margin: 0 auto; padding: 48px 48px 80px; }
+
+/* Page header */
+.ug-page-header { margin-bottom: 48px; padding-bottom: 28px; border-bottom: 2px solid var(--border); }
+.ug-page-header .breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.ug-page-header .breadcrumb a { color: var(--accent); text-decoration: none; }
+.ug-page-header h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.8px; color: var(--fg); }
+.ug-page-header .subtitle { font-size: 16px; color: var(--muted); margin-top: 8px; }
+
+/* Sections */
+.ug-section { margin-bottom: 48px; scroll-margin-top: 24px; }
+.ug-section-title {
+  font-size: 24px; font-weight: 700; color: var(--accent);
+  margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.ug-section-body p { margin-bottom: 14px; }
+.ug-section-body b { color: var(--fg); font-weight: 600; }
+.ug-section-body i { color: var(--muted); }
+.ug-section-body code {
+  font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 13px;
+}
+.ug-section-body a { color: var(--accent); text-decoration: none; }
+.ug-section-body a:hover { text-decoration: underline; }
+
+/* Tool entries */
+.ug-tool { margin-bottom: 20px; padding: 16px 20px; background: var(--card-bg);
+  border: 1px solid var(--border); border-radius: 8px; }
+.ug-tool-name { font-size: 16px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
+.ug-tool-name .citation { font-size: 12px; color: var(--muted); font-weight: 400; }
+.ug-tool-desc { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+.ug-tool-desc b { color: var(--fg); }
+.ug-tool ul { list-style: none; padding-left: 0; margin: 8px 0; }
+.ug-tool ul li { padding: 3px 0; padding-left: 20px; position: relative; }
+.ug-tool ul li::before { content: "\2022"; position: absolute; left: 4px; color: var(--accent); }
+
+/* Tables */
+.ug-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.ug-table th { background: var(--table-header); padding: 10px 14px; text-align: left;
+  font-weight: 600; color: var(--fg); border-bottom: 1px solid var(--border); }
+.ug-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--fg); }
+.ug-table tr:nth-child(even) td { background: var(--table-stripe); }
+.ug-table tr:last-child td { border-bottom: none; }
+.ug-table td code { font-size: 12px; }
+.ug-table .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+  border: 1px solid var(--swatch-border); vertical-align: middle; margin-right: 6px; }
+
+/* Screenshots */
+.ug-screenshot { margin: 20px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.ug-screenshot img { display: block; width: 100%; height: auto; }
+.ug-screenshot .caption { padding: 10px 16px; font-size: 13px; color: var(--muted);
+  background: var(--card-bg); border-top: 1px solid var(--border); }
+
+/* Callouts */
+.ug-callout { padding: 14px 18px; margin: 16px 0; border-radius: 8px; border-left: 4px solid var(--accent);
+  background: var(--card-bg); font-size: 14px; }
+.ug-callout .label { font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+
+/* Keyboard shortcut table */
+.ug-kbd { display: inline-block; padding: 2px 8px; border: 1px solid var(--border);
+  border-radius: 4px; background: var(--code-bg); font-family: monospace; font-size: 12px;
+  color: var(--fg); }
+
+/* Print */
+@media print { .ug-sidebar { display: none; } .ug-main { margin-left: 0; } .ug-content { padding: 20px; } }
+/* Mobile */
+@media (max-width: 768px) {
+  .ug-sidebar { position: relative; width: 100%; min-width: 100%; border-right: none;
+    border-bottom: 1px solid var(--border); }
+  .ug-main { margin-left: 0; } .ug-content { padding: 24px 16px 48px; }
+  .ug-page-header h2 { font-size: 26px; }
+  .ug-section-title { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="ug-sidebar" id="ug-sidebar">
+  <div class="ug-sidebar-header">
+    <h1>GeoSpaX</h1>
+    <div class="version">User Guide v1.3.1</div>
+  </div>
+  <input type="text" class="ug-search" id="ug-search" placeholder="Search guide..." oninput="ugFilter()">
+  <div class="ug-nav" id="ug-nav">
+    <div class="ug-nav-group">Getting Started</div>
+    <a href="#getting-started" class="ug-nav-item">Getting Started</a>
+    <a href="#map-navigation" class="ug-nav-item">Map Navigation</a>
+    <a href="#basemaps" class="ug-nav-item">Basemaps</a>
+    <div class="ug-nav-group">Data & Layers</div>
+    <a href="#layer-panel" class="ug-nav-item">Layer Panel</a>
+    <a href="#symbology" class="ug-nav-item">Symbology</a>
+    <a href="#digitizing" class="ug-nav-item">Digitizing</a>
+    <a href="#feature-info" class="ug-nav-item">Feature Info</a>
+    <a href="#attribute-table" class="ug-nav-item">Attribute Table</a>
+    <a href="#elevation-profile" class="ug-nav-item">Elevation Profile</a>
+    <div class="ug-nav-group">Export</div>
+    <a href="#export" class="ug-nav-item">Export</a>
+    <div class="ug-nav-group">Analysis</div>
+    <a href="#analysis-geometric" class="ug-nav-item">Geometric & Descriptive</a>
+    <a href="#analysis-inferential" class="ug-nav-item">Inferential Statistics</a>
+    <div class="ug-nav-group">Reference</div>
+    <a href="#keyboard-shortcuts" class="ug-nav-item">Keyboard Shortcuts</a>
+  </div>
+</nav>
+
+<main class="ug-main">
+<div class="ug-content">
+
+<div class="ug-page-header">
+  <div class="breadcrumb"><a href="https://geospax.in4metrix.dev">GeoSpaX</a> &rsaquo; Documentation</div>
+  <h2>User Guide</h2>
+  <div class="subtitle">Complete reference for all GeoSpaX tools, panels, and analysis methods.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- GETTING STARTED                                                  -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="getting-started">
+  <div class="ug-section-title">Getting Started</div>
+  <div class="ug-section-body">
+    <p>Drag & drop any supported file onto the map, or click the <b>Data Sources</b> panel and use <b>click to browse</b>.</p>
+
+    <table class="ug-table">
+      <thead><tr><th>Format</th><th>Extension</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><b>GeoJSON</b></td><td><code>.geojson</code>, <code>.json</code></td><td>RFC 7946. The default format for web GIS.</td></tr>
+        <tr><td><b>KML / KMZ</b></td><td><code>.kml</code>, <code>.kmz</code></td><td>OGC KML 2.2. Google Earth compatible.</td></tr>
+        <tr><td><b>GPX</b></td><td><code>.gpx</code></td><td>GPX 1.1. GPS tracks, routes, waypoints.</td></tr>
+        <tr><td><b>Shapefile</b></td><td><code>.zip</code></td><td>Zipped <code>.shp</code> + <code>.dbf</code> + <code>.prj</code> + <code>.shx</code>.</td></tr>
+        <tr><td><b>CSV</b></td><td><code>.csv</code></td><td>Opens a column mapper for lat/lon fields.</td></tr>
+        <tr><td><b>XLSX</b></td><td><code>.xlsx</code>, <code>.xls</code></td><td>Excel workbook. Opens a column mapper.</td></tr>
+        <tr><td><b>GeoTIFF</b></td><td><code>.tif</code>, <code>.tiff</code></td><td>Raster. Style band, colour ramp, min/max in Symbology.</td></tr>
+      </tbody>
+    </table>
+
+    <p>CSV and XLSX files open a column mapper - pick the latitude, longitude, optional label, and elevation columns, and set the source CRS if your coordinates are projected (e.g. UTM).</p>
+
+    <div class="ug-callout">
+      <div class="label">Tip</div>
+      Try the built-in sample: drag <code>samples/sample_species_richness.geojson</code> onto the map to explore all analysis tools with ready-made data.
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- MAP NAVIGATION                                                   -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="map-navigation">
+  <div class="ug-section-title">Map Navigation</div>
+  <div class="ug-section-body">
+    <table class="ug-table">
+      <thead><tr><th>Action</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Zoom in / out</td><td><b>Scroll wheel</b> or <span class="ug-kbd">+</span> / <span class="ug-kbd">&minus;</span> buttons (top-left)</td></tr>
+        <tr><td>Pan</td><td><b>Drag</b> the map</td></tr>
+        <tr><td>Zoom in on a point</td><td><b>Double-click</b> the map</td></tr>
+        <tr><td>Fullscreen</td><td>Press <span class="ug-kbd">F</span></td></tr>
+        <tr><td>Toggle left panel</td><td>Press <span class="ug-kbd">L</span></td></tr>
+        <tr><td>Toggle Analysis drawer</td><td>Press <span class="ug-kbd">A</span></td></tr>
+      </tbody>
+    </table>
+    <p>The <b>minimap</b> (bottom-right) shows your current viewport in context. The <b>status bar</b> shows current zoom level, cursor coordinates, and visible feature count.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- BASEMAPS                                                         -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="basemaps">
+  <div class="ug-section-title">Basemaps</div>
+  <div class="ug-section-body">
+    <table class="ug-table">
+      <thead><tr><th>Name</th><th>Source</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr><td><b>Topo</b></td><td>OpenTopoMap</td><td>Topographic detail, contours</td></tr>
+        <tr><td><b>Satellite</b></td><td>Esri World Imagery</td><td>Land cover, field sites</td></tr>
+        <tr><td><b>Streets</b></td><td>OpenStreetMap</td><td>Urban context, roads</td></tr>
+        <tr><td><b>Relief</b></td><td>Esri Shaded Relief</td><td>Elevation, terrain</td></tr>
+        <tr><td><b>Terrain</b></td><td>Esri World Topo</td><td>General reference</td></tr>
+        <tr><td><b>Dark</b></td><td>CartoDB Dark Matter</td><td>Data overlays, dark theme</td></tr>
+      </tbody>
+    </table>
+    <p>Adjust basemap opacity with the slider beneath the selector.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- LAYER PANEL                                                       -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="layer-panel">
+  <div class="ug-section-title">Layer Panel</div>
+  <div class="ug-section-body">
+    <table class="ug-table">
+      <thead><tr><th>Control</th><th>Icon</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Visibility toggle</td><td>&#x1F441;</td><td>Show / hide the layer</td></tr>
+        <tr><td>Rename</td><td>&#x270F;</td><td>Inline rename (Enter to confirm, Esc to cancel). Double-click name also works.</td></tr>
+        <tr><td>Zoom to layer</td><td>&#x1F50D;</td><td>Fit map to layer extent</td></tr>
+        <tr><td>View fields</td><td>&#x1F4C4;</td><td>Show field names, types, and sample values</td></tr>
+        <tr><td>Labels</td><td>&#x1F3F7;</td><td>Choose an attribute to show as map labels; set font size</td></tr>
+        <tr><td>Remove</td><td>&times;</td><td>Delete the layer</td></tr>
+        <tr><td>Opacity slider</td><td>&mdash;</td><td>Per-layer transparency</td></tr>
+      </tbody>
+    </table>
+    <p><b>Right-click</b> a layer for more options: move up/down, edit symbology, open attribute table, zoom to layer, rename, remove.</p>
+    <p>Click the layer name to select it for symbology editing.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SYMBOLOGY                                                         -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="symbology">
+  <div class="ug-section-title">Symbology</div>
+  <div class="ug-section-body">
+    <table class="ug-table">
+      <thead><tr><th>Mode</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><b>Single Symbol</b></td><td>Fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Shapes: circle, square, triangle, diamond, star, cross.</td></tr>
+        <tr><td><b>Categorized</b></td><td>One colour per unique value of a chosen attribute. Click legend entries on the map to rename them.</td></tr>
+        <tr><td><b>Graduated</b></td><td>Numeric attribute divided into 2-10 classes along a colour ramp (Viridis, Heat, Cool, Terrain).</td></tr>
+      </tbody>
+    </table>
+    <p><b>Reset</b> returns the layer to its default style.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- DIGITIZING                                                        -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="digitizing">
+  <div class="ug-section-title">Digitizing</div>
+  <div class="ug-section-body">
+    <p>Use the pencil toolbar (top-center of map, horizontal) to draw <b>Points</b>, <b>Lines</b>, or <b>Polygons</b>.</p>
+    <table class="ug-table">
+      <thead><tr><th>Toolbar button</th><th>Function</th></tr></thead>
+      <tbody>
+        <tr><td>Point</td><td>Click to place a point feature</td></tr>
+        <tr><td>Line</td><td>Click to add vertices; double-click to finish</td></tr>
+        <tr><td>Polygon</td><td>Click to add vertices; double-click to close</td></tr>
+        <tr><td>Edit</td><td>Select and move existing vertices</td></tr>
+        <tr><td>Rectangle select</td><td>Drag to select features in a box</td></tr>
+        <tr><td>Circle select</td><td>Drag to select features in a circle</td></tr>
+        <tr><td>Duplicate</td><td>Copy selected features (<span class="ug-kbd">Ctrl+D</span>)</td></tr>
+        <tr><td>Snap</td><td>Toggle snapping to existing vertices</td></tr>
+        <tr><td>Undo</td><td>Undo last edit (<span class="ug-kbd">Ctrl+Z</span>)</td></tr>
+        <tr><td>Redo</td><td>Redo last undo (<span class="ug-kbd">Ctrl+Y</span>)</td></tr>
+      </tbody>
+    </table>
+    <p>A crosshair cursor is shown during digitizing. Press <span class="ug-kbd">Esc</span> to cancel at any time.</p>
+    <p>After drawing, fill in the attribute form (name, description, category). Features are saved to the <b>Drawn Features</b> layer, which is fully exportable.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- FEATURE INFO                                                      -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="feature-info">
+  <div class="ug-section-title">Feature Info</div>
+  <div class="ug-section-body">
+    <p>Click any feature on the map to open its attribute card in the right panel. Shows geometry type, lat/lon, and all attributes.</p>
+    <table class="ug-table">
+      <thead><tr><th>Button</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><b>Prev / Next</b></td><td>Navigate through features in the same layer</td></tr>
+        <tr><td><b>Zoom to feature</b></td><td>Pan and zoom the map to the feature</td></tr>
+        <tr><td><b>Copy attributes</b></td><td>Copy the full attribute table to clipboard</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- ATTRIBUTE TABLE                                                   -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="attribute-table">
+  <div class="ug-section-title">Attribute Table</div>
+  <div class="ug-section-body">
+    <p>Select a layer from the dropdown. All features appear in a searchable, paginated table (50 rows per page).</p>
+    <table class="ug-table">
+      <thead><tr><th>Feature</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Search</td><td>Type in the search box to filter across all columns</td></tr>
+        <tr><td>Sort</td><td>Click a column header to sort ascending / descending</td></tr>
+        <tr><td>Filter expression</td><td>Type <code>col > 5</code> in the filter box for expression-based filtering</td></tr>
+        <tr><td>Pagination</td><td>Use <b>Prev</b> / <b>Next</b> buttons at the bottom</td></tr>
+        <tr><td>Zoom to row</td><td>Click any row to zoom to that feature and open it in Feature Info</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- ELEVATION PROFILE                                                 -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="elevation-profile">
+  <div class="ug-section-title">Elevation Profile</div>
+  <div class="ug-section-body">
+    <p>Layers with an elevation column (<code>elevation</code>, <code>elev</code>, <code>alt</code>, or <code>z</code>) auto-populate the bottom profile panel.</p>
+    <table class="ug-table">
+      <thead><tr><th>Axis</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>X-axis</td><td>Distance along the track (km)</td></tr>
+        <tr><td>Y-axis</td><td>Elevation (m a.s.l.). Y starts from 0 by default.</td></tr>
+      </tbody>
+    </table>
+    <p>Toggle layers on/off with checkboxes. <b>Click a point on the chart</b> to pan the map to that location. Drag the top edge of the panel to resize it.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- EXPORT                                                            -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="export">
+  <div class="ug-section-title">Export</div>
+  <div class="ug-section-body">
+    <p><b>Output CRS</b> - choose a target coordinate reference system before exporting. Default is WGS 84 (EPSG:4326). UTM auto-detect suggests the correct zone. Coordinates are reprojected client-side.</p>
+
+    <h3 style="font-size:16px;font-weight:700;color:var(--fg);margin:20px 0 10px;">Data exports</h3>
+    <table class="ug-table">
+      <thead><tr><th>Format</th><th>Standard</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><b>GeoJSON</b></td><td>RFC 7946 + named CRS</td><td>Read by QGIS & ArcGIS</td></tr>
+        <tr><td><b>CSV</b></td><td>Flat table</td><td>Longitude / latitude columns</td></tr>
+        <tr><td><b>XLSX</b></td><td>Excel workbook</td><td>One layer per sheet when exporting all</td></tr>
+        <tr><td><b>Shapefile</b></td><td>ESRI Shapefile</td><td>Zipped <code>.shp</code> / <code>.dbf</code> / <code>.prj</code> / <code>.shx</code></td></tr>
+        <tr><td><b>KML</b></td><td>OGC KML 2.2</td><td>Google Earth, ArcGIS Earth</td></tr>
+        <tr><td><b>GPX</b></td><td>GPX 1.1</td><td>GPS devices, Garmin, OsmAnd</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size:16px;font-weight:700;color:var(--fg);margin:20px 0 10px;">Map image exports</h3>
+    <table class="ug-table">
+      <thead><tr><th>Option</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><b>Export map as PNG</b></td><td>Current viewport at 72-400 DPI with title, legend, north arrow, scale bar</td></tr>
+        <tr><td><b>Export map as PDF</b></td><td>Same content as a PDF page</td></tr>
+        <tr><td><b>Map Layout Composer</b></td><td>Full print-layout tool with adjustable inset, gridlines, scale bar styles, and north arrow. Open via Export &rarr; Map Image &rarr; Export as PNG/PDF &rarr; Preview.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/03_export_crs.png" alt="Export panel with CRS selector and UTM auto-detect">
+      <div class="caption">Export panel showing the Per-Layer Export section with Output CRS dropdown and UTM auto-detect hint.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- ANALYSIS: GEOMETRIC                                               -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="analysis-geometric">
+  <div class="ug-section-title">Spatial Analysis - Geometric & Descriptive</div>
+  <div class="ug-section-body">
+    <p>Select a layer and run any tool. Results appear in the bottom panel and are added as exportable layers.</p>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Mean Center & Standard Distance</div>
+      <div class="ug-tool-desc">Calculates the geographic mean of all point coordinates (the "centre of gravity") and a standard-distance circle. A small circle = tightly clustered data; a large circle = widely spread data. Use it to compare the geographic centroid of two groups or track shifts over time.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Bounding Box</div>
+      <div class="ug-tool-desc">Minimum axis-aligned rectangle enclosing all features. Shows width, height, and area (km&sup2;). Useful as a quick study-area extent or for comparing dataset sizes.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Nearest Neighbor Index (NNI) <span class="citation">(Clark & Evans 1954)</span></div>
+      <div class="ug-tool-desc">Compares observed mean nearest-neighbor distance with the expected distance under complete spatial randomness.</div>
+      <table class="ug-table">
+        <thead><tr><th>NNI</th><th>Interpretation</th></tr></thead>
+        <tbody>
+          <tr><td><code>NNI < 1</code></td><td>Clustered (sites are closer together than random)</td></tr>
+          <tr><td><code>NNI &asymp; 1</code></td><td>Random</td></tr>
+          <tr><td><code>NNI > 1</code></td><td>Dispersed (regularly spaced)</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-tool-desc">The z-score and p-value test if the pattern differs significantly from random. <code>p < 0.05</code> + <code>NNI < 1</code> = statistically significant clustering.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Convex Hull</div>
+      <div class="ug-tool-desc">Smallest convex polygon enclosing all features. Output includes perimeter (km) and area (km&sup2;). Useful for comparing species ranges, estimating home ranges, or defining a study boundary.</div>
+    </div>
+
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/04_convex_hull.png" alt="Convex hull analysis result">
+      <div class="caption">Convex Hull tool output showing the hull polygon, results panel, and Analysis drawer.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Calculate Field</div>
+      <div class="ug-tool-desc">Select a layer. Create a new attribute from values already in the table. Two modes:</div>
+      <table class="ug-table">
+        <thead><tr><th>Mode</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><b>Weighted conditions</b></td><td>Each row is a test on a numeric field plus a weight; the score is the sum of weights where tests pass (otherwise 0 unless you set an Otherwise value). 1-8 rows.</td></tr>
+          <tr><td><b>Expression</b></td><td>Type a formula using field names and the functions listed below.</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-tool-desc">
+        <b>Operators:</b> <code>+ - * / % && || ! ? : ( ) > >= < <= == !=</code> (single <code>=</code> also works as equals).<br>
+        <b>Fields:</b> Plain names (<code>elevation_m</code>) or double-quoted (<code>"tree_cover_pct"</code>) as in QGIS; single quotes make text literals.
+      </div>
+      <table class="ug-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>abs min max round(x[,n]) floor ceil</code></td><td>Basic math</td></tr>
+          <tr><td><code>sqrt log exp pow</code></td><td>Powers and logs</td></tr>
+          <tr><td><code>coalesce(a,b,&hellip;) isnull(x)</code></td><td>Null handling</td></tr>
+          <tr><td><code>if(cond,a,b)</code></td><td>Conditional</td></tr>
+          <tr><td><code>length(s) concat(a,b,&hellip;)</code></td><td>String operations</td></tr>
+          <tr><td><code>lower upper</code></td><td>Case conversion</td></tr>
+          <tr><td><code>to_int to_num to_text</code></td><td>Type conversion</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-tool-desc">
+        <b>Nulls:</b> Arithmetic with null gives null; division by zero gives null. In weighted-conditions mode a null or non-numeric value simply fails the test (Otherwise applies).
+      </div>
+      <div class="ug-callout">
+        <div class="label">QGIS equivalence</div>
+        <code>CASE WHEN "elev" >= 500 AND "elev" <= 1800 THEN 1 ELSE 0 END</code> becomes <code>(elev >= 500 && elev <= 1800 ? 1 : 0)</code>
+      </div>
+      <table class="ug-table">
+        <thead><tr><th>#</th><th>Example</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>(elev >= 500 && elev <= 1800 ? 1 : 0) + (cover >= 70 ? 1 : 0) + (rain >= 2500 ? 1 : 0)</code></td><td>Index / proxy score</td></tr>
+          <tr><td>2</td><td><code>(cover >= 80 ? 1 : 0)</code></td><td>Binary flag</td></tr>
+          <tr><td>3</td><td><code>rain / (elev + 1)</code></td><td>Ratio</td></tr>
+          <tr><td>4</td><td><code>concat(site, ' (', to_text(round(cover,0)), '%)')</code></td><td>Label</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-tool-desc">This is not a suitability model and not a distribution model. You choose the tests, weights, and meaning. Copy the expression into your methods and record the GeoSpaX version from the page footer and the access date.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Line Lengths</div>
+      <div class="ug-tool-desc">Haversine great-circle length for each line feature. Appends a <code>length_km</code> attribute; total is shown in the results panel.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Polygon Areas</div>
+      <div class="ug-tool-desc">Spherical excess area (Chamberlain & Duquette 2009) for each polygon. Appends <code>area_km2</code>; accurate to < 0.3% at continental scale. Total shown in results.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Centroids</div>
+      <div class="ug-tool-desc">Area-weighted centroid for polygons, coordinate mean for lines and points. Useful as a representative coordinate for labelling or joining.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Buffer Zones</div>
+      <div class="ug-tool-desc">Creates a circular buffer of a user-specified radius (km) around each feature as a 24-sided polygon. For production-grade buffers on lines or polygons, use QGIS &rarr; Vector &rarr; Geoprocessing &rarr; Buffer.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Simplify Geometries (Douglas-Peucker)</div>
+      <div class="ug-tool-desc">Reduces vertex count while preserving shape. Increase tolerance to simplify more aggressively. Useful when exporting to web maps where file size matters, or when polygon detail exceeds the target scale.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">DBSCAN Clustering <span class="citation">(Ester et al. 1996)</span></div>
+      <div class="ug-tool-desc">Groups points into density clusters without requiring a pre-set number of clusters. Points that don't fit any cluster are labelled <b>noise</b> (cluster = -1). Epsilon (neighbourhood radius) is auto-derived from 1.5&times; the median nearest-neighbor distance; MinPts = 3.</div>
+      <div class="ug-tool-desc">Each point gets a <code>cluster</code> attribute. Use DBSCAN first to explore groupings, then run Gi* or LISA for significance-tested hot spots.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">IDW Interpolation <span class="citation">(Shepard 1968, p = 2)</span></div>
+      <div class="ug-tool-desc">Inverse Distance Weighting surface on a 50 &times; 50 grid. Estimates values at unsampled locations by weighting nearby observations more heavily. Good for a quick continuous surface (e.g. species richness, rainfall). Note: IDW can produce "bull's-eye" artefacts around isolated extreme values - consider this exploratory.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Point Density</div>
+      <div class="ug-tool-desc">Counts points within a moving kernel window on a 50 &times; 50 grid - a simple heat map of concentration. Not a significance test. Use Gi* for statistically tested hot spots.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Weighted Density</div>
+      <div class="ug-tool-desc">Same as Point Density but each point is weighted by a numeric attribute (e.g. richness, abundance). Shows where high-value features concentrate in space.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Voronoi / Thiessen Polygons</div>
+      <div class="ug-tool-desc">Divides the map so every location is assigned to its nearest point. Computed on a 120 &times; 120 raster grid (boundaries may appear slightly pixelated). Useful for allocating service areas or delineating nearest-feature catchments.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- ANALYSIS: INFERENTIAL                                             -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="analysis-inferential">
+  <div class="ug-section-title">Inferential Spatial Statistics</div>
+  <div class="ug-section-body">
+    <p>These four tools test whether spatial patterns are <i>statistically significant</i> and identify which specific features are driving them. All tools share common <b>Weights</b> and <b>UTM projection</b> settings.</p>
+
+    <h3 style="font-size:16px;font-weight:700;color:var(--fg);margin:20px 0 10px;">Spatial Weights Options</h3>
+    <table class="ug-table">
+      <thead><tr><th>Option</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><b>Distance band</b></td><td>Two features are neighbours if they are within <i>d</i> km. Default: the minimum distance that gives every feature at least one neighbour. Best for regular grids or continuous fields.</td></tr>
+        <tr><td><b>K-nearest neighbours (KNN)</b></td><td>Each feature's <i>k</i> nearest features are its neighbours (default k = 8). Every feature always gets exactly <i>k</i> neighbours regardless of density. Best for irregular sampling or variable-density data.</td></tr>
+        <tr><td><b>UTM auto-projection</b></td><td>Distances are computed on an auto-selected UTM zone (not raw degrees), removing distortion near the equator and at high latitudes.</td></tr>
+        <tr><td><b>FDR correction</b></td><td>Benjamini-Hochberg False Discovery Rate adjustment prevents spurious hot spots when many features are tested at once. Leave it checked for confirmatory analysis; uncheck only for exploratory work.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Getis-Ord Gi* Hot Spot Analysis <span class="citation">(Ord & Getis 1995)</span></div>
+      <div class="ug-tool-desc">For each feature, asks: "Is this feature's value, together with its neighbours', unusually high or low compared with the global mean?" Each feature receives a z-score and p-value.</div>
+      <table class="ug-table">
+        <thead><tr><th>Colour</th><th>Class</th><th>z-score</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="swatch" style="background:#b30000"></span>Deep red</td><td>99% hot spot</td><td>z &ge; 2.58</td><td>Extremely strong evidence of a high-value cluster</td></tr>
+          <tr><td><span class="swatch" style="background:#e60000"></span>Red</td><td>95% hot spot</td><td>z &ge; 1.96</td><td>Strong evidence</td></tr>
+          <tr><td><span class="swatch" style="background:#ff6600"></span>Orange</td><td>90% hot spot</td><td>z &ge; 1.65</td><td>Moderate evidence</td></tr>
+          <tr><td><span class="swatch" style="background:#888"></span>Grey</td><td>Not significant</td><td>&mdash;</td><td>No evidence of unusual clustering</td></tr>
+          <tr><td><span class="swatch" style="background:#add8e6"></span>Light blue</td><td>90% cold spot</td><td>z &le; &minus;1.65</td><td>Moderate evidence of a low-value cluster</td></tr>
+          <tr><td><span class="swatch" style="background:#0000e6"></span>Blue</td><td>95% cold spot</td><td>z &le; &minus;1.96</td><td>Strong evidence</td></tr>
+          <tr><td><span class="swatch" style="background:#000080"></span>Dark blue</td><td>99% cold spot</td><td>z &le; &minus;2.58</td><td>Extremely strong evidence of a low-value cluster</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-callout">
+        <div class="label">How to use results</div>
+        A 95%+ hot spot cluster indicates a zone where high values are not random - likely a refugium, optimal habitat, or resource concentration worth prioritising for conservation. A cold spot cluster may indicate habitat degradation or harsh microclimate. Features marked "not significant" may simply lack enough neighbours - try increasing the band distance or switching to KNN.
+      </div>
+    </div>
+
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/19_gistar_results.png" alt="Getis-Ord Gi* results panel">
+      <div class="caption">Gi* results panel showing hot/cold spot counts, distance band, UTM zone, and FDR note.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Local Moran's I - LISA Cluster & Outlier Analysis <span class="citation">(Anselin 1995)</span></div>
+      <div class="ug-tool-desc">LISA classifies each feature into a cluster or outlier type based on its own value relative to its neighbours. Significance is assessed by conditional permutation (999 randomisations).</div>
+      <table class="ug-table">
+        <thead><tr><th>Colour</th><th>Class</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="swatch" style="background:#e60000"></span>HH - High-High</td><td>Cluster</td><td>High value surrounded by high neighbours. Core of a spatial hot spot. Prioritise for protection.</td></tr>
+          <tr><td><span class="swatch" style="background:#0000cc"></span>LL - Low-Low</td><td>Cluster</td><td>Low value surrounded by low neighbours. Core of a spatial cold spot. Investigate cause (degradation, edge effect, microclimate).</td></tr>
+          <tr><td><span class="swatch" style="background:#ff8800"></span>HL - High-Low</td><td>Outlier</td><td>High value surrounded by low neighbours. Often a micro-refugium or remnant patch; high conservation value per unit area.</td></tr>
+          <tr><td><span class="swatch" style="background:#88aaff"></span>LH - Low-High</td><td>Outlier</td><td>Low value surrounded by high neighbours. Unexpectedly depauperate patch within a rich landscape; potential degradation signal.</td></tr>
+          <tr><td><span class="swatch" style="background:#888"></span>Grey</td><td>Not significant</td><td>Pseudo-p > 0.05 (or FDR threshold).</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-tool-desc"><i>High / Low are relative to the global mean.</i> The pseudo-p-value comes from conditional permutation - how often a random re-labelling of neighbours produces a more extreme local Moran's I than the observed value.</div>
+    </div>
+
+    <div class="ug-screenshot">
+      <img src="practical_assignment/screenshots/20_lisa.png" alt="LISA cluster map">
+      <div class="caption">LISA cluster map showing HH, LL, HL, and LH classifications with significance from 999 permutations.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Global Moran's I - Spatial Autocorrelation Test <span class="citation">(Cliff & Ord 1981)</span></div>
+      <div class="ug-tool-desc">Summarises the degree of spatial autocorrelation across the entire layer in a single index and tests whether it differs from zero.</div>
+      <table class="ug-table">
+        <thead><tr><th>Result</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><b>Moran's I</b></td><td>Observed index (roughly &minus;1 to +1, but not strictly bounded)</td></tr>
+          <tr><td><b>Expected I</b></td><td>&minus;1/(n&minus;1); the mean under spatial randomness</td></tr>
+          <tr><td><b>Variance</b></td><td>Cliff & Ord randomisation variance</td></tr>
+          <tr><td><b>z-score</b></td><td>(I &minus; E[I]) / &radic;Var(I)</td></tr>
+          <tr><td><b>p-value</b></td><td>Two-tailed probability under H&#x2080;: no spatial autocorrelation</td></tr>
+        </tbody>
+      </table>
+      <table class="ug-table">
+        <thead><tr><th>Result</th><th>Interpretation</th></tr></thead>
+        <tbody>
+          <tr><td><code>I >> E[I]</code>, <code>z > 1.96</code>, <code>p < 0.05</code></td><td><b>Positive autocorrelation</b> - similar values cluster together. This confirms that Gi* and LISA results are meaningful.</td></tr>
+          <tr><td><code>I &asymp; E[I]</code></td><td><b>Random</b> - no global spatial structure detected.</td></tr>
+          <tr><td><code>I << E[I]</code>, <code>z < &minus;1.96</code>, <code>p < 0.05</code></td><td><b>Negative autocorrelation</b> - dissimilar values are neighbours (checkerboard pattern).</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-tool-desc">A non-significant I does not rule out local hot spots - local clusters can exist even when the global average is near zero.</div>
+    </div>
+
+    <div class="ug-tool">
+      <div class="ug-tool-name">Moran Scatterplot</div>
+      <div class="ug-tool-desc">A diagnostic chart that visualises Global Moran's I and shows which features drive autocorrelation. X-axis = standardised value (z-score) for each feature. Y-axis = spatial lag (mean standardised value of its neighbours). The slope of the regression line = Global Moran's I.</div>
+      <table class="ug-table">
+        <thead><tr><th>Quadrant</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><b>Upper-right (HH)</b></td><td>High value, high-value neighbours. Positive autocorrelation (hot-spot core).</td></tr>
+          <tr><td><b>Lower-left (LL)</b></td><td>Low value, low-value neighbours. Positive autocorrelation (cold-spot core).</td></tr>
+          <tr><td><b>Upper-left (LH)</b></td><td>Low value, high-value neighbours. Spatial outlier.</td></tr>
+          <tr><td><b>Lower-right (HL)</b></td><td>High value, low-value neighbours. Spatial outlier.</td></tr>
+        </tbody>
+      </table>
+      <div class="ug-tool-desc">Points far from the origin in HH/LL correspond to LISA HH/LL clusters. Hover a point to see its site name and value.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- KEYBOARD SHORTCUTS                                                -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ug-section" id="keyboard-shortcuts">
+  <div class="ug-section-title">Keyboard Shortcuts</div>
+  <div class="ug-section-body">
+    <table class="ug-table">
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><span class="ug-kbd">+</span> / <span class="ug-kbd">&minus;</span></td><td>Zoom in / out</td></tr>
+        <tr><td><span class="ug-kbd">F</span></td><td>Toggle fullscreen</td></tr>
+        <tr><td><span class="ug-kbd">L</span></td><td>Toggle left panel</td></tr>
+        <tr><td><span class="ug-kbd">A</span></td><td>Toggle Analysis drawer</td></tr>
+        <tr><td><span class="ug-kbd">Esc</span></td><td>Cancel digitizing / close modals / close Analysis drawer</td></tr>
+        <tr><td><span class="ug-kbd">Enter</span></td><td>Confirm inline layer rename</td></tr>
+        <tr><td><span class="ug-kbd">Ctrl+Z</span></td><td>Undo (digitizing edits)</td></tr>
+        <tr><td><span class="ug-kbd">Ctrl+Y</span> / <span class="ug-kbd">Ctrl+Shift+Z</span></td><td>Redo</td></tr>
+        <tr><td><span class="ug-kbd">Ctrl+D</span></td><td>Duplicate selected features</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</main>
+
+<script>
+// Theme detection from URL parameter
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('theme') === 'light') document.body.classList.add('light');
+})();
+
+// Search filter
+function ugFilter() {
+  var q = document.getElementById('ug-search').value.toLowerCase();
+  document.querySelectorAll('.ug-nav-item').forEach(function(item) {
+    if (!q || item.textContent.toLowerCase().indexOf(q) >= 0) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  // Also filter nav group headers
+  document.querySelectorAll('.ug-nav-group').forEach(function(group) {
+    var next = group.nextElementSibling;
+    var anyVisible = false;
+    while (next && !next.classList.contains('ug-nav-group')) {
+      if (next.style.display !== 'none') { anyVisible = true; break; }
+      next = next.nextElementSibling;
+    }
+    group.style.display = anyVisible ? '' : 'none';
+  });
+}
+
+// Scroll-spy: highlight current section in sidebar
+window.addEventListener('scroll', function() {
+  var sections = document.querySelectorAll('.ug-section');
+  var navItems = document.querySelectorAll('.ug-nav-item');
+  var scrollY = window.scrollY + 120;
+  var current = '';
+  sections.forEach(function(s) {
+    if (s.offsetTop <= scrollY) current = s.id;
+  });
+  navItems.forEach(function(n) {
+    if (n.getAttribute('href') === '#' + current) n.classList.add('active');
+    else n.classList.remove('active');
+  });
+});
+</script>
+
+</body>
+</html>

@@ -741,8 +741,8 @@ In Part B of your report:
 ### Save the project
 
 1. Click the **💾 Save** button in the topbar.
-2. This saves all layers, symbology, and view state as a `.geospax` file.
-3. Name it `Surname_lab.geospax`.
+2. This saves all layers, symbology, and view state as a `.gspx` file.
+3. Name it `Surname_lab.gspx`.
 
 > **![screenshots/30_save_project.png](screenshots/30_save_project.png)**
 
@@ -769,7 +769,7 @@ Fill in the provenance table with:
 - [ ] Map 4: `Surname_lab_map4_habitat_proxy.pdf`: habitat_score classes, legend, CRS, source line, title says "habitat proxy"
 - [ ] Provenance table with GeoSpaX version and access date
 - [ ] Exported GeoJSON in the correct UTM zone (EPSG:32754, 32755, or 32756)
-- [ ] Saved `.geospax` project file
+- [ ] Saved `.gspx` project file
 - [ ] Three thresholds, three weights, and citations written in the report
 - [ ] No forest-loss hectares, no protected-area percentage, no clan names unless from a cited source
 - [ ] (Recommended) Gap analysis run with WDPA layer, gap percentage reported with citation
