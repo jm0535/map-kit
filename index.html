@@ -1432,14 +1432,6 @@
 
   /* Attribute table */
   #attr-table-section { border-top: 1px solid var(--border); flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-  #attr-table-section.resizable { height: 300px; min-height: 100px; max-height: 80vh; flex: 0 0 auto; }
-  #attr-table-resize-handle {
-    height: 5px; cursor: ns-resize; background: transparent; flex-shrink: 0;
-    position: relative; z-index: 10;
-  }
-  #attr-table-resize-handle:hover, #attr-table-resize-handle.dragging {
-    background: var(--accent-bg);
-  }
   #attr-table-header {
     padding: 6px 12px; font-size: 12px; font-weight: 600;
     color: var(--text-muted); background: transparent; cursor: pointer;
@@ -2695,12 +2687,11 @@
       </div>
     </div>
 
-    <div class="panel-section" id="attr-table-section">
-      <div id="attr-table-resize-handle"></div>
+    <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
         <span>&#x1F4CA; Attribute Table</span><span class="arrow">&#x25BC;</span>
       </div>
-      <div class="panel-body hidden" id="attr-table-body" style="padding:6px 8px; display:flex; flex-direction:column; overflow:hidden; flex:1;">
+      <div class="panel-body hidden" style="padding:6px 8px;">
         <select id="attr-layer-select" onchange="loadAttrTable(this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px;margin-bottom:6px;">
           <option value=""> - Select layer - </option>
         </select>
@@ -10267,38 +10258,6 @@ function closeAnalysisDrawer() {
   }
   setupResize('left-resize', 'left-panel', 'left');
   setupResize('right-resize', 'right-panel', 'right');
-
-  // Attribute table height resize handle
-  (function setupAttrTableResize() {
-    const handle = document.getElementById('attr-table-resize-handle');
-    const section = document.getElementById('attr-table-section');
-    if (!handle || !section) return;
-    let startY, startH, dragging = false;
-    handle.addEventListener('mousedown', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragging = true;
-      startY = e.clientY;
-      startH = section.offsetHeight;
-      section.classList.add('resizable');
-      handle.classList.add('dragging');
-      document.body.style.cursor = 'ns-resize';
-      document.body.style.userSelect = 'none';
-    });
-    document.addEventListener('mousemove', e => {
-      if (!dragging) return;
-      const dy = startY - e.clientY;
-      const newH = Math.max(100, Math.min(window.innerHeight * 0.8, startH + dy));
-      section.style.height = newH + 'px';
-    });
-    document.addEventListener('mouseup', () => {
-      if (!dragging) return;
-      dragging = false;
-      handle.classList.remove('dragging');
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    });
-  })();
 })();
 
 // ═══════════════════════════════════════════════════════════════════════════
