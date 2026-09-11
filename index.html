@@ -2243,11 +2243,18 @@
 </head>
 <body>
 
-<!-- Early popout detection: add composer-popout class before any main
-     app JS runs, so the main app UI never flashes in the detached window. -->
+<!-- Early popout detection: add composer-popout class and inject a
+     catch-all style BEFORE any main app HTML renders, so the main app
+     UI never flashes in the detached window. -->
 <script>
 if (new URLSearchParams(window.location.search).get('composer') === '1') {
   document.body.classList.add('composer-popout');
+  // Belt-and-suspenders: hide ALL body children except #layout-modal
+  // and #toast. This catches any element the targeted CSS might miss.
+  var s = document.createElement('style');
+  s.id = 'composer-popout-early';
+  s.textContent = 'body.composer-popout > *:not(#layout-modal):not(#toast):not(script):not(style) { display: none !important; }';
+  document.head.appendChild(s);
 }
 </script>
 
