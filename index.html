@@ -2639,7 +2639,7 @@
         <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Map Navigation</div>
         <b>Scroll</b> to zoom &mdash; <b>drag</b> to pan &mdash; <b>double-click</b> to zoom in.<br>
         <b>+ / &minus;</b> buttons top-left, or keyboard <b>+</b> / <b>&minus;</b>.<br>
-        <b>F</b> toggles fullscreen &mdash; <b>L</b> toggles the layer panel.<br>
+        <b>F</b> toggles fullscreen &mdash; <b>L</b> toggles the left panel &mdash; <b>A</b> toggles the Analysis drawer.<br>
         The <b>minimap</b> (bottom-right) shows your current viewport in context.<br>
         The <b>status bar</b> shows current zoom level, cursor coordinates, and visible feature count.<br><br>
 
@@ -2828,9 +2828,13 @@
         <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Keyboard Shortcuts</div>
         &bull; <b>+ / &minus;</b> &mdash; zoom in / out<br>
         &bull; <b>F</b> &mdash; toggle fullscreen<br>
-        &bull; <b>L</b> &mdash; toggle layer panel<br>
-        &bull; <b>Esc</b> &mdash; cancel digitizing / close modals<br>
+        &bull; <b>L</b> &mdash; toggle left panel<br>
+        &bull; <b>A</b> &mdash; toggle Analysis drawer<br>
+        &bull; <b>Esc</b> &mdash; cancel digitizing / close modals / close Analysis drawer<br>
         &bull; <b>Enter</b> &mdash; confirm inline layer rename<br>
+        &bull; <b>Ctrl+Z</b> &mdash; undo (digitizing edits)<br>
+        &bull; <b>Ctrl+Y / Ctrl+Shift+Z</b> &mdash; redo<br>
+        &bull; <b>Ctrl+D</b> &mdash; duplicate selected features<br>
       </div>
     </div>
   </div>
@@ -5059,7 +5063,7 @@ function _confirmAttrForm() {
   showToast(`${feature.geometry.type} feature added`, 'success');
 }
 
-// Escape key to cancel digitizing
+// Escape key to cancel digitizing + other global shortcuts
 document.addEventListener('keydown', e => {
   const tag = (e.target && e.target.tagName || '').toLowerCase();
   const isText = tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable);
@@ -5069,7 +5073,30 @@ document.addEventListener('keydown', e => {
     else if (_selectMode) cancelSelectMode();
     else closeAnalysisDrawer();
   } else if (!isText && (e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
     toggleAnalysisDrawer();
+  } else if (!isText && (e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey) {
+    // F — toggle fullscreen
+    e.preventDefault();
+    if (map._container && typeof map.toggleFullscreen === 'function') {
+      map.toggleFullscreen();
+    } else {
+      const el = document.getElementById('map-wrap') || document.documentElement;
+      if (document.fullscreenElement) document.exitFullscreen();
+      else el.requestFullscreen && el.requestFullscreen();
+    }
+  } else if (!isText && (e.key === 'l' || e.key === 'L') && !e.ctrlKey && !e.metaKey) {
+    // L — toggle left panel
+    e.preventDefault();
+    toggleLeftPanel();
+  } else if (!isText && (e.key === '+' || e.key === '=') && !e.ctrlKey && !e.metaKey) {
+    // + — zoom in
+    e.preventDefault();
+    map.zoomIn();
+  } else if (!isText && (e.key === '-' || e.key === '_') && !e.ctrlKey && !e.metaKey) {
+    // - — zoom out
+    e.preventDefault();
+    map.zoomOut();
   }
 });
 
