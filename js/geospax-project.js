@@ -395,8 +395,34 @@
     });
     var suggested = (meta.projectId || 'project') + '_' +
                     (meta.subject || 'geospax').replace(/[^\w-]+/g, '_') + '.gspx';
+    var json = GSX.projectToJSON(true);
 
-    // Build a save-as dialog so the user can rename the workspace file
+    // Use the File System Access API (showSaveFilePicker) when available.
+    // This opens the browser's native Save As dialog so the user can
+    // choose both the filename AND the folder to save to.
+    if (typeof root.showSaveFilePicker === 'function') {
+      root.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{
+          description: 'GeoSpaX workspace (.gspx)',
+          accept: { 'application/json': ['.gspx', '.json'] }
+        }]
+      }).then(function (handle) {
+        return handle.createWritable().then(function (w) {
+          return w.write(json).then(function () { return w.close(); });
+        });
+      }).then(function () {
+        root.showToast('Project saved (' + Math.round(json.length / 1024) +
+                       ' KB)', 'info');
+      }).catch(function (err) {
+        if (err && err.name === 'AbortError') return; // user cancelled
+        root.showToast('Save failed: ' + (err && err.message || err), 'error');
+      });
+      return;
+    }
+
+    // Fallback: in-app dialog with filename input (browsers without
+    // showSaveFilePicker - downloads to the default Downloads folder)
     var overlay = document.createElement('div');
     overlay.className = 'attr-form-overlay';
     overlay.setAttribute('role', 'dialog');
@@ -405,6 +431,9 @@
     overlay.innerHTML =
       '<div class="attr-form-box">' +
         '<h3>&#x1F4BE; Save Workspace</h3>' +
+        '<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">' +
+        'Enter a filename for your workspace. The file will be saved to your ' +
+        'browser\'s default download folder.</p>' +
         '<div class="attr-form-row">' +
           '<label>Filename</label>' +
           '<input type="text" id="gsx-save-filename" value="' + suggested +
@@ -434,7 +463,6 @@
       if (!name) name = suggested;
       if (!/\.\w+$/.test(name)) name += '.gspx';
       overlay.remove();
-      var json = GSX.projectToJSON(true);
       download(name, json, 'application/json');
       root.showToast('Project saved (' + Math.round(json.length / 1024) +
                      ' KB) as ' + name, 'info');
