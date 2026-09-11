@@ -67,3 +67,9 @@ elevation_profile_*.png
 
 # Practical assignment (lecturer-only materials, not for public repo)
 practical_assignment/
+
+# FR422 lecturer-only materials in conservation roadmap
+geospax_conservation_roadmap/FR422*
+
+# Old sample docs
+samples/Five test datasets pushed.*
