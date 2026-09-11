@@ -9987,7 +9987,7 @@ function toggleProfilePanel() {
 
 function openUserGuideTab(e) {
   if (e) e.stopPropagation();
-  var url = 'userguide' + (document.body.classList.contains('light') ? '?theme=light' : '');
+  var url = 'userguide.html' + (document.body.classList.contains('light') ? '?theme=light' : '');
   var w = window.open(url, '_blank');
   if (!w) { showToast('Pop-up blocked. Allow pop-ups to open the User Guide in a new tab.', 'error'); }
 }
