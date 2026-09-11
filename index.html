@@ -2504,7 +2504,7 @@
           </select>
         </label>
         <label id="profile-zero-wrap" class="profile-ctl" style="cursor:pointer;">
-          <input type="checkbox" id="profile-y-zero" checked onclick="rebuildProfileFromCheckboxes()">
+          <input type="checkbox" id="profile-y-zero" onclick="rebuildProfileFromCheckboxes()">
           Y from 0
         </label>
         <div style="flex:1"></div>
@@ -8220,7 +8220,7 @@ function rebuildProfileFromCheckboxes() {
   const sortEl = document.getElementById('profile-sort');
   const sortMode = sortEl ? sortEl.value : 'elevation';
   const zeroEl = document.getElementById('profile-y-zero');
-  const yFromZero = zeroEl ? zeroEl.checked : true;
+  const yFromZero = zeroEl ? zeroEl.checked : false;
 
   // Cache the rendered (sorted) lat/lon arrays per profile so click→pan picks
   // the correct map location for the clicked point.
