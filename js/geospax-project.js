@@ -443,9 +443,10 @@
       var name = (inp && inp.value ? inp.value.trim() : suggested);
       if (!name) name = suggested;
       if (!/\.\w+$/.test(name)) name += '.gspx';
-      overlay.remove();
 
       if (hasFSAccess) {
+        // Call showSaveFilePicker BEFORE removing the overlay so the
+        // user gesture from the click is preserved.
         root.showSaveFilePicker({
           suggestedName: name,
           types: [{
@@ -453,6 +454,7 @@
             accept: { 'application/json': ['.gspx', '.json'] }
           }]
         }).then(function (handle) {
+          overlay.remove();
           return handle.createWritable().then(function (w) {
             return w.write(json).then(function () { return w.close(); });
           });
@@ -460,12 +462,16 @@
           root.showToast('Project saved (' + Math.round(json.length / 1024) +
                          ' KB) as ' + name, 'info');
         }).catch(function (err) {
-          if (err && err.name === 'AbortError') return;
-          // Fallback to download if showSaveFilePicker fails at runtime
+          if (overlay.parentNode) overlay.remove();
+          if (err && err.name === 'AbortError') return; // user cancelled
+          // showSaveFilePicker failed (security error, not allowed, etc.)
+          // Fall back to standard download
+          console.warn('showSaveFilePicker failed, using download fallback:', err);
           download(name, json, 'application/json');
-          root.showToast('Project saved as ' + name, 'info');
+          root.showToast('Project saved as ' + name + ' (Downloads folder)', 'info');
         });
       } else {
+        overlay.remove();
         download(name, json, 'application/json');
         root.showToast('Project saved (' + Math.round(json.length / 1024) +
                        ' KB) as ' + name, 'info');
