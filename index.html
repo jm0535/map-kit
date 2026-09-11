@@ -2547,6 +2547,11 @@
         <div id="attr-table-wrap" style="flex:1;overflow:auto;">
           <table id="attr-table"><thead><tr></tr></thead><tbody></tbody></table>
         </div>
+        <div id="attr-pagination" style="display:none; padding:4px 0; font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; gap:6px; border-top:1px solid var(--border); margin-top:2px;">
+          <button id="attr-prev-page" onclick="attrPrevPage()" style="font-size:10px; padding:2px 8px; background:var(--surface-2); border:1px solid var(--border); border-radius:3px; color:var(--text); cursor:pointer;">&#x25C0; Prev</button>
+          <span id="attr-page-info"></span>
+          <button id="attr-next-page" onclick="attrNextPage()" style="font-size:10px; padding:2px 8px; background:var(--surface-2); border:1px solid var(--border); border-radius:3px; color:var(--text); cursor:pointer;">Next &#x25B6;</button>
+        </div>
       </div>
     </div>
 
@@ -2829,8 +2834,14 @@
       <select id="analysis-layer-select-b" style="display:none">
         <option value="">— Second layer —</option>
       </select>
-      <select id="analysis-filter-select" class="ad-layer-select" style="margin-top:4px; display:none;" onchange="refreshAnalysisAttrSelect()" title="Filter features by province/region before analysis">
-      </select>
+      <div id="analysis-filter-wrapper" style="margin-top:4px; display:none; position:relative;">
+        <div id="analysis-filter-toggle" class="ad-layer-select" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleFilterDropdown(event)" title="Filter features by province/region before analysis">
+          <span id="analysis-filter-label">All features (no filter)</span>
+          <span style="font-size:9px; color:var(--text-faint);">&#x25BC;</span>
+        </div>
+        <div id="analysis-filter-list" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; background:var(--surface-3); border:1px solid var(--accent); border-radius:6px; z-index:10000; box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
+      </div>
+      <input type="hidden" id="analysis-filter-select" value="">
     </div>
 
   <!-- ════ SINGLE-LAYER GEOMETRIC / STATISTICAL TOOLS ════ -->
@@ -8204,13 +8215,21 @@ function refreshAnalysisLayerSelect() {
 
   // Preserve province filter if same layer is still selected
   const filterSel = document.getElementById('analysis-filter-select');
+  const filterList = document.getElementById('analysis-filter-list');
   if (filterSel && filterSel.value) {
-    // Rebuild filter options for the current layer, then restore the value
     const prevFilter = filterSel.value;
     refreshAnalysisFilter();
-    if (prevFilter && Array.from(filterSel.options).some(o => o.value === prevFilter)) {
-      filterSel.value = prevFilter;
+    // Check if the previous filter value still exists in the new dropdown
+    if (prevFilter && filterList) {
+      const exists = Array.from(filterList.children).some(d => d.textContent === prevFilter);
+      if (exists) {
+        filterSel.value = prevFilter;
+        const label = document.getElementById('analysis-filter-label');
+        if (label) label.textContent = prevFilter;
+      }
     }
+  } else {
+    refreshAnalysisFilter();
   }
 }
 
@@ -8268,22 +8287,56 @@ function refreshGSXRasterLayerSelect() {
 function refreshAnalysisFilter() {
   const layerId = document.getElementById('analysis-layer-select').value;
   const filterSel = document.getElementById('analysis-filter-select');
-  filterSel.innerHTML = '';
-  if (!layerId || layerId === '__all__') { filterSel.style.display = 'none'; return; }
+  const wrapper = document.getElementById('analysis-filter-wrapper');
+  const list = document.getElementById('analysis-filter-list');
+  const label = document.getElementById('analysis-filter-label');
+  if (!wrapper) return;
+  filterSel.value = '';
+  list.innerHTML = '';
+  list.style.display = 'none';
+  label.textContent = 'All features (no filter)';
+  if (!layerId || layerId === '__all__') { wrapper.style.display = 'none'; return; }
   const ul = uploadedLayers.find(l => l.id === layerId);
-  if (!ul || !ul.geojsonFeatures) { filterSel.style.display = 'none'; return; }
-  // Collect unique stateProvince values
+  if (!ul || !ul.geojsonFeatures) { wrapper.style.display = 'none'; return; }
   const provinces = new Set();
   ul.geojsonFeatures.forEach(f => {
     const v = f.properties && f.properties.stateProvince;
     if (v !== null && v !== '' && v !== undefined) provinces.add(String(v).trim());
   });
-  if (provinces.size < 2) { filterSel.style.display = 'none'; return; }
-  filterSel.style.display = '';
-  filterSel.innerHTML = '<option value="">All features (no filter)</option>';
+  if (provinces.size < 2) { wrapper.style.display = 'none'; return; }
+  wrapper.style.display = '';
+  const allOpt = document.createElement('div');
+  allOpt.textContent = 'All features (no filter)';
+  allOpt.style.cssText = 'padding:6px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--border);';
+  allOpt.onmouseover = () => allOpt.style.background = 'var(--accent-bg)';
+  allOpt.onmouseout = () => allOpt.style.background = '';
+  allOpt.onclick = (e) => { e.stopPropagation(); setAnalysisFilter(''); };
+  list.appendChild(allOpt);
   Array.from(provinces).sort().forEach(p => {
-    filterSel.innerHTML += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
+    const opt = document.createElement('div');
+    opt.textContent = p;
+    opt.style.cssText = 'padding:6px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--border);';
+    opt.onmouseover = () => opt.style.background = 'var(--accent-bg)';
+    opt.onmouseout = () => opt.style.background = '';
+    opt.onclick = (e) => { e.stopPropagation(); setAnalysisFilter(p); };
+    list.appendChild(opt);
   });
+}
+
+function toggleFilterDropdown(e) {
+  if (e) e.stopPropagation();
+  const list = document.getElementById('analysis-filter-list');
+  list.style.display = list.style.display === 'none' ? 'block' : 'none';
+}
+
+function setAnalysisFilter(value) {
+  const filterSel = document.getElementById('analysis-filter-select');
+  const label = document.getElementById('analysis-filter-label');
+  const list = document.getElementById('analysis-filter-list');
+  filterSel.value = value;
+  label.textContent = value || 'All features (no filter)';
+  list.style.display = 'none';
+  refreshAnalysisAttrSelect();
 }
 
 function refreshAnalysisAttrSelect() {
@@ -9861,12 +9914,49 @@ function loadAttrTable(layerId) {
 }
 
 function filterAttrTable(query) {
-  const rows = document.querySelectorAll('#attr-table tbody tr');
+  if (!_attrRawRows.length) return;
   const q = query.toLowerCase();
-  rows.forEach(tr => {
-    const text = tr.textContent.toLowerCase();
-    tr.style.display = text.includes(q) ? '' : 'none';
+  if (!q) {
+    // Restore all rows (re-sorted if sort is active)
+    let rows = [..._attrRawRows];
+    if (_attrSortCol) {
+      rows.sort((a, b) => {
+        let va = a[_attrSortCol], vb = b[_attrSortCol];
+        const na = parseFloat(va), nb = parseFloat(vb);
+        if (!isNaN(na) && !isNaN(nb) && isFinite(na) && isFinite(nb)) {
+          return _attrSortDir === 'asc' ? na - nb : nb - na;
+        }
+        const sa = String(va || '').toLowerCase();
+        const sb = String(vb || '').toLowerCase();
+        if (sa < sb) return _attrSortDir === 'asc' ? -1 : 1;
+        if (sa > sb) return _attrSortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    renderSortedTable(_attrCurrentLayerId, rows, _attrCurrentKeys);
+    document.getElementById('attr-count').textContent = `${_attrRawRows.length} rows`;
+    return;
+  }
+  const filtered = _attrRawRows.filter(row => {
+    return Object.values(row).some(v => String(v || '').toLowerCase().includes(q));
   });
+  // Re-sort the filtered rows if a sort is active
+  if (_attrSortCol) {
+    filtered.sort((a, b) => {
+      let va = a[_attrSortCol], vb = b[_attrSortCol];
+      const na = parseFloat(va), nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb) && isFinite(na) && isFinite(nb)) {
+        return _attrSortDir === 'asc' ? na - nb : nb - na;
+      }
+      const sa = String(va || '').toLowerCase();
+      const sb = String(vb || '').toLowerCase();
+      if (sa < sb) return _attrSortDir === 'asc' ? -1 : 1;
+      if (sa > sb) return _attrSortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  renderSortedTable(_attrCurrentLayerId, filtered, _attrCurrentKeys);
+  document.getElementById('attr-count').textContent = `${filtered.length} rows (filtered)`;
 }
 
 function zoomToFeature(layerInfo, featureIndex) {
@@ -10135,8 +10225,25 @@ let _attrSortCol = null;
 let _attrSortDir = 'asc'; // 'asc' | 'desc'
 let _attrFilterExpr = null;
 let _attrRawRows = []; // store raw row data for re-sorting
+let _attrSortedRows = []; // sorted rows (before pagination)
+let _attrCurrentLayerId = null;
+let _attrCurrentKeys = [];
+const ATTR_PAGE_SIZE = 50;
+let _attrCurrentPage = 0;
 
 function renderSortedTable(layerId, rows, keys) {
+  _attrCurrentLayerId = layerId;
+  _attrCurrentKeys = keys;
+  _attrSortedRows = rows;
+  _attrCurrentPage = 0;
+  renderAttrPage();
+}
+
+function renderAttrPage() {
+  const layerId = _attrCurrentLayerId;
+  const rows = _attrSortedRows;
+  const keys = _attrCurrentKeys;
+  if (!layerId || !keys.length) return;
   const thead = document.querySelector('#attr-table thead tr');
   const tbody = document.querySelector('#attr-table tbody');
   thead.innerHTML = keys.map(k => {
@@ -10144,7 +10251,10 @@ function renderSortedTable(layerId, rows, keys) {
     return `<th class="${cls}" onclick="sortAttrTable('${layerId}','${k}')">${escapeHtml(k)}</th>`;
   }).join('');
   tbody.innerHTML = '';
-  rows.forEach((row, i) => {
+  const start = _attrCurrentPage * ATTR_PAGE_SIZE;
+  const end = Math.min(start + ATTR_PAGE_SIZE, rows.length);
+  for (let i = start; i < end; i++) {
+    const row = rows[i];
     const tr = document.createElement('tr');
     tr.dataset.index = row._origIndex;
     tr.innerHTML = keys.map(k => `<td title="${escapeHtml(row[k] !== undefined ? row[k] : '')}">${escapeHtml(row[k] !== undefined ? row[k] : '')}</td>`).join('');
@@ -10161,7 +10271,32 @@ function renderSortedTable(layerId, rows, keys) {
       }
     });
     tbody.appendChild(tr);
-  });
+  }
+  // Update pagination controls
+  const pagDiv = document.getElementById('attr-pagination');
+  const pageInfo = document.getElementById('attr-page-info');
+  const prevBtn = document.getElementById('attr-prev-page');
+  const nextBtn = document.getElementById('attr-next-page');
+  const totalPages = Math.ceil(rows.length / ATTR_PAGE_SIZE);
+  if (rows.length > ATTR_PAGE_SIZE) {
+    pagDiv.style.display = 'flex';
+    pageInfo.textContent = `Page ${_attrCurrentPage + 1} of ${totalPages} (${rows.length} rows)`;
+    prevBtn.disabled = _attrCurrentPage === 0;
+    prevBtn.style.opacity = _attrCurrentPage === 0 ? '0.4' : '1';
+    nextBtn.disabled = _attrCurrentPage >= totalPages - 1;
+    nextBtn.style.opacity = nextBtn.disabled ? '0.4' : '1';
+  } else {
+    pagDiv.style.display = 'none';
+  }
+}
+
+function attrPrevPage() {
+  if (_attrCurrentPage > 0) { _attrCurrentPage--; renderAttrPage(); }
+}
+
+function attrNextPage() {
+  const totalPages = Math.ceil(_attrSortedRows.length / ATTR_PAGE_SIZE);
+  if (_attrCurrentPage < totalPages - 1) { _attrCurrentPage++; renderAttrPage(); }
 }
 
 function sortAttrTable(layerId, col) {
@@ -10196,21 +10331,13 @@ function applyAttrFilter() {
   const input = document.getElementById('attr-filter-expr');
   const expr = input?.value.trim();
   if (!expr) { clearAttrFilter(); return; }
-  const tbody = document.querySelector('#attr-table tbody');
-  const rows = tbody.querySelectorAll('tr');
-  rows.forEach(tr => {
-    const idx = parseInt(tr.dataset.index);
-    const props = _attrRawRows.find(r => r._origIndex === idx);
-    if (!props) return;
-    tr.classList.remove('filtered-out');
-    // Parse simple expression: column op value
-    // Supports: col > 5, col >= 5, col < 5, col <= 5, col = 5, col == 5, col != 5
-    const m = expr.match(/^(.+?)\s*(>=|<=|!=|==|=|>|<)\s*(.+)$/);
-    if (!m) { tr.classList.toggle('filtered-out', false); return; }
-    let col = m[1].trim();
-    let op = m[2].trim();
-    let val = m[3].trim();
-    if (op === '=') op = '==';
+  const m = expr.match(/^(.+?)\s*(>=|<=|!=|==|=|>|<)\s*(.+)$/);
+  if (!m) { showToast('Filter format: column op value (e.g. elevation_m > 100)', 'error'); return; }
+  let col = m[1].trim();
+  let op = m[2].trim();
+  let val = m[3].trim();
+  if (op === '=') op = '==';
+  const filtered = _attrRawRows.filter(props => {
     const cellVal = props[col];
     const numCell = parseFloat(cellVal);
     const numVal = parseFloat(val);
@@ -10236,21 +10363,50 @@ function applyAttrFilter() {
         case '!=': result = sv !== tv; break;
       }
     }
-    tr.classList.toggle('filtered-out', !result);
+    return result;
   });
   _attrFilterExpr = expr;
-  const visible = tbody.querySelectorAll('tr:not(.filtered-out)').length;
-  const info = uploadedLayers.find(l => l.id === document.getElementById('attr-layer-select').value);
-  document.getElementById('attr-count').textContent = `${visible} of ${info?.properties?.length || 0} rows`;
+  // Re-sort the filtered rows if a sort is active
+  if (_attrSortCol) {
+    filtered.sort((a, b) => {
+      let va = a[_attrSortCol], vb = b[_attrSortCol];
+      const na = parseFloat(va), nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb) && isFinite(na) && isFinite(nb)) {
+        return _attrSortDir === 'asc' ? na - nb : nb - na;
+      }
+      const sa = String(va || '').toLowerCase();
+      const sb = String(vb || '').toLowerCase();
+      if (sa < sb) return _attrSortDir === 'asc' ? -1 : 1;
+      if (sa > sb) return _attrSortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  renderSortedTable(_attrCurrentLayerId, filtered, _attrCurrentKeys);
+  document.getElementById('attr-count').textContent = `${filtered.length} of ${_attrRawRows.length} rows`;
 }
 
 function clearAttrFilter() {
   const input = document.getElementById('attr-filter-expr');
   if (input) input.value = '';
   _attrFilterExpr = null;
-  document.querySelectorAll('#attr-table tbody tr.filtered-out').forEach(tr => tr.classList.remove('filtered-out'));
-  const info = uploadedLayers.find(l => l.id === document.getElementById('attr-layer-select').value);
-  if (info) document.getElementById('attr-count').textContent = `${info.properties.length} rows`;
+  // Re-sort the raw rows if a sort is active
+  let rows = [..._attrRawRows];
+  if (_attrSortCol) {
+    rows.sort((a, b) => {
+      let va = a[_attrSortCol], vb = b[_attrSortCol];
+      const na = parseFloat(va), nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb) && isFinite(na) && isFinite(nb)) {
+        return _attrSortDir === 'asc' ? na - nb : nb - na;
+      }
+      const sa = String(va || '').toLowerCase();
+      const sb = String(vb || '').toLowerCase();
+      if (sa < sb) return _attrSortDir === 'asc' ? -1 : 1;
+      if (sa > sb) return _attrSortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  renderSortedTable(_attrCurrentLayerId, rows, _attrCurrentKeys);
+  document.getElementById('attr-count').textContent = `${_attrRawRows.length} rows`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -14028,6 +14184,15 @@ refreshAttrLayerSelect();
 refreshExportLayerSelect();
 renderBookmarks();
 collapseAllSectionsByDefault();
+
+// Close custom filter dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('analysis-filter-wrapper');
+  const list = document.getElementById('analysis-filter-list');
+  if (wrapper && list && !wrapper.contains(e.target)) {
+    list.style.display = 'none';
+  }
+});
 function _hideLoading() { document.getElementById('loading').style.display='none'; }
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
