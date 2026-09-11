@@ -2211,35 +2211,33 @@
         </div>
         <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
           <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; font-weight:600;">&#x1F4C1; Sample Datasets</div>
-          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Species Occurrence</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('paradisaea_occurrences.geojson', 'Emperor Bird-of-paradise (128 pts)')" title="128 GBIF occurrence records with environmental fields (elevation, tree cover, rainfall, BIO1, BIO15, WorldCover) - full FR422 workflow training">&#x1F426; Bird-of-paradise</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('sample_species_richness.geojson', 'Species Richness (41 pts)')" title="41 species-richness survey points across two PNG montane transects">Species Richness</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('butterfly_presences.geojson', 'Butterfly Presences')" title="Butterfly occurrence points for SDM practice">Butterfly</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('vine_host_plants.geojson', 'Vine Host Plants')" title="Vine host plant locations">Vine Host Plants</button>
-          </div>
-          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Tabular (CSV / XLSX) - test the column mapper</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('species_occurrences.csv', 'Species Occurrences (CSV)')" title="128 species occurrence rows in CSV format with lat/lon columns - opens the column mapper">&#x1F4CA; Occurrences CSV</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('species_occurrences.xlsx', 'Species Occurrences (XLSX)')" title="128 species occurrence rows in Excel format with lat/lon columns - opens the sheet picker then column mapper">&#x1F4D5; Occurrences XLSX</button>
-          </div>
-          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Boundaries & Protected Areas</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('png_provinces.geojson', 'PNG Provinces')" title="22 PNG province boundary polygons (EPSG:4326)">&#x1F5FA; PNG Provinces</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('png_protected_areas.geojson', 'PNG Protected Areas')" title="50 WDPA protected-area polygons for gap analysis">&#x1F6E1; Protected Areas</button>
-          </div>
-          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Polygons & Grids</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:6px;">
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('forest_patches.geojson', 'Forest Patches')" title="Forest patch polygons for landscape metrics">Forest Patches</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('habitat_survey_grid.geojson', 'Habitat Survey Grid')" title="Hexagonal survey grid for MCE practice">Habitat Grid</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('stream_water_sources.geojson', 'Stream Water Sources')" title="Stream and water source points">Water Sources</button>
-          </div>
-          <div style="font-size:9px; color:var(--text-faint); margin-bottom:3px;">Rasters (GeoTIFF)</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('PNG_BIO1_30s.tif', 'BIO1 Temperature')" title="WorldClim BIO1 annual mean temperature raster for PNG">&#x1F6F0; BIO1 Temperature</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('PNG_BIO12_precip.tif', 'BIO12 Precipitation')" title="WorldClim BIO12 annual precipitation raster for PNG">&#x1F327; BIO12 Precipitation</button>
-            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('PNG_tree_cover_pct.tif', 'Tree Cover %')" title="Tree-cover percentage raster (0-100) derived from ESA WorldCover">&#x1F332; Tree Cover %</button>
-          </div>
+          <select id="sample-data-select" onchange="if(this.value){loadSampleData(this.value, this.options[this.selectedIndex].text); this.value='';}" style="width:100%; font-size:11px; padding:4px 6px; border:1px solid var(--border); border-radius:4px; background:var(--bg); color:var(--text);">
+            <option value="">-- Load a sample dataset --</option>
+            <optgroup label="Species Occurrence">
+              <option value="paradisaea_occurrences.geojson">&#x1F426; Emperor Bird-of-paradise (128 pts)</option>
+              <option value="sample_species_richness.geojson">Species Richness (41 pts)</option>
+              <option value="butterfly_presences.geojson">Butterfly Presences</option>
+              <option value="vine_host_plants.geojson">Vine Host Plants</option>
+            </optgroup>
+            <optgroup label="Tabular (CSV / XLSX)">
+              <option value="species_occurrences.csv">&#x1F4CA; Occurrences CSV (128 rows)</option>
+              <option value="species_occurrences.xlsx">&#x1F4D5; Occurrences XLSX (128 rows)</option>
+            </optgroup>
+            <optgroup label="Boundaries & Protected Areas">
+              <option value="png_provinces.geojson">&#x1F5FA; PNG Provinces (22 polygons)</option>
+              <option value="png_protected_areas.geojson">&#x1F6E1; PNG Protected Areas (50 polygons)</option>
+            </optgroup>
+            <optgroup label="Polygons & Grids">
+              <option value="forest_patches.geojson">Forest Patches</option>
+              <option value="habitat_survey_grid.geojson">Habitat Survey Grid</option>
+              <option value="stream_water_sources.geojson">Stream Water Sources</option>
+            </optgroup>
+            <optgroup label="Rasters (GeoTIFF)">
+              <option value="PNG_BIO1_30s.tif">&#x1F6F0; BIO1 Temperature</option>
+              <option value="PNG_BIO12_precip.tif">&#x1F327; BIO12 Precipitation</option>
+              <option value="PNG_tree_cover_pct.tif">&#x1F332; Tree Cover %</option>
+            </optgroup>
+          </select>
         </div>
       </div>
     </div>
