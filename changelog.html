@@ -50,6 +50,7 @@ body {
 .cl-nav-item:hover { color: var(--fg); background: var(--table-header); }
 .cl-nav-item.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
 .cl-nav-item .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-left: 6px; }
+.cl-nav-item .badge.latest { background: var(--badge-new); color: #fff; }
 .cl-main { margin-left: 280px; flex: 1; }
 .cl-content { max-width: 920px; margin: 0 auto; padding: 48px 48px 80px; }
 .cl-page-header { margin-bottom: 48px; padding-bottom: 28px; border-bottom: 2px solid var(--border); }
@@ -129,7 +130,7 @@ body {
   <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
   <div class="cl-nav" id="cl-nav">
     <div class="cl-nav-group">Releases</div>
-    <a href="#v1.3.1" class="cl-nav-item">v1.3.1 <span class="badge" style="background:var(--badge-new);color:#fff;">Latest</span></a>
+    <a href="#v1.3.1" class="cl-nav-item">v1.3.1 <span class="badge latest">Latest</span></a>
     <a href="#v1.3.0" class="cl-nav-item">v1.3.0</a>
     <a href="#v1.2.0" class="cl-nav-item">v1.2.0</a>
     <a href="#v1.1.0" class="cl-nav-item">v1.1.0</a>
