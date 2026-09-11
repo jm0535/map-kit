@@ -156,7 +156,7 @@
   /* ── Left panel ── */
   #left-panel {
     width: 270px; min-width: 200px; max-width: 500px; background: var(--surface-1); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+    display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; flex-shrink: 0;
     position: relative; transition: width 0.2s, min-width 0.2s, padding 0.2s, border 0.2s;
   }
   #left-panel.collapsed { width: 0 !important; min-width: 0 !important; padding: 0 !important; overflow: hidden; border-right: none; }
@@ -329,7 +329,7 @@
   }
   .label-popover .lp-tab:hover { color: var(--text); }
   .label-popover .lp-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .label-popover .lp-body { padding: 10px 12px; overflow-y: auto; flex: 1; }
+  .label-popover .lp-body { padding: 10px 12px; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; flex: 1; }
   .label-popover .lp-section-title {
     font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;
     letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 8px;
@@ -367,7 +367,7 @@
   }
   .label-popover .lp-search:focus { border-color: var(--accent); outline: none; }
   .label-popover .lp-features-list {
-    max-height: 170px; overflow-y: auto;
+    max-height: 170px; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth;
     border: 1px solid var(--border); border-radius: 4px;
   }
   .label-popover .lp-item {
@@ -711,7 +711,7 @@
   }
   #analysis-drawer-header .adh-close:hover { background: var(--surface-3); color: var(--text); }
   #analysis-drawer-body {
-    flex: 1; overflow-y: auto; padding: 12px 14px 24px;
+    flex: 1; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; padding: 12px 14px 24px;
   }
   #analysis-drawer-body .ad-section-title {
     font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
@@ -1294,7 +1294,7 @@
   /* ── Right panel ── */
   #right-panel {
     width: 280px; min-width: 200px; max-width: 500px; background: var(--surface-1); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0;
+    display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; flex-shrink: 0;
     position: relative; transition: width 0.2s, min-width 0.2s, padding 0.2s, border 0.2s;
   }
   #right-panel.collapsed { width: 0 !important; min-width: 0 !important; padding: 0 !important; overflow: hidden; border-left: none; }
@@ -14263,7 +14263,8 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown') idx = (idx + 1) % items.length;
     else idx = idx <= 0 ? items.length - 1 : idx - 1;
     items[idx].classList.add('filter-highlighted');
-    items[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // Use 'center' so the item is always visible even when wrapping
+    items[idx].scrollIntoView({ block: 'center', behavior: 'smooth' });
   } else if (e.key === 'Enter') {
     const highlighted = list.querySelector('.filter-highlighted');
     if (highlighted) { highlighted.click(); e.preventDefault(); }

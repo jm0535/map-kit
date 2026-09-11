@@ -132,7 +132,7 @@
     if (nextIdx >= items.length) nextIdx = items.length - 1;
     if (cur) cur.classList.remove('is-highlighted');
     items[nextIdx].classList.add('is-highlighted');
-    items[nextIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    items[nextIdx].scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 
   /* ---- wiring ----------------------------------------------------- */
