@@ -34,9 +34,20 @@ geospax --output-dir docs/ --dpi 300 --verbose
 
 ## User Guide - Web GIS
 
+### Panel Layout
+
+GeoSpaX has four main areas:
+
+| Location | Panels | What you do here |
+| --- | --- | --- |
+| **Left panel** | Data Sources, Open Data, Layers, Basemap, Export (🗺 Map Image, 📄 Per-Layer Export, 📈 Elevation Profile, 📦 Bulk Data Export) | Import files, manage layers, change basemap, export data and maps |
+| **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks, User Guide | Inspect features, view/edit attribute table, style layers |
+| **Analysis drawer** (right side, opens on demand) | 🧪 Analysis with 13 sections (Point Pattern, Inferential Hotspots, Conservation Planning, etc.) | Click the 🧪 Analysis button in the top toolbar or press `A` to open |
+| **Bottom panel** | Elevation Profile, Analysis Results, How to Cite | View analysis results, elevation profiles, citation formats |
+
 ### Importing Data
 
-Open the **Import** panel (left sidebar, folder icon). Drag and drop files directly onto the map or click **Choose file**.
+Open the **Data Sources** panel (left sidebar). Drag and drop files directly onto the map or click **Choose file**.
 
 | Format | Notes |
 | --- | --- |
@@ -56,11 +67,13 @@ After import the layer appears in the **Layers** panel and the map zooms to its 
 | Control | Location | Action |
 | --- | --- | --- |
 | Zoom in / out | Top-left `+` / `−` | Click or keyboard `+` / `−`; 0.25 zoom increments for fine-grained control |
-| Fullscreen | Top-right | Toggle browser fullscreen (`F`) |
+| Fullscreen | Top-left | Toggle browser fullscreen (`F`) |
 | Measurement tool | Toolbar | Draw polyline or polygon to measure distance / area |
 | Minimap | Bottom-right | Overview of current viewport |
 | Basemap selector | Left panel | Switch between 6 free basemaps (see below) |
 | Basemap opacity | Left panel | Slider 0-100% |
+
+**Keyboard shortcuts**: `+` / `−` zoom in/out, `F` toggle fullscreen, `L` toggle left panel, `A` toggle Analysis drawer, `Esc` cancel digitizing / close modals, `Enter` confirm inline rename, `Ctrl+Z` undo, `Ctrl+Y` / `Ctrl+Shift+Z` redo, `Ctrl+D` duplicate selected features. Shortcuts are suppressed when typing in text inputs.
 
 **Basemaps**: OpenTopoMap (Topo), Esri World Imagery (Satellite), OpenStreetMap (Streets), Esri Shaded Relief (Relief), Esri World Topo (Terrain), CartoDB Dark Matter (Dark).
 
@@ -72,13 +85,16 @@ Every imported or analysis-generated layer appears here.
 
 | Action | How |
 | --- | --- |
-| Toggle visibility | Click the **eye icon** next to the layer |
-| Rename | Double-click the layer name; press Enter to confirm or Esc to cancel |
+| Toggle visibility | Click the 👁 icon next to the layer |
+| Rename | Click the ✏ button, or double-click the layer name; press Enter to confirm or Esc to cancel |
 | Zoom to layer | Click the 🔍 button, or right-click the layer name |
-| Remove layer | Click the **×** button |
+| View fields | Click the 📄 button to see all fields with types and sample values |
+| Show/hide labels | Click the 🏷 button to choose an attribute for map labels |
+| Remove layer | Click the × button |
 | Select for styling | Click the layer name to highlight it in the Symbology panel |
 | Per-layer opacity | Slider in the layer row |
-| Feature labels | Choose any attribute column; adjust font size |
+| Reorder | Drag the ☰ handle, or right-click for Move Up/Down/Top/Bottom |
+| Context menu | Right-click for all options (zoom, rename, visibility, move, symbology, attribute table, fields, remove) |
 
 ---
 
@@ -109,14 +125,16 @@ GeoTIFF layers get a dedicated raster symbology panel with QGIS/ArcGIS-style con
 
 ### Digitizing
 
-Draw new features using the toolbar at the top-right of the map (pencil icons):
+Draw new features using the floating toolbar at the top-center of the map (pencil icons, horizontal layout):
 
-1. Click **Point**, **Line**, or **Polygon**.
+1. Click **Point** (📌), **Line** (─), or **Polygon** (⬡).
 2. Click the map to add vertices. Double-click to finish a line or polygon.
 3. Fill in the attribute form (name, description, category).
 4. The feature is added to the **"Drawn Features"** layer, which is fully exportable.
 
 Press **Esc** at any time to cancel. A crosshair cursor shows when digitizing mode is active.
+
+**Editing tools** (also on the floating toolbar): ✏ Edit vertices (drag to reshape, double-click vertex to delete), □ Rectangle select, ◯ Circle select, ⚘ Duplicate selected (Ctrl+D), 🧲 Snap to vertices (toggle), ↶ Undo (Ctrl+Z), ↷ Redo (Ctrl+Y / Ctrl+Shift+Z), ✖ Cancel / clear selection.
 
 ---
 
@@ -136,7 +154,7 @@ Click any feature on the map to inspect it:
 
 ### Attribute Table
 
-Open **Attribute Table** from the toolbar. Select a layer to see all features in a searchable table. Click a row to zoom to that feature and inspect it in the Feature Info panel.
+Open **Attribute Table** from the right panel. Select a layer to see all features in a searchable table. Click a row to zoom to that feature and inspect it in the Feature Info panel.
 
 ---
 
@@ -146,6 +164,7 @@ Layers with an elevation attribute (column named `elevation`, `elev`, `alt`, `z`
 
 - Distance (km) on the X-axis, elevation (m a.s.l.) on the Y-axis.
 - Multi-layer comparison via toggle checkboxes.
+- **Y from 0** checkbox: unchecked by default (Y-axis starts at actual minimum elevation); check to force Y-axis to start at 0 (sea level).
 - Click a point on the profile chart to pan the map to that location.
 - Drag the top edge of the panel to resize it.
 
@@ -157,7 +176,9 @@ Open the **Export** panel. All layers - imported, drawn, and analysis outputs - 
 
 #### Output CRS selector
 
-Before exporting, choose the target coordinate reference system from the **Output CRS** dropdown. The default is **EPSG:4326 (WGS 84)**. Other presets include UTM zones, national grids (British National Grid, GDA2020, etc.), and Web Mercator. Coordinates are reprojected client-side via proj4js.
+Before exporting, choose the target coordinate reference system from the **Output CRS** dropdown (in the **📄 Per-Layer Export** section). The default is **EPSG:4326 (WGS 84)**. Other presets include UTM zones, national grids (British National Grid, GDA2020, etc.), and Web Mercator. Coordinates are reprojected client-side via proj4js.
+
+**UTM auto-detect**: when you select a layer, GeoSpaX calculates the data's centroid longitude and latitude, determines the correct UTM zone, and shows a hint (e.g., "Your data centroids at 147.1°E, 6.1°S -> UTM Zone 55S (EPSG:32755). Click to select."). Click the link to auto-select the correct CRS. If the zone is not already in the dropdown, GeoSpaX adds it automatically. This works globally for both hemispheres.
 
 #### Data exports
 
@@ -178,8 +199,10 @@ Before exporting, choose the target coordinate reference system from the **Outpu
 
 #### Map image exports
 
-- **Export map as PNG** - captures the current viewport with title, legend, north arrow, and scale bar at 72-400 DPI.
-- **Export map as PDF** - same content embedded in a PDF page (A4 portrait or landscape).
+- **Export map as PNG** (🖼) - captures the current viewport with title, legend, north arrow, and scale bar at 72-400 DPI.
+- **Export map as PDF** (📄) - same content embedded in a PDF page (A4 portrait or landscape).
+
+Both open a floating Export Map dialog. Click **Preview** to open the **Map Composer** for full print-layout control.
 
 ---
 
@@ -203,7 +226,7 @@ GBIF searches support both scientific names and common names. The record limit i
 
 ### Map Composer
 
-Open the **Composer** from the toolbar (layout icon) or the Export panel. The composer provides QGIS/ArcGIS-style print layout with:
+Open the **Composer** from the **Export** panel (left panel): expand **Export** → **🗺 Map Image**, click **Export as PNG** or **Export as PDF**, then click **Preview**. The composer provides QGIS/ArcGIS-style print layout with:
 
 - **Attached mode** - composer opens as a modal overlay on the main window
 - **Detached mode** - opens in a separate browser window for multi-monitor use; stays synchronized with the main map via BroadcastChannel
@@ -230,7 +253,9 @@ Use the **Save Project** / **Load Project** buttons in the global topbar to pers
 
 ## Spatial Analysis Guide
 
-Open the **Analysis** panel (beaker icon). Select a layer from the dropdown, then run any tool. Results appear in the bottom panel and are added as new, exportable layers.
+Open the **Analysis** drawer (click the 🧪 **Analysis** button in the top toolbar, or press `A`). The drawer slides in on the right side, next to the Feature Info panel. Select a layer from the dropdown, then run any tool. Results appear in the bottom panel and are added as new, exportable layers.
+
+**Analysis drawer sections**: 📍 Point Pattern, 📊 Inferential Hotspots & Autocorrelation, 🌡 Interpolation & Density, 🧩 Clustering, 📐 Lines & Polygons, 🧮 Attributes, 🛰 Raster Analysis, ⚖ Multi-Criteria Evaluation, 🌳 Conservation Planning, 🗺 Landscape Metrics, 🦌 SDM, 📠 Raster Reclassify, 📋 Provenance & Project.
 
 ### Geometric / Descriptive Tools
 
@@ -352,6 +377,49 @@ Same as Point Density but weights each point by a selected numeric attribute (e.
 Divides the plane so that every location is assigned to its nearest point. Computed on a 120 × 120 raster grid; boundaries may appear slightly pixelated at close zoom.
 
 **Use it when**: allocating service areas, delineating nearest-feature catchments, or as a first-pass spatial interpolation method.
+
+---
+
+### Calculate Field (🧮 Attributes section)
+
+Creates a new attribute by combining existing fields using rules you define. Two modes:
+
+- **Weighted conditions**: each row tests one field against a threshold (e.g., `elevation_m between 0 and 2000`, `tree_cover_pct >= 50`), and each test contributes a weight to the final score. A point that passes all tests gets the maximum score.
+- **Expression mode**: write a JavaScript-style expression referencing field names (e.g., `elevation_m * 0.001 + tree_cover_pct * 0.01`).
+
+The new field is added to the layer's attribute table and auto-styled with Graduated symbology. A live preview shows the old and new values for the first 5 features before you commit.
+
+**Use it when**: building a habitat suitability score, a composite index, or any derived attribute from multiple fields.
+
+---
+
+### Conservation Planning (🌳 section)
+
+Systematic conservation planning tools for gap analysis and prioritisation:
+
+#### Protection Gap
+
+Overlays your habitat layer (Layer A) with a protected-areas layer (Layer B) and computes how much of your habitat falls inside versus outside existing protected areas. Reports total habitat area, protected area, gap area, and gap percentage. Also names the specific protected areas that overlap your habitat.
+
+**Use it when**: assessing whether your species' habitat is already protected or needs new protection.
+
+#### Priority Area Identification
+
+Takes your species points (which have a habitat score from Calculate Field), checks each point against the protected-areas layer, and identifies points that are both high-quality (score above your threshold) AND unprotected (outside any PA polygon). These are the sites where new conservation action would have the highest return.
+
+**Use it when**: identifying which high-quality sites are unprotected and should be prioritised for new conservation investment.
+
+#### Multi-Criteria Evaluation (WLC)
+
+Weighted Linear Combination overlay of multiple raster or polygon layers. Assign weights to each criterion, and the tool produces a suitability surface. Useful for systematic conservation planning when you have multiple competing objectives (e.g., biodiversity value, threat level, cost).
+
+#### Landscape Metrics
+
+Computes patch-level metrics (area, perimeter, shape index, edge density) for polygon layers. Useful for quantifying habitat fragmentation.
+
+#### Connectivity Graph
+
+Builds a graph of connected habitat patches based on a distance threshold. Useful for identifying isolated patches and planning corridors.
 
 ---
 

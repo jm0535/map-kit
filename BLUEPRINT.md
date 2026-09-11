@@ -1,6 +1,6 @@
 # GeoSpaX - Blueprint & Changelog
 
-**Version:** 1.3.0  
+**Version:** 1.3.1  
 **Author:** Jimmy Moses  
 **Affiliation:** School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology  
 **URL:** https://geospax.in4metrix.dev/  
@@ -11,13 +11,50 @@
 
 ## How to Cite
 
-> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.3.0) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
+> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.3.1) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
 
 See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, and BibTeX formats with copy-to-clipboard.
 
 ---
 
 ## Version History
+
+### v1.3.1 (2026-09-11) - UI Fixes, Keyboard Shortcuts, Documentation
+
+#### Digitizing Toolbar Relocation
+- **Moved to top-center**: floating edit tools (draw point, line, polygon, edit, select, undo, redo, cancel) moved from vertical right-side stack to horizontal bar at top-center of map
+- **Smaller icons**: button size reduced from 34px to 26px for less screen obstruction
+- **No longer blocks bottom panel**: the bottom profile/results panel can be expanded without overlap
+
+#### Layer Panel
+- **Visible rename button**: added ✏ button to each layer row (was only accessible via double-click or right-click context menu)
+- **Layer row buttons**: ☰ drag, 👁 visibility, 🔍 zoom, ✏ rename, 📄 view fields, 🏷 labels, × remove
+
+#### Keyboard Shortcuts
+- **F**: toggle fullscreen (was advertised but not implemented)
+- **L**: toggle left panel (was advertised but not implemented)
+- **+ / -**: zoom in/out (was advertised but not implemented)
+- **A**: toggle Analysis drawer (was implemented but not documented)
+- **Ctrl+Z / Ctrl+Y / Ctrl+D**: undo / redo / duplicate (were implemented but not documented)
+- All shortcuts suppressed when typing in text inputs
+
+#### Elevation Profile
+- **Y from 0 checkbox**: unchecked by default (Y-axis starts at actual minimum elevation); was checked by default which forced Y-axis to 0 even when all elevations were positive
+
+#### Export
+- **UTM auto-detect**: global UTM zone detection works for any world location (both hemispheres), not just Papua New Guinea
+- **Filename field**: added output filename input with auto-generated suggestion (e.g., `Surname_lab_species_points_utm55S_WGS84`)
+
+#### Citation Panel
+- **Scrollable**: How to Cite tab content now scrolls properly when panel is smaller than content
+
+#### Documentation
+- **Em-dash removal**: replaced all em-dashes (—) and en-dashes (–) with regular hyphens (-) across all files per user preference
+- **Screenshots embedded**: 38 screenshots from `screenshots/` folder now embedded in the step-by-step guide DOCX
+- **Icon accuracy**: guide now uses exact icons from GeoSpaX (text-style, no emoji variation selectors)
+- **README.md**: updated panel layout, digitizing location, keyboard shortcuts, layer buttons, Composer access, conservation tools, Calculate Field, UTM auto-detect
+
+---
 
 ### v1.3.0 (2026-09-10) - GeoTIFF Symbology, Open Data Connectors, Composer Fixes
 
@@ -51,7 +88,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 - **Global Save Project / Load Project**: moved to the topbar so users can save/load from anywhere, not just the Analysis panel
 - **Removed duplicate Save/Load**: removed from Analysis and Provenance panels
 - **Fine-grained zoom**: 0.25 zoom increments in the main map and both composer modes (attached + detached)
-- **Elevation profile fix**: Y-axis now starts at zero
+- **Elevation profile fix**: Y from 0 checkbox added (unchecked by default; user can force Y-axis to start at 0)
 - **GBIF common-name search**: search by common name in addition to scientific name
 - **Google Search Console**: site verification file added
 
@@ -279,10 +316,17 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 │  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐  │
 │  │ Left     │  │ Map      │  │ Right Panel           │  │
 │  │ Panel    │  │ Viewport │  │ (Feature Info,        │  │
-│  │ (Import, │  │ (Leaflet)│  │  Symbology, Labels)   │  │
-│  │  Layers, │  │          │  │                       │  │
-│  │  Analysis│  │          │  └──────────────────────┘  │
-│  │  Export) │  │          │  ┌──────────────────────┐  │
+│  │ (Data    │  │ (Leaflet)│  │  Attribute Table,      │  │
+│  │  Sources,│  │          │  │  Symbology, Overview,  │  │
+│  │  Open    │  │  ┌────┐  │  │  Bookmarks, User Guide)│  │
+│  │  Data,   │  │  │Top │  │  └──────────────────────┘  │
+│  │  Layers, │  │  │Bar │  │  ┌──────────────────────┐  │
+│  │  Basemap,│  │  └────┘  │  │ Analysis Drawer       │  │
+│  │  Export) │  │          │  │ (opens on right,       │  │
+│  │          │  │          │  │  hidden by default,     │  │
+│  │          │  │          │  │  13 sections)          │  │
+│  │          │  │          │  └──────────────────────┘  │
+│  │          │  │          │  ┌──────────────────────┐  │
 │  │          │  │          │  │ Bottom Panel          │  │
 │  │          │  │          │  │ (Elevation Profile,   │  │
 │  │          │  │          │  │  Analysis Results,    │  │
