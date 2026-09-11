@@ -3991,6 +3991,8 @@ function createMeasureTool(map) {
 
 // Global layer storage (declared here because MapLegend references it)
 let uploadedLayers = [];
+// Expose on window for external modules (geospax-conservation.js etc.)
+window.uploadedLayers = uploadedLayers;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAP LEGEND CONTROL
@@ -14449,6 +14451,7 @@ async function _applyComposerState(state) {
     isRaster: !!l.isRaster,
     georaster: l.georaster || null,
   }));
+  window.uploadedLayers = uploadedLayers;
   // Restore symbology state.
   for (const k in state.legendState) {
     legendState[k] = state.legendState[k];
