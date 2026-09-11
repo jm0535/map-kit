@@ -396,33 +396,11 @@
     var suggested = (meta.projectId || 'project') + '_' +
                     (meta.subject || 'geospax').replace(/[^\w-]+/g, '_') + '.gspx';
     var json = GSX.projectToJSON(true);
+    var hasFSAccess = typeof root.showSaveFilePicker === 'function';
 
-    // Use the File System Access API (showSaveFilePicker) when available.
-    // This opens the browser's native Save As dialog so the user can
-    // choose both the filename AND the folder to save to.
-    if (typeof root.showSaveFilePicker === 'function') {
-      root.showSaveFilePicker({
-        suggestedName: suggested,
-        types: [{
-          description: 'GeoSpaX workspace (.gspx)',
-          accept: { 'application/json': ['.gspx', '.json'] }
-        }]
-      }).then(function (handle) {
-        return handle.createWritable().then(function (w) {
-          return w.write(json).then(function () { return w.close(); });
-        });
-      }).then(function () {
-        root.showToast('Project saved (' + Math.round(json.length / 1024) +
-                       ' KB)', 'info');
-      }).catch(function (err) {
-        if (err && err.name === 'AbortError') return; // user cancelled
-        root.showToast('Save failed: ' + (err && err.message || err), 'error');
-      });
-      return;
-    }
-
-    // Fallback: in-app dialog with filename input (browsers without
-    // showSaveFilePicker - downloads to the default Downloads folder)
+    // In-app dialog: lets the user type a filename, then choose where
+    // to save via the native Save As dialog (if File System Access API
+    // is available) or via a standard download (fallback).
     var overlay = document.createElement('div');
     overlay.className = 'attr-form-overlay';
     overlay.setAttribute('role', 'dialog');
@@ -431,14 +409,16 @@
     overlay.innerHTML =
       '<div class="attr-form-box">' +
         '<h3>&#x1F4BE; Save Workspace</h3>' +
-        '<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">' +
-        'Enter a filename for your workspace. The file will be saved to your ' +
-        'browser\'s default download folder.</p>' +
         '<div class="attr-form-row">' +
           '<label>Filename</label>' +
           '<input type="text" id="gsx-save-filename" value="' + suggested +
           '" autocapitalize="off" spellcheck="false">' +
         '</div>' +
+        (hasFSAccess
+          ? '<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">' +
+            'Click Save to choose where to save this file on your computer.</p>'
+          : '<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">' +
+            'The file will be saved to your browser\'s default download folder.</p>') +
         '<div class="attr-form-actions">' +
           '<button class="btn-cancel" onclick="this.closest(\'.attr-form-overlay\').remove();">Cancel</button>' +
           '<button class="btn-ok" onclick="_gsxConfirmSave()">Save</button>' +
@@ -457,15 +437,39 @@
       });
     }
 
-    // Confirm save
+    // Confirm save: use File System Access API if available (native
+    // Save As dialog for folder selection), otherwise plain download.
     root._gsxConfirmSave = function () {
       var name = (inp && inp.value ? inp.value.trim() : suggested);
       if (!name) name = suggested;
       if (!/\.\w+$/.test(name)) name += '.gspx';
       overlay.remove();
-      download(name, json, 'application/json');
-      root.showToast('Project saved (' + Math.round(json.length / 1024) +
-                     ' KB) as ' + name, 'info');
+
+      if (hasFSAccess) {
+        root.showSaveFilePicker({
+          suggestedName: name,
+          types: [{
+            description: 'GeoSpaX workspace (.gspx)',
+            accept: { 'application/json': ['.gspx', '.json'] }
+          }]
+        }).then(function (handle) {
+          return handle.createWritable().then(function (w) {
+            return w.write(json).then(function () { return w.close(); });
+          });
+        }).then(function () {
+          root.showToast('Project saved (' + Math.round(json.length / 1024) +
+                         ' KB) as ' + name, 'info');
+        }).catch(function (err) {
+          if (err && err.name === 'AbortError') return;
+          // Fallback to download if showSaveFilePicker fails at runtime
+          download(name, json, 'application/json');
+          root.showToast('Project saved as ' + name, 'info');
+        });
+      } else {
+        download(name, json, 'application/json');
+        root.showToast('Project saved (' + Math.round(json.length / 1024) +
+                       ' KB) as ' + name, 'info');
+      }
     };
 
     // Enter to confirm, Escape to cancel
