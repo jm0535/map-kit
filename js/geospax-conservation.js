@@ -491,6 +491,74 @@
   };
 
   /* ===================================================================
+     P0-5 — PRIORITY AREA IDENTIFICATION
+     Identify high-quality habitat sites that fall OUTSIDE existing
+     protected areas — the "gap" in SCP gap analysis.
+     =================================================================== */
+
+  /**
+   * habitatFeatures: point features with a habitat_score (or named) field
+   * paFeatures:      protected-area polygon features
+   * opts.scoreField:  field name for the habitat score (default 'habitat_score')
+   * opts.minScore:   minimum score to be considered high-quality (default 1)
+   * Returns the subset of points that are high-quality AND unprotected.
+   */
+  GSX.priorityAreas = function (habitatFeatures, paFeatures, opts) {
+    opts = opts || {};
+    var scoreField = opts.scoreField || 'habitat_score';
+    var minScore = (typeof opts.minScore === 'number') ? opts.minScore : 1;
+    var feats = habitatFeatures || [];
+    var pas = GSX.polygonsOnly(paFeatures || []).polys;
+
+    var priority = [], protected_high = [], low_score = [];
+
+    feats.forEach(function (f) {
+      if (!f.geometry || f.geometry.type !== 'Point') return;
+      var score = f.properties ? f.properties[scoreField] : null;
+      if (typeof score !== 'number' || !isFinite(score)) {
+        low_score.push(f);
+        return;
+      }
+      if (score < minScore) {
+        low_score.push(f);
+        return;
+      }
+      // High-quality point — check if inside any PA
+      var insidePA = false;
+      for (var i = 0; i < pas.length; i++) {
+        try {
+          if (T.booleanPointInPolygon(f, pas[i])) { insidePA = true; break; }
+        } catch (e) { /* skip malformed PA */ }
+      }
+      if (insidePA) {
+        protected_high.push(f);
+      } else {
+        var copy = JSON.parse(JSON.stringify(f));
+        copy.properties = copy.properties || {};
+        copy.properties._priority = true;
+        copy.properties._protected = false;
+        copy.properties._score = score;
+        priority.push(copy);
+      }
+    });
+
+    return {
+      ok: true,
+      priorityFeatures: priority,
+      protectedHighFeatures: protected_high,
+      lowScoreFeatures: low_score,
+      totalPoints: feats.filter(function (f) {
+        return f && f.geometry && f.geometry.type === 'Point';
+      }).length,
+      priorityCount: priority.length,
+      protectedHighCount: protected_high.length,
+      lowScoreCount: low_score.length,
+      scoreField: scoreField,
+      minScore: minScore
+    };
+  };
+
+  /* ===================================================================
      UI WRAPPERS  (DOM-dependent — not unit-tested)
      =================================================================== */
 
@@ -590,8 +658,121 @@
     }
     res.caption = 'Protection gap is computed on mapped extent only; ' +
                   'it does not account for management effectiveness.';
+
+    // Render results in the analysis results panel
+    var gapHtml = '<b>Protection Gap Analysis</b><br>' +
+      res.summaryRows.map(function (r) {
+        return '<b>' + r[0] + ':</b> ' + r[1];
+      }).join('<br>') +
+      '<br><span style="color:var(--text-muted)">' + res.caption + '</span>';
+    if (typeof root.showResult === 'function') root.showResult(gapHtml);
+
     root.showToast('Protected ' + res.protectedPct.toFixed(1) + '% of habitat', 'info');
     return res;
+  };
+
+  /* ── P0-5 UI — Priority Area Identification ── */
+
+  GSX.uiPriorityAreas = function () {
+    var habId = document.getElementById('gsx-priority-hab').value;
+    var paId  = document.getElementById('gsx-priority-pa').value;
+    var scoreField = document.getElementById('gsx-priority-field').value || 'habitat_score';
+    var minScore = parseFloat(document.getElementById('gsx-priority-min').value);
+    if (!habId) { root.showToast('Select a habitat layer', 'error'); return; }
+    if (!paId)  { root.showToast('Select a protected-areas layer', 'error'); return; }
+    if (isNaN(minScore)) { root.showToast('Set a minimum habitat score', 'error'); return; }
+
+    var habFeats = featuresOf(habId);
+    var paFeats  = featuresOf(paId);
+    root.showToast('Identifying priority areas…', 'info');
+
+    var res = GSX.priorityAreas(habFeats, paFeats, {
+      scoreField: scoreField, minScore: minScore
+    });
+    if (!res.ok) { root.showToast(res.error || 'Priority area analysis failed', 'error'); return; }
+
+    // Render priority points on the map
+    if (res.priorityFeatures.length > 0) {
+      var lyr = root.L.geoJSON(GSX.fc(res.priorityFeatures), {
+        pointToLayer: function (feat, latlng) {
+          return root.L.circleMarker(latlng, {
+            radius: 7, color: '#e53e3e', weight: 2,
+            fillColor: '#fc8181', fillOpacity: 0.8
+          });
+        },
+        onEachFeature: function (f, l) {
+          var site = f.properties.site || f.properties.gbifID || '(no id)';
+          l.bindPopup('<b>Priority conservation area</b><br>Site: ' + site +
+            '<br>Habitat score: ' + f.properties._score +
+            '<br>Status: Unprotected high-quality habitat');
+        }
+      });
+      root.addAnalysisLayer('Priority Areas (unprotected, score ≥ ' + minScore + ')',
+        [lyr], GSX.fc(res.priorityFeatures));
+    }
+
+    res.summaryRows = [
+      ['Total points analysed',     res.totalPoints],
+      ['High-quality & unprotected (priority)', res.priorityCount],
+      ['High-quality & already protected',      res.protectedHighCount],
+      ['Below score threshold',     res.lowScoreCount],
+      ['Score field',               res.scoreField],
+      ['Minimum score',             res.minScore]
+    ];
+    res.caption = 'Priority areas are high-quality habitat points (score ≥ ' + minScore +
+      ') that fall outside existing protected areas. These are the sites most in need ' +
+      'of new conservation action.';
+
+    // Render results in the analysis results panel
+    var html = '<b>Priority Area Identification</b><br>' +
+      res.summaryRows.map(function (r) {
+        return '<b>' + r[0] + ':</b> ' + r[1];
+      }).join('<br>') +
+      '<br><span style="color:var(--text-muted)">' + res.caption + '</span>';
+    if (typeof root.showResult === 'function') root.showResult(html);
+
+    root.showToast(res.priorityCount + ' priority areas identified', 'info');
+    return res;
+  };
+
+  /** Populate the priority-area dropdowns with loaded layers. */
+  GSX.refreshPriorityDropdowns = function () {
+    var layers = root.uploadedLayers || [];
+    var habSel = document.getElementById('gsx-priority-hab');
+    var paSel  = document.getElementById('gsx-priority-pa');
+    if (habSel) {
+      var habVal = habSel.value;
+      habSel.innerHTML = '<option value="">— select habitat layer —</option>' +
+        layers.map(function (l) {
+          return '<option value="' + l.id + '">' + (l.name || l.id) + '</option>';
+        }).join('');
+      if (habVal && layers.some(function (l) { return l.id === habVal; })) habSel.value = habVal;
+    }
+    if (paSel) {
+      var paVal = paSel.value;
+      paSel.innerHTML = '<option value="">— select protected areas —</option>' +
+        layers.map(function (l) {
+          return '<option value="' + l.id + '">' + (l.name || l.id) + '</option>';
+        }).join('');
+      if (paVal && layers.some(function (l) { return l.id === paVal; })) paSel.value = paVal;
+    }
+    GSX.refreshPriorityFields();
+  };
+
+  /** Populate the score-field dropdown from the selected habitat layer. */
+  GSX.refreshPriorityFields = function () {
+    var habId = document.getElementById('gsx-priority-hab');
+    var fldSel = document.getElementById('gsx-priority-field');
+    if (!habId || !fldSel) return;
+    var l = layerById(habId.value);
+    if (!l) { fldSel.innerHTML = '<option value="habitat_score">habitat_score</option>'; return; }
+    var feats = l.geojsonFeatures || (l.geojson && l.geojson.features) || [];
+    var fields = numericFields(feats);
+    if (fields.indexOf('habitat_score') === -1) fields.unshift('habitat_score');
+    var cur = fldSel.value || 'habitat_score';
+    fldSel.innerHTML = fields.map(function (f) {
+      return '<option value="' + f + '"' + (f === cur ? ' selected' : '') + '>' + f + '</option>';
+    }).join('');
   };
 
   /* ===================================================================

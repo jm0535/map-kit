@@ -3177,6 +3177,29 @@
       <button class="export-btn primary" onclick="GSX.uiProtectionGap()">Run Protection Gap</button>
     </div>
 
+    <div class="ad-subhead">Priority Area Identification</div>
+    <div class="ad-tool-desc">Find high-quality habitat points (based on a score field) that fall OUTSIDE existing protected areas. These are the sites most in need of new conservation action.</div>
+    <div class="ad-form-row">
+      <label>Habitat layer</label>
+      <select id="gsx-priority-hab" onchange="GSX.refreshPriorityFields()"><option value="">— select habitat layer —</option></select>
+    </div>
+    <div class="ad-form-row">
+      <label>Protected areas layer</label>
+      <select id="gsx-priority-pa"><option value="">— select protected areas —</option></select>
+    </div>
+    <div class="ad-form-row">
+      <label>Score field</label>
+      <select id="gsx-priority-field"><option value="habitat_score">habitat_score</option></select>
+    </div>
+    <div class="ad-form-row">
+      <label>Minimum habitat score</label>
+      <input id="gsx-priority-min" type="number" value="2" min="0" step="1" class="gsx-narrow">
+    </div>
+    <div class="ad-btn-row">
+      <button class="export-btn" onclick="GSX.refreshPriorityDropdowns()">&#x21BB; Refresh layers</button>
+      <button class="export-btn primary" onclick="GSX.uiPriorityAreas()">Identify Priority Areas</button>
+    </div>
+
     <div class="ad-subhead">Suitability Mapping (WLC)</div>
     <div class="ad-form-row">
       <label>Cell size (m)</label>
@@ -8262,6 +8285,7 @@ function refreshAnalysisLayerSelect() {
     refreshGSXWLCConstraint();
     refreshGSXSDMLayers();
     refreshGSXRasterLayerSelect();
+    if (typeof GSX.refreshPriorityDropdowns === 'function') GSX.refreshPriorityDropdowns();
     if (typeof GSX.uiRenderProvenanceTable === 'function') GSX.uiRenderProvenanceTable();
   }
 
