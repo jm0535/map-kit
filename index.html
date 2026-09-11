@@ -5882,6 +5882,7 @@ function addLayerToPanel(info) {
     <div class="layer-color-swatch" style="background:${info.color}"></div>
     <span class="layer-label" title="${safeName}&#10;Click to edit symbology&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this); event.stopPropagation();">${safeName}</span>
     <button class="layer-action-btn" onclick="zoomToLayer('${info.id}'); event.stopPropagation();" title="Zoom to layer">&#x1f50d;</button>
+    <button class="layer-label-btn" onclick="renameLayer('${info.id}'); event.stopPropagation();" title="Rename layer">&#x270f;</button>
     <span class="layer-count">${info.featureCount}</span>
     <button class="layer-label-btn" onclick="showLayerFields('${info.id}'); event.stopPropagation();" title="View fields">&#x1F4C4;</button>
     <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this); event.stopPropagation();" title="Show/hide labels">&#x1f3f7;</button>
