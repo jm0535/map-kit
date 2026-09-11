@@ -163,6 +163,8 @@ body {
     <a href="#project-provenance" class="ug-nav-item"><span class="ug-ico">&#x1F4CB;</span> Project &amp; Provenance</a>
     <a href="#how-to-cite" class="ug-nav-item"><span class="ug-ico">&#x1F4DA;</span> How to Cite</a>
     <a href="#glossary" class="ug-nav-item"><span class="ug-ico">&#x1F4AB;</span> Glossary</a>
+    <a href="#references" class="ug-nav-item"><span class="ug-ico">&#x1F4DA;</span> References</a>
+    <a href="#licenses" class="ug-nav-item"><span class="ug-ico">&#x2696;</span> Licenses &amp; Attribution</a>
   </div>
 </nav>
 
@@ -1195,6 +1197,177 @@ body {
         <tr><td><b>.gspx</b></td><td>GeoSpaX project file format. A JSON file containing all layers, styles, digitized features, and bookmarks.</td></tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- REFERENCES -->
+<div class="ug-section" id="references">
+  <div class="ug-section-title"><span class="ug-ico">&#x1F4DA;</span> References</div>
+  <div class="ug-section-body">
+    <p>The methods, algorithms, and data sources used in GeoSpaX are drawn from the peer-reviewed literature and open-data providers below. In-text citations in the analysis sections refer to these entries.</p>
+
+    <h3>Spatial statistics</h3>
+    <table class="ug-table">
+      <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Anselin, L. (1995). Local indicators of spatial association - LISA. <i>Geographical Analysis</i> 27(2): 93-115.</td><td>LISA Cluster &amp; Outlier Analysis</td></tr>
+        <tr><td>2</td><td>Benjamini, Y. &amp; Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. <i>Journal of the Royal Statistical Society, Series B</i> 57(1): 289-300.</td><td>FDR correction in Gi* and LISA</td></tr>
+        <tr><td>3</td><td>Chamberlain, R. G. &amp; Duquette, W. H. (2009). Some algorithms for polygons on a sphere. <i>Proceedings of the 24th Annual GIS in Action Conference</i>, pp. 1-10. NASA JPL.</td><td>Polygon area (spherical excess)</td></tr>
+        <tr><td>4</td><td>Clark, P. J. &amp; Evans, F. C. (1954). Distance to nearest neighbor as a measure of spatial relationships in populations. <i>Ecology</i> 35(4): 445-453.</td><td>Nearest Neighbor Index</td></tr>
+        <tr><td>5</td><td>Cliff, A. D. &amp; Ord, J. K. (1981). <i>Spatial Processes: Models and Applications</i>. London: Pion.</td><td>Global Moran's I (randomization variance)</td></tr>
+        <tr><td>6</td><td>Ester, M., Kriegel, H.-P., Sander, J. &amp; Xu, X. (1996). A density-based algorithm for discovering clusters in large spatial databases with noise. <i>Proceedings of the 2nd International Conference on Knowledge Discovery and Data Mining (KDD-96)</i>, pp. 226-231.</td><td>DBSCAN Clustering</td></tr>
+        <tr><td>7</td><td>Moran, P. A. P. (1950). Notes on continuous stochastic phenomena. <i>Biometrika</i> 37(1/2): 17-23.</td><td>Global Moran's I (conceptual basis)</td></tr>
+        <tr><td>8</td><td>Ord, J. K. &amp; Getis, A. (1995). Local spatial autocorrelation statistics: distributional issues and an application. <i>Geographical Analysis</i> 27(4): 286-306.</td><td>Getis-Ord Gi* Hot Spot Analysis</td></tr>
+        <tr><td>9</td><td>Shepard, D. (1968). A two-dimensional interpolation function for irregularly-spaced data. <i>Proceedings of the 1968 ACM National Conference</i>, pp. 517-524.</td><td>IDW Interpolation</td></tr>
+        <tr><td>10</td><td>Abramowitz, M. &amp; Stegun, I. A. (1964). <i>Handbook of Mathematical Functions</i>. Washington, DC: National Bureau of Standards. Formula 7.1.26.</td><td>Normal CDF approximation for z-score to p-value</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Geometry &amp; simplification</h3>
+    <table class="ug-table">
+      <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
+      <tbody>
+        <tr><td>11</td><td>Douglas, D. H. &amp; Peucker, T. K. (1973). Algorithms for the reduction of the number of points required to represent a digitized line or its caricature. <i>The Canadian Cartographer</i> 10(2): 112-122.</td><td>Simplify Geometries</td></tr>
+        <tr><td>12</td><td>Otsu, N. (1979). A threshold selection method from gray-level histograms. <i>IEEE Transactions on Systems, Man, and Cybernetics</i> 9(1): 62-66.</td><td>Raster Reclassify histogram threshold</td></tr>
+        <tr><td>13</td><td>Vorono\u00ef, G. F. (1908). Nouvelles applications des parametres continus a la theorie des formes quadratiques. <i>Journal fur die Reine und Angewandte Mathematik</i> 133: 97-178.</td><td>Voronoi / Thiessen Polygons</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Species distribution modeling</h3>
+    <table class="ug-table">
+      <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
+      <tbody>
+        <tr><td>14</td><td>Booth, T. H., Nix, H. A., Busby, J. R. &amp; Hutchinson, M. F. (2014). BIOCLIM: the first species distribution modelling package, its early applications and relevance to most current MaxEnt studies. <i>Diversity and Distributions</i> 20(1): 1-9.</td><td>BIOCLIM mode</td></tr>
+        <tr><td>15</td><td>Hutchinson, G. E. (1957). Concluding remarks. <i>Cold Spring Harbor Symposia on Quantitative Biology</i> 22: 415-427.</td><td>Niche concept underlying BIOCLIM</td></tr>
+        <tr><td>16</td><td>Mahalanobis, P. C. (1936). On the generalised distance in statistics. <i>Proceedings of the National Institute of Sciences of India</i> 2(1): 49-55.</td><td>Mahalanobis distance SDM</td></tr>
+        <tr><td>17</td><td>Phillips, S. J., Anderson, R. P. &amp; Schapire, R. E. (2006). Maximum entropy modeling of species geographic distributions. <i>Ecological Modelling</i> 190(3-4): 231-259.</td><td>MaxEnt (reference; API path only)</td></tr>
+        <tr><td>18</td><td>Fick, S. E. &amp; Hijmans, R. J. (2017). WorldClim 2: new 1-km spatial resolution climate surfaces for global land areas. <i>International Journal of Climatology</i> 37(12): 4302-4315.</td><td>WorldClim BIOCLIM variable definitions</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Conservation planning</h3>
+    <table class="ug-table">
+      <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
+      <tbody>
+        <tr><td>19</td><td>CBD (2022). <i>Kunming-Montreal Global Biodiversity Framework</i>. Montreal: Convention on Biological Diversity. Target 3 (30 by 30).</td><td>Protection Gap context</td></tr>
+        <tr><td>20</td><td>Ball, I. R., Possingham, H. P. &amp; Watts, M. (2009). Marxan and relatives: software for spatial conservation prioritisation. In: Moilanen, A., Wilson, K. A. &amp; Possingham, H. P. (eds), <i>Spatial Conservation Prioritisation</i>, pp. 185-195. Oxford: Oxford University Press.</td><td>Systematic conservation planning context</td></tr>
+        <tr><td>21</td><td>Dudley, N. (ed.) (2008). <i>Guidelines for Applying Protected Area Management Categories</i>. Gland: IUCN.</td><td>Protected area categories</td></tr>
+        <tr><td>22</td><td>Malczewski, J. (2000). GIS and multicriteria decision analysis. <i>Journal of Geographical Systems</i> 2(4): 381-401.</td><td>WLC suitability mapping</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Landscape ecology</h3>
+    <table class="ug-table">
+      <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
+      <tbody>
+        <tr><td>23</td><td>McGarigal, K. &amp; Marks, B. J. (1995). <i>FRAGSTATS: Spatial Pattern Analysis Program for Quantifying Landscape Structure</i>. USDA Forest Service General Technical Report PNW-GTR-351.</td><td>Patch fragmentation metrics</td></tr>
+        <tr><td>24</td><td>Urban, D. &amp; Keitt, T. (2001). Landscape connectivity: a graph-theoretic perspective. <i>Ecology</i> 82(5): 1205-1218.</td><td>Connectivity graph</td></tr>
+        <tr><td>25</td><td>Hansen, M. C. et al. (2013). High-resolution global maps of 21st-century forest cover change. <i>Science</i> 342(6160): 850-853.</td><td>Forest change detection context</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Software citation &amp; reproducibility</h3>
+    <table class="ug-table">
+      <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
+      <tbody>
+        <tr><td>26</td><td>Smith, A. M. et al. (2016). Software citation principles with FORCE11. <i>PeerJ Computer Science</i> 2: e86.</td><td>How to Cite format</td></tr>
+        <tr><td>27</td><td>Moses, J. (2026). GeoSpaX: Interactive Web GIS &amp; Spatial Analysis, Version 1.3.1. School of Forestry, University of Technology, Papua New Guinea. Available at: https://geospax.in4metrix.dev/</td><td>GeoSpaX self-citation</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LICENSES & ATTRIBUTION -->
+<div class="ug-section" id="licenses">
+  <div class="ug-section-title"><span class="ug-ico">&#x2696;</span> Licenses &amp; Attribution</div>
+  <div class="ug-section-body">
+    <p>GeoSpaX is released under the <a href="https://github.com/jm0535/map-kit/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>. The third-party libraries, basemaps, and data connectors it uses retain their own licenses and attribution requirements, summarised below.</p>
+
+    <h3>GeoSpaX</h3>
+    <table class="ug-table">
+      <thead><tr><th>Component</th><th>License</th><th>Author / Holder</th></tr></thead>
+      <tbody>
+        <tr><td>GeoSpaX application &amp; source code</td><td>MIT</td><td>Jimmy Moses, School of Forestry, PNG University of Technology</td></tr>
+        <tr><td>GeoSpaX Python package</td><td>MIT</td><td>Jimmy Moses</td></tr>
+        <tr><td>Sample datasets (e.g. <code>sample_species_richness.geojson</code>)</td><td>CC BY 4.0</td><td>Jimmy Moses</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Vendored JavaScript libraries</h3>
+    <p>All libraries below are bundled in the <code>vendor/</code> directory; no CDN is used. The app works fully offline after the initial page load.</p>
+    <table class="ug-table">
+      <thead><tr><th>Library</th><th>Version</th><th>License</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer">Leaflet</a></td><td>1.9.4</td><td>BSD-2-Clause</td><td>Interactive map engine</td></tr>
+        <tr><td><a href="https://www.chartjs.org/" target="_blank" rel="noopener noreferrer">Chart.js</a></td><td>4.4.0</td><td>MIT</td><td>Elevation profiles, Moran scatterplot</td></tr>
+        <tr><td><a href="https://html2canvas.hertzen.com/" target="_blank" rel="noopener noreferrer">html2canvas</a></td><td>1.4.1</td><td>MIT</td><td>Map PNG export</td></tr>
+        <tr><td><a href="https://github.com/parallax/jsPDF" target="_blank" rel="noopener noreferrer">jsPDF</a></td><td>2.5.1</td><td>MIT</td><td>Map PDF export</td></tr>
+        <tr><td><a href="https://sheetjs.com/" target="_blank" rel="noopener noreferrer">SheetJS (xlsx)</a></td><td>0.20.3</td><td>Apache-2.0</td><td>XLSX import and export</td></tr>
+        <tr><td><a href="https://github.com/mapbox/shp-write" target="_blank" rel="noopener noreferrer">shp-write</a></td><td>0.3.2</td><td>MIT</td><td>Shapefile export</td></tr>
+        <tr><td><a href="https://github.com/calvinmetcalf/shpjs" target="_blank" rel="noopener noreferrer">shpjs</a></td><td>6.1.0</td><td>MIT</td><td>Shapefile import</td></tr>
+        <tr><td><a href="https://github.com/mapbox/togeojson" target="_blank" rel="noopener noreferrer">toGeoJSON</a></td><td>0.16.0</td><td>MIT</td><td>KML / GPX import</td></tr>
+        <tr><td><a href="https://github.com/proj4js/proj4js" target="_blank" rel="noopener noreferrer">proj4js</a></td><td>2.11.0</td><td>MIT</td><td>CRS reprojection</td></tr>
+        <tr><td><a href="https://github.com/GeoTIFF/georaster" target="_blank" rel="noopener noreferrer">GeoRaster</a></td><td>1.6.0</td><td>MIT</td><td>GeoTIFF parsing</td></tr>
+        <tr><td><a href="https://github.com/GeoTIFF/georaster-layer-for-leaflet" target="_blank" rel="noopener noreferrer">GeoRaster Layer</a></td><td>3.10.0</td><td>MIT</td><td>GeoTIFF rendering</td></tr>
+        <tr><td><a href="https://github.com/Leaflet/Leaflet.heat" target="_blank" rel="noopener noreferrer">Leaflet Heat</a></td><td>0.2.0</td><td>BSD-2-Clause</td><td>Heat map layers</td></tr>
+        <tr><td><a href="https://turfjs.org/" target="_blank" rel="noopener noreferrer">Turf.js</a></td><td>6.5.0</td><td>MIT</td><td>Spatial operations (overlay, buffer, simplification)</td></tr>
+        <tr><td><a href="https://github.com/geotiffjs/geotiff.js" target="_blank" rel="noopener noreferrer">geotiff.js</a></td><td>2.1.3</td><td>MIT</td><td>GeoTIFF parsing fallback</td></tr>
+        <tr><td><a href="https://github.com/ljagis/leaflet-measure" target="_blank" rel="noopener noreferrer">Leaflet Measure</a></td><td>3.1.0</td><td>MIT</td><td>Distance / area measurement</td></tr>
+        <tr><td><a href="https://github.com/brunob/leaflet.fullscreen" target="_blank" rel="noopener noreferrer">Leaflet Fullscreen</a></td><td>3.0.0</td><td>MIT</td><td>Fullscreen control</td></tr>
+        <tr><td><a href="https://rsms.me/inter/" target="_blank" rel="noopener noreferrer">Inter font</a></td><td>4.0</td><td>OFL-1.1</td><td>UI typeface</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Basemap attribution</h3>
+    <table class="ug-table">
+      <thead><tr><th>Basemap</th><th>Provider</th><th>Attribution / License</th></tr></thead>
+      <tbody>
+        <tr><td>Topo</td><td>Esri World Topo</td><td>&copy; Esri</td></tr>
+        <tr><td>Satellite</td><td>Esri World Imagery</td><td>&copy; Esri</td></tr>
+        <tr><td>Hillshade</td><td>Esri Shaded Relief</td><td>&copy; Esri; Sources: USGS, NGA, NASA, CGIAR</td></tr>
+        <tr><td>Streets</td><td>OpenStreetMap</td><td>&copy; OpenStreetMap contributors (ODbL)</td></tr>
+        <tr><td>OpenTopoMap</td><td>OpenTopoMap</td><td>Map data &copy; OpenStreetMap contributors, SRTM; Map style &copy; OpenTopoMap (CC-BY-SA)</td></tr>
+        <tr><td>Positron</td><td>CartoDB Light</td><td>&copy; OpenStreetMap contributors &copy; CARTO</td></tr>
+        <tr><td>Dark Matter</td><td>CartoDB Dark</td><td>&copy; OpenStreetMap contributors &copy; CARTO</td></tr>
+        <tr><td>USGS Topo</td><td>USGS National Map (WMS)</td><td>USGS The National Map</td></tr>
+        <tr><td>USGS Imagery</td><td>USGS National Map (WMS)</td><td>USGS The National Map</td></tr>
+        <tr><td>USGS Shaded Relief</td><td>USGS 3DEP (WMS)</td><td>USGS 3D Elevation Program</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Open data connectors</h3>
+    <table class="ug-table">
+      <thead><tr><th>Connector</th><th>Provider</th><th>API / License</th></tr></thead>
+      <tbody>
+        <tr><td>OSM Overpass</td><td>OpenStreetMap</td><td>Overpass API; data &copy; OpenStreetMap contributors (ODbL)</td></tr>
+        <tr><td>GBIF Biodiversity</td><td>Global Biodiversity Information Facility</td><td>GBIF API; CC-BY 4.0 per dataset</td></tr>
+        <tr><td>Natural Earth</td><td>Natural Earth Project</td><td>Public domain (CC0)</td></tr>
+        <tr><td>Ecoregions</td><td>WWF / RESOLVE</td><td>WWF Terrestrial Ecoregions; CC-BY 4.0</td></tr>
+        <tr><td>Marine Boundaries</td><td>MarineRegions.org (VLIZ)</td><td>CC-BY 4.0</td></tr>
+        <tr><td>World Bank</td><td>World Bank Group</td><td>World Bank Open Data API; CC-BY 4.0</td></tr>
+        <tr><td>Geocoding / Search</td><td>Nominatim (OpenStreetMap)</td><td>Usage policy; data &copy; OpenStreetMap contributors</td></tr>
+        <tr><td>CRS definitions</td><td>epsg.io</td><td>Map projection data under CC-BY 4.0</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Python package dependencies</h3>
+    <table class="ug-table">
+      <thead><tr><th>Library</th><th>License</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://geopandas.org/" target="_blank" rel="noopener noreferrer">geopandas</a></td><td>BSD-3-Clause</td><td>Geospatial data frames</td></tr>
+        <tr><td><a href="https://pandas.pydata.org/" target="_blank" rel="noopener noreferrer">pandas</a></td><td>BSD-3-Clause</td><td>Tabular data</td></tr>
+        <tr><td><a href="https://matplotlib.org/" target="_blank" rel="noopener noreferrer">matplotlib</a></td><td>PSF-based (Matplotlib license)</td><td>Static maps</td></tr>
+        <tr><td><a href="https://python-visualization.github.io/folium/" target="_blank" rel="noopener noreferrer">folium</a></td><td>MIT</td><td>Interactive maps</td></tr>
+        <tr><td><a href="https://contextily.readthedocs.io/" target="_blank" rel="noopener noreferrer">contextily</a></td><td>BSD-3-Clause</td><td>Basemap tiles</td></tr>
+        <tr><td><a href="https://shapely.readthedocs.io/" target="_blank" rel="noopener noreferrer">shapely</a></td><td>BSD-3-Clause</td><td>Geometry operations</td></tr>
+        <tr><td><a href="https://pyproj4.github.io/pyproj/" target="_blank" rel="noopener noreferrer">pyproj</a></td><td>MIT</td><td>CRS transformations</td></tr>
+      </tbody>
+    </table>
+
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Attribution in exported maps</div>
+      When you export a map via the Map Layout Composer with <b>Source attribution</b> enabled, the relevant basemap and data attributions are automatically included in the output. Always retain these attributions in published figures.
+    </div>
   </div>
 </div>
 
