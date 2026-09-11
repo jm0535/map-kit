@@ -2243,6 +2243,14 @@
 </head>
 <body>
 
+<!-- Early popout detection: add composer-popout class before any main
+     app JS runs, so the main app UI never flashes in the detached window. -->
+<script>
+if (new URLSearchParams(window.location.search).get('composer') === '1') {
+  document.body.classList.add('composer-popout');
+}
+</script>
+
 <!-- Top bar -->
 <div id="topbar">
   <div class="logo">&#x1f5fa; GeoSpaX</div>
@@ -3867,16 +3875,21 @@ function haversineKm(pts) {
 // ═══════════════════════════════════════════════════════════════════════════
 // MAP INIT
 // ═══════════════════════════════════════════════════════════════════════════
+// In composer popout mode (?composer=1) the main map is hidden, so skip
+// adding zoom/scale/fullscreen controls and the measure tool to save resources.
+const _isPopout = new URLSearchParams(window.location.search).get('composer') === '1';
 const map = L.map('map', { center:[-6.0,146.0], zoom:8, zoomControl:false, zoomSnap:0.25, zoomDelta:0.25 });
-L.control.zoom({position:'topleft'}).addTo(map);
-L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
-try { L.control.fullscreen({position:'topleft'}).addTo(map); } catch(e) {}
-// Custom measurement tool (distance + area) - replaces the leaflet-measure
-// vendor plugin for a UI that matches the app theme and never covers the
-// zoom/fullscreen controls. All distances are geodesic (Leaflet spherical);
-// areas use the spherical-excess ringArea() helper.
 let measureTool = null;
-try { measureTool = createMeasureTool(map); } catch (e) { console.error('Measure tool init failed:', e); }
+if (!_isPopout) {
+  L.control.zoom({position:'topleft'}).addTo(map);
+  L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
+  try { L.control.fullscreen({position:'topleft'}).addTo(map); } catch(e) {}
+  // Custom measurement tool (distance + area) - replaces the leaflet-measure
+  // vendor plugin for a UI that matches the app theme and never covers the
+  // zoom/fullscreen controls. All distances are geodesic (Leaflet spherical);
+  // areas use the spherical-excess ringArea() helper.
+  try { measureTool = createMeasureTool(map); } catch (e) { console.error('Measure tool init failed:', e); }
+}
 
 // Populate OSM quick-query buttons in the Open Data panel
 (function() {
