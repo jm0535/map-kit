@@ -3353,6 +3353,20 @@
   </div>
 </div>
 
+<!-- View Fields modal -->
+<div id="view-fields-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeViewFields()">
+  <div id="view-fields-box" style="background:var(--surface-1);border:1px solid var(--border-strong);border-radius:8px;padding:20px 24px;width:520px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <h3 id="vf-title" style="color:var(--accent);font-size:13px;margin:0 0 2px;">Layer Fields</h3>
+        <span id="vf-subtitle" style="color:var(--text-muted);font-size:11px;"></span>
+      </div>
+      <button onclick="closeViewFields()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0 4px;" title="Close">&times;</button>
+    </div>
+    <div id="vf-content" style="flex:1;overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth;"></div>
+  </div>
+</div>
+
 <!-- Column mapper modal -->
 <div id="col-mapper-overlay">
   <div id="col-mapper-box">
@@ -5813,6 +5827,7 @@ function addLayerToPanel(info) {
     <span class="layer-label" title="${safeName}&#10;Click to edit symbology&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this); event.stopPropagation();">${safeName}</span>
     <button class="layer-action-btn" onclick="zoomToLayer('${info.id}'); event.stopPropagation();" title="Zoom to layer">&#x1f50d;</button>
     <span class="layer-count">${info.featureCount}</span>
+    <button class="layer-label-btn" onclick="showLayerFields('${info.id}'); event.stopPropagation();" title="View fields">&#x1F4C4;</button>
     <button class="layer-label-btn" onclick="openLabelPopover('${info.id}', this); event.stopPropagation();" title="Show/hide labels">&#x1f3f7;</button>
     <button class="layer-remove" onclick="removeUploadedLayer('${info.id}'); event.stopPropagation();" title="Remove layer">&times;</button>
     <div class="label-popover" id="lp-${info.id}"></div>
@@ -10141,6 +10156,7 @@ function openLayerContextMenu(id, x, y) {
     <div class="lcm-sep"></div>
     <div class="lcm-item" onclick="closeLayerContextMenu();selectSymbologyLayer('${id}')"><span class="lcm-icon">&#x1F3A8;</span> Edit Symbology</div>
     <div class="lcm-item" onclick="closeLayerContextMenu();openAttrTableForLayer('${id}')"><span class="lcm-icon">&#x1F4CB;</span> Open Attribute Table</div>
+    <div class="lcm-item" onclick="closeLayerContextMenu();showLayerFields('${id}')"><span class="lcm-icon">&#x1F4C4;</span> View Fields</div>
     <div class="lcm-sep"></div>
     <div class="lcm-item danger" onclick="closeLayerContextMenu();removeUploadedLayer('${id}')"><span class="lcm-icon">&#x1F5D1;</span> Remove Layer</div>
   `;
@@ -10168,6 +10184,58 @@ function closeLayerContextMenu() {
   if (menu) menu.remove();
   document.removeEventListener('mousedown', _lcmOutside, true);
   document.removeEventListener('keydown', _lcmKey, true);
+}
+
+// Quick field viewer: shows all field names, types, and sample values
+function showLayerFields(id) {
+  const info = uploadedLayers.find(l => l.id === id);
+  if (!info) return;
+  const overlay = document.getElementById('view-fields-overlay');
+  const title = document.getElementById('vf-title');
+  const subtitle = document.getElementById('vf-subtitle');
+  const content = document.getElementById('vf-content');
+  title.textContent = info.name || id;
+  // Collect all field names and sample values
+  const fieldMap = {};
+  let featureCount = 0;
+  info.layer.eachLayer(sub => {
+    if (!sub.feature) return;
+    featureCount++;
+    const props = sub.feature.properties || {};
+    Object.keys(props).forEach(k => {
+      if (!fieldMap[k]) fieldMap[k] = { values: [], count: 0 };
+      fieldMap[k].count++;
+      if (fieldMap[k].values.length < 3 && props[k] !== null && props[k] !== undefined && props[k] !== '') {
+        fieldMap[k].values.push(String(props[k]));
+      }
+    });
+  });
+  const fieldCount = Object.keys(fieldMap).length;
+  subtitle.textContent = `${fieldCount} fields, ${featureCount} features`;
+  if (fieldCount === 0) {
+    content.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">No fields found in this layer.</div>';
+  } else {
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:6px 8px;color:var(--accent);">#</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Field Name</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Type</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Sample Values</th></tr></thead><tbody>';
+    Object.keys(fieldMap).sort().forEach((k, i) => {
+      const f = fieldMap[k];
+      const sample = f.values.length > 0 ? f.values.map(v => escapeHtml(v.length > 30 ? v.substring(0, 30) + '...' : v)).join(', ') : '<span style="color:var(--text-faint);">empty</span>';
+      // Detect type from first non-null value
+      let type = 'text';
+      const firstVal = f.values[0];
+      if (firstVal !== undefined) {
+        if (!isNaN(parseFloat(firstVal)) && isFinite(parseFloat(firstVal))) type = 'number';
+        else if (firstVal === 'true' || firstVal === 'false') type = 'boolean';
+      }
+      html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 8px;color:var(--text-faint);">${i + 1}</td><td style="padding:5px 8px;font-weight:600;">${escapeHtml(k)}</td><td style="padding:5px 8px;color:var(--text-muted);">${type}</td><td style="padding:5px 8px;color:var(--text-muted);">${sample}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    content.innerHTML = html;
+  }
+  overlay.style.display = 'flex';
+}
+
+function closeViewFields() {
+  document.getElementById('view-fields-overlay').style.display = 'none';
 }
 
 // Helper used by the context menu: select the layer in the attribute table.
