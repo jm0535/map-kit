@@ -2209,6 +2209,18 @@
           <div class="spinner"></div>
           <span id="processing-text">Processing file...</span>
         </div>
+        <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">&#x1F4C1; Sample Datasets</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('sample_species_richness.geojson', 'Species Richness (41 pts)')" title="41 species-richness survey points across two PNG montane transects">Species Richness</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('butterfly_presences.geojson', 'Butterfly Presences')" title="Butterfly occurrence points for SDM practice">Butterfly Presences</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('forest_patches.geojson', 'Forest Patches')" title="Forest patch polygons for landscape metrics">Forest Patches</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('habitat_survey_grid.geojson', 'Habitat Survey Grid')" title="Hexagonal survey grid for MCE practice">Habitat Grid</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('stream_water_sources.geojson', 'Stream Water Sources')" title="Stream and water source points">Water Sources</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px;" onclick="loadSampleData('vine_host_plants.geojson', 'Vine Host Plants')" title="Vine host plant locations">Vine Host Plants</button>
+            <button class="btn-primary" style="font-size:10px; padding:5px 4px; grid-column:1 / -1;" onclick="loadSampleData('PNG_BIO1_30s.tif', 'BIO1 Temperature')" title="WorldClim BIO1 annual mean temperature raster for PNG">&#x1F6F0; BIO1 Temperature (GeoTIFF)</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2635,7 +2647,7 @@
         Drag &amp; drop any supported file onto the map, or click the <b>Data Sources</b> panel and use <b>Choose file</b>.<br>
         Supported formats: <b>GeoJSON</b>, <b>KML/KMZ</b>, <b>GPX</b>, <b>Shapefile (.zip)</b>, <b>CSV</b>, <b>XLSX</b>, <b>GeoTIFF</b>.<br>
         CSV and XLSX files open a column mapper - pick the latitude, longitude, optional label, and elevation columns, and set the source CRS if your coordinates are projected (e.g. UTM).<br>
-        Try the built-in sample: drag <code>samples/sample_species_richness.geojson</code> onto the map to explore all analysis tools with ready-made data.<br><br>
+        Try the built-in sample: click <b>Species Richness</b> in the <b>Sample Datasets</b> section of <b>Data Sources</b> to load ready-made data and explore all analysis tools.<br><br>
 
         <!-- ── MAP NAVIGATION ── -->
         <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;">&#x25B6; Map Navigation</div>
@@ -7743,6 +7755,37 @@ async function processFile(file) {
   else {
     showToast(`Unsupported file type: .${ext}`, 'error');
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SAMPLE DATA LOADER
+// ═══════════════════════════════════════════════════════════════════════════
+async function loadSampleData(filename, displayName) {
+  showProcessing(`Loading ${displayName}...`);
+  try {
+    const ext = filename.split('.').pop().toLowerCase();
+    const url = 'samples/' + filename;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Could not load ${filename} (HTTP ${resp.status})`);
+
+    if (ext === 'geojson' || ext === 'json') {
+      const gj = await resp.json();
+      addUploadedGeoJSON(gj, displayName);
+    } else if (ext === 'tif' || ext === 'tiff') {
+      const buf = await resp.arrayBuffer();
+      const file = new File([buf], filename, { type: 'image/tiff' });
+      await loadGeoTIFFFile(file, displayName);
+    } else {
+      const text = await resp.text();
+      const file = new File([text], filename);
+      await processFile(file);
+    }
+    showToast(`Loaded ${displayName}`, 'info');
+  } catch (err) {
+    console.error(err);
+    showToast(`Error loading sample: ${err.message}`, 'error');
+  }
+  hideProcessing();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

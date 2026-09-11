@@ -19,7 +19,7 @@ make serve
 open index.html
 ```
 
-**Try the sample dataset** - drag `samples/sample_species_richness.geojson` onto the map (or use **Import → Choose file**). It contains 41 species-richness survey points across two Papua New Guinea montane transects and is designed to produce clear hot-spot and autocorrelation results straight away.
+**Try the sample datasets** - open **Data Sources** in the left panel and click any button in the **Sample Datasets** section to load ready-made data (species richness, butterfly presences, forest patches, habitat grid, water sources, vine host plants, and a WorldClim BIO1 GeoTIFF). The species richness sample contains 41 survey points across two Papua New Guinea montane transects and is designed to produce clear hot-spot and autocorrelation results straight away.
 
 ### Python Package
 
@@ -558,9 +558,30 @@ The chart is interactive: hover a point to see the feature's site name and attri
 
 ---
 
-## Sample Dataset
+## Sample Datasets
 
-`samples/sample_species_richness.geojson` - 41 fictional but ecologically realistic species-richness survey points across two montane transects in Papua New Guinea:
+All sample datasets are available directly from the app: open **Data Sources** in the left panel and click any button in the **Sample Datasets** section. No file browsing needed.
+
+### Vector samples
+
+| File | Description |
+|------|-------------|
+| `sample_species_richness.geojson` | 41 species-richness survey points across two PNG montane transects (YUS + Wilhelm) |
+| `butterfly_presences.geojson` | Butterfly occurrence points for SDM practice |
+| `forest_patches.geojson` | Forest patch polygons for landscape metrics |
+| `habitat_survey_grid.geojson` | Hexagonal survey grid for MCE practice |
+| `stream_water_sources.geojson` | Stream and water source points |
+| `vine_host_plants.geojson` | Vine host plant locations |
+
+### Raster samples
+
+| File | Description |
+|------|-------------|
+| `PNG_BIO1_30s.tif` | WorldClim BIO1 (annual mean temperature) for PNG at 30-arcsecond resolution |
+
+### Species richness sample details
+
+`sample_species_richness.geojson` - 41 fictional but ecologically realistic species-richness survey points across two montane transects in Papua New Guinea:
 
 - **YUS transect** (Huon Peninsula, ~146°E): 26 sites from 50 m to 3190 m elevation. Richness peaks at ~1800-2000 m (mid-elevation hump), producing a clear hot-spot cluster detectable by Gi* and LISA.
 - **Wilhelm transect** (Chimbu Province, ~145°E): 15 sites from 2620 m to 4509 m. Uniformly low richness at high elevation; forms a cold-spot cluster.
