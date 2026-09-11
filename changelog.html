@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeoSpaX Changelog</title>
+<style>
+:root {
+  --bg: #0f1117; --fg: #e0e0e0; --accent: #4a9eff; --muted: #999;
+  --sidebar-bg: #161821; --border: #2a2d3a; --code-bg: #1a1a2e;
+  --card-bg: #1a1c28; --table-stripe: #14161e; --table-header: #1e2030;
+  --badge-new: #16a34a; --badge-fix: #2563eb; --badge-enh: #d97706;
+  --badge-dep: #dc2626; --badge-sec: #7c3aed;
+}
+body.light {
+  --bg: #ffffff; --fg: #1a1a1a; --accent: #2563eb; --muted: #666;
+  --sidebar-bg: #f6f8fa; --border: #e1e4e8; --code-bg: #f0f0f0;
+  --card-bg: #f9f9fb; --table-stripe: #f6f8fa; --table-header: #eef1f4;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--bg); color: var(--fg); line-height: 1.7; font-size: 15px;
+  display: flex; min-height: 100vh;
+}
+.cl-sidebar {
+  width: 280px; min-width: 280px; background: var(--sidebar-bg);
+  border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0;
+  overflow-y: auto; z-index: 100;
+}
+.cl-sidebar-header { padding: 28px 24px 18px; border-bottom: 1px solid var(--border); }
+.cl-sidebar-header h1 { font-size: 20px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+.cl-sidebar-header .version { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.cl-sidebar-header .back-link { display: block; margin-top: 10px; font-size: 12px; color: var(--accent); text-decoration: none; }
+.cl-sidebar-header .back-link:hover { text-decoration: underline; }
+.cl-search {
+  margin: 14px 18px 10px; padding: 8px 12px; width: calc(100% - 36px);
+  border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg);
+  font-size: 13px; outline: none; transition: border-color 0.15s;
+}
+.cl-search:focus { border-color: var(--accent); }
+.cl-nav { padding: 8px 0 24px; }
+.cl-nav-group { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); padding: 12px 24px 4px; }
+.cl-nav-item {
+  display: block; padding: 7px 24px; font-size: 13px; color: var(--muted);
+  text-decoration: none; transition: all 0.12s; border-left: 3px solid transparent;
+}
+.cl-nav-item:hover { color: var(--fg); background: var(--table-header); }
+.cl-nav-item.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.cl-nav-item .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-left: 6px; }
+.cl-main { margin-left: 280px; flex: 1; }
+.cl-content { max-width: 920px; margin: 0 auto; padding: 48px 48px 80px; }
+.cl-page-header { margin-bottom: 48px; padding-bottom: 28px; border-bottom: 2px solid var(--border); }
+.cl-page-header .breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.cl-page-header .breadcrumb a { color: var(--accent); text-decoration: none; }
+.cl-page-header h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.8px; color: var(--fg); }
+.cl-page-header .subtitle { font-size: 16px; color: var(--muted); margin-top: 8px; }
+.cl-release { margin-bottom: 56px; scroll-margin-top: 24px; }
+.cl-release-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.cl-release-version { font-size: 28px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+.cl-release-date { font-size: 14px; color: var(--muted); }
+.cl-release-tag {
+  display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.cl-release-tag.latest { background: var(--badge-new); color: #fff; }
+.cl-release-tag.stable { background: var(--badge-fix); color: #fff; }
+.cl-release-title { font-size: 18px; font-weight: 600; color: var(--fg); margin-bottom: 20px; }
+.cl-category { margin-bottom: 24px; }
+.cl-category-title {
+  font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--fg); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.cl-entry {
+  padding: 10px 16px; margin-bottom: 8px; background: var(--card-bg);
+  border: 1px solid var(--border); border-radius: 6px; border-left: 3px solid var(--border);
+}
+.cl-entry.new { border-left-color: var(--badge-new); }
+.cl-entry.fix { border-left-color: var(--badge-fix); }
+.cl-entry.enh { border-left-color: var(--badge-enh); }
+.cl-entry.dep { border-left-color: var(--badge-dep); }
+.cl-entry.sec { border-left-color: var(--badge-sec); }
+.cl-entry-label {
+  display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: 10px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 8px;
+  vertical-align: middle;
+}
+.cl-entry-label.new { background: var(--badge-new); color: #fff; }
+.cl-entry-label.fix { background: var(--badge-fix); color: #fff; }
+.cl-entry-label.enh { background: var(--badge-enh); color: #fff; }
+.cl-entry-label.dep { background: var(--badge-dep); color: #fff; }
+.cl-entry-label.sec { background: var(--badge-sec); color: #fff; }
+.cl-entry-text { font-size: 14px; color: var(--fg); }
+.cl-entry-text code {
+  font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 12px;
+}
+.cl-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.cl-table th { background: var(--table-header); padding: 10px 14px; text-align: left;
+  font-weight: 600; color: var(--fg); border-bottom: 1px solid var(--border); }
+.cl-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--fg); }
+.cl-table tr:nth-child(even) td { background: var(--table-stripe); }
+.cl-table tr:last-child td { border-bottom: none; }
+.cl-callout { padding: 14px 18px; margin: 16px 0; border-radius: 8px; border-left: 4px solid var(--accent);
+  background: var(--card-bg); font-size: 14px; }
+.cl-callout .label { font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.cl-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 32px; padding: 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; }
+.cl-legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+@media print { .cl-sidebar { display: none; } .cl-main { margin-left: 0; } .cl-content { padding: 20px; } }
+@media (max-width: 768px) {
+  .cl-sidebar { position: relative; width: 100%; min-width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+  .cl-main { margin-left: 0; } .cl-content { padding: 24px 16px 48px; }
+  .cl-page-header h2 { font-size: 26px; } .cl-release-version { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="cl-sidebar" id="cl-sidebar">
+  <div class="cl-sidebar-header">
+    <h1>&#x1F9EA; GeoSpaX</h1>
+    <div class="version">Changelog</div>
+    <a href="userguide.html" class="back-link">&#x25C0; Back to User Guide</a>
+  </div>
+  <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
+  <div class="cl-nav" id="cl-nav">
+    <div class="cl-nav-group">Releases</div>
+    <a href="#v1.3.1" class="cl-nav-item">v1.3.1 <span class="badge" style="background:var(--badge-new);color:#fff;">Latest</span></a>
+    <a href="#v1.3.0" class="cl-nav-item">v1.3.0</a>
+    <a href="#v1.2.0" class="cl-nav-item">v1.2.0</a>
+    <a href="#v1.1.0" class="cl-nav-item">v1.1.0</a>
+    <a href="#v1.0.0" class="cl-nav-item">v1.0.0</a>
+    <div class="cl-nav-group">Reference</div>
+    <a href="#roadmap" class="cl-nav-item">Roadmap</a>
+    <a href="#upgrade-guide" class="cl-nav-item">Upgrade Guide</a>
+    <a href="#deprecation-policy" class="cl-nav-item">Deprecation Policy</a>
+  </div>
+</nav>
+
+<main class="cl-main">
+<div class="cl-content">
+
+<div class="cl-page-header">
+  <div class="breadcrumb"><a href="userguide.html">User Guide</a> / Changelog</div>
+  <h2>Changelog</h2>
+  <div class="subtitle">Version history and release notes for GeoSpaX</div>
+</div>
+
+<div class="cl-legend">
+  <div class="cl-legend-item"><span class="cl-entry-label new">New</span> New feature</div>
+  <div class="cl-legend-item"><span class="cl-entry-label enh">Enh</span> Enhancement</div>
+  <div class="cl-legend-item"><span class="cl-entry-label fix">Fix</span> Bug fix</div>
+  <div class="cl-legend-item"><span class="cl-entry-label dep">Dep</span> Deprecation</div>
+  <div class="cl-legend-item"><span class="cl-entry-label sec">Sec</span> Security</div>
+</div>
+
+<!-- v1.3.1 -->
+<div class="cl-release" id="v1.3.1">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.3.1</span>
+    <span class="cl-release-date">11 September 2026</span>
+    <span class="cl-release-tag latest">Latest</span>
+  </div>
+  <div class="cl-release-title">UI Fixes, Keyboard Shortcuts, Documentation</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Visible rename button</b> on each layer panel row. Previously only accessible via double-click or right-click context menu. Layer row buttons are now: &#x2630; drag, &#x1F441; visibility, &#x1F50D; zoom, &#x270F; rename, &#x1F4C4; view fields, &#x1F3F7; labels, &#x00D7; remove.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Keyboard shortcuts</b>: <code>F</code> toggle fullscreen, <code>L</code> toggle left panel, <code>+</code>/<code>-</code> zoom, <code>A</code> toggle Analysis drawer, <code>Ctrl+Z</code> undo, <code>Ctrl+Y</code>/<code>Ctrl+Shift+Z</code> redo, <code>Ctrl+D</code> duplicate selected features. All shortcuts suppressed when typing in text inputs.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Rich export filename suggestions</b>: auto-generated names include species, geometry type, UTM zone, and datum (e.g. <code>Surname_lab_species_points_utm55S_WGS84</code>).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Custom export filename input</b> added to the export panel.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Standalone User Guide page</b> (<code>userguide.html</code>) with enterprise-style layout, sidebar navigation, search filtering, scroll-spy, light/dark theme support, and actual GeoSpaX interface icons throughout.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label enh">Enh</span> Enhancements</div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Digitizing toolbar relocated</b> from vertical right-side stack to horizontal bar at top-center of map. Button size reduced from 34px to 26px. No longer blocks the bottom panel.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Global UTM auto-detect</b> now works for any world location in both hemispheres, not just Papua New Guinea.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Citation panel</b> content now scrolls properly when the panel is smaller than the content.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Comprehensive User Guide</b> expanded to cover all 33 feature sections including Open Data connectors, Map Composer, Raster Analysis, MCE, Conservation Planning, Landscape Metrics, SDM, Raster Reclassify, Provenance, How to Cite, References, and Licenses.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label fix">Fix</span> Bug Fixes</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Elevation Profile Y-from-0</b> checkbox is now unchecked by default. Previously it was checked by default, forcing the Y-axis to start at 0 even when all elevations were positive.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Em-dash and en-dash removal</b>: replaced all em-dashes and en-dashes with regular hyphens across all application and documentation files per user preference.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Project extension correction</b>: fixed guide references from <code>.geospax</code> and <code>.gsx</code> to the correct <code>.gspx</code> extension.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Documentation</div>
+    <div class="cl-entry"><span class="cl-entry-text">38 screenshots from <code>screenshots/</code> folder embedded in the step-by-step guide DOCX. Guide now uses exact icons from GeoSpaX. README updated with panel layout, digitizing location, keyboard shortcuts, layer buttons, Composer access, conservation tools, Calculate Field, and UTM auto-detect.</span></div>
+  </div>
+</div>
+
+<!-- v1.3.0 -->
+<div class="cl-release" id="v1.3.0">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.3.0</span>
+    <span class="cl-release-date">10 September 2026</span>
+    <span class="cl-release-tag stable">Stable</span>
+  </div>
+  <div class="cl-release-title">GeoTIFF Symbology, Open Data Connectors, Composer Fixes</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>GeoTIFF direct symbology</b> (QGIS/ArcGIS workflow): GeoTIFF layers auto-selected in Symbology panel on load. Band selection, 8 colour ramps, min/max stretch with reset, opacity slider, continuous and classified rendering (Equal Interval, Quantile, Natural Breaks/Jenks, Manual breaks; 2-10 classes).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Open Data Connectors</b> (<code>js/geospax-opendata.js</code>): OSM Overpass, GBIF (with common-name search and pagination beyond 300 records), Natural Earth (bundled vector), WWF Terrestrial Ecoregions (846 polygons), Marine Ecoregions MEOW (232 polygons), World Bank indicators, USGS basemaps (Topo, Imagery, Shaded Relief).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>View Fields</b> feature for quick field inspection with pattern-based recognition and accurate source metadata for all open-source data connectors.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Global Save/Load Project</b> promoted to the topbar so users can save/load from anywhere, not just the Analysis panel.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Fine-grained zoom</b>: 0.25 zoom increments in the main map and both composer modes (attached + detached).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Sample GeoTIFF</b>: <code>PNG_BIO1_30s.tif</code> (WorldClim BIO1 for Papua New Guinea) added to samples.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label enh">Enh</span> Enhancements</div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Gradient legend auto-added</b> when GeoTIFF loads: raster legend mode set to <code>raster</code> with gradient bar and min/mid/max labels.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Composer raster rendering</b>: GeoRasterLayer re-instantiated on the composer map with current symbology. The raster surface now appears in the composer, not just the legend.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Detached composer sync</b>: georaster data serialised via BroadcastChannel so the detached composer window also renders GeoTIFF surfaces.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>GBIF common-name search</b>: search by common/vernacular name in addition to scientific name. User-controlled record limit (1-10000) with pagination.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Analysis panel</b>: auto-collapse all sections by default, generic field-selector dropdown for filtering, attribute table pagination, custom scrollable filter dropdown, province filter for mainland/island subsetting.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label fix">Fix</span> Bug Fixes</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Scalebar disappearing</b> at low zoom levels: <code>_metersPerPixel</code> now uses <code>lmap.project()</code> (unrounded) instead of <code>latLngToContainerPoint()</code> (integer-rounded).</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>GeoTIFF parsing</b>: fixed pixel data extraction for real WorldClim GeoTIFFs, symbology panel and attribute table not appearing, band-aware rendering (was hardcoded to band 0).</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Raster analysis UI</b>: fixed Histogram, Otsu, and Polygonize functions.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Smooth scrolling</b> in all dropdowns and scrollable panels.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Composer popout sync</b>: fixed export settings, view mirror, and ready-message spam bugs. Autosave recovery dialog suppressed in detached composer popout.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Removed duplicate Save/Load</b> from Analysis and Provenance panels (now only in topbar).</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Elevation profile Y-from-0</b> toggle not responding in some browsers.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Testing</div>
+    <div class="cl-entry"><span class="cl-entry-text">677 tests passing across 19 Playwright test files (<code>test_02</code>-<code>test_20</code>). Full raster symbology, attribute table, composer, and open-data connector coverage.</span></div>
+  </div>
+</div>
+
+<!-- v1.2.0 -->
+<div class="cl-release" id="v1.2.0">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.2.0</span>
+    <span class="cl-release-date">9 September 2026</span>
+  </div>
+  <div class="cl-release-title">Calculate Field Tool, Project Save/Load, CITATION.cff</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Calculate Field</b> (<code>js/gsx-calcfield.js</code>): write a new attribute on any vector layer from existing fields, entirely client-side. Two modes: <b>Weighted conditions</b> (1-8 rows: numeric field + test + weight, optional Otherwise value) and <b>Expression</b> (small documented language with field insert, QGIS-style quoted field names). Expression language supports arithmetic, logic, comparisons, and functions (<code>abs</code>, <code>min</code>, <code>max</code>, <code>round</code>, <code>floor</code>, <code>ceil</code>, <code>sqrt</code>, <code>log</code>, <code>exp</code>, <code>pow</code>, <code>coalesce</code>, <code>isnull</code>, <code>if</code>, <code>length</code>, <code>concat</code>, <code>lower</code>, <code>upper</code>, <code>to_int</code>, <code>to_num</code>, <code>to_text</code>). Live preview of first 5 features. Optional graduated/categorized styling on the new field. QGIS <code>CASE WHEN</code> equivalence documented.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Project Save/Load</b>: serialise entire map session (layers, styles, digitized features, bookmarks) to a <code>.gspx</code> JSON project file. Autosave with periodic localStorage recovery prompt on reload.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>CITATION.cff</b>: machine-readable citation metadata file added for Zenodo/DataCite integration.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>How to Cite tab</b> in bottom panel with FORCE11-compliant citation formats: APA (7th ed.), Chicago (17th ed.), Harvard, BibTeX. Copy-to-clipboard for each format.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>BLUEPRINT.md</b> with full changelog and roadmap.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label enh">Enh</span> Enhancements</div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Map Composer enhancements</b>: attribution label redesign (semi-transparent card, bold "Source:" prefix, draggable, toggleable), legend title and subtitle editing with live preview, legend resizing fix, enterprise resize handles (triangular grips), snap-to-grid (2-100px), sidebar collapse button, composer refresh button.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Export panel restructure</b>: collapsible sub-groups (Map Image, Elevation Profile, Bulk Data Export, Per-Layer Export) with single format-picker + Export button (ArcGIS Online-style UX).</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Drawing tools</b>: snap-to-vertex, body drag, duplicate detection, <code>Ctrl+D</code> shortcut, theme colors, accessibility improvements, 8 bug fixes.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Measurement tool</b>: replaced leaflet-measure with custom themed distance+area tool (geodesic distance, spherical area, non-overlapping UI, undo/finish/mode toggle).</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Symbology</b>: QGIS-style tabbed renderer (Simple / Categorized / Graduated for vectors; Continuous / Classified for rasters). Vector graduated honours the Classes control (equal-interval classes).</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>Responsive layout</b>: large desktop (>=1600px, >=2000px) and tablet landscape (>=1024px) optimization.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label fix">Fix</span> Bug Fixes</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Shapefile export</b>: patched bundled shpwrite to use JSZip 3.x <code>generateAsync()</code> instead of removed <code>generate()</code>. Replaced broken <code>location.href</code> data-URI navigation with Blob download. Fixed naming to use layer name not geometry-type label.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Measure tool</b>: dblclick debounce, area min-points, theme-aware color, keyboard handler (<code>Ctrl+Z</code> only), panel hidden by default.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Select mode</b>: clear selection on cancel/Esc, replace (not append) on new drag.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Spatial statistics</b>: Moran's I weights, DBSCAN eps/MinPts, Voronoi distance, area-weighted centroids, Polygon Areas subtract holes and sum all MultiPolygon parts, Clark-Evans z-test/p-value added to NNI, Moran scatterplot slope row-standardised.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Hotspot/WLC/SDM tools</b>: read features from <code>geojsonFeatures</code> for imported layers (was reading from stale source).</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Basemaps</b>: replaced broken Stadia tiles with Esri World Topo and CartoDB Dark Matter. Fixed broken Relief basemap.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Bottom panel</b>: fixed overflow hiding tabs, Chart.js canvas contained so panel never blows out the viewport.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Right panel conflict</b>: drawer now pushes map instead of overlaying. Auto-collapse right panel when analysis drawer opens.</span></div>
+  </div>
+</div>
+
+<!-- v1.1.0 -->
+<div class="cl-release" id="v1.1.0">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.1.0</span>
+    <span class="cl-release-date">29 July 2025</span>
+  </div>
+  <div class="cl-release-title">Conservation Module Integration</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Conservation Planning</b>: vector overlay toolkit (Union, Intersect, Erase), protection gap reporting, WLC suitability rework (Weighted Linear Combination with criteria table, constraint masking, rescale-01 normalisation), second layer selector (A/B dropdowns).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Conservation Metrics</b>: equal-area reporting (LAEA projection), fragmentation metrics (patch count, mean patch size, edge density, largest patch index), connectivity analysis (nearest-neighbour distances), change detection (compare two polygon layers for gains, losses, persistence).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>SDM Correctness Fixes</b>: Bioclim SDM rewrite (percentile-based envelope with proper env sampling via <code>sampleEnvAt</code>), Mahalanobis SDM rewrite (chi-square survival function, covariance with regularisation), warning system for insufficient data, missing env values, singular covariance. MaxEnt (server-side API) retained.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Provenance &amp; Project Persistence</b>: provenance stamping on import and analysis output, provenance table (view/export lineage metadata), project metadata (title, author, description, CRS).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Raster Tools</b>: reclassify (binary threshold with Otsu suggestion), polygonize (raster masks to vector polygons via run-length encoding), histogram (value distribution with bin count control).</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Dropdown rendering fix</b> (<code>js/gsx-select.js</code>): suppresses native popup on Linux/GTK browsers and draws option list as <code>position: fixed</code> panel. App-wide via event delegation. Keyboard accessible, ARIA roles, flips above control when short on space. Escape hatch: <code>data-gsx-select="off"</code>.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Module architecture</b>: six JS modules in <code>js/</code> directory (<code>geospax-conservation.js</code>, <code>geospax-conservation-m2.js</code>, <code>geospax-sdm-fix.js</code>, <code>geospax-project.js</code>, <code>geospax-raster.js</code>, <code>gsx-select.js</code>). Global <code>GSX</code> object exposes all conservation module functions.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Inferential spatial statistics</b>: Getis-Ord Gi* (Ord &amp; Getis 1995), Local Moran's I / LISA (Anselin 1995), Global Moran's I (Cliff &amp; Ord 1981). UTM auto-projection, KNN weights, Benjamini-Hochberg FDR correction, Moran scatterplot.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Conservation tools</b>: hotspot analysis, suitability WLC, GeoTIFF input support, Bioclim / Mahalanobis / MaxEnt SDM. Turf.js v6.5.0 and geotiff.js v2.1.3 vendor libraries added.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Elevation profile export</b> (PNG / PDF / SVG) at true 300 DPI. Google Earth-style terrain profile with sort-order toggle.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Enterprise UI redesign</b> with light/dark token system. Professional feature labeling: halo text, style controls, declutter. QGIS-style layer panel context menu, correct z-order.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>XLSX export</b> and output-CRS reprojection for all vector exports. KML and GPX export for vector layers.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Raster legend</b>: classification breaks (Equal Interval / Quantile / Jenks / Manual), gradient swatch for heat / IDW / weighted density layers. Render heatmap layers in Map Layout Composer.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Refreshed basemaps</b>: fix broken Relief, add Hillshade + OpenTopoMap + Positron.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Undo/redo</b> for drawing &amp; editing operations.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Rebrand</b> from Map-Kit to GeoSpaX. Vercel hosting (<code>geospax.in4metrix.dev</code>) + GitHub Pages mirror.</span></div>
+  </div>
+</div>
+
+<!-- v1.0.0 -->
+<div class="cl-release" id="v1.0.0">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.0.0</span>
+    <span class="cl-release-date">20 May 2025</span>
+    <span class="cl-release-tag stable">Initial</span>
+  </div>
+  <div class="cl-release-title">Initial Release</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Standalone Web GIS</b> with zero backend. Interactive mapping with Leaflet.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Data import</b>: GeoJSON, KML/KMZ, GPX, Shapefile (zip), CSV/XLSX, GeoTIFF. CRS picker for CSV/XLSX import. XLSX sheet picker for multi-sheet workbooks. CSV/XLSX parser respects quoted fields.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>QGIS-style symbology</b>: Simple, Categorized, Graduated. Stroke/outline, marker shapes.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Spatial analysis tools</b>: Mean Center, Standard Distance, Bounding Box, NNI, Convex Hull, Line Lengths, Polygon Areas, Centroids, Buffer, Simplify, DBSCAN, IDW, Point Density, Weighted Density, Voronoi.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Elevation profile</b> with Chart.js. Click-to-pan, sort-order toggle.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Map Layout Composer</b> with graticule, north arrow, scalebar. QGIS-style lock controls. Default to current view. Publication-quality export at 300/600 DPI.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Export</b>: GeoJSON, CSV, XLSX, Shapefile, KML, GPX, PNG, PDF.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Dark/light theme</b> system.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Python package</b> (<code>geospax</code>) for publication-ready static and interactive maps.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Feature Info panel</b> with highlight, navigation, zoom, copy, clear.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Search box, bookmarks, edit mode, select mode, attribute filter</b>.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>QGIS-style digitizing toolbar</b> for drawing points, lines, and polygons.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>QGIS-style map legend</b> with categorized/graduated renderer support.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>QGIS-style layer export</b> for all imported and analysis-generated layers.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Overview map</b> in PNG/PDF export.</span></div>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div class="cl-release" id="roadmap">
+  <div class="cl-release-header">
+    <span class="cl-release-version">Roadmap</span>
+  </div>
+  <div class="cl-release-title">Planned Features</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">v1.4.0 (Planned)</div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Kriging interpolation</b> - ordinary kriging with variogram fitting (replace IDW limitation)</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Geographically Weighted Regression (GWR)</b> - local regression for spatial non-stationarity</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Point Pattern Analysis</b> - Ripley's K, kernel density estimation with bandwidth selection</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Raster calculator</b> - band math and map algebra expressions</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>WMS/WMTS layer support</b> - connect to OGC web map services</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">v1.5.0 (Planned)</div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>R Console (WebR)</b> - integrated R terminal in bottom panel via WebR (R compiled to WebAssembly). Runs entirely client-side. Data bridge: pass active layer GeoJSON into R <code>sf</code> data frames. Inline plot rendering. Package support: <code>sf</code>, <code>terra</code>, <code>gstat</code>, <code>spdep</code>, <code>tmap</code>.</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Collaborative editing</b> - real-time multi-user map editing via WebSocket</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Plugin architecture</b> - user-defined analysis tools via JavaScript plugin API</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Mobile responsive layout</b> - touch-optimized UI for tablets and phones</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Offline mode</b> - service worker for full offline capability including basemap caching</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Print-to-scale</b> - WYSIWYG print dialog with exact scale ratio (1:50,000 etc.)</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Map series</b> - atlas generation: one map per feature in a polygon layer</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Future Considerations</div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>DOI assignment</b> - Zenodo integration for citable software releases</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>CodeMeta.json</b> - full software metadata for discoverability</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>WebAssembly port</b> - performance-critical spatial algorithms in Rust/WASM</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Vector tiles</b> - MVT/PBF vector tile layer support</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>PostGIS connector</b> - direct database connection for enterprise workflows</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>ArcGIS REST integration</b> - consume ArcGIS Online/Enterprise feature services</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>AI-assisted classification</b> - supervised classification from training polygons</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Story maps</b> - narrative scroll-driven map storytelling mode</span></div>
+  </div>
+</div>
+
+<!-- UPGRADE GUIDE -->
+<div class="cl-release" id="upgrade-guide">
+  <div class="cl-release-header">
+    <span class="cl-release-version">Upgrade Guide</span>
+  </div>
+  <div class="cl-release-title">How to upgrade between versions</div>
+
+  <div class="cl-callout">
+    <div class="label">&#x1F4A1; Zero-install upgrades</div>
+    GeoSpaX is a browser application. Upgrading to the latest version simply requires refreshing the page at <code>https://geospax.in4metrix.dev/</code>. There is no installation step. Clear your browser cache if you do not see the new version (check the version number in the status bar).
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">v1.2.0 to v1.3.0</div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Save/Load moved</b>: the Save Project and Load Project buttons moved from the Analysis and Provenance panels to the topbar. Old locations no longer have these buttons.</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>GeoTIFF workflow changed</b>: GeoTIFF layers are now auto-selected in the Symbology panel on load. You no longer need to visit the Analysis panel first to style a raster.</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>GBIF limit</b>: the GBIF record limit dropdown was replaced with a number input (1-10000). Common-name search is now supported.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">v1.1.0 to v1.2.0</div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Old SDM functions removed</b>: <code>runBioclimSDM</code>, <code>runMahalanobisSDM</code>, and <code>runSDM</code> were replaced by <code>GSX.runBioclimSDM</code> and <code>GSX.runMahalanobisSDM</code>. If you have custom scripts calling the old functions, update them to use the <code>GSX.</code> namespace.</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Project files</b>: <code>.gspx</code> project files saved in v1.2.0+ are compatible with v1.3.x. No migration needed.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">v1.0.0 to v1.1.0</div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Rebrand</b>: Map-Kit was renamed to GeoSpaX. Old bookmarks pointing to the GitHub Pages URL still work. The canonical URL is now <code>https://geospax.in4metrix.dev/</code>.</span></div>
+    <div class="cl-entry"><span class="cl-entry-text"><b>Analysis drawer</b>: Spatial Analysis moved from inline panels to a dedicated slide-in drawer. Press <code>A</code> or click the &#x1F9EA; Analysis button in the top toolbar.</span></div>
+  </div>
+</div>
+
+<!-- DEPRECATION POLICY -->
+<div class="cl-release" id="deprecation-policy">
+  <div class="cl-release-header">
+    <span class="cl-release-version">Deprecation Policy</span>
+  </div>
+  <div class="cl-release-title">Versioning and deprecation</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Versioning</div>
+    <div class="cl-entry"><span class="cl-entry-text">GeoSpaX follows <b>semantic versioning</b> (<code>MAJOR.MINOR.PATCH</code>).</span></div>
+    <table class="cl-table">
+      <thead><tr><th>Version bump</th><th>When</th><th>Breaking changes?</th></tr></thead>
+      <tbody>
+        <tr><td><code>MAJOR</code></td><td>Incompatible API or workflow changes</td><td>Yes</td></tr>
+        <tr><td><code>MINOR</code></td><td>New features, backward-compatible</td><td>No</td></tr>
+        <tr><td><code>PATCH</code></td><td>Bug fixes, documentation</td><td>No</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Deprecation timeline</div>
+    <table class="cl-table">
+      <thead><tr><th>Stage</th><th>Duration</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td>1. Deprecation announced</td><td>One minor release</td><td>Feature still works; console warning logged; changelog and upgrade guide updated</td></tr>
+        <tr><td>2. Feature disabled</td><td>One minor release</td><td>Feature hidden from UI; can be re-enabled via a flag for migration</td></tr>
+        <tr><td>3. Feature removed</td><td>Next major release</td><td>Feature and its code path are deleted</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Currently deprecated</div>
+    <table class="cl-table">
+      <thead><tr><th>Feature</th><th>Deprecated in</th><th>Removed in</th><th>Replacement</th></tr></thead>
+      <tbody>
+        <tr><td><code>runBioclimSDM</code> / <code>runMahalanobisSDM</code> / <code>runSDM</code> (old inline functions)</td><td>v1.1.0</td><td>v1.2.0</td><td><code>GSX.runBioclimSDM</code> / <code>GSX.runMahalanobisSDM</code></td></tr>
+        <tr><td>Save/Load in Analysis and Provenance panels</td><td>v1.3.0</td><td>v1.3.0</td><td>Topbar Save/Load buttons</td></tr>
+        <tr><td>GBIF limit dropdown</td><td>v1.3.0</td><td>v1.3.0</td><td>GBIF limit number input (1-10000)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</main>
+
+<script>
+// Theme detection from URL parameter
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('theme') === 'light') document.body.classList.add('light');
+})();
+
+// Search filter
+function clFilter() {
+  var q = document.getElementById('cl-search').value.toLowerCase();
+  document.querySelectorAll('.cl-release, .cl-entry, .cl-category').forEach(function(el) {
+    if (!q || el.textContent.toLowerCase().indexOf(q) >= 0) {
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+  // Re-show release headers and category titles even if their entries are hidden
+  document.querySelectorAll('.cl-release-header, .cl-category-title').forEach(function(el) {
+    el.style.display = '';
+  });
+}
+
+// Scroll-spy: highlight current release in sidebar
+window.addEventListener('scroll', function() {
+  var releases = document.querySelectorAll('.cl-release');
+  var navItems = document.querySelectorAll('.cl-nav-item');
+  var scrollY = window.scrollY + 120;
+  var current = '';
+  releases.forEach(function(s) {
+    if (s.offsetTop <= scrollY) current = s.id;
+  });
+  navItems.forEach(function(n) {
+    if (n.getAttribute('href') === '#' + current) n.classList.add('active');
+    else n.classList.remove('active');
+  });
+});
+</script>
+
+</body>
+</html>

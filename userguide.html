@@ -163,8 +163,10 @@ body {
     <a href="#project-provenance" class="ug-nav-item"><span class="ug-ico">&#x1F4CB;</span> Project &amp; Provenance</a>
     <a href="#how-to-cite" class="ug-nav-item"><span class="ug-ico">&#x1F4DA;</span> How to Cite</a>
     <a href="#glossary" class="ug-nav-item"><span class="ug-ico">&#x1F4AB;</span> Glossary</a>
+    <a href="#faq" class="ug-nav-item"><span class="ug-ico">&#x2753;</span> FAQ</a>
     <a href="#references" class="ug-nav-item"><span class="ug-ico">&#x1F4DA;</span> References</a>
     <a href="#licenses" class="ug-nav-item"><span class="ug-ico">&#x2696;</span> Licenses &amp; Attribution</a>
+    <a href="changelog.html" class="ug-nav-item"><span class="ug-ico">&#x1F4DD;</span> Changelog</a>
   </div>
 </nav>
 
@@ -1197,6 +1199,114 @@ body {
         <tr><td><b>.gspx</b></td><td>GeoSpaX project file format. A JSON file containing all layers, styles, digitized features, and bookmarks.</td></tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="ug-section" id="faq">
+  <div class="ug-section-title"><span class="ug-ico">&#x2753;</span> Frequently Asked Questions</div>
+  <div class="ug-section-body">
+
+    <h3>Getting started</h3>
+
+    <p><b>Q: Do I need to install anything?</b></p>
+    <p>No. GeoSpaX runs entirely in your browser. Open <a href="https://geospax.in4metrix.dev/" target="_blank" rel="noopener noreferrer">https://geospax.in4metrix.dev/</a> and start working. There is no backend server, no login, and no installation step.</p>
+
+    <p><b>Q: Which browsers are supported?</b></p>
+    <p>GeoSpaX works in modern Chrome, Firefox, Edge, and Safari. JavaScript must be enabled. On some Linux/GTK browser builds, native dropdown popups may not paint; GeoSpaX includes a custom dropdown replacement (<code>gsx-select.js</code>) that handles this automatically.</p>
+
+    <p><b>Q: Does GeoSpaX work offline?</b></p>
+    <p>After the initial page load, all third-party libraries are vendored locally (no CDN). The only runtime network requests are basemap tiles, the Nominatim geocoder, epsg.io CRS definitions, and the open data APIs (Overpass, GBIF, World Bank). Your data never leaves your browser.</p>
+
+    <p><b>Q: How do I get sample data to try the tools?</b></p>
+    <p>Drag <code>samples/sample_species_richness.geojson</code> onto the map. It contains 41 species-richness survey points across two Papua New Guinea montane transects and is designed to produce clear hot-spot and autocorrelation results. A sample GeoTIFF (<code>PNG_BIO1_30s.tif</code>, WorldClim BIO1) is also included.</p>
+
+    <h3>Data and formats</h3>
+
+    <p><b>Q: Why does my Shapefile import fail?</b></p>
+    <p>GeoSpaX requires a <b>.zip bundle</b> containing <code>.shp</code>, <code>.dbf</code>, <code>.prj</code> (and optionally <code>.shx</code>). A bare <code>.shp</code> file is not supported because the accompanying files are needed for attributes and CRS. Zip the folder containing all component files and drag the <code>.zip</code> onto the map.</p>
+
+    <p><b>Q: My CSV has coordinates but they are not in latitude/longitude. What do I do?</b></p>
+    <p>When you import a CSV or XLSX, a column mapper dialog appears. Set the <b>Source CRS</b> to match your data (e.g. UTM zone 55S for Papua New Guinea). GeoSpaX will reproject the coordinates to WGS 84 (EPSG:4326) on import using proj4js.</p>
+
+    <p><b>Q: What is the maximum file size?</b></p>
+    <p>There is no hard limit, but performance depends on your browser's memory. Files under 50 MB generally load instantly. Files over 200 MB may take several seconds and can be slow to render. Very large GeoTIFFs are tiled on the fly by GeoRaster.</p>
+
+    <p><b>Q: Can I import data from ArcGIS or QGIS?</b></p>
+    <p>Yes. Export your data from ArcGIS or QGIS as GeoJSON, Shapefile (zip), KML, or CSV and import it into GeoSpaX. For raster data, export as GeoTIFF.</p>
+
+    <h3>Coordinate reference systems</h3>
+
+    <p><b>Q: What CRS does GeoSpaX use internally?</b></p>
+    <p>All data is stored and displayed in <b>EPSG:4326 (WGS 84)</b>. Imported data in other CRS is reprojected client-side using proj4js. The Export panel's Output CRS selector reprojects on export.</p>
+
+    <p><b>Q: Why do distance-based statistics use UTM?</b></p>
+    <p>Raw latitude/longitude degrees are angular, not linear. Computing distances in degrees gives wrong results. GeoSpaX auto-selects the appropriate UTM zone for your data extent and projects coordinates into metres before computing distances for Getis-Ord Gi*, LISA, Global Moran's I, NNI, and DBSCAN. This improves accuracy but does not remove all projection limitations for data spanning multiple UTM zones.</p>
+
+    <p><b>Q: How do I choose the right output CRS for export?</b></p>
+    <p>For general sharing, use <b>EPSG:4326 (WGS 84)</b>. For area-preserving analysis within a single country, use the local UTM zone (e.g. UTM 55S for Papua New Guinea mainland). For web mapping, use <b>EPSG:3857 (Web Mercator)</b>. GeoSpaX auto-detects the UTM zone from your data extent.</p>
+
+    <h3>Analysis and statistics</h3>
+
+    <p><b>Q: What is the difference between a hot spot (Getis-Ord Gi*) and a HH cluster (LISA)?</b></p>
+    <p>Gi* identifies clusters of <b>high or low values</b> relative to the global mean. LISA classifies each feature by its value <b>and</b> its neighbours' values into four types: HH (high-high), LL (low-low), HL (high-low outlier), LH (low-high outlier). A Gi* hot spot is usually also a LISA HH cluster, but not always - LISA additionally flags spatial outliers that Gi* does not.</p>
+
+    <p><b>Q: Should I use FDR correction?</b></p>
+    <p>Leave <b>Apply FDR correction</b> checked (default) for confirmatory analysis. The Benjamini-Hochberg procedure controls the false discovery rate when many features are tested simultaneously. Uncheck it only for exploratory analysis where you expect few tests and want maximum sensitivity.</p>
+
+    <p><b>Q: My Gi* or LISA results show "not significant" for everything. Why?</b></p>
+    <p>Common causes: (1) too few features (need at least 30 for reliable inference), (2) distance band too small (no neighbours within the band - try increasing it or switching to KNN), (3) values have no spatial structure (the result is correct - there is no clustering). Check the weights matrix report in the results panel.</p>
+
+    <p><b>Q: Is IDW the same as kriging?</b></p>
+    <p>No. IDW is a deterministic interpolation method that weights nearby points by inverse distance. It does not model spatial autocorrelation and can produce "bull's-eye" artefacts around isolated extreme values. Kriging uses a fitted variogram model and is statistically optimal under certain assumptions. GeoSpaX provides IDW for quick exploratory surfaces; kriging is planned for v1.4.0.</p>
+
+    <p><b>Q: What is the difference between BIOCLIM and MaxEnt?</b></p>
+    <p>BIOCLIM is a simple bioclimatic envelope model that uses percentile ranges of environmental variables at presence points. MaxEnt uses maximum entropy modelling with a more sophisticated machine-learning approach. BIOCLIM is faster and fully client-side; MaxEnt requires an API call. For most teaching and exploratory work, BIOCLIM is sufficient. For publication, consider MaxEnt or ensemble approaches.</p>
+
+    <h3>Conservation</h3>
+
+    <p><b>Q: How does the Protection Gap relate to the 30 by 30 target?</b></p>
+    <p>The Kunming-Montreal Global Biodiversity Framework Target 3 calls for 30% of terrestrial and marine areas to be effectively conserved by 2030. The Protection Gap tool measures how much of a habitat layer (layer A) is covered by protected areas (layer B). A gap of 70% or more means the area is under-protected relative to the 30% target.</p>
+
+    <p><b>Q: Can GeoSpaX replace Marxan?</b></p>
+    <p>No. GeoSpaX provides exploratory conservation planning tools (protection gap, priority areas, WLC suitability) but does not implement the integer programming or simulated annealing optimisation that Marxan uses for systematic reserve design. GeoSpaX is designed for teaching, rapid assessment, and visualisation. For production reserve selection, use Marxan, Zonation, or prioritizr.</p>
+
+    <h3>Export and projects</h3>
+
+    <p><b>Q: What is a .gspx file?</b></p>
+    <p>A <code>.gspx</code> file is a GeoSpaX project file. It is a JSON file containing all layers, symbology, digitized features, bookmarks, and analysis results. Use the &#x1F4BE; Save button in the topbar to download one, and the &#x1F4C2; Load button to restore a session. <code>.json</code> files are also accepted for loading.</p>
+
+    <p><b>Q: How do I get a publication-quality map?</b></p>
+    <p>Use the <b>Map Layout Composer</b> (click &#x1F4D0; in the topbar or press the Composer button). Add a title, graticule, scale bar, north arrow, legend, and overview inset. Set the paper size and DPI (300 or 600). Export as PNG or PDF. See the <a href="#map-composer">Map Layout Composer</a> section for full instructions.</p>
+
+    <p><b>Q: Why does my exported map look different from what I see on screen?</b></p>
+    <p>The composer renders a fresh Leaflet map at the target DPI. Basemap tiles are loaded at a higher zoom level for actual resolution increase. If tiles are slow to load, wait for the "ready" indicator before exporting. Heatmap layers, GeoTIFF surfaces, and labels are all rendered in the export.</p>
+
+    <h3>Performance and limitations</h3>
+
+    <p><b>Q: GeoSpaX is slow with my large dataset. What can I do?</b></p>
+    <p>(1) Simplify geometries using the Simplify tool (Douglas-Peucker) to reduce vertex count. (2) Filter features in the Attribute Table before analysis. (3) Reduce the IDW grid resolution. (4) Use a smaller distance band or fewer KNN neighbours. (5) Close other browser tabs to free memory.</p>
+
+    <p><b>Q: Are the buffer zones true geometric buffers?</b></p>
+    <p>No. GeoSpaX uses a circular approximation per vertex via Turf.js. For production work requiring topological correctness, use QGIS or PostGIS <code>ST_Buffer</code>. See the Limitations section in the README.</p>
+
+    <p><b>Q: Are the Voronoi polygons exact?</b></p>
+    <p>No. GeoSpaX uses a grid-based approximation (120 x 120 raster). Cell boundaries are pixelated. For exact Voronoi diagrams, use a dedicated library or QGIS.</p>
+
+    <h3>Citation and licensing</h3>
+
+    <p><b>Q: How do I cite GeoSpaX in my thesis or paper?</b></p>
+    <p>Open the <b>How to Cite</b> tab in the bottom panel for ready-formatted citations in APA (7th ed.), Chicago (17th ed.), Harvard, and BibTeX. Always include the version number (v1.3.1) and access date. See the <a href="#how-to-cite">How to Cite</a> section and the <a href="#references">References</a> section for details.</p>
+
+    <p><b>Q: Can I use GeoSpaX for commercial purposes?</b></p>
+    <p>Yes. GeoSpaX is licensed under the MIT License, which permits commercial use, modification, and distribution. See the <a href="#licenses">Licenses &amp; Attribution</a> section for third-party library licenses.</p>
+
+    <p><b>Q: Do I need to attribute basemaps in my exported maps?</b></p>
+    <p>Yes. When you export a map with <b>Source attribution</b> enabled in the Map Layout Composer, the relevant basemap and data attributions are automatically included. Always retain these attributions in published figures. See the <a href="#licenses">Licenses</a> section for the full attribution list.</p>
+
+    <p><b>Q: Where can I find the full version history?</b></p>
+    <p>See the <a href="changelog.html" target="_blank" rel="noopener noreferrer">Changelog</a> page for release notes, upgrade guides, and the deprecation policy.</p>
+
   </div>
 </div>
 
