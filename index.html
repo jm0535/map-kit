@@ -75,19 +75,28 @@
 <script src="js/geospax-opendata.js"></script>
 
 <!-- ── Composer popout early detection (in head, before body parses) ──
-     If ?composer=1, immediately add a class to <html> and inject a style
-     that hides ALL body content except #layout-modal and #toast. This runs
-     in the head before any body HTML is parsed or rendered, so the main
-     app UI can never flash in the detached composer window. -->
+     If ?composer=1, hide the entire body with visibility:hidden so nothing
+     can flash. The _initComposerPopout() function later makes #layout-modal
+     visible again. This is the most reliable approach because visibility
+     doesn't trigger layout/reflow and works even during 308 redirects. -->
 <script>
 (function() {
-  if (new URLSearchParams(window.location.search).get('composer') !== '1') return;
+  // Detect composer popout mode via URL parameter OR window.opener
+  // (window.opener is set by window.open and survives 308 redirects)
+  var isPopout = new URLSearchParams(window.location.search).get('composer') === '1'
+              || (window.opener !== null && window.name === 'geospax_composer');
+  if (!isPopout) return;
+  // Mark <html> immediately
   document.documentElement.classList.add('composer-popout');
+  // Hide everything in the body, then selectively show only the composer
   var s = document.createElement('style');
   s.textContent =
-    'html.composer-popout body > *:not(#layout-modal):not(#toast) { display:none !important; }' +
-    'html.composer-popout #layout-modal { display:flex !important; position:fixed; inset:0; z-index:99999; background:var(--bg,#0f1115); padding:0; overflow:hidden; }' +
-    'html.composer-popout #layout-box { width:100% !important; height:100% !important; max-width:none !important; border:none !important; border-radius:0 !important; }';
+    'html.composer-popout body { visibility:hidden !important; background:#0f1115 !important; }' +
+    'html.composer-popout body.composer-ready #layout-modal { visibility:visible !important; }' +
+    'html.composer-popout body.composer-ready #layout-modal * { visibility:visible !important; }' +
+    'html.composer-popout #layout-modal { display:flex !important; position:fixed; inset:0; z-index:99999; background:#0f1115; padding:0; overflow:hidden; }' +
+    'html.composer-popout #layout-box { width:100% !important; height:100% !important; max-width:none !important; border:none !important; border-radius:0 !important; }' +
+    'html.composer-popout body.composer-ready > *:not(#layout-modal):not(#toast) { display:none !important; }';
   document.head.appendChild(s);
 })();
 </script>
@@ -3887,7 +3896,8 @@ function haversineKm(pts) {
 // ═══════════════════════════════════════════════════════════════════════════
 // In composer popout mode (?composer=1) the main map is hidden, so skip
 // adding zoom/scale/fullscreen controls and the measure tool to save resources.
-const _isPopout = new URLSearchParams(window.location.search).get('composer') === '1';
+const _isPopout = new URLSearchParams(window.location.search).get('composer') === '1'
+               || (window.opener !== null && window.name === 'geospax_composer');
 const map = L.map('map', { center:[-6.0,146.0], zoom:8, zoomControl:false, zoomSnap:0.25, zoomDelta:0.25 });
 let measureTool = null;
 if (!_isPopout) {
@@ -14889,9 +14899,15 @@ async function _applyComposerState(state) {
 // ── Popout bootstrap: detect ?composer=1 and enter popout mode ──
 function _initComposerPopout() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('composer') !== '1') return;
+  // Detect popout via URL parameter OR window.opener (survives 308 redirects)
+  const isPopout = params.get('composer') === '1'
+                 || (window.opener !== null && window.name === 'geospax_composer');
+  if (!isPopout) return;
   isComposerPopout = true;
   document.body.classList.add('composer-popout');
+  // Make the composer modal visible (head script hid the body with
+  // visibility:hidden; this class selectively reveals #layout-modal).
+  document.body.classList.add('composer-ready');
   // Hide the loading spinner - the popout doesn't need the main map to load.
   const loading = document.getElementById('loading');
   if (loading) loading.style.display = 'none';
