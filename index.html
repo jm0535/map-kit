@@ -14712,15 +14712,47 @@ function detachComposerWindow() {
     return;
   }
   const url = window.location.href.split('?')[0] + '?composer=1';
+  // Open a resizable, scrollable window large enough for the composer.
+  const w = Math.min(1400, screen.availWidth - 100);
+  const h = Math.min(900, screen.availHeight - 100);
+  const left = Math.max(0, (screen.availWidth - w) / 2);
+  const top = Math.max(0, (screen.availHeight - h) / 2);
   composerPopoutWindow = window.open(url, 'geospax_composer',
-    'width=1100,height=720,menubar=no,toolbar=no,location=no,status=no');
+    'width=' + w + ',height=' + h +
+    ',left=' + left + ',top=' + top +
+    ',resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=no,status=no');
   if (!composerPopoutWindow) {
     showToast('Pop-up blocked. Allow pop-ups for this site to detach the composer.', 'error');
     return;
   }
-  // Close the in-page modal - the detached window takes over.
-  closeLayoutModal();
-  showToast('Composer detached. Drag the new window to your second monitor.', 'success');
+  // Don't close the in-page modal until the popout confirms it's ready
+  // (via BroadcastChannel 'composer_ready'). This prevents the user from
+  // seeing a flash of the main app without the composer if the popup is slow.
+  const _detachCloseTimer = setInterval(() => {
+    if (!composerPopoutWindow || composerPopoutWindow.closed) {
+      clearInterval(_detachCloseTimer);
+      return;
+    }
+    // Check if the popout has loaded and added the composer-popout class
+    try {
+      if (composerPopoutWindow.document &&
+          composerPopoutWindow.document.body &&
+          composerPopoutWindow.document.body.classList.contains('composer-popout')) {
+        clearInterval(_detachCloseTimer);
+        closeLayoutModal();
+        showToast('Composer detached to its own window. Drag it to your second monitor and resize as needed.', 'success');
+      }
+    } catch(e) { /* cross-origin before load - keep waiting */ }
+  }, 200);
+
+  // Safety: close after 8s even if the check didn't pass (e.g. cross-origin)
+  setTimeout(() => {
+    try { clearInterval(_detachCloseTimer); } catch(e){}
+    // If the modal is still open, close it — the popup is handling the composer.
+    if (composerPopoutWindow && !composerPopoutWindow.closed) {
+      closeLayoutModal();
+    }
+  }, 8000);
 
   // Poll for popout close - when detected, reopen the in-page composer
   // so the user seamlessly returns to the attached layout view.
@@ -14853,6 +14885,9 @@ function _initComposerPopout() {
   // Hide the loading spinner - the popout doesn't need the main map to load.
   const loading = document.getElementById('loading');
   if (loading) loading.style.display = 'none';
+  // Remove the early loading indicator (added in the head script)
+  const cl = document.getElementById('composer-loading');
+  if (cl) cl.remove();
 
   // Set up BroadcastChannel to receive state from the main window.
   try {
