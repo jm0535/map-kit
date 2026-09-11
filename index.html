@@ -2430,9 +2430,10 @@
             <span>&#x1f4c4; Per-Layer Export</span><span class="arrow">&#x25BC;</span>
           </div>
           <div class="panel-body sub">
-            <select id="export-layer-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+            <select id="export-layer-select" onchange="_updateExportCrsHint()" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
             <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Output CRS (CSV / GeoJSON / Shapefile)</div>
-            <select id="export-crs-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;"></select>
+            <select id="export-crs-select" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:4px;"></select>
+            <div id="export-crs-hint" style="font-size:10px;color:var(--text-muted);margin:0 0 6px 0;display:none;"></div>
             <div style="font-size:10px;color:var(--text-muted);margin:2px 0 2px;">Format</div>
             <select id="export-layer-format" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px 6px;margin-bottom:6px;">
               <option value="geojson">GeoJSON</option>
@@ -13317,6 +13318,55 @@ function refreshExportLayerSelect() {
   if (!sel) return;
   sel.innerHTML = uploadedLayers.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('');
   _initExportCrsSelect();
+  _updateExportCrsHint();
+}
+
+/** Auto-detect the correct UTM zone for the selected export layer and show a hint. */
+function _updateExportCrsHint() {
+  const sel = document.getElementById('export-layer-select');
+  const crsSel = document.getElementById('export-crs-select');
+  const hint = document.getElementById('export-crs-hint');
+  if (!sel || !crsSel || !hint) return;
+  const lid = sel.value;
+  if (!lid) { hint.style.display = 'none'; return; }
+  const info = uploadedLayers.find(l => l.id === lid);
+  if (!info || !info.geojsonFeatures || info.geojsonFeatures.length === 0) {
+    hint.style.display = 'none'; return;
+  }
+  // Compute centroid longitude from all point features (or polygon centroids)
+  let lonSum = 0, lonCount = 0;
+  info.geojsonFeatures.forEach(f => {
+    if (!f.geometry) return;
+    const gt = f.geometry.type;
+    if (gt === 'Point') {
+      lonSum += f.geometry.coordinates[0]; lonCount++;
+    } else if (gt === 'MultiPoint') {
+      f.geometry.coordinates.forEach(c => { lonSum += c[0]; lonCount++; });
+    } else if (gt === 'LineString') {
+      f.geometry.coordinates.forEach(c => { lonSum += c[0]; lonCount++; });
+    } else if (gt === 'MultiLineString') {
+      f.geometry.coordinates.forEach(ring => ring.forEach(c => { lonSum += c[0]; lonCount++; }));
+    } else if (gt === 'Polygon') {
+      f.geometry.coordinates[0].forEach(c => { lonSum += c[0]; lonCount++; });
+    } else if (gt === 'MultiPolygon') {
+      f.geometry.coordinates.forEach(poly => poly[0].forEach(c => { lonSum += c[0]; lonCount++; }));
+    }
+  });
+  if (lonCount === 0) { hint.style.display = 'none'; return; }
+  const cLon = lonSum / lonCount;
+  const zone = Math.floor((cLon + 180) / 6) + 1;
+  const epsg = zone >= 0 ? 32700 + zone : 32600 + Math.abs(zone); // 327xx for south, 326xx for north
+  const epsgCode = 'EPSG:' + epsg;
+  const hemi = 'S';
+  // Check if this EPSG is in the dropdown
+  const hasOpt = Array.from(crsSel.options).some(o => o.value === epsgCode);
+  if (hasOpt) {
+    hint.innerHTML = `&raquo; Your data centroids at ${cLon.toFixed(1)}&deg;E &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. <a href="#" onclick="document.getElementById('export-crs-select').value='${epsgCode}';return false;" style="color:var(--accent);text-decoration:none;">Click to select</a>`;
+    hint.style.display = '';
+  } else {
+    hint.innerHTML = `&raquo; Your data centroids at ${cLon.toFixed(1)}&deg;E &rarr; UTM Zone ${zone}${hemi} (${epsgCode}). Select it from the dropdown above.`;
+    hint.style.display = '';
+  }
 }
 
 function _initExportCrsSelect() {
