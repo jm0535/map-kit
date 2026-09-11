@@ -251,13 +251,13 @@
   .map-legend-raster-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .map-legend-empty { color: var(--text-faint); text-align: center; padding: 8px 0; font-size: 10px; }
 
-  /* Digitizing toolbar */
-  .digitize-toolbar { position: absolute; top: 52px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 4px; transition: right 0.28s cubic-bezier(.4,0,.2,1); }
-  .digitize-btn { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.15s; }
+  /* Digitizing toolbar — horizontal bar at top of map */
+  .digitize-toolbar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: row; gap: 3px; padding: 3px 6px; border-radius: 8px; background: rgba(0,0,0,0.25); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.28s cubic-bezier(.4,0,.2,1); }
+  .digitize-btn { width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.15s; }
   .digitize-btn:hover { background: var(--surface-3); color: var(--text); border-color: var(--border-strong); }
   .digitize-btn.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent-bg); }
   .digitize-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
-  .digitize-sep { width: 24px; height: 1px; background: var(--border); margin: 2px auto; }
+  .digitize-sep { width: 1px; height: 20px; background: var(--border); margin: 3px 2px; }
 
   /* Digitize cursor styles */
   .leaflet-container.digitize-point { cursor: crosshair; }
@@ -2093,7 +2093,7 @@
     .layer-item { font-size: 13px; padding: 6px 6px; }
     .layer-action-btn { font-size: 12px; }
 
-    .digitize-btn { width: 36px; height: 36px; font-size: 17px; }
+    .digitize-btn { width: 28px; height: 28px; font-size: 14px; }
 
     #analysis-drawer-body .ad-section-title { font-size: 12px; }
     #analysis-drawer-body .ad-tool-row { font-size: 12px; }
@@ -2114,7 +2114,7 @@
 
     .panel-header { font-size: 14px; padding: 12px 18px; }
     .layer-item { font-size: 14px; }
-    .digitize-btn { width: 38px; height: 38px; font-size: 18px; }
+    .digitize-btn { width: 30px; height: 30px; font-size: 15px; }
   }
 
   /* ── Tablet landscape & small desktop (1024–1366px) ─────────────────────── */
@@ -2134,8 +2134,8 @@
     #analysis-drawer-inner { width: 320px; }
 
     /* Slightly larger touch targets on digitize toolbar */
-    .digitize-btn { width: 38px; height: 38px; font-size: 17px; }
-    #digitize-toolbar { gap: 5px; }
+    .digitize-btn { width: 30px; height: 30px; font-size: 15px; }
+    #digitize-toolbar { gap: 4px; }
 
     /* Topbar: hide coord/scale on smaller viewports to save space */
     #topbar .coord-display { display: none; }
@@ -2150,7 +2150,7 @@
     #analysis-drawer-inner { width: 300px; }
 
     /* Bump touch targets to recommended 40px */
-    .digitize-btn { width: 40px; height: 40px; font-size: 18px; }
+    .digitize-btn { width: 32px; height: 32px; font-size: 16px; }
 
     /* Tighten topbar */
     #topbar .scale-display { display: none; }
