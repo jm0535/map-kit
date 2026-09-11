@@ -18,7 +18,7 @@
   'use strict';
 
   var PANEL_CLASS = 'gsx-sel-panel';
-  var MAX_PANEL_H = 280;
+  var MAX_PANEL_H = 400;
   var open = null; // { select, panel }
 
   function selectFor(node) {
@@ -106,7 +106,7 @@
     open = { select: select, panel: panel };
     place(panel, select);
     var cur = panel.querySelector('.is-selected');
-    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
+    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   /* ---- keyboard --------------------------------------------------- */
@@ -119,6 +119,20 @@
       if (i < 0 || i >= n) return;
       if (!select.options[i].disabled) { commit(select, i); return; }
     }
+  }
+
+  function highlightItem(panel, index) {
+    var items = panel.querySelectorAll('.gsx-sel-opt:not(.is-disabled)');
+    if (!items.length) return;
+    // Find current highlight
+    var cur = panel.querySelector('.gsx-sel-opt.is-highlighted');
+    var curIdx = cur ? Array.prototype.indexOf.call(items, cur) : -1;
+    var nextIdx = curIdx + index;
+    if (nextIdx < 0) nextIdx = 0;
+    if (nextIdx >= items.length) nextIdx = items.length - 1;
+    if (cur) cur.classList.remove('is-highlighted');
+    items[nextIdx].classList.add('is-highlighted');
+    items[nextIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   /* ---- wiring ----------------------------------------------------- */
@@ -141,16 +155,31 @@
       if (!sel) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        openFor(sel);
+        if (open && open.select === sel) {
+          // Enter selects the highlighted item
+          var highlighted = open.panel.querySelector('.gsx-sel-opt.is-highlighted');
+          if (highlighted) {
+            var idx = Array.prototype.indexOf.call(open.panel.children, highlighted);
+            commit(sel, idx);
+          } else {
+            close();
+          }
+        } else {
+          openFor(sel);
+        }
       } else if (open && open.select === sel &&
                  (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
         e.preventDefault();
-        step(sel, e.key === 'ArrowDown' ? 1 : -1);
+        highlightItem(open.panel, e.key === 'ArrowDown' ? 1 : -1);
       }
     }, true);
 
-    // Any scroll or resize invalidates the anchor position.
-    window.addEventListener('scroll', close, true);
+    // Any scroll or resize invalidates the anchor position — but NOT scrolls
+    // inside the open panel itself (those are internal and should not close it).
+    window.addEventListener('scroll', function (e) {
+      if (open && open.panel && open.panel.contains(e.target)) return;
+      close();
+    }, true);
     window.addEventListener('resize', close);
     window.addEventListener('blur', close);
   }

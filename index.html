@@ -80,6 +80,7 @@
     --surface-1:    #1a1d24;
     --surface-2:    #21252e;
     --surface-3:    #2a2f3a;
+    scroll-behavior: smooth;
     --border:       #2d3340;
     --border-strong:#3a4150;
     --text:         #e5e7eb;
@@ -1030,6 +1031,7 @@
      position: fixed on <body> so no ancestor overflow can clip it. */
   .gsx-sel-panel {
     position: fixed; z-index: 20000; overflow-y: auto; overscroll-behavior: contain;
+    scroll-behavior: smooth;
     padding: 3px; background: var(--surface-1);
     border: 1px solid var(--border-strong); border-radius: 6px;
     box-shadow: 0 8px 28px rgba(0,0,0,0.45);
@@ -1040,11 +1042,13 @@
     overflow: hidden; text-overflow: ellipsis; line-height: 1.45;
   }
   .gsx-sel-panel .gsx-sel-opt:hover { background: var(--surface-3); }
+  .gsx-sel-panel .gsx-sel-opt.is-highlighted { background: var(--accent-bg); color: var(--accent); }
   .gsx-sel-panel .gsx-sel-opt.is-selected {
     background: var(--accent-bg); color: var(--accent); font-weight: 600;
   }
   .gsx-sel-panel .gsx-sel-opt.is-disabled { opacity: .45; cursor: not-allowed; }
   .gsx-sel-panel .gsx-sel-opt.is-disabled:hover { background: none; }
+  #analysis-filter-list .filter-highlighted { background: var(--accent-bg) !important; color: var(--accent) !important; }
   /* Highlight the control whose list is currently showing. */
   select.gsx-sel-active { border-color: var(--accent) !important; }
 
@@ -2843,7 +2847,7 @@
             <span id="analysis-filter-label">All features (no filter)</span>
             <span style="font-size:9px; color:var(--text-faint);">&#x25BC;</span>
           </div>
-          <div id="analysis-filter-list" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; background:var(--surface-3); border:1px solid var(--accent); border-radius:6px; z-index:10000; box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
+          <div id="analysis-filter-list" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; overscroll-behavior:contain; scroll-behavior:smooth; background:var(--surface-3); border:1px solid var(--accent); border-radius:6px; z-index:10000; box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
         </div>
       </div>
       <input type="hidden" id="analysis-filter-select" value="">
@@ -8367,7 +8371,16 @@ function refreshAnalysisFilterValues() {
 function toggleFilterDropdown(e) {
   if (e) e.stopPropagation();
   const list = document.getElementById('analysis-filter-list');
-  list.style.display = list.style.display === 'none' ? 'block' : 'none';
+  const isOpen = list.style.display === 'block';
+  list.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // Scroll to the currently selected item
+    const filterSel = document.getElementById('analysis-filter-select');
+    if (filterSel && filterSel.value) {
+      const items = Array.from(list.children).find(d => d.textContent === filterSel.value);
+      if (items) items.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
 }
 
 function setAnalysisFilter(value) {
@@ -14233,6 +14246,27 @@ document.addEventListener('click', (e) => {
   const list = document.getElementById('analysis-filter-list');
   if (wrapper && list && !wrapper.contains(e.target)) {
     list.style.display = 'none';
+  }
+});
+// Keyboard navigation for custom filter dropdown
+document.addEventListener('keydown', (e) => {
+  const list = document.getElementById('analysis-filter-list');
+  if (!list || list.style.display !== 'block') return;
+  if (e.key === 'Escape') { list.style.display = 'none'; e.preventDefault(); return; }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const items = Array.from(list.children);
+    if (!items.length) return;
+    let cur = list.querySelector('.filter-highlighted');
+    let idx = cur ? items.indexOf(cur) : -1;
+    if (cur) cur.classList.remove('filter-highlighted');
+    if (e.key === 'ArrowDown') idx = (idx + 1) % items.length;
+    else idx = idx <= 0 ? items.length - 1 : idx - 1;
+    items[idx].classList.add('filter-highlighted');
+    items[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  } else if (e.key === 'Enter') {
+    const highlighted = list.querySelector('.filter-highlighted');
+    if (highlighted) { highlighted.click(); e.preventDefault(); }
   }
 });
 function _hideLoading() { document.getElementById('loading').style.display='none'; }
