@@ -183,8 +183,6 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 > **![screenshots/01_imported.png](screenshots/01_imported.png)**
 >
 > **![screenshots/attr_table_paginated.png](screenshots/attr_table_paginated.png)**
->
-> **![screenshots/attr_table_search_western.png](screenshots/attr_table_search_western.png)**
 
 ### Export to the correct UTM zone (analysis CRS)
 
@@ -310,8 +308,6 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 2. Check the box. The CRS text (e.g., "EPSG:4326") appears in the bottom-right of the map.
 3. Note: The CRS text shows the map's display CRS. Write your CRS (e.g., "CRS: EPSG:32755") in your title or subtitle to meet the assignment requirement.
 
-> **![screenshots/09_composer_crs_text.png](screenshots/09_composer_crs_text.png)**
-
 ### Step 7: Verify map elements
 
 Check that the following are visible on the composer:
@@ -325,8 +321,6 @@ Check that the following are visible on the composer:
 - **CRS text** (bottom-right)
 
 If any element is hidden, toggle it on in the composer sidebar.
-
-> **![screenshots/10_map1_complete.png](screenshots/10_map1_complete.png)**
 
 ### Step 8: Export the map
 
@@ -366,16 +360,12 @@ If any element is hidden, toggle it on in the composer sidebar.
 4. Click the **Apply** button.
 5. The map now shows points coloured by the selected attribute.
 
-> **![screenshots/13_graduated_field_classes.png](screenshots/13_graduated_field_classes.png)**
-
 ### Step 3: Record the class breaks
 
 1. Look at the **legend** on the map (bottom-right area). It now shows a colour ramp with break values.
 2. **Write down the class break values** in your notebook.
 3. Example: 0 to 20%, 20 to 40%, 40 to 60%, 60 to 80%, 80 to 100%.
 4. You will state the number of classes and the break values in your report.
-
-> **![screenshots/14_legend_breaks.png](screenshots/14_legend_breaks.png)**
 
 ### Step 4: Open the composer and export
 
@@ -384,8 +374,6 @@ If any element is hidden, toggle it on in the composer sidebar.
 3. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
 4. Verify the legend shows the graduated classes with break values.
 5. Export as `Surname_lab_map2_attribute.pdf` at 300 DPI.
-
-> **![screenshots/15_map2_complete.png](screenshots/15_map2_complete.png)**
 
 ---
 
@@ -424,15 +412,11 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
    - **K-nearest neighbours** with k = 8 (default. Change the **Neighbours (k)** input if needed).
 3. Leave **Apply FDR correction** (Benjamini-Hochberg) **checked**. Write in your report that FDR was applied.
 
-> **![screenshots/17_weights_fdr.png](screenshots/17_weights_fdr.png)**
-
 ### Step 3: Run Getis-Ord Gi*
 
 1. Find the **📊 Inferential Hotspots & Autocorrelation** section.
 2. Click the **🔥 Getis-Ord Gi* Hot Spots** button.
 3. Wait a few seconds for the analysis to complete.
-
-> **![screenshots/18_gistar_button.png](screenshots/18_gistar_button.png)**
 
 ### Step 4: Read the results
 
@@ -518,8 +502,6 @@ Before touching the software, write down:
 1. In the **Output field name** input, type: `habitat_score`
 2. Set **Output type** to **Integer**.
 
-> **![screenshots/23_calcfield_output.png](screenshots/23_calcfield_output.png)**
-
 ### Step 4: Add your three criteria (Weighted conditions mode)
 
 The Calculate Field tool opens in **Weighted conditions** mode by default, with 3 empty rows. Fill in three rows (one per criterion):
@@ -545,8 +527,6 @@ Example for a species favouring mid-elevation forest with high rainfall:
 | 1 | `elevation_m` | between | 0 | 2000 | 1 |
 | 2 | `tree_cover_pct` | >= | 50 | - | 1 |
 | 3 | `rainfall_mm` | >= | 2500 | - | 1 |
-
-> **![screenshots/24_calcfield_rows.png](screenshots/24_calcfield_rows.png)**
 
 ### Step 5: Preview and run
 
@@ -584,8 +564,6 @@ Example for a species favouring mid-elevation forest with high rainfall:
 3. Set 4 or 5 classes (e.g., 0, 1, 2, 3 for three equal-weight criteria).
 4. Choose a colour ramp (e.g., Green to Yellow to Red, or Viridis).
 5. Click **Apply**.
-
-> **![screenshots/28_habitat_score_styled.png](screenshots/28_habitat_score_styled.png)**
 
 ### Step 8: Open the composer and export
 
