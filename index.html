@@ -10186,41 +10186,147 @@ function closeLayerContextMenu() {
   document.removeEventListener('keydown', _lcmKey, true);
 }
 
-// Field metadata for known GBIF/enriched species occurrence layers.
-// Describes what each field means, where it came from, and coded value meanings.
+// WorldClim BIOCLIM variables (bio1–bio19) — standard definitions from
+// https://www.worldclim.org/data/bioclim.html — used worldwide, not PNG-specific.
+const WORLCLIM_BIOCLIM = {
+  bio1:  'Annual mean temperature (°C)',
+  bio2:  'Mean diurnal range (mean of monthly max–min temp, °C)',
+  bio3:  'Isothermality (BIO2/BIO7 × 100, dimensionless)',
+  bio4:  'Temperature seasonality (standard deviation × 100)',
+  bio5:  'Max temperature of warmest month (°C)',
+  bio6:  'Min temperature of coldest month (°C)',
+  bio7:  'Temperature annual range (BIO5–BIO6, °C)',
+  bio8:  'Mean temperature of wettest quarter (°C)',
+  bio9:  'Mean temperature of driest quarter (°C)',
+  bio10: 'Mean temperature of warmest quarter (°C)',
+  bio11: 'Mean temperature of coldest quarter (°C)',
+  bio12: 'Annual precipitation (mm)',
+  bio13: 'Precipitation of wettest month (mm)',
+  bio14: 'Precipitation of driest month (mm)',
+  bio15: 'Precipitation seasonality (coefficient of variation, %)',
+  bio16: 'Precipitation of wettest quarter (mm)',
+  bio17: 'Precipitation of driest quarter (mm)',
+  bio18: 'Precipitation of warmest quarter (mm)',
+  bio19: 'Precipitation of coldest quarter (mm)'
+};
+
+// ESA WorldCover 2021 class codes — global land-cover legend
+// https://esa-worldcover.org/en/data-access
+const WORLDCOVER_CODES = {
+  10: 'Tree cover (forest, canopy > 30%)',
+  20: 'Shrubland',
+  30: 'Grassland',
+  40: 'Cropland',
+  50: 'Built-up (urban, settlements)',
+  60: 'Bare / sparse vegetation',
+  70: 'Snow and ice',
+  80: 'Permanent water bodies (lakes, rivers)',
+  90: 'Herbaceous wetland',
+  95: 'Mangroves',
+  100: 'Moss and lichen'
+};
+
+// Exact-match metadata for fields with fixed names (GBIF, common names)
 const FIELD_METADATA = {
   site: { desc: 'GBIF occurrence record identifier (prefixed with GBIF_)', source: 'GBIF' },
   gbifID: { desc: 'GBIF numeric record ID', source: 'GBIF' },
   scientificName: { desc: 'Full scientific name with author citation', source: 'GBIF taxonomy' },
   species: { desc: 'Species name (binomial)', source: 'GBIF taxonomy' },
+  genus: { desc: 'Genus name', source: 'GBIF taxonomy' },
+  family: { desc: 'Family name', source: 'GBIF taxonomy' },
+  kingdom: { desc: 'Kingdom', source: 'GBIF taxonomy' },
+  phylum: { desc: 'Phylum', source: 'GBIF taxonomy' },
+  order: { desc: 'Order', source: 'GBIF taxonomy' },
+  taxonKey: { desc: 'GBIF taxon key', source: 'GBIF taxonomy' },
   year: { desc: 'Year the occurrence was recorded', source: 'GBIF' },
+  month: { desc: 'Month the occurrence was recorded', source: 'GBIF' },
+  day: { desc: 'Day of the month the occurrence was recorded', source: 'GBIF' },
   basisOfRecord: { desc: 'How the record was observed (e.g. HUMAN_OBSERVATION, PRESERVED_SPECIMEN)', source: 'GBIF' },
   locality: { desc: 'Specific location description (may be empty)', source: 'GBIF' },
-  stateProvince: { desc: 'Province or region within PNG (e.g. Western, West New Britain, Bougainville)', source: 'GBIF' },
-  elevation_m: { desc: 'Elevation above sea level in metres', source: 'Sampled from PNG elevation raster at each point' },
-  tree_cover_pct: { desc: 'Percentage tree canopy cover (0 to 100)', source: 'Sampled from PNG tree-cover raster at each point' },
-  rainfall_mm: { desc: 'Annual precipitation in millimetres (BIOCLIM BIO12)', source: 'Sampled from PNG BIOCLIM raster at each point' },
-  bio1: { desc: 'Annual mean temperature in degrees Celsius', source: 'Sampled from PNG BIOCLIM BIO1 raster at each point' },
-  bio15: { desc: 'Precipitation seasonality (coefficient of variation, higher = more seasonal)', source: 'Sampled from PNG BIOCLIM BIO15 raster at each point' },
+  stateProvince: { desc: 'Province or region (e.g. Western, West New Britain, Bougainville)', source: 'GBIF' },
+  country: { desc: 'Country of the occurrence', source: 'GBIF' },
+  countryCode: { desc: 'ISO country code', source: 'GBIF' },
+  decimalLatitude: { desc: 'Latitude in decimal degrees', source: 'GBIF' },
+  decimalLongitude: { desc: 'Longitude in decimal degrees', source: 'GBIF' },
+  coordinateUncertaintyInMeters: { desc: 'Coordinate uncertainty in metres', source: 'GBIF' },
+  recordedBy: { desc: 'Name of the person who recorded the observation', source: 'GBIF' },
+  identifiedBy: { desc: 'Name of the person who identified the specimen', source: 'GBIF' },
+  occurrenceID: { desc: 'GBIF occurrence ID', source: 'GBIF' },
+  collectionCode: { desc: 'Collection code', source: 'GBIF' },
+  catalogNumber: { desc: 'Catalog number', source: 'GBIF' },
+  institutionCode: { desc: 'Institution code', source: 'GBIF' },
   worldcover_class: {
     desc: 'ESA WorldCover 2021 land-cover class code. See the code reference table below.',
     source: 'Sampled from ESA WorldCover 2021 10 m raster at each point',
-    codes: {
-      10: 'Tree cover (forest, canopy > 30%)',
-      20: 'Shrubland',
-      30: 'Grassland',
-      40: 'Cropland',
-      50: 'Built-up (urban, settlements)',
-      60: 'Bare / sparse vegetation',
-      70: 'Snow and ice',
-      80: 'Permanent water bodies (lakes, rivers)',
-      90: 'Herbaceous wetland',
-      95: 'Mangroves',
-      100: 'Moss and lichen'
-    }
+    codes: WORLDCOVER_CODES
   },
   worldcover_label: { desc: 'Human-readable ESA WorldCover 2021 land-cover label (e.g. Tree cover, Grassland, Built-up, Water)', source: 'Derived from worldcover_class' }
 };
+
+// Generic field-name pattern matchers — recognise fields by name pattern,
+// not by exact match, so any dataset with these naming conventions is
+// automatically described. Patterns are checked in order; first match wins.
+const FIELD_PATTERNS = [
+  // WorldClim BIOCLIM variables: bio1–bio19 (with optional prefix/suffix)
+  { test: k => /^bio([1-9]|1[0-9])$/.test(k),
+    meta: k => ({ desc: WORLCLIM_BIOCLIM[k], source: 'WorldClim BIOCLIM raster sampled at each point' }) },
+  // Elevation
+  { test: k => /^(elev|elevation|altitude|dem|height)(_m|m|_meters|_srtm|ation_m)?$/i.test(k),
+    meta: () => ({ desc: 'Elevation above sea level in metres', source: 'Sampled from elevation raster at each point' }) },
+  // Tree / canopy cover
+  { test: k => /^(tree|canopy|forest)[-_]?(cover|pct|percent|density)/i.test(k),
+    meta: () => ({ desc: 'Percentage tree/canopy cover (0 to 100)', source: 'Sampled from tree-cover raster at each point' }) },
+  // Rainfall / precipitation
+  { test: k => /^(rain|rainfall|precip|precipitation)[-_]?(mm|annual|total)?$/i.test(k),
+    meta: () => ({ desc: 'Annual precipitation in millimetres', source: 'Sampled from precipitation raster at each point' }) },
+  // Temperature
+  { test: k => /^(temp|temperature)[-_]?(c|celsius|mean|avg|annual)?$/i.test(k),
+    meta: () => ({ desc: 'Temperature in degrees Celsius', source: 'Sampled from temperature raster at each point' }) },
+  // WorldCover class (any field with 'worldcover' and 'class')
+  { test: k => /worldcover.*class|class.*worldcover/i.test(k),
+    meta: () => ({ desc: 'ESA WorldCover 2021 land-cover class code. See the code reference table below.', source: 'Sampled from ESA WorldCover 2021 10 m raster at each point', codes: WORLDCOVER_CODES }) },
+  // WorldCover label
+  { test: k => /worldcover.*label|label.*worldcover/i.test(k),
+    meta: () => ({ desc: 'Human-readable ESA WorldCover 2021 land-cover label', source: 'Derived from worldcover class code' }) },
+  // Land cover class (generic)
+  { test: k => /^(land|lc)[-_]?(cover|class|code)/i.test(k),
+    meta: () => ({ desc: 'Land-cover class code', source: 'Sampled from land-cover raster at each point' }) },
+  // NDVI / EVI
+  { test: k => /^(ndvi|evi|savi|ndwi)$/i.test(k),
+    meta: k => ({ desc: `${k.toUpperCase()} vegetation index value`, source: 'Sampled from satellite vegetation index raster at each point' }) },
+  // Slope / aspect
+  { test: k => /^(slope|aspect)$/i.test(k),
+    meta: k => ({ desc: k.toLowerCase() === 'slope' ? 'Terrain slope in degrees' : 'Terrain aspect (compass direction of slope) in degrees', source: 'Derived from elevation raster at each point' }) },
+  // Population density
+  { test: k => /^(pop|population)[-_]?(density|count)?$/i.test(k),
+    meta: () => ({ desc: 'Population density or count', source: 'Sampled from population raster at each point' }) },
+  // Soil pH
+  { test: k => /^(soil)[-_]?(ph|ph_h2o)/i.test(k),
+    meta: () => ({ desc: 'Soil pH', source: 'Sampled from soil raster at each point' }) },
+  // Latitude / Longitude (generic)
+  { test: k => /^(lat|latitude)$/i.test(k),
+    meta: () => ({ desc: 'Latitude in decimal degrees', source: 'Layer geometry' }) },
+  { test: k => /^(lon|lng|long|longitude)$/i.test(k),
+    meta: () => ({ desc: 'Longitude in decimal degrees', source: 'Layer geometry' }) },
+  // ID / FID (generic)
+  { test: k => /^(id|fid|objectid|gid|uid)$/i.test(k),
+    meta: () => ({ desc: 'Unique feature identifier', source: 'Layer attribute table' }) },
+  // Area
+  { test: k => /^(area)[-_]?(km2|m2|ha|hectares)?$/i.test(k),
+    meta: () => ({ desc: 'Polygon area', source: 'Calculated from geometry' }) },
+  // Length
+  { test: k => /^(length|len|perimeter)[-_]?(km|m|mi)?$/i.test(k),
+    meta: () => ({ desc: 'Line length or polygon perimeter', source: 'Calculated from geometry' }) }
+];
+
+// Resolve field metadata: exact match first, then pattern match, then fallback.
+function resolveFieldMeta(fieldName) {
+  if (FIELD_METADATA[fieldName]) return FIELD_METADATA[fieldName];
+  for (const p of FIELD_PATTERNS) {
+    if (p.test(fieldName)) return p.meta(fieldName);
+  }
+  return null;
+}
 
 // Quick field viewer: shows all field names, types, descriptions, and sample values
 function showLayerFields(id) {
@@ -10262,15 +10368,16 @@ function showLayerFields(id) {
         if (!isNaN(parseFloat(firstVal)) && isFinite(parseFloat(firstVal))) type = 'number';
         else if (firstVal === 'true' || firstVal === 'false') type = 'boolean';
       }
-      const meta = FIELD_METADATA[k];
+      const meta = resolveFieldMeta(k);
       const desc = meta ? escapeHtml(meta.desc) : '<span style="color:var(--text-faint);font-style:italic;">No built-in description</span>';
       const source = meta ? escapeHtml(meta.source) : '<span style="color:var(--text-faint);font-style:italic;">User-loaded data</span>';
       html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 8px;color:var(--text-faint);">${i + 1}</td><td style="padding:5px 8px;font-weight:600;">${escapeHtml(k)}</td><td style="padding:5px 8px;color:var(--text-muted);">${type}</td><td style="padding:5px 8px;">${desc}</td><td style="padding:5px 8px;color:var(--text-muted);font-size:10px;">${source}</td><td style="padding:5px 8px;color:var(--text-muted);">${sample}</td></tr>`;
     });
     html += '</tbody></table>';
-    // If worldcover_class is present, show the code reference table
-    if (fieldMap['worldcover_class']) {
-      const codes = FIELD_METADATA.worldcover_class.codes;
+    // If any field has WorldCover codes attached, show the code reference table
+    const wcField = Object.keys(fieldMap).find(k => { const m = resolveFieldMeta(k); return m && m.codes === WORLDCOVER_CODES; });
+    if (wcField) {
+      const codes = WORLDCOVER_CODES;
       html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:8px;">ESA WorldCover 2021 Class Codes</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;color:var(--accent);">Code</th><th style="text-align:left;padding:4px 8px;color:var(--accent);">Land Cover Type</th></tr></thead><tbody>';
       Object.keys(codes).forEach(code => {
         html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;font-weight:600;">${code}</td><td style="padding:4px 8px;">${escapeHtml(codes[code])}</td></tr>`;
@@ -10280,7 +10387,7 @@ function showLayerFields(id) {
     // Only show the GBIF enrichment note when GBIF fields are actually present
     const hasGbif = fieldMap['gbifID'] || fieldMap['scientificName'] || fieldMap['basisOfRecord'];
     if (hasGbif) {
-      html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);line-height:1.5;">This layer contains GBIF species occurrence records enriched with environmental data sampled at each point location. GBIF fields (site, gbifID, scientificName, species, year, basisOfRecord, locality, stateProvince) come from the original occurrence record. Environmental fields (elevation_m, tree_cover_pct, rainfall_mm, bio1, bio15, worldcover_class, worldcover_label) were added by sampling raster datasets at each point coordinate. Null values mean the raster had no data at that location.</div>';
+      html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);line-height:1.5;">This layer contains GBIF species occurrence records enriched with environmental data sampled at each point location. GBIF fields come from the original occurrence record. Environmental fields were added by sampling raster datasets at each point coordinate. Null values mean the raster had no data at that location.</div>';
     }
     content.innerHTML = html;
   }
