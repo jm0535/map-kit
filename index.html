@@ -2193,7 +2193,7 @@
     <!-- Upload -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Data Sources</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F4C2; Data Sources</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden">
         <div id="upload-zone" onclick="document.getElementById('upload-file').click()"
@@ -2215,7 +2215,7 @@
     <!-- Open Data Connectors -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Open Data</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F310; Open Data</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" id="opendata-panel">
 
@@ -2339,7 +2339,7 @@
     <!-- Layers -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Layers</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F5C2; Layers</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" id="layers-panel">
         <div id="uploaded-layers-list"></div>
@@ -2350,7 +2350,7 @@
     <!-- Basemaps -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Basemap</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F5FA; Basemap</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden">
         <!-- Hidden grid kept for switchBasemap() compatibility -->
@@ -2389,7 +2389,7 @@
     <!-- Export -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Export</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F4E4; Export</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" style="padding:0;">
 
@@ -2541,7 +2541,7 @@
 
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Feature Info</span><span class="arrow">&#x25BC;</span>
+        <span>&#x2139; Feature Info</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" id="feature-info">
         <div class="fi-empty">Click a feature on the map to inspect its attributes.</div>
@@ -2550,7 +2550,7 @@
 
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Attribute Table</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F4CA; Attribute Table</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" style="padding:6px 8px;">
         <select id="attr-layer-select" onchange="loadAttrTable(this.value)" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:4px;margin-bottom:6px;">
@@ -2577,7 +2577,7 @@
     <!-- Symbology -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Symbology</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F3A8; Symbology</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" id="symbology-panel">
         <div id="symbology-empty" style="font-size:11px;color:var(--text-faint);text-align:center;padding:12px 0;">Import data to configure symbology</div>
@@ -2601,7 +2601,7 @@
 
     <div class="panel-section" id="overview-panel">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Overview</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F9ED; Overview</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" style="padding:8px 12px;">
         <div id="minimap"></div>
@@ -2611,7 +2611,7 @@
     <!-- Bookmarks -->
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>Bookmarks</span><span class="arrow">&#x25BC;</span>
+        <span>&#x1F516; Bookmarks</span><span class="arrow">&#x25BC;</span>
       </div>
       <div class="panel-body hidden" id="bookmarks-panel">
         <div style="display:flex;gap:6px;margin-bottom:8px;">
@@ -2624,7 +2624,7 @@
 
     <div class="panel-section">
       <div class="panel-header collapsed" onclick="toggleSection(this)">
-        <span>User Guide</span>
+        <span>&#x1F4D6; User Guide</span>
         <span style="margin-left:auto;padding-right:8px;"><a href="changelog.html" target="_blank" rel="noopener noreferrer" title="Open Changelog in a new tab" style="font-size:10px;color:var(--accent);text-decoration:none;margin-right:6px;">&#x1F4DD; Changelog</a><a href="#" onclick="openUserGuideTab(event)" title="Open User Guide in a new tab" style="font-size:10px;color:var(--accent);text-decoration:none;">&#x1F5D7; Open in tab</a></span>
         <span class="arrow">&#x25BC;</span>
       </div>
@@ -3523,7 +3523,7 @@
         </div>
         <div class="composer-sidebar-scroll">
           <details class="composer-section" open>
-            <summary>Map</summary>
+            <summary>&#x1F5FA; Map</summary>
             <div class="composer-section-body">
               <button class="lock-btn" id="lock-main-btn" type="button" onclick="toggleLayoutLock('main')" title="Unlock to edit the main map's pan/zoom independently of the source map. Locked = mirrors source map.">
                 <span class="lock-icon">🔒</span> <span class="lock-label">Main map</span>
@@ -3537,7 +3537,7 @@
             </div>
           </details>
           <details class="composer-section" open>
-            <summary>Paper</summary>
+            <summary>&#x1F4C4; Paper</summary>
             <div class="composer-section-body">
               <select id="layout-paper-size" onchange="onLayoutPaperChange()" title="Paper size preset">
                 <option value="custom" selected>Custom (16:9)</option>
@@ -3562,7 +3562,7 @@
             </div>
           </details>
           <details class="composer-section" open>
-            <summary>Title &amp; Text</summary>
+            <summary>&#x1F4DD; Title &amp; Text</summary>
             <div class="composer-section-body">
               <input type="text" id="layout-title-input" placeholder="Map title…" oninput="onLayoutTitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
               <input type="text" id="layout-subtitle-input" placeholder="Subtitle (optional)…" oninput="onLayoutSubtitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
@@ -3578,7 +3578,7 @@
             </div>
           </details>
           <details class="composer-section">
-            <summary>Gridlines</summary>
+            <summary>&#x1F4D0; Gridlines</summary>
             <div class="composer-section-body">
               <label class="layout-toggle" title="Show coordinate gridlines (graticule)">
                 <input type="checkbox" id="layout-show-grid" onchange="onLayoutGridChange()"> Gridlines
@@ -3592,7 +3592,7 @@
             </div>
           </details>
           <details class="composer-section" open>
-            <summary>Scale Bar</summary>
+            <summary>&#x1F4CF; Scale Bar</summary>
             <div class="composer-section-body">
               <select id="layout-scalebar-style" onchange="onLayoutScalebarChange()" title="Scalebar style (QGIS/ArcGIS conventions)">
                 <option value="single-box" selected>Single Box</option>
@@ -3608,7 +3608,7 @@
             </div>
           </details>
           <details class="composer-section">
-            <summary>North Arrow</summary>
+            <summary>&#x1F9ED; North Arrow</summary>
             <div class="composer-section-body">
               <select id="layout-north-style" onchange="onLayoutNorthStyleChange()" title="North arrow style">
                 <option value="classic" selected>Classic (half/half)</option>
@@ -3620,7 +3620,7 @@
             </div>
           </details>
           <details class="composer-section">
-            <summary>Overview</summary>
+            <summary>&#x1F5FA; Overview</summary>
             <div class="composer-section-body">
               <button class="lock-btn" id="lock-overview-btn" type="button" onclick="toggleLayoutLock('overview')" title="Unlock to edit the overview inset's pan/zoom independently. Locked = automatic fit.">
                 <span class="lock-icon">🔒</span> <span class="lock-label">Overview</span>
@@ -3628,7 +3628,7 @@
             </div>
           </details>
           <details class="composer-section">
-            <summary>Legend</summary>
+            <summary>&#x1F4CB; Legend</summary>
             <div class="composer-section-body" id="legend-management-body">
               <input type="text" id="layout-legend-title-input" placeholder="Legend title…" oninput="onLegendTitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;margin-bottom:4px;">
               <input type="text" id="layout-legend-subtitle-input" placeholder="Legend subtitle (optional)…" oninput="onLegendSubtitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;">
@@ -3637,7 +3637,7 @@
             </div>
           </details>
           <details class="composer-section">
-            <summary>Export</summary>
+            <summary>&#x1F4BE; Export</summary>
             <div class="composer-section-body">
               <label class="cs-label" style="font-size:10px;color:var(--text-muted);">Format</label>
               <select id="layout-export-format" onchange="onLayoutExportFormatChange()" title="Export format">
@@ -3665,7 +3665,7 @@
             </div>
           </details>
           <details class="composer-section">
-            <summary>Templates</summary>
+            <summary>&#x1F4C1; Templates</summary>
             <div class="composer-section-body">
               <p style="font-size:10px;color:var(--text-muted);margin:0;">Save and load layout configurations.</p>
               <input type="text" id="layout-template-name" placeholder="Template name…" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
