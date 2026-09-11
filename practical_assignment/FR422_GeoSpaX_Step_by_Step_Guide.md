@@ -7,6 +7,8 @@
 
 This guide walks you through creating all four required maps entirely in GeoSpaX, with no QGIS install needed. Record the GeoSpaX version (shown in the page footer) and today's date in your provenance table.
 
+> **Full reference:** For detailed explanations of every tool, panel, and analysis method, see the [GeoSpaX User Guide](https://geospax.in4metrix.dev/userguide.html). For version history and release notes, see the [Changelog](https://geospax.in4metrix.dev/changelog.html).
+
 > **Naming convention:** Throughout this guide, file names use the placeholder `Surname`. **Replace `Surname` with your actual surname** in every file name (e.g., `Moses_lab_...`, `Wari_lab_...`, `Bani_lab_...`). Do not submit files with the literal word "Surname" in the name.
 
 > **Verified:** Every step in this guide was tested against the lab training file (`lab_Paradisaea_guilielmi_occurrences.geojson`, 128 GBIF records, Emperor Bird-of-paradise) using the live GeoSpaX application. The screenshots in the `screenshots/` folder show each step.
