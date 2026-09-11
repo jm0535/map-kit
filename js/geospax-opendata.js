@@ -470,6 +470,144 @@ const GSX_OpenData = (function () {
     }
   }
 
+  // ── 8. OSM Quick Queries (pre-configured for common categories) ───────────
+  // One-click Overpass queries for roads, rivers, lakes, wetlands, mountains,
+  // conservation areas, forests, and mining areas. All use the current map bbox.
+
+  const OSM_QUICK_QUERIES = {
+    roads: {
+      label: 'Roads',
+      icon: '\u{1F6E3}\u{FE0F}',
+      desc: 'highway=motorway, trunk, primary, secondary, tertiary, residential, unclassified, track',
+      tag: 'highway',
+      values: ['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'track'],
+      layerName: 'OSM: Roads',
+    },
+    rivers: {
+      label: 'Rivers & Streams',
+      icon: '\u{1F4A7}',
+      desc: 'waterway=river, stream, canal, tidal_creek',
+      tag: 'waterway',
+      values: ['river', 'stream', 'canal', 'tidal_creek'],
+      layerName: 'OSM: Rivers',
+    },
+    lakes: {
+      label: 'Lakes & Ponds',
+      icon: '\u{1F3DE}\u{FE0F}',
+      desc: 'natural=water (lakes, ponds, reservoirs)',
+      tag: 'natural',
+      values: ['water'],
+      layerName: 'OSM: Lakes',
+    },
+    wetlands: {
+      label: 'Wetlands & Swamps',
+      icon: '\u{1F33C}',
+      desc: 'natural=wetland (swamps, marshes, bogs, mangroves)',
+      tag: 'natural',
+      values: ['wetland'],
+      layerName: 'OSM: Wetlands',
+    },
+    mountains: {
+      label: 'Mountains & Peaks',
+      icon: '\u{26F0}\u{FE0F}',
+      desc: 'natural=peak, volcano, ridge, cliff, saddle',
+      tag: 'natural',
+      values: ['peak', 'volcano', 'ridge', 'cliff', 'saddle'],
+      layerName: 'OSM: Mountains',
+    },
+    conservation: {
+      label: 'Conservation Areas',
+      icon: '\u{1F9BE}',
+      desc: 'boundary=protected_area, national_park; leisure=nature_reserve',
+      tag: null, // multi-tag query
+      layerName: 'OSM: Conservation Areas',
+    },
+    forest: {
+      label: 'Forest & Timber',
+      icon: '\u{1F332}',
+      desc: 'landuse=forest, forestry; natural=wood',
+      tag: null,
+      layerName: 'OSM: Forest & Timber',
+    },
+    mining: {
+      label: 'Mining & Quarries',
+      icon: '\u{26CF}\u{FE0F}',
+      desc: 'landuse=quarry; man_made=mineshaft; historic=mine',
+      tag: null,
+      layerName: 'OSM: Mining Areas',
+    },
+  };
+
+  async function osmQuickQuery(key) {
+    const cfg = OSM_QUICK_QUERIES[key];
+    if (!cfg) return;
+
+    const bbox = _getMapBBox();
+    const bboxStr = `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`;
+
+    // Build Overpass QL query
+    let tagFilters;
+    if (cfg.tag && cfg.values) {
+      // Single tag with multiple values: ["key"~"value1|value2|..."]
+      tagFilters = `["${cfg.tag}"~"^(${cfg.values.join('|')})$"]`;
+    } else if (key === 'conservation') {
+      // Multi-tag: boundary=protected_area OR boundary=national_park OR leisure=nature_reserve
+      tagFilters = null;
+    } else if (key === 'forest') {
+      tagFilters = null;
+    } else if (key === 'mining') {
+      tagFilters = null;
+    }
+
+    let query;
+    if (tagFilters) {
+      query = `[out:json][timeout:25];(node${tagFilters}(${bboxStr});way${tagFilters}(${bboxStr});relation${tagFilters}(${bboxStr}););out center geom;`;
+    } else if (key === 'conservation') {
+      query = `[out:json][timeout:25];(` +
+        `way["boundary"="protected_area"](${bboxStr});` +
+        `way["boundary"="national_park"](${bboxStr});` +
+        `way["leisure"="nature_reserve"](${bboxStr});` +
+        `relation["boundary"="protected_area"](${bboxStr});` +
+        `relation["boundary"="national_park"](${bboxStr});` +
+        `relation["leisure"="nature_reserve"](${bboxStr});` +
+        `);out center geom;`;
+    } else if (key === 'forest') {
+      query = `[out:json][timeout:25];(` +
+        `way["landuse"="forest"](${bboxStr});` +
+        `way["landuse"="forestry"](${bboxStr});` +
+        `way["natural"="wood"](${bboxStr});` +
+        `relation["landuse"="forest"](${bboxStr});` +
+        `relation["landuse"="forestry"](${bboxStr});` +
+        `relation["natural"="wood"](${bboxStr});` +
+        `);out center geom;`;
+    } else if (key === 'mining') {
+      query = `[out:json][timeout:25];(` +
+        `way["landuse"="quarry"](${bboxStr});` +
+        `node["man_made"="mineshaft"](${bboxStr});` +
+        `node["historic"="mine"](${bboxStr});` +
+        `way["historic"="mine"](${bboxStr});` +
+        `);out center geom;`;
+    }
+
+    showProcessing('Querying OpenStreetMap: ' + cfg.label + '...');
+    try {
+      const data = await _overpassFetch(query);
+      hideProcessing();
+
+      if (!data.elements || data.elements.length === 0) {
+        showToast('No ' + cfg.label + ' found in current map view', 'info');
+        return;
+      }
+
+      const geojson = _osmToGeoJSON(data.elements);
+      addUploadedGeoJSON(geojson, cfg.layerName, nextColor());
+      showToast(`Loaded ${geojson.features.length} ${cfg.label} from OSM`, 'success');
+    } catch (e) {
+      hideProcessing();
+      showToast(cfg.label + ' query failed: ' + e.message, 'error');
+    }
+  }
+
   // ── Public API ───────────────────────────────────────────────────────────
   return {
     overpassQuery,
@@ -478,5 +616,7 @@ const GSX_OpenData = (function () {
     ecoregionsAdd,
     marineAdd,
     worldBankQuery,
+    osmQuickQuery,
+    OSM_QUICK_QUERIES,
   };
 })();

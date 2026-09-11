@@ -2232,6 +2232,18 @@
           </div>
         </div>
 
+        <!-- OSM Quick Queries: Infrastructure & Land Use -->
+        <div class="panel-subsection">
+          <div class="panel-header sub" onclick="toggleSection(this)">
+            <span>&#x1F5FA;&#xFE0F; Infrastructure & Land Use</span><span class="arrow">&#x25BC;</span>
+          </div>
+          <div class="panel-body hidden" style="padding:8px 10px;">
+            <p style="font-size:10px;color:var(--text-muted);margin:0 0 6px;">One-click OSM queries for common infrastructure and land-use features in the current map view. High-resolution, free, open data from OpenStreetMap.</p>
+            <div id="osm-quick-buttons" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+            </div>
+          </div>
+        </div>
+
         <!-- GBIF Biodiversity -->
         <div class="panel-subsection">
           <div class="panel-header sub" onclick="toggleSection(this)">
@@ -3697,6 +3709,22 @@ try { L.control.fullscreen({position:'topleft'}).addTo(map); } catch(e) {}
 // areas use the spherical-excess ringArea() helper.
 let measureTool = null;
 try { measureTool = createMeasureTool(map); } catch (e) { console.error('Measure tool init failed:', e); }
+
+// Populate OSM quick-query buttons in the Open Data panel
+(function() {
+  const container = document.getElementById('osm-quick-buttons');
+  if (!container) return;
+  if (typeof GSX_OpenData === 'undefined' || !GSX_OpenData.OSM_QUICK_QUERIES) return;
+  for (const [key, cfg] of Object.entries(GSX_OpenData.OSM_QUICK_QUERIES)) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-primary';
+    btn.style.cssText = 'font-size:10px;padding:5px 4px;text-align:left;line-height:1.3;';
+    btn.title = cfg.desc;
+    btn.innerHTML = `<span style="font-size:13px;vertical-align:middle;">${cfg.icon}</span> <span style="vertical-align:middle;">${cfg.label}</span>`;
+    btn.onclick = () => GSX_OpenData.osmQuickQuery(key);
+    container.appendChild(btn);
+  }
+})();
 
 function createMeasureTool(map) {
   // Read accent colour from the active theme so lines adapt to dark/light mode
@@ -10273,16 +10301,37 @@ const FIELD_METADATA = {
   // ── OSM / Overpass fields ──
   name: { desc: 'Feature name (from OpenStreetMap tags)', sources: { 'OSM:': 'OpenStreetMap', DEFAULT: 'Layer attribute' } },
   amenity: { desc: 'OSM amenity tag (e.g. school, hospital, restaurant)', source: 'OpenStreetMap' },
-  highway: { desc: 'OSM highway tag (road classification)', source: 'OpenStreetMap' },
+  highway: { desc: 'OSM highway tag (road classification, e.g. motorway, primary, residential)', source: 'OpenStreetMap' },
   building: { desc: 'OSM building tag', source: 'OpenStreetMap' },
   shop: { desc: 'OSM shop tag (type of shop)', source: 'OpenStreetMap' },
   tourism: { desc: 'OSM tourism tag (e.g. hotel, attraction)', source: 'OpenStreetMap' },
-  natural: { desc: 'OSM natural tag (e.g. tree, water, peak)', source: 'OpenStreetMap' },
+  natural: { desc: 'OSM natural tag (e.g. water, wetland, peak, wood)', source: 'OpenStreetMap' },
   waterway: { desc: 'OSM waterway tag (e.g. river, stream, canal)', source: 'OpenStreetMap' },
-  landuse: { desc: 'OSM landuse tag (e.g. residential, forest, farmland)', source: 'OpenStreetMap' },
+  water: { desc: 'OSM water classification tag (e.g. lake, pond, reservoir)', source: 'OpenStreetMap' },
+  wetland: { desc: 'OSM wetland type tag (e.g. swamp, marsh, bog, mangrove)', source: 'OpenStreetMap' },
+  landuse: { desc: 'OSM landuse tag (e.g. forest, quarry, residential, farmland)', source: 'OpenStreetMap' },
   place: { desc: 'OSM place tag (e.g. city, town, village)', source: 'OpenStreetMap' },
-  boundary: { desc: 'OSM boundary tag (e.g. administrative)', source: 'OpenStreetMap' },
+  boundary: { desc: 'OSM boundary tag (e.g. administrative, protected_area, national_park)', source: 'OpenStreetMap' },
+  leisure: { desc: 'OSM leisure tag (e.g. nature_reserve, park)', source: 'OpenStreetMap' },
   admin_level: { desc: 'OSM administrative level (e.g. 2=country, 4=state)', source: 'OpenStreetMap' },
+  man_made: { desc: 'OSM man_made tag (e.g. mineshaft, tower, pipeline)', source: 'OpenStreetMap' },
+  historic: { desc: 'OSM historic tag (e.g. mine, monument, archaeological_site)', source: 'OpenStreetMap' },
+  ele: { desc: 'Elevation in metres (OSM tag)', source: 'OpenStreetMap' },
+  ref: { desc: 'Reference code or number (OSM tag, e.g. road number)', source: 'OpenStreetMap' },
+  surface: { desc: 'OSM surface tag (e.g. paved, unpaved, gravel)', source: 'OpenStreetMap' },
+  bridge: { desc: 'OSM bridge tag', source: 'OpenStreetMap' },
+  tunnel: { desc: 'OSM tunnel tag', source: 'OpenStreetMap' },
+  width: { desc: 'Width in metres (OSM tag, e.g. road width)', source: 'OpenStreetMap' },
+  lanes: { desc: 'Number of lanes (OSM tag)', source: 'OpenStreetMap' },
+  operator: { desc: 'Operator or managing entity (OSM tag)', source: 'OpenStreetMap' },
+  protect_class: { desc: 'OSM protection class code (e.g. 1–6 for IUCN categories)', source: 'OpenStreetMap' },
+  protection_title: { desc: 'OSM protection title (e.g. National Park, Nature Reserve)', source: 'OpenStreetMap' },
+  start_date: { desc: 'Start date of construction or operation (OSM tag)', source: 'OpenStreetMap' },
+  maxspeed: { desc: 'Maximum speed limit in km/h (OSM tag)', source: 'OpenStreetMap' },
+  oneway: { desc: 'OSM oneway tag (yes/no/reversible)', source: 'OpenStreetMap' },
+  smoothness: { desc: 'OSM smoothness tag (e.g. excellent, good, bad, very_bad)', source: 'OpenStreetMap' },
+  tracktype: { desc: 'OSM tracktype grade (grade1=best to grade5=worst)', source: 'OpenStreetMap' },
+  'source': { desc: 'OSM source tag (data origin)', source: 'OpenStreetMap' },
 
   // ── Natural Earth reference fields ──
   ADMIN: { desc: 'Country or admin-0 name (Natural Earth)', source: 'Natural Earth' },
