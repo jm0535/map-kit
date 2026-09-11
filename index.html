@@ -13321,7 +13321,9 @@ function refreshExportLayerSelect() {
   _updateExportCrsHint();
 }
 
-/** Auto-detect the correct UTM zone for the selected export layer and show a hint. */
+/** Auto-detect the correct UTM zone for the selected export layer and show a hint.
+ *  Works for any location worldwide — computes centroid lon/lat, determines the
+ *  UTM zone and hemisphere, and dynamically adds the EPSG option if needed. */
 function _updateExportCrsHint() {
   const sel = document.getElementById('export-layer-select');
   const crsSel = document.getElementById('export-crs-select');
@@ -13333,40 +13335,53 @@ function _updateExportCrsHint() {
   if (!info || !info.geojsonFeatures || info.geojsonFeatures.length === 0) {
     hint.style.display = 'none'; return;
   }
-  // Compute centroid longitude from all point features (or polygon centroids)
-  let lonSum = 0, lonCount = 0;
+  // Compute centroid longitude AND latitude from all features
+  let lonSum = 0, latSum = 0, n = 0;
   info.geojsonFeatures.forEach(f => {
     if (!f.geometry) return;
     const gt = f.geometry.type;
-    if (gt === 'Point') {
-      lonSum += f.geometry.coordinates[0]; lonCount++;
-    } else if (gt === 'MultiPoint') {
-      f.geometry.coordinates.forEach(c => { lonSum += c[0]; lonCount++; });
-    } else if (gt === 'LineString') {
-      f.geometry.coordinates.forEach(c => { lonSum += c[0]; lonCount++; });
-    } else if (gt === 'MultiLineString') {
-      f.geometry.coordinates.forEach(ring => ring.forEach(c => { lonSum += c[0]; lonCount++; }));
-    } else if (gt === 'Polygon') {
-      f.geometry.coordinates[0].forEach(c => { lonSum += c[0]; lonCount++; });
-    } else if (gt === 'MultiPolygon') {
-      f.geometry.coordinates.forEach(poly => poly[0].forEach(c => { lonSum += c[0]; lonCount++; }));
-    }
+    const collect = (coords) => { lonSum += coords[0]; latSum += coords[1]; n++; };
+    if (gt === 'Point') collect(f.geometry.coordinates);
+    else if (gt === 'MultiPoint') f.geometry.coordinates.forEach(collect);
+    else if (gt === 'LineString') f.geometry.coordinates.forEach(collect);
+    else if (gt === 'MultiLineString') f.geometry.coordinates.forEach(ring => ring.forEach(collect));
+    else if (gt === 'Polygon') f.geometry.coordinates[0].forEach(collect);
+    else if (gt === 'MultiPolygon') f.geometry.coordinates.forEach(poly => poly[0].forEach(collect));
   });
-  if (lonCount === 0) { hint.style.display = 'none'; return; }
-  const cLon = lonSum / lonCount;
+  if (n === 0) { hint.style.display = 'none'; return; }
+  const cLon = lonSum / n;
+  const cLat = latSum / n;
+  // UTM zone: 1-60, each 6° wide, starting at 180°W
   const zone = Math.floor((cLon + 180) / 6) + 1;
-  const epsg = zone >= 0 ? 32700 + zone : 32600 + Math.abs(zone); // 327xx for south, 326xx for north
-  const epsgCode = 'EPSG:' + epsg;
-  const hemi = 'S';
-  // Check if this EPSG is in the dropdown
-  const hasOpt = Array.from(crsSel.options).some(o => o.value === epsgCode);
-  if (hasOpt) {
-    hint.innerHTML = `&raquo; Your data centroids at ${cLon.toFixed(1)}&deg;E &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. <a href="#" onclick="document.getElementById('export-crs-select').value='${epsgCode}';return false;" style="color:var(--accent);text-decoration:none;">Click to select</a>`;
-    hint.style.display = '';
-  } else {
-    hint.innerHTML = `&raquo; Your data centroids at ${cLon.toFixed(1)}&deg;E &rarr; UTM Zone ${zone}${hemi} (${epsgCode}). Select it from the dropdown above.`;
-    hint.style.display = '';
+  const hemi = cLat >= 0 ? 'N' : 'S';
+  // EPSG: 326xx for northern hemisphere, 327xx for southern
+  const epsgNum = (hemi === 'N' ? 32600 : 32700) + zone;
+  const epsgCode = 'EPSG:' + epsgNum;
+  const proj4Def = `+proj=utm +zone=${zone} ${hemi === 'S' ? '+south ' : ''}+datum=WGS84 +units=m +no_defs`;
+  const lonStr = Math.abs(cLon).toFixed(1) + '°' + (cLon >= 0 ? 'E' : 'W');
+  const latStr = Math.abs(cLat).toFixed(1) + '°' + (cLat >= 0 ? 'N' : 'S');
+  // Register the proj4 definition so reprojection works
+  if (typeof proj4 !== 'undefined') {
+    try { proj4.defs(epsgCode, proj4Def); } catch(_) {}
   }
+  // Check if this EPSG is already in the dropdown; if not, add it
+  let hasOpt = Array.from(crsSel.options).some(o => o.value === epsgCode);
+  if (!hasOpt) {
+    const opt = document.createElement('option');
+    opt.value = epsgCode;
+    opt.textContent = `UTM Zone ${zone}${hemi} / WGS 84 (${epsgCode})`;
+    // Insert before the custom option
+    const customOpt = Array.from(crsSel.options).find(o => o.value === '__custom__');
+    if (customOpt) crsSel.insertBefore(opt, customOpt);
+    else crsSel.appendChild(opt);
+    hasOpt = true;
+  }
+  if (hasOpt) {
+    hint.innerHTML = `&raquo; Your data centroids at ${lonStr}, ${latStr} &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. <a href="#" onclick="document.getElementById('export-crs-select').value='${epsgCode}';return false;" style="color:var(--accent);text-decoration:none;">Click to select</a>`;
+  } else {
+    hint.innerHTML = `&raquo; Your data centroids at ${lonStr}, ${latStr} &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. Select it from the dropdown above.`;
+  }
+  hint.style.display = '';
 }
 
 function _initExportCrsSelect() {
