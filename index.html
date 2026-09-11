@@ -13378,12 +13378,44 @@ function _updateExportCrsHint() {
     else crsSel.appendChild(opt);
     hasOpt = true;
   }
+  // Suggest a rich filename: Surname_lab_species_points_utmXXH_WGS84
+  const suggestedName = _suggestExportName(info, zone, hemi);
   if (hasOpt) {
-    hint.innerHTML = `&raquo; Your data centroids at ${lonStr}, ${latStr} &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. <a href="#" onclick="document.getElementById('export-crs-select').value='${epsgCode}';return false;" style="color:var(--accent);text-decoration:none;">Click to select</a>`;
+    hint.innerHTML = `&raquo; Your data centroids at ${lonStr}, ${latStr} &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. <a href="#" onclick="document.getElementById('export-crs-select').value='${epsgCode}';return false;" style="color:var(--accent);text-decoration:none;">Click to select</a>` +
+      (suggestedName ? `<br>&raquo; Suggested filename: <b>${suggestedName}</b>. <a href="#" onclick="document.getElementById('export-layer-name').value='${suggestedName}';return false;" style="color:var(--accent);text-decoration:none;">Click to use</a>` : '');
   } else {
-    hint.innerHTML = `&raquo; Your data centroids at ${lonStr}, ${latStr} &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. Select it from the dropdown above.`;
+    hint.innerHTML = `&raquo; Your data centroids at ${lonStr}, ${latStr} &rarr; <b>UTM Zone ${zone}${hemi} (${epsgCode})</b>. Select it from the dropdown above.` +
+      (suggestedName ? `<br>&raquo; Suggested filename: <b>${suggestedName}</b>` : '');
   }
   hint.style.display = '';
+}
+
+/** Suggest a rich export filename: Surname_lab_species_points_utmXXH_WGS84
+ *  Uses the layer name to guess species, and the detected UTM zone/hemisphere. */
+function _suggestExportName(info, zone, hemi) {
+  if (!info || !info.name) return '';
+  // Try to extract a species common name from the layer name.
+  // Layer names are typically like "lab_Paradisaea_guilielmi_occurrences_geojson"
+  // or "Paradisaea_guilielmi_occurrences.geojson"
+  let name = info.name.replace(/\.geojson$|\.json$|\.csv$|\.xlsx$|\.kml$|\.gpx$|\.zip$/i, '');
+  // Remove common suffixes: _occurrences, _points, _geojson, _utm*, _wgs*, _epsg*
+  name = name.replace(/_occurrences$/i, '').replace(/_points?$/i, '').replace(/_geojson$/i, '');
+  name = name.replace(/_utm\d+[ns]$/i, '').replace(/_wgs\d+$/i, '').replace(/_epsg\d+/i, '');
+  // Remove "lab_" prefix if present (students add their own surname)
+  name = name.replace(/^lab_/i, '');
+  // Convert genus_species to a readable form (e.g., Paradisaea_guilielmi -> birdofparadise is too complex;
+  // just keep the scientific name as-is, lowercased and underscored)
+  name = _safeName(name).toLowerCase();
+  if (!name) return '';
+  // Detect geometry type from features
+  let geomType = 'points';
+  if (info.geojsonFeatures && info.geojsonFeatures.length > 0) {
+    const gt = info.geojsonFeatures[0].geometry && info.geojsonFeatures[0].geometry.type;
+    if (gt === 'Polygon' || gt === 'MultiPolygon') geomType = 'polygon';
+    else if (gt === 'LineString' || gt === 'MultiLineString') geomType = 'lines';
+    else if (gt === 'Point' || gt === 'MultiPoint') geomType = 'points';
+  }
+  return `Surname_lab_${name}_${geomType}_utm${zone}${hemi}_WGS84`;
 }
 
 function _initExportCrsSelect() {
