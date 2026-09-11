@@ -3355,7 +3355,7 @@
 
 <!-- View Fields modal -->
 <div id="view-fields-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeViewFields()">
-  <div id="view-fields-box" style="background:var(--surface-1);border:1px solid var(--border-strong);border-radius:8px;padding:20px 24px;width:520px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;">
+  <div id="view-fields-box" style="background:var(--surface-1);border:1px solid var(--border-strong);border-radius:8px;padding:20px 24px;width:780px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div>
         <h3 id="vf-title" style="color:var(--accent);font-size:13px;margin:0 0 2px;">Layer Fields</h3>
@@ -10186,7 +10186,43 @@ function closeLayerContextMenu() {
   document.removeEventListener('keydown', _lcmKey, true);
 }
 
-// Quick field viewer: shows all field names, types, and sample values
+// Field metadata for known GBIF/enriched species occurrence layers.
+// Describes what each field means, where it came from, and coded value meanings.
+const FIELD_METADATA = {
+  site: { desc: 'GBIF occurrence record identifier (prefixed with GBIF_)', source: 'GBIF' },
+  gbifID: { desc: 'GBIF numeric record ID', source: 'GBIF' },
+  scientificName: { desc: 'Full scientific name with author citation', source: 'GBIF taxonomy' },
+  species: { desc: 'Species name (binomial)', source: 'GBIF taxonomy' },
+  year: { desc: 'Year the occurrence was recorded', source: 'GBIF' },
+  basisOfRecord: { desc: 'How the record was observed (e.g. HUMAN_OBSERVATION, PRESERVED_SPECIMEN)', source: 'GBIF' },
+  locality: { desc: 'Specific location description (may be empty)', source: 'GBIF' },
+  stateProvince: { desc: 'Province or region within PNG (e.g. Western, West New Britain, Bougainville)', source: 'GBIF' },
+  elevation_m: { desc: 'Elevation above sea level in metres', source: 'Sampled from PNG elevation raster at each point' },
+  tree_cover_pct: { desc: 'Percentage tree canopy cover (0 to 100)', source: 'Sampled from PNG tree-cover raster at each point' },
+  rainfall_mm: { desc: 'Annual precipitation in millimetres (BIOCLIM BIO12)', source: 'Sampled from PNG BIOCLIM raster at each point' },
+  bio1: { desc: 'Annual mean temperature in degrees Celsius', source: 'Sampled from PNG BIOCLIM BIO1 raster at each point' },
+  bio15: { desc: 'Precipitation seasonality (coefficient of variation, higher = more seasonal)', source: 'Sampled from PNG BIOCLIM BIO15 raster at each point' },
+  worldcover_class: {
+    desc: 'ESA WorldCover 2021 land-cover class code. See the code reference table below.',
+    source: 'Sampled from ESA WorldCover 2021 10 m raster at each point',
+    codes: {
+      10: 'Tree cover (forest, canopy > 30%)',
+      20: 'Shrubland',
+      30: 'Grassland',
+      40: 'Cropland',
+      50: 'Built-up (urban, settlements)',
+      60: 'Bare / sparse vegetation',
+      70: 'Snow and ice',
+      80: 'Permanent water bodies (lakes, rivers)',
+      90: 'Herbaceous wetland',
+      95: 'Mangroves',
+      100: 'Moss and lichen'
+    }
+  },
+  worldcover_label: { desc: 'Human-readable ESA WorldCover 2021 land-cover label (e.g. Tree cover, Grassland, Built-up, Water)', source: 'Derived from worldcover_class' }
+};
+
+// Quick field viewer: shows all field names, types, descriptions, and sample values
 function showLayerFields(id) {
   const info = uploadedLayers.find(l => l.id === id);
   if (!info) return;
@@ -10215,7 +10251,7 @@ function showLayerFields(id) {
   if (fieldCount === 0) {
     content.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">No fields found in this layer.</div>';
   } else {
-    let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:6px 8px;color:var(--accent);">#</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Field Name</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Type</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Sample Values</th></tr></thead><tbody>';
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:6px 8px;color:var(--accent);">#</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Field Name</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Type</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Description</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Source</th><th style="text-align:left;padding:6px 8px;color:var(--accent);">Sample Values</th></tr></thead><tbody>';
     Object.keys(fieldMap).sort().forEach((k, i) => {
       const f = fieldMap[k];
       const sample = f.values.length > 0 ? f.values.map(v => escapeHtml(v.length > 30 ? v.substring(0, 30) + '...' : v)).join(', ') : '<span style="color:var(--text-faint);">empty</span>';
@@ -10226,9 +10262,23 @@ function showLayerFields(id) {
         if (!isNaN(parseFloat(firstVal)) && isFinite(parseFloat(firstVal))) type = 'number';
         else if (firstVal === 'true' || firstVal === 'false') type = 'boolean';
       }
-      html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 8px;color:var(--text-faint);">${i + 1}</td><td style="padding:5px 8px;font-weight:600;">${escapeHtml(k)}</td><td style="padding:5px 8px;color:var(--text-muted);">${type}</td><td style="padding:5px 8px;color:var(--text-muted);">${sample}</td></tr>`;
+      const meta = FIELD_METADATA[k];
+      const desc = meta ? escapeHtml(meta.desc) : '<span style="color:var(--text-faint);">No description available</span>';
+      const source = meta ? escapeHtml(meta.source) : '<span style="color:var(--text-faint);">Unknown</span>';
+      html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 8px;color:var(--text-faint);">${i + 1}</td><td style="padding:5px 8px;font-weight:600;">${escapeHtml(k)}</td><td style="padding:5px 8px;color:var(--text-muted);">${type}</td><td style="padding:5px 8px;">${desc}</td><td style="padding:5px 8px;color:var(--text-muted);font-size:10px;">${source}</td><td style="padding:5px 8px;color:var(--text-muted);">${sample}</td></tr>`;
     });
     html += '</tbody></table>';
+    // If worldcover_class is present, show the code reference table
+    if (fieldMap['worldcover_class']) {
+      const codes = FIELD_METADATA.worldcover_class.codes;
+      html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);"><div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:8px;">ESA WorldCover 2021 Class Codes</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px 8px;color:var(--accent);">Code</th><th style="text-align:left;padding:4px 8px;color:var(--accent);">Land Cover Type</th></tr></thead><tbody>';
+      Object.keys(codes).forEach(code => {
+        html += `<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;font-weight:600;">${code}</td><td style="padding:4px 8px;">${escapeHtml(codes[code])}</td></tr>`;
+      });
+      html += '</tbody></table></div>';
+    }
+    // Add a note about data enrichment
+    html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);line-height:1.5;">This layer contains GBIF species occurrence records enriched with environmental data sampled at each point location. GBIF fields (site, gbifID, scientificName, species, year, basisOfRecord, locality, stateProvince) come from the original occurrence record. Environmental fields (elevation_m, tree_cover_pct, rainfall_mm, bio1, bio15, worldcover_class, worldcover_label) were added by sampling raster datasets at each point coordinate. Null values mean the raster had no data at that location.</div>';
     content.innerHTML = html;
   }
   overlay.style.display = 'flex';
