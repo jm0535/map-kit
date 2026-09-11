@@ -10226,7 +10226,11 @@ const WORLDCOVER_CODES = {
   100: 'Moss and lichen'
 };
 
-// Exact-match metadata for fields with fixed names (GBIF, common names)
+// Exact-match metadata for fields with fixed names (GBIF, common names,
+// and FR422-specific enriched fields whose source cannot be inferred from
+// the field name alone — e.g. rainfall_mm is WorldClim BIO12 renamed,
+// elevation_m is WorldClim 2.1 elevation, tree_cover_pct is derived from
+// ESA WorldCover class 10).
 const FIELD_METADATA = {
   site: { desc: 'GBIF occurrence record identifier (prefixed with GBIF_)', source: 'GBIF' },
   gbifID: { desc: 'GBIF numeric record ID', source: 'GBIF' },
@@ -10241,7 +10245,7 @@ const FIELD_METADATA = {
   year: { desc: 'Year the occurrence was recorded', source: 'GBIF' },
   month: { desc: 'Month the occurrence was recorded', source: 'GBIF' },
   day: { desc: 'Day of the month the occurrence was recorded', source: 'GBIF' },
-  basisOfRecord: { desc: 'How the record was observed (e.g. HUMAN_OBSERVATION, PRESERVED_SPECIMEN)', source: 'GBIF' },
+  basisOfRecord: { desc: 'How the record was observed (e.g. HUMAN_OBSERVATION, PRESERVED_SPECIMEN, MATERIAL_SAMPLE)', source: 'GBIF' },
   locality: { desc: 'Specific location description (may be empty)', source: 'GBIF' },
   stateProvince: { desc: 'Province or region (e.g. Western, West New Britain, Bougainville)', source: 'GBIF' },
   country: { desc: 'Country of the occurrence', source: 'GBIF' },
@@ -10255,9 +10259,14 @@ const FIELD_METADATA = {
   collectionCode: { desc: 'Collection code', source: 'GBIF' },
   catalogNumber: { desc: 'Catalog number', source: 'GBIF' },
   institutionCode: { desc: 'Institution code', source: 'GBIF' },
+  // FR422 enriched fields — these have fixed names in the assignment data
+  // but their source cannot be inferred from the name alone:
+  rainfall_mm: { desc: 'Annual precipitation in millimetres (WorldClim BIO12)', source: 'WorldClim 2.1 BIO12 (30 arc-second) raster sampled at each point' },
+  elevation_m: { desc: 'Elevation above sea level in metres', source: 'WorldClim 2.1 elevation (2.5 arc-minute) raster sampled at each point' },
+  tree_cover_pct: { desc: 'Percentage tree-cover proxy (0–100), derived from ESA WorldCover class 10', source: 'Derived from ESA WorldCover 2021 class 10, sampled at each point' },
   worldcover_class: {
-    desc: 'ESA WorldCover 2021 land-cover class code. See the code reference table below.',
-    source: 'Sampled from ESA WorldCover 2021 10 m raster at each point',
+    desc: 'ESA WorldCover 2021 v200 land-cover class code. See the code reference table below.',
+    source: 'Sampled from ESA WorldCover 2021 v200 (10 m) raster at each point',
     codes: WORLDCOVER_CODES
   },
   worldcover_label: { desc: 'Human-readable ESA WorldCover 2021 land-cover label (e.g. Tree cover, Grassland, Built-up, Water)', source: 'Derived from worldcover_class' }
@@ -10269,7 +10278,7 @@ const FIELD_METADATA = {
 const FIELD_PATTERNS = [
   // WorldClim BIOCLIM variables: bio1–bio19 (with optional prefix/suffix)
   { test: k => /^bio([1-9]|1[0-9])$/.test(k),
-    meta: k => ({ desc: WORLCLIM_BIOCLIM[k], source: 'WorldClim BIOCLIM raster sampled at each point' }) },
+    meta: k => ({ desc: WORLCLIM_BIOCLIM[k], source: 'WorldClim 2.1 BIOCLIM raster sampled at each point' }) },
   // Elevation
   { test: k => /^(elev|elevation|altitude|dem|height)(_m|m|_meters|_srtm|ation_m)?$/i.test(k),
     meta: () => ({ desc: 'Elevation above sea level in metres', source: 'Sampled from elevation raster at each point' }) },
@@ -10284,7 +10293,7 @@ const FIELD_PATTERNS = [
     meta: () => ({ desc: 'Temperature in degrees Celsius', source: 'Sampled from temperature raster at each point' }) },
   // WorldCover class (any field with 'worldcover' and 'class')
   { test: k => /worldcover.*class|class.*worldcover/i.test(k),
-    meta: () => ({ desc: 'ESA WorldCover 2021 land-cover class code. See the code reference table below.', source: 'Sampled from ESA WorldCover 2021 10 m raster at each point', codes: WORLDCOVER_CODES }) },
+    meta: () => ({ desc: 'ESA WorldCover 2021 v200 land-cover class code. See the code reference table below.', source: 'Sampled from ESA WorldCover 2021 v200 (10 m) raster at each point', codes: WORLDCOVER_CODES }) },
   // WorldCover label
   { test: k => /worldcover.*label|label.*worldcover/i.test(k),
     meta: () => ({ desc: 'Human-readable ESA WorldCover 2021 land-cover label', source: 'Derived from worldcover class code' }) },
