@@ -230,6 +230,12 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 
 **What it means in real-world conservation:** Every published conservation plan, protected-area proposal, and environmental impact assessment specifies its CRS. Using the wrong CRS is one of the most common errors in GIS - it produces silently wrong area and distance measurements. In a real conservation plan, the CRS choice is documented in the methods section and all reported measurements (hectares, kilometres) are computed in that CRS. The assignment mirrors this requirement: you must export to the correct UTM zone for your data and report all measurements in that CRS.
 
+> **How GeoSpaX computes distances and areas:** GeoSpaX uses two methods for accuracy:
+> - **Measurement tools** (ruler, line length, polygon area, protection gap): These use **Karney's geodesic algorithms** (GeographicLib) on the WGS84 ellipsoid, which gives sub-millimetre accuracy anywhere on Earth. This is the same algorithm used by PostGIS, PROJ, and QGIS for geodesic calculations. Cite: Karney, C. F. F. (2013). Algorithms for geodesics. *Journal of Geodesy*, 87(1), 43-55.
+> - **Spatial statistics** (Gi*, LISA, Moran's I, NNI): These require a flat (planar) coordinate system, so GeoSpaX auto-selects the correct UTM zone and projects your points into metres on the WGS84 ellipsoid before computing distances. UTM distortion is less than 0.04% within a single zone.
+>
+> Both methods are far more accurate than the Haversine formula (which assumes a perfect sphere and can be off by up to 0.5% in PNG). When you report a distance or area in your assignment, state that it was computed using geodesic (ellipsoidal) methods.
+
 #### Steps to export
 
 1. Open the **Export** section in the **left panel** (expand the Export section header).

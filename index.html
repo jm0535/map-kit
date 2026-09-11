@@ -42,6 +42,7 @@
 <!-- File parsing libs -->
 <script src="vendor/xlsx/xlsx.full.min.js"></script>
 <script src="vendor/proj4/proj4.js"></script>
+<script src="vendor/geographiclib/geographiclib-geodesic.min.js"></script>
 <script src="vendor/shpjs/shp.min.js"></script>
 <script src="vendor/togeojson/togeojson.js"></script>
 
@@ -3758,13 +3759,26 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// Geodesic distance (Karney / GeographicLib) — true WGS84 ellipsoidal.
+// Falls back to Haversine (spherical) if the library is not loaded.
+var _geod = (typeof geodesic !== 'undefined') ? geodesic.Geodesic.WGS84 : null;
+
+function geodesicDistM(p1, p2) {
+  if (_geod) {
+    try { return _geod.Inverse(p1.lat, p1.lon, p2.lat, p2.lon).s12; } catch (_) {}
+  }
+  // Haversine fallback (sphere, R=6371 km)
+  var R = 6371000;
+  var dLat = (p2.lat - p1.lat) * Math.PI / 180;
+  var dLon = (p2.lon - p1.lon) * Math.PI / 180;
+  var a = Math.sin(dLat/2)**2 + Math.cos(p1.lat*Math.PI/180) * Math.cos(p2.lat*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 function haversineKm(pts) {
-  const R=6371, d=[0];
-  for(let i=1;i<pts.length;i++){
-    const dLat=(pts[i].lat-pts[i-1].lat)*Math.PI/180;
-    const dLon=(pts[i].lon-pts[i-1].lon)*Math.PI/180;
-    const a=Math.sin(dLat/2)**2+Math.cos(pts[i-1].lat*Math.PI/180)*Math.cos(pts[i].lat*Math.PI/180)*Math.sin(dLon/2)**2;
-    d.push(d[i-1]+R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+  var d = [0];
+  for (var i = 1; i < pts.length; i++) {
+    d.push(d[i-1] + geodesicDistM(pts[i-1], pts[i]) / 1000);
   }
   return d;
 }
@@ -8633,30 +8647,43 @@ function polygonsFromFeatures(features) {
 }
 
 function deg2rad(d) { return d * Math.PI / 180; }
+
+// Geodesic distance between two {lat,lon} points in metres.
+// Uses Karney's GeographicLib (WGS84 ellipsoid) with Haversine fallback.
 function haversineDist(p1, p2) {
-  const R = 6371000;
-  const dLat = deg2rad(p2.lat - p1.lat), dLon = deg2rad(p2.lon - p1.lon);
-  const a = Math.sin(dLat/2)**2 + Math.cos(deg2rad(p1.lat)) * Math.cos(deg2rad(p2.lat)) * Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return geodesicDistM(p1, p2);
 }
 
 function lineLength(coords) {
   let d = 0;
   for (let i = 1; i < coords.length; i++) {
-    d += haversineDist({lat:coords[i-1][1],lon:coords[i-1][0]}, {lat:coords[i][1],lon:coords[i][0]});
+    d += geodesicDistM({lat:coords[i-1][1],lon:coords[i-1][0]}, {lat:coords[i][1],lon:coords[i][0]});
   }
   return d;
 }
 
-// Signed spherical-excess area of a single ring (Chamberlain & Duquette).
+// Geodesic polygon area using GeographicLib's polygon area on the
+// WGS84 ellipsoid. Falls back to spherical-excess (Chamberlain &
+// Duquette) if the library is not loaded.
 function ringArea(ring) {
   if (!ring || ring.length < 3) return 0;
+  if (_geod) {
+    try {
+      var p = _geod.Polygon(false, false);
+      for (var i = 0; i < ring.length; i++) {
+        p.AddPoint(ring[i][1], ring[i][0]);
+      }
+      var r = p.Compute(false, true);
+      return Math.abs(r.area);
+    } catch (_) {}
+  }
+  // Spherical-excess fallback
   let area = 0;
   for (let i = 0; i < ring.length; i++) {
     const j = (i+1) % ring.length;
     area += deg2rad(ring[j][0] - ring[i][0]) * (2 + Math.sin(deg2rad(ring[i][1])) + Math.sin(deg2rad(ring[j][1])));
   }
-  return area * 6371000 * 6371000 / 2;
+  return Math.abs(area * 6371000 * 6371000 / 2);
 }
 
 // Net area of one Polygon (array of rings): outer ring minus any holes.

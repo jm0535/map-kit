@@ -44,10 +44,53 @@
     return { value: v, text: s, unit: u.label, display: s + ' ' + u.label };
   };
 
-  /** Area of a Feature or FeatureCollection in m². */
+  /** Area of a Feature or FeatureCollection in m².
+   *  Uses GeographicLib (Karney) geodesic polygon area on the WGS84
+   *  ellipsoid when available; falls back to turf.area (spherical). */
   GSX.areaM2 = function (gj) {
     if (!gj) return 0;
+    var geod = (typeof root.geodesic !== 'undefined') ? root.geodesic.Geodesic.WGS84 : null;
+    if (geod) {
+      try { return GSX._geodesicAreaM2(gj, geod); } catch (e) { /* fall through */ }
+    }
     try { return T.area(gj); } catch (e) { return 0; }
+  };
+
+  /** Geodesic polygon area using GeographicLib's Polygon class. */
+  GSX._geodesicAreaM2 = function (gj, geod) {
+    var total = 0;
+    var feats = gj.type === 'FeatureCollection' ? gj.features : [gj];
+    for (var i = 0; i < feats.length; i++) {
+      var geom = feats[i].geometry || feats[i];
+      if (!geom) continue;
+      if (geom.type === 'Polygon') {
+        total += Math.abs(GSX._ringAreaGeod(geom.coordinates, geod));
+      } else if (geom.type === 'MultiPolygon') {
+        for (var p = 0; p < geom.coordinates.length; p++) {
+          total += Math.abs(GSX._ringAreaGeod(geom.coordinates[p], geod));
+        }
+      }
+    }
+    return total;
+  };
+
+  GSX._ringAreaGeod = function (rings, geod) {
+    // Outer ring minus holes
+    var outer = GSX._singleRingAreaGeod(rings[0], geod);
+    for (var h = 1; h < rings.length; h++) {
+      outer -= GSX._singleRingAreaGeod(rings[h], geod);
+    }
+    return outer;
+  };
+
+  GSX._singleRingAreaGeod = function (ring, geod) {
+    if (!ring || ring.length < 3) return 0;
+    var p = geod.Polygon(false, false);
+    for (var i = 0; i < ring.length; i++) {
+      p.AddPoint(ring[i][1], ring[i][0]); // lat, lon
+    }
+    var r = p.Compute(false, true);
+    return r.area;
   };
 
   /* ===================================================================
@@ -57,6 +100,22 @@
   function isPolygonal(f) {
     return f && f.geometry &&
       (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon');
+  }
+
+  /** Geodesic distance in metres between two turf point features or
+   *  GeoJSON points, using GeographicLib (Karney) on the WGS84
+   *  ellipsoid. Falls back to turf.distance (Haversine) if the
+   *  library is unavailable. */
+  function geodDistM(a, b) {
+    var geod = (typeof root.geodesic !== 'undefined') ? root.geodesic.Geodesic.WGS84 : null;
+    if (geod) {
+      try {
+        var ca = a.geometry ? a.geometry.coordinates : a,
+            cb = b.geometry ? b.geometry.coordinates : b;
+        return geod.Inverse(ca[1], ca[0], cb[1], cb[0]).s12;
+      } catch (_) {}
+    }
+    return T.distance(a, b, { units: 'meters' });
   }
 
   /** Keep only polygonal features. Returns {polys, skipped}. */
@@ -320,7 +379,7 @@
           if (isPolygonal(feats[i])) {
             if (T.booleanPointInPolygon(centroid, feats[i])) return 1;
           } else if (feats[i].geometry && feats[i].geometry.type === 'Point') {
-            if (T.distance(centroid, feats[i], { units: 'meters' }) <= (opts.tolerance || 0)) return 1;
+            if (geodDistM(centroid, feats[i]) <= (opts.tolerance || 0)) return 1;
           }
         } catch (e) { /* ignore malformed feature */ }
       }
@@ -341,7 +400,7 @@
       feats.forEach(function (f) {
         if (!f.geometry || f.geometry.type !== 'Point') return;
         try {
-          if (T.distance(centroid, f, { units: 'meters' }) <= radius) n++;
+          if (geodDistM(centroid, f) <= radius) n++;
         } catch (e) { /* skip */ }
       });
       return Math.min(1, n / sat);
@@ -366,7 +425,7 @@
       var d = null;
       try {
         if (f.geometry.type === 'Point') {
-          d = T.distance(pt, f, { units: 'meters' });
+          d = geodDistM(pt, f);
         } else if (isPolygonal(f)) {
           if (T.booleanPointInPolygon(pt, f)) { d = 0; }
           else {
@@ -393,7 +452,7 @@
       var c;
       try { c = T.centroid(f); } catch (e) { return; }
       var d;
-      try { d = T.distance(pt, c, { units: 'meters' }); } catch (e) { return; }
+      try { d = geodDistM(pt, c); } catch (e) { return; }
       if (d < bestD) { bestD = d; best = f; }
     });
     return best;

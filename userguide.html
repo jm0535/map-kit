@@ -668,6 +668,10 @@ body {
       <div class="label">&#x1F4A1; CRS &amp; UTM auto-detect</div>
       For projected output (UTM), GeoSpaX auto-selects the correct UTM zone based on the layer centroid. Reprojection is done client-side. For analysis that requires accurate distance (Gi*, LISA, Moran's I, NNI), the app always uses an auto-selected UTM projection internally regardless of the export CRS.
     </div>
+    <div class="ug-callout">
+      <div class="label">&#x1F30D; Geodesic distance & area (WGS84 ellipsoid)</div>
+      All measurement, line-length, and polygon-area calculations in GeoSpaX use <b>Karney's geodesic algorithms</b> (GeographicLib) on the WGS84 ellipsoid, not the simpler Haversine (spherical) or spherical-excess formulas. This gives sub-millimetre accuracy for distances and areas anywhere on Earth. Spatial statistics (Gi*, LISA, Moran's I) still use UTM planar projection because those methods require a flat coordinate system, but the UTM projection itself is on the WGS84 ellipsoid so distortion is minimal within a single zone.
+    </div>
     <div class="ug-screenshot">
       <img src="practical_assignment/screenshots/03_export_crs.png" alt="Export panel with CRS selector and UTM auto-detect">
       <div class="caption">&#x1F4C4; Export panel showing the Per-Layer Export section with Output CRS dropdown and UTM auto-detect hint.</div>
@@ -782,7 +786,7 @@ body {
     </div>
     <div class="ug-tool">
       <div class="ug-tool-name"><span class="ug-ico">&#x1F4CF;</span> Line Lengths</div>
-      <div class="ug-tool-desc">Haversine great-circle length for each line feature. Appends a <code>length_km</code> attribute; total is shown in the results panel.</div>
+      <div class="ug-tool-desc">Geodesic (Karney / WGS84 ellipsoid) length for each line feature. Appends a <code>length_km</code> attribute; total is shown in the results panel.</div>
     </div>
     <div class="ug-tool">
       <div class="ug-tool-name"><span class="ug-ico">&#x25A6;</span> Polygon Areas</div>
@@ -1264,7 +1268,7 @@ body {
     <table class="ug-table">
       <thead><tr><th>Term</th><th>Definition</th></tr></thead>
       <tbody>
-        <tr><td><b>CRS</b></td><td>Coordinate Reference System. The mapping from coordinates on a flat surface to positions on the Earth. GeoSpaX uses WGS 84 (EPSG:4326) for storage and auto-selects UTM for distance-based analysis.</td></tr>
+        <tr><td><b>CRS</b></td><td>Coordinate Reference System. The mapping from coordinates on a flat surface to positions on the Earth. GeoSpaX uses WGS 84 (EPSG:4326) for storage, Karney's geodesic algorithms (GeographicLib) for measurement and area, and auto-selects UTM for spatial statistics that require a planar coordinate system.</td></tr>
         <tr><td><b>EPSG</b></td><td>European Petroleum Survey Group. Maintains the registry of standard CRS codes (e.g. EPSG:4326 = WGS 84).</td></tr>
         <tr><td><b>UTM</b></td><td>Universal Transverse Mercator. A projected CRS that divides the Earth into 60 zones, each 6 degrees of longitude wide. Distances in UTM are in metres with minimal distortion.</td></tr>
         <tr><td><b>GeoJSON</b></td><td>A JSON-based format for encoding geographic data. RFC 7946 standard.</td></tr>
@@ -1321,7 +1325,7 @@ body {
     <p>All data is stored and displayed in <b>EPSG:4326 (WGS 84)</b>. Imported data in other CRS is reprojected client-side using proj4js. The Export panel's Output CRS selector reprojects on export.</p>
 
     <p><b>Q: Why do distance-based statistics use UTM?</b></p>
-    <p>Raw latitude/longitude degrees are angular, not linear. Computing distances in degrees gives wrong results. GeoSpaX auto-selects the appropriate UTM zone for your data extent and projects coordinates into metres before computing distances for Getis-Ord Gi*, LISA, Global Moran's I, NNI, and DBSCAN. This improves accuracy but does not remove all projection limitations for data spanning multiple UTM zones.</p>
+    <p>Raw latitude/longitude degrees are angular, not linear. Computing distances in degrees gives wrong results. GeoSpaX uses two approaches: (1) for measurement, line-length, and polygon-area tools, it uses <b>Karney's geodesic algorithms</b> (GeographicLib) on the WGS84 ellipsoid for sub-millimetre accuracy; (2) for spatial statistics (Getis-Ord Gi*, LISA, Global Moran's I, NNI, DBSCAN), it auto-selects the appropriate UTM zone and projects coordinates into metres on a planar grid, because those methods require a flat coordinate system. UTM distortion is minimal within a single zone.</p>
 
     <p><b>Q: How do I choose the right output CRS for export?</b></p>
     <p>For general sharing, use <b>EPSG:4326 (WGS 84)</b>. For area-preserving analysis within a single country, use the local UTM zone (e.g. UTM 55S for Papua New Guinea mainland). For web mapping, use <b>EPSG:3857 (Web Mercator)</b>. GeoSpaX auto-detects the UTM zone from your data extent.</p>
