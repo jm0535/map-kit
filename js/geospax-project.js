@@ -393,12 +393,62 @@
       var el = document.getElementById('gsx-proj-' + k);
       if (el) meta[k] = el.value;
     });
-    var json = GSX.projectToJSON(true);
-    var name = (meta.projectId || 'project') + '_' +
-               (meta.subject || 'geospax').replace(/[^\w-]+/g, '_') + '.gspx';
-    download(name, json, 'application/json');
-    root.showToast('Project saved (' + Math.round(json.length / 1024) + ' KB) — id ' +
-                   meta.projectId, 'info');
+    var suggested = (meta.projectId || 'project') + '_' +
+                    (meta.subject || 'geospax').replace(/[^\w-]+/g, '_') + '.gspx';
+
+    // Build a save-as dialog so the user can rename the workspace file
+    var overlay = document.createElement('div');
+    overlay.className = 'attr-form-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Save Workspace');
+    overlay.innerHTML =
+      '<div class="attr-form-box">' +
+        '<h3>&#x1F4BE; Save Workspace</h3>' +
+        '<div class="attr-form-row">' +
+          '<label>Filename</label>' +
+          '<input type="text" id="gsx-save-filename" value="' + suggested +
+          '" autocapitalize="off" spellcheck="false">' +
+        '</div>' +
+        '<div class="attr-form-actions">' +
+          '<button class="btn-cancel" onclick="this.closest(\'.attr-form-overlay\').remove();">Cancel</button>' +
+          '<button class="btn-ok" onclick="_gsxConfirmSave()">Save</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    // Pre-select the filename (without extension) for quick renaming
+    var inp = overlay.querySelector('#gsx-save-filename');
+    if (inp) {
+      requestAnimationFrame(function () {
+        inp.focus();
+        var dot = inp.value.lastIndexOf('.');
+        if (dot > 0) inp.setSelectionRange(0, dot);
+        else inp.select();
+      });
+    }
+
+    // Confirm save
+    root._gsxConfirmSave = function () {
+      var name = (inp && inp.value ? inp.value.trim() : suggested);
+      if (!name) name = suggested;
+      if (!/\.\w+$/.test(name)) name += '.gspx';
+      overlay.remove();
+      var json = GSX.projectToJSON(true);
+      download(name, json, 'application/json');
+      root.showToast('Project saved (' + Math.round(json.length / 1024) +
+                     ' KB) as ' + name, 'info');
+    };
+
+    // Enter to confirm, Escape to cancel
+    function _saveKeydown(e) {
+      if (e.key === 'Enter') { e.preventDefault(); root._gsxConfirmSave(); }
+      if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', _saveKeydown); }
+    }
+    document.addEventListener('keydown', _saveKeydown);
+    new MutationObserver(function (_, obs) {
+      if (!document.contains(overlay)) { document.removeEventListener('keydown', _saveKeydown); obs.disconnect(); }
+    }).observe(document.body, { childList: true, subtree: false });
   };
 
   GSX.uiLoadProject = function (file) {
