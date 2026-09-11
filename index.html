@@ -2834,12 +2834,17 @@
       <select id="analysis-layer-select-b" style="display:none">
         <option value="">— Second layer —</option>
       </select>
-      <div id="analysis-filter-wrapper" style="margin-top:4px; display:none; position:relative;">
-        <div id="analysis-filter-toggle" class="ad-layer-select" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleFilterDropdown(event)" title="Filter features by province/region before analysis">
-          <span id="analysis-filter-label">All features (no filter)</span>
-          <span style="font-size:9px; color:var(--text-faint);">&#x25BC;</span>
+      <div id="analysis-filter-wrapper" style="margin-top:4px; display:none;">
+        <select id="analysis-filter-field" class="ad-layer-select" style="margin-bottom:4px; font-size:11px;" onchange="refreshAnalysisFilterValues()" title="Select the field to filter by">
+          <option value="">— Filter by field —</option>
+        </select>
+        <div style="position:relative;">
+          <div id="analysis-filter-toggle" class="ad-layer-select" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleFilterDropdown(event)" title="Filter features by the selected field before analysis">
+            <span id="analysis-filter-label">All features (no filter)</span>
+            <span style="font-size:9px; color:var(--text-faint);">&#x25BC;</span>
+          </div>
+          <div id="analysis-filter-list" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; background:var(--surface-3); border:1px solid var(--accent); border-radius:6px; z-index:10000; box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
         </div>
-        <div id="analysis-filter-list" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:200px; overflow-y:auto; background:var(--surface-3); border:1px solid var(--accent); border-radius:6px; z-index:10000; box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
       </div>
       <input type="hidden" id="analysis-filter-select" value="">
     </div>
@@ -8213,19 +8218,26 @@ function refreshAnalysisLayerSelect() {
     if (typeof GSX.uiRenderProvenanceTable === 'function') GSX.uiRenderProvenanceTable();
   }
 
-  // Preserve province filter if same layer is still selected
+  // Preserve field filter if same layer is still selected
   const filterSel = document.getElementById('analysis-filter-select');
+  const fieldSel = document.getElementById('analysis-filter-field');
   const filterList = document.getElementById('analysis-filter-list');
-  if (filterSel && filterSel.value) {
+  if (filterSel && filterSel.value && fieldSel && fieldSel.value) {
     const prevFilter = filterSel.value;
+    const prevField = fieldSel.value;
     refreshAnalysisFilter();
-    // Check if the previous filter value still exists in the new dropdown
-    if (prevFilter && filterList) {
-      const exists = Array.from(filterList.children).some(d => d.textContent === prevFilter);
-      if (exists) {
-        filterSel.value = prevFilter;
-        const label = document.getElementById('analysis-filter-label');
-        if (label) label.textContent = prevFilter;
+    // Restore field selection
+    if (prevField && Array.from(fieldSel.options).some(o => o.value === prevField)) {
+      fieldSel.value = prevField;
+      refreshAnalysisFilterValues();
+      // Restore value selection
+      if (prevFilter && filterList) {
+        const exists = Array.from(filterList.children).some(d => d.textContent === prevFilter);
+        if (exists) {
+          filterSel.value = prevFilter;
+          const label = document.getElementById('analysis-filter-label');
+          if (label) label.textContent = prevFilter;
+        }
       }
     }
   } else {
@@ -8288,6 +8300,7 @@ function refreshAnalysisFilter() {
   const layerId = document.getElementById('analysis-layer-select').value;
   const filterSel = document.getElementById('analysis-filter-select');
   const wrapper = document.getElementById('analysis-filter-wrapper');
+  const fieldSel = document.getElementById('analysis-filter-field');
   const list = document.getElementById('analysis-filter-list');
   const label = document.getElementById('analysis-filter-label');
   if (!wrapper) return;
@@ -8295,16 +8308,44 @@ function refreshAnalysisFilter() {
   list.innerHTML = '';
   list.style.display = 'none';
   label.textContent = 'All features (no filter)';
+  fieldSel.innerHTML = '<option value="">— Filter by field —</option>';
   if (!layerId || layerId === '__all__') { wrapper.style.display = 'none'; return; }
   const ul = uploadedLayers.find(l => l.id === layerId);
   if (!ul || !ul.geojsonFeatures) { wrapper.style.display = 'none'; return; }
-  const provinces = new Set();
+  // Collect all property keys
+  const allKeys = new Set();
   ul.geojsonFeatures.forEach(f => {
-    const v = f.properties && f.properties.stateProvince;
-    if (v !== null && v !== '' && v !== undefined) provinces.add(String(v).trim());
+    if (f.properties) Object.keys(f.properties).forEach(k => allKeys.add(k));
   });
-  if (provinces.size < 2) { wrapper.style.display = 'none'; return; }
+  if (allKeys.size === 0) { wrapper.style.display = 'none'; return; }
   wrapper.style.display = '';
+  Array.from(allKeys).sort().forEach(k => {
+    fieldSel.innerHTML += `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`;
+  });
+  // Clear value dropdown until a field is selected
+  list.innerHTML = '';
+}
+
+function refreshAnalysisFilterValues() {
+  const layerId = document.getElementById('analysis-layer-select').value;
+  const fieldSel = document.getElementById('analysis-filter-field');
+  const filterSel = document.getElementById('analysis-filter-select');
+  const list = document.getElementById('analysis-filter-list');
+  const label = document.getElementById('analysis-filter-label');
+  const field = fieldSel.value;
+  filterSel.value = '';
+  list.innerHTML = '';
+  list.style.display = 'none';
+  label.textContent = 'All features (no filter)';
+  if (!field) return;
+  const ul = uploadedLayers.find(l => l.id === layerId);
+  if (!ul || !ul.geojsonFeatures) return;
+  const values = new Set();
+  ul.geojsonFeatures.forEach(f => {
+    const v = f.properties && f.properties[field];
+    if (v !== null && v !== '' && v !== undefined) values.add(String(v).trim());
+  });
+  if (values.size < 2) { label.textContent = 'Only one value (no filter needed)'; return; }
   const allOpt = document.createElement('div');
   allOpt.textContent = 'All features (no filter)';
   allOpt.style.cssText = 'padding:6px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--border);';
@@ -8312,13 +8353,13 @@ function refreshAnalysisFilter() {
   allOpt.onmouseout = () => allOpt.style.background = '';
   allOpt.onclick = (e) => { e.stopPropagation(); setAnalysisFilter(''); };
   list.appendChild(allOpt);
-  Array.from(provinces).sort().forEach(p => {
+  Array.from(values).sort().forEach(v => {
     const opt = document.createElement('div');
-    opt.textContent = p;
+    opt.textContent = v;
     opt.style.cssText = 'padding:6px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--border);';
     opt.onmouseover = () => opt.style.background = 'var(--accent-bg)';
     opt.onmouseout = () => opt.style.background = '';
-    opt.onclick = (e) => { e.stopPropagation(); setAnalysisFilter(p); };
+    opt.onclick = (e) => { e.stopPropagation(); setAnalysisFilter(v); };
     list.appendChild(opt);
   });
 }
@@ -8366,13 +8407,15 @@ function getAnalysisFeatures(layerId) {
     const ul = uploadedLayers.find(l => l.id === layerId);
     features = ul && ul.geojsonFeatures ? ul.geojsonFeatures : [];
   }
-  // Apply province filter if set
+  // Apply field filter if set
   const filterSel = document.getElementById('analysis-filter-select');
-  if (filterSel && filterSel.value) {
-    const prov = filterSel.value;
+  const fieldSel = document.getElementById('analysis-filter-field');
+  if (filterSel && filterSel.value && fieldSel && fieldSel.value) {
+    const filterVal = filterSel.value;
+    const field = fieldSel.value;
     features = features.filter(f => {
-      const v = f.properties && f.properties.stateProvince;
-      return v !== null && v !== undefined && String(v).trim() === prov;
+      const v = f.properties && f.properties[field];
+      return v !== null && v !== undefined && String(v).trim() === filterVal;
     });
   }
   return features;
