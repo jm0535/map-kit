@@ -10317,6 +10317,7 @@ function runAnalysis(tool) {
 
   case 'simplify': {
     const simplified = [];
+    const simplifyFeatures = [];
     let beforeVerts = 0, afterVerts = 0;
     features.forEach(f => {
       if (!f.geometry) return;
@@ -10351,9 +10352,10 @@ function runAnalysis(tool) {
         style: {color:'#f6e05e', weight:2, fillOpacity:0.1, dashArray:'4 3'}
       }).addTo(map);
       analysisOverlays.push(layer);
+      simplifyFeatures.push({type:'Feature',geometry:{type:f.geometry.type,coordinates:newCoords},properties:f.properties||{}});
     });
     const pct = beforeVerts > 0 ? ((1 - afterVerts/beforeVerts)*100).toFixed(1) : 0;
-    addAnalysisLayer('Simplified', analysisOverlays.slice(), null);
+    addAnalysisLayer('Simplified', analysisOverlays.slice(), {type:'FeatureCollection',features:simplifyFeatures});
     showResult(`<b>Simplified Geometries</b><br>Before: ${beforeVerts} vertices<br>After: ${afterVerts} vertices<br>Reduction: ${pct}%<br><span style="color:var(--text-muted)">Yellow dashed = simplified. Added as layer.</span>`);
     break;
   }
