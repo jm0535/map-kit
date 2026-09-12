@@ -325,6 +325,13 @@
     width: 14px; height: 14px; border-radius: 3px;
     border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
   }
+  .layer-geom-icon {
+    width: 16px; height: 16px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.7; transition: opacity 0.15s;
+  }
+  .layer-geom-icon svg { width: 14px; height: 14px; display: block; }
+  .layer-item:hover .layer-geom-icon { opacity: 1; }
   .layer-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .layer-label.editing { background: var(--surface-2); border: 1px solid var(--accent); border-radius: 3px; padding: 0 4px; outline: none; cursor: text; min-width: 40px; }
   .layer-action-btn { font-size: 11px; cursor: pointer; opacity: 0.35; background: none; border: none; padding: 0 2px; color: var(--text-muted); line-height: 1; }
@@ -6257,18 +6264,52 @@ function addUploadedGeoJSON(geojson, name, color, opts) {
   }
 }
 
+// Geometry type icon for the Layers panel (QGIS QgsIconUtils style).
+// Returns an inline SVG matching the geometry: point (dot), line (stroke),
+// polygon (filled square), raster (grid), or mixed (overlay).
+function _geomIconSVG(geomType, color) {
+  const c = color || '#8b8b8b';
+  const stroke = 'rgba(255,255,255,0.3)';
+  if (geomType === 'Point') {
+    return `<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="3.5" fill="${c}" stroke="${stroke}" stroke-width="1"/></svg>`;
+  }
+  if (geomType === 'LineString') {
+    return `<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="12" x2="12" y2="2" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  if (geomType === 'Polygon') {
+    return `<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="2.5" width="9" height="9" fill="${c}" fill-opacity="0.5" stroke="${c}" stroke-width="1.5" rx="1"/></svg>`;
+  }
+  if (geomType === 'Raster') {
+    return `<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="10" height="10" fill="none" stroke="${c}" stroke-width="1" rx="1"/><line x1="6.67" y1="2" x2="6.67" y2="12" stroke="${c}" stroke-width="0.75"/><line x1="2" y1="6.67" x2="12" y2="6.67" stroke="${c}" stroke-width="0.75"/></svg>`;
+  }
+  // Mixed / unknown
+  return `<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="9" r="2" fill="${c}" stroke="${stroke}" stroke-width="0.5"/><line x1="7" y1="7" x2="12" y2="2" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/><rect x="7" y="7" width="5" height="5" fill="${c}" fill-opacity="0.4" stroke="${c}" stroke-width="1" rx="0.5"/></svg>`;
+}
+
+function _geomLabel(geomType) {
+  const labels = {
+    'Point': 'Point layer',
+    'LineString': 'Line layer',
+    'Polygon': 'Polygon layer',
+    'Raster': 'Raster layer',
+  };
+  return labels[geomType] || 'Mixed geometry';
+}
+
 function addLayerToPanel(info) {
   const el = document.createElement('div');
   el.className = 'layer-item';
   el.dataset.layerId = info.id;
   el.style.position = 'relative';
   const safeName = escapeHtml(info.name);
+  const geomType = _detectGeomType(info);
   el.draggable = true;
   el.innerHTML = `
     <span class="layer-drag-handle" title="Drag to reorder">&#x2630;</span>
     <input type="checkbox" checked>
     <span class="layer-eye" onclick="toggleUploadedLayer('${info.id}')" title="Toggle visibility">&#x1F441;</span>
     <div class="layer-color-swatch" style="background:${info.color}"></div>
+    <span class="layer-geom-icon" title="${_geomLabel(geomType)}">${_geomIconSVG(geomType, info.color)}</span>
     <span class="layer-label" title="${safeName}&#10;Click to edit symbology&#10;Double-click to rename&#10;Right-click for options" ondblclick="renameLayer('${info.id}', this); event.stopPropagation();">${safeName}</span>
     <button class="layer-action-btn" onclick="zoomToLayer('${info.id}'); event.stopPropagation();" title="Zoom to layer">&#x1f50d;</button>
     <button class="layer-label-btn" onclick="renameLayer('${info.id}'); event.stopPropagation();" title="Rename layer">&#x270f;</button>
