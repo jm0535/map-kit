@@ -7007,8 +7007,14 @@ function _buildVectorSymbologyBody(info) {
           <input type="number" value="7" min="3" max="30" style="width:52px" onchange="resizeLayer('${id}',this.value)">` : ''}
       </div>
       <div class="sym-field">
-        <label class="sym-label">Opacity</label>
-        <input type="range" min="10" max="100" value="90" onchange="opacityLayer('${id}',this.value)">
+        <label class="sym-label">Fill Opacity</label>
+        <input type="range" min="0" max="100" value="80" oninput="fillOpacityLayer('${id}',this.value)" style="flex:1;">
+        <span class="sym-opacity-val" id="fill-opacity-val-${id}" style="min-width:36px;text-align:right;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">80%</span>
+      </div>
+      <div class="sym-field">
+        <label class="sym-label">Stroke Opacity</label>
+        <input type="range" min="0" max="100" value="90" oninput="strokeOpacityLayer('${id}',this.value)" style="flex:1;">
+        <span class="sym-opacity-val" id="stroke-opacity-val-${id}" style="min-width:36px;text-align:right;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">90%</span>
       </div>
       <div class="sym-field">
         <label class="sym-label">Stroke</label>
@@ -7158,7 +7164,8 @@ function _buildRasterSymbologyBody(info) {
     </div>
     <div class="sym-field">
       <label class="sym-label">Opacity</label>
-      <input type="range" min="0" max="100" value="${Math.round(((info.layer && info.layer.options && info.layer.options.opacity) != null ? info.layer.options.opacity : 0.75) * 100)}" oninput="opacityLayer('${id}', this.value)" style="flex:1;">
+      <input type="range" min="0" max="100" value="${Math.round(((info.layer && info.layer.options && info.layer.options.opacity) != null ? info.layer.options.opacity : 0.75) * 100)}" oninput="fillOpacityLayer('${id}', this.value)" style="flex:1;">
+      <span class="sym-opacity-val" id="fill-opacity-val-${id}" style="min-width:36px;text-align:right;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${Math.round(((info.layer && info.layer.options && info.layer.options.opacity) != null ? info.layer.options.opacity : 0.75) * 100)}%</span>
     </div>` : '';
 
   return `
@@ -7592,9 +7599,17 @@ function resizeLayer(id, size) {
 }
 
 function opacityLayer(id, val) {
+  // Legacy single-opacity: sets both fill and stroke together
+  fillOpacityLayer(id, val * 0.8);
+  strokeOpacityLayer(id, val);
+}
+
+function fillOpacityLayer(id, val) {
   const info = uploadedLayers.find(l=>l.id===id);
   if (!info) return;
   const opacity = val / 100;
+  const valEl = document.getElementById(`fill-opacity-val-${id}`);
+  if (valEl) valEl.textContent = Math.round(val) + '%';
   if (info.isRaster && info.layer && typeof info.layer.setOpacity === 'function') {
     info.layer.setOpacity(opacity);
   } else if (info.isRaster && info.layer && typeof info.layer.setOptions === 'function') {
@@ -7602,7 +7617,20 @@ function opacityLayer(id, val) {
     if (typeof info.layer.redraw === 'function') info.layer.redraw();
   } else if (info.layer && typeof info.layer.eachLayer === 'function') {
     info.layer.eachLayer(sub => {
-      if (sub.setStyle) sub.setStyle({ opacity, fillOpacity: opacity * 0.8 });
+      if (sub.setStyle) sub.setStyle({ fillOpacity: opacity });
+    });
+  }
+}
+
+function strokeOpacityLayer(id, val) {
+  const info = uploadedLayers.find(l=>l.id===id);
+  if (!info) return;
+  const opacity = val / 100;
+  const valEl = document.getElementById(`stroke-opacity-val-${id}`);
+  if (valEl) valEl.textContent = Math.round(val) + '%';
+  if (info.layer && typeof info.layer.eachLayer === 'function') {
+    info.layer.eachLayer(sub => {
+      if (sub.setStyle) sub.setStyle({ opacity });
     });
   }
 }
