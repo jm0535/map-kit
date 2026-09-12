@@ -457,9 +457,9 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 ### Step 2: Set spatial weights
 
 1. Find the **Weights type** dropdown (next to the analysis variable).
-2. Choose either:
-   - **Distance band** (auto-computed. The results will show the band distance, e.g., "53.87 km"), or
-   - **K-nearest neighbours** with k = 8 (default. Change the **Neighbours (k)** input if needed).
+2. Select **Distance band** (auto-computed. The results will show the band distance, e.g., "53.87 km").
+   - **Why distance band, not KNN:** The *P. guilielmi* training file has 128 records with tree_cover_pct values mostly near 99 (mean = 92.6, SD = 20). With K-nearest neighbours k = 8, each point only has 9 neighbours (including itself). The Gi* z-score denominator depends on the neighbour count — with only 9 neighbours the maximum possible z-score is ~1.14, which is below the 90% threshold (z ≥ 1.65). This means KNN k = 8 **cannot detect any hot spots** on this dataset. The distance band (53.87 km) gives each point ~40–80 neighbours, producing z-scores high enough to identify the 100 hot spots at 99% confidence.
+   - **K-nearest neighbours** with k = 8 is still a valid choice for other datasets with more variable data or fewer points, but for this training file, use **Distance band** to reproduce the example results below.
 3. Leave **Apply FDR correction** (Benjamini-Hochberg) **checked**. Write in your report that FDR was applied.
 
 ### Step 3: Run Getis-Ord Gi*
@@ -496,7 +496,7 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 If you prefer Local Moran's I (LISA):
 
 1. Click the **🗺️ LISA Cluster & Outlier Map** button (next to the Gi* button, in the **📊 Inferential Hotspots & Autocorrelation** section).
-2. Same field (`tree_cover_pct`), same weights choice.
+2. Same field (`tree_cover_pct`), same weights choice (**Distance band** recommended — see Step 2 above for why KNN k = 8 does not work for this dataset).
 3. The legend shows HH (High-High), LL (Low-Low), HL (High-Low outlier), LH (Low-High outlier), and Not significant.
 4. GeoSpaX uses 999 permutations. Write that number in your report.
 
