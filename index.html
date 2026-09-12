@@ -1388,6 +1388,78 @@
     height: calc(100% - 22px) !important;
   }
   #analysis-results-panel { padding: 12px 16px; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── Statistical Report Card (R/spdep + PySAL/esda style) ── */
+  .stat-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;
+    font-size: 12px; color: var(--text); line-height: 1.55;
+  }
+  .stat-card-header {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin-bottom: 2px; display: flex; align-items: center; gap: 6px;
+  }
+  .stat-card-subtitle {
+    font-size: 11px; color: var(--text-muted); margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .stat-card-section {
+    margin-top: 10px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .stat-card-section-title {
+    font-size: 10px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .stat-card-table {
+    width: 100%; border-collapse: collapse; font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-card-table td {
+    padding: 2px 0; color: var(--text);
+  }
+  .stat-card-table td:first-child { color: var(--text-muted); width: 45%; }
+  .stat-card-table td:last-child { font-weight: 500; text-align: right; }
+  .stat-card-table .stat-highlight { font-weight: 700; }
+  .stat-card-table .stat-sig { color: #68d391; font-weight: 700; }
+  .stat-card-table .stat-ns { color: #fc8181; }
+  .stat-card-interp {
+    background: var(--surface); border-radius: 6px; padding: 8px 10px;
+    font-size: 11px; color: var(--text); margin-top: 6px;
+    border-left: 3px solid var(--accent);
+  }
+  .stat-card-conservation {
+    background: rgba(102, 209, 153, 0.08); border-radius: 6px;
+    padding: 8px 10px; font-size: 11px; color: var(--text); margin-top: 6px;
+    border-left: 3px solid #68d391;
+  }
+  .stat-card-citation {
+    font-size: 10px; color: var(--text-muted); font-style: italic;
+    margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border);
+  }
+  .stat-card-report-sentence {
+    background: var(--surface); border-radius: 4px; padding: 6px 8px;
+    font-size: 11px; color: var(--text); margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace; line-height: 1.5;
+    border: 1px solid var(--border);
+  }
+  .stat-card-actions {
+    display: flex; gap: 8px; margin-top: 10px;
+  }
+  .stat-card-btn {
+    font-size: 10px; font-weight: 500; padding: 4px 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text-muted); cursor: pointer;
+    transition: all .15s;
+  }
+  .stat-card-btn:hover { color: var(--text); border-color: var(--accent); }
+  .stat-card-badge {
+    display: inline-block; font-size: 9px; font-weight: 600;
+    padding: 1px 6px; border-radius: 3px; margin-left: 4px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .stat-card-badge-sig { background: rgba(104, 209, 153, 0.15); color: #68d391; }
+  .stat-card-badge-ns { background: rgba(252, 129, 129, 0.15); color: #fc8181; }
   .ar-clear-btn {
     font-size: 11px; font-weight: 500;
     padding: 4px 10px;
@@ -9570,6 +9642,216 @@ function _bhAdjust(pvals) {
   return q;
 }
 
+// ── Descriptive statistics helpers (R summary() + Python describe() style) ──
+function _descStats(vals) {
+  const n = vals.length;
+  if (n === 0) return { n: 0 };
+  const sorted = [...vals].sort((a, b) => a - b);
+  const mean = vals.reduce((a, b) => a + b, 0) / n;
+  const variance = n > 1 ? vals.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1) : 0;
+  const sd = Math.sqrt(variance);
+  const median = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+  const q1 = sorted[Math.floor(n * 0.25)];
+  const q3 = sorted[Math.floor(n * 0.75)];
+  const skewness = n > 2 && sd > 0
+    ? (vals.reduce((s, v) => s + ((v - mean) / sd) ** 3, 0) / n) : 0;
+  const kurtosis = n > 3 && sd > 0
+    ? (vals.reduce((s, v) => s + ((v - mean) / sd) ** 4, 0) / n - 3) : 0;
+  return {
+    n, mean, sd, variance, median, q1, q3,
+    min: sorted[0], max: sorted[n - 1],
+    skewness, kurtosis,
+    range: sorted[n - 1] - sorted[0],
+    cv: mean !== 0 ? sd / Math.abs(mean) : 0
+  };
+}
+
+// Format a p-value for display (R style: < 2.2e-16 for very small)
+function _formatP(p) {
+  if (!isFinite(p)) return 'n/a';
+  if (p < 2.2e-16) return '< 2.2e-16';
+  if (p < 0.001) return p.toExponential(3);
+  return p.toFixed(4);
+}
+
+// Significance stars (R convention: *** 0.001, ** 0.01, * 0.05, . 0.1)
+function _sigStars(p) {
+  if (!isFinite(p)) return '';
+  if (p < 0.001) return ' ***';
+  if (p < 0.01) return ' **';
+  if (p < 0.05) return ' *';
+  if (p < 0.1) return ' .';
+  return '';
+}
+
+// ── Statistical Report Card renderer (R/spdep + PySAL/esda style) ──
+// config = {
+//   title:      'Global Moran\'s I',
+//   subtitle:   'Spatial autocorrelation test',
+//   method:     'Moran (1950), Cliff & Ord (1981)',
+//   nullHyp:    'Complete Spatial Randomness (CSR)',
+//   altHyp:     'Spatial autocorrelation exists',
+//   descriptives: { attribute, n, mean, sd, min, max, median, skewness, kurtosis },
+//   results:    [{ label, value, highlight?, sig?, ns? }, ...],
+//   effectSize: { label, value, interpretation },
+//   interpretation: 'plain English interpretation',
+//   conservation: 'conservation-specific relevance',
+//   weights:    'distance band = 53.87 km · UTM 55S',
+//   citation:   'Moran, P.A.P. (1950). Notes on continuous...',
+//   reportSentence: 'A Global Moran\'s I test indicated...'
+// }
+function _statReportCard(cfg) {
+  let html = '<div class="stat-card">';
+
+  // Header
+  html += `<div class="stat-card-header">${cfg.title}</div>`;
+  if (cfg.subtitle) html += `<div class="stat-card-subtitle">${cfg.subtitle}</div>`;
+
+  // Method & hypotheses
+  if (cfg.method || cfg.nullHyp) {
+    html += '<div class="stat-card-section">';
+    if (cfg.method) html += `<div style="font-size:11px;color:var(--text-muted)"><b>Method:</b> ${cfg.method}</div>`;
+    if (cfg.nullHyp) html += `<div style="font-size:11px;color:var(--text-muted)"><b>H₀:</b> ${cfg.nullHyp}</div>`;
+    if (cfg.altHyp) html += `<div style="font-size:11px;color:var(--text-muted)"><b>H₁:</b> ${cfg.altHyp}</div>`;
+    html += '</div>';
+  }
+
+  // Descriptive statistics
+  if (cfg.descriptives) {
+    const d = cfg.descriptives;
+    html += '<div class="stat-card-section">';
+    html += '<div class="stat-card-section-title">Descriptive Statistics</div>';
+    html += '<table class="stat-card-table">';
+    if (d.attribute) html += `<tr><td>Attribute</td><td>${escapeHtml(String(d.attribute))}</td></tr>`;
+    html += `<tr><td>n (observations)</td><td>${d.n}</td></tr>`;
+    if (isFinite(d.mean)) html += `<tr><td>Mean</td><td>${d.mean.toFixed(2)}</td></tr>`;
+    if (isFinite(d.sd)) html += `<tr><td>SD</td><td>${d.sd.toFixed(2)}</td></tr>`;
+    if (isFinite(d.median)) html += `<tr><td>Median</td><td>${d.median.toFixed(2)}</td></tr>`;
+    if (isFinite(d.min)) html += `<tr><td>Min</td><td>${d.min.toFixed(2)}</td></tr>`;
+    if (isFinite(d.max)) html += `<tr><td>Max</td><td>${d.max.toFixed(2)}</td></tr>`;
+    if (isFinite(d.skewness)) html += `<tr><td>Skewness</td><td>${d.skewness.toFixed(3)}</td></tr>`;
+    if (isFinite(d.kurtosis)) html += `<tr><td>Excess Kurtosis</td><td>${d.kurtosis.toFixed(3)}</td></tr>`;
+    if (isFinite(d.cv)) html += `<tr><td>CV (coefficient of variation)</td><td>${d.cv.toFixed(3)}</td></tr>`;
+    html += '</table>';
+    html += '</div>';
+  }
+
+  // Test results
+  if (cfg.results && cfg.results.length) {
+    html += '<div class="stat-card-section">';
+    html += '<div class="stat-card-section-title">Test Results</div>';
+    html += '<table class="stat-card-table">';
+    for (const r of cfg.results) {
+      const cls = r.highlight ? 'stat-highlight' : '';
+      const sigCls = r.sig ? 'stat-sig' : (r.ns ? 'stat-ns' : '');
+      const stars = r.pValue != null ? _sigStars(r.pValue) : '';
+      html += `<tr><td>${r.label}</td><td class="${cls} ${sigCls}">${r.value}${stars}</td></tr>`;
+    }
+    html += '</table>';
+    html += '</div>';
+  }
+
+  // Effect size
+  if (cfg.effectSize) {
+    html += '<div class="stat-card-section">';
+    html += '<div class="stat-card-section-title">Effect Size</div>';
+    html += `<table class="stat-card-table">`;
+    html += `<tr><td>${cfg.effectSize.label || 'Effect size'}</td><td>${cfg.effectSize.value}</td></tr>`;
+    html += '</table>';
+    if (cfg.effectSize.interpretation) {
+      html += `<div class="stat-card-interp">${cfg.effectSize.interpretation}</div>`;
+    }
+    html += '</div>';
+  }
+
+  // Interpretation
+  if (cfg.interpretation) {
+    html += '<div class="stat-card-section">';
+    html += '<div class="stat-card-section-title">Interpretation</div>';
+    html += `<div class="stat-card-interp">${cfg.interpretation}</div>`;
+    html += '</div>';
+  }
+
+  // Conservation relevance
+  if (cfg.conservation) {
+    html += '<div class="stat-card-section">';
+    html += '<div class="stat-card-section-title">Conservation Relevance</div>';
+    html += `<div class="stat-card-conservation">${cfg.conservation}</div>`;
+    html += '</div>';
+  }
+
+  // Weights / parameters
+  if (cfg.weights) {
+    html += '<div class="stat-card-section">';
+    html += '<div class="stat-card-section-title">Spatial Weights</div>';
+    html += `<div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace">${cfg.weights}</div>`;
+    html += '</div>';
+  }
+
+  // Report sentence (copy-paste ready)
+  if (cfg.reportSentence) {
+    html += '<div class="stat-card-section">';
+    html += '<div class="stat-card-section-title">Report Sentence (APA style)</div>';
+    html += `<div class="stat-card-report-sentence" id="stat-report-sentence">${cfg.reportSentence}</div>`;
+    html += '</div>';
+  }
+
+  // Citation
+  if (cfg.citation) {
+    html += `<div class="stat-card-citation">${cfg.citation}</div>`;
+  }
+
+  // Action buttons
+  html += '<div class="stat-card-actions">';
+  html += `<button class="stat-card-btn" onclick="_copyStatReport(this)">📋 Copy report</button>`;
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+// Copy the plain-text version of the report to clipboard
+function _copyStatReport(btn) {
+  const card = btn.closest('.stat-card');
+  if (!card) return;
+  const lines = [];
+  // Extract text from each section
+  const header = card.querySelector('.stat-card-header');
+  if (header) lines.push(header.textContent.trim());
+  const subtitle = card.querySelector('.stat-card-subtitle');
+  if (subtitle) lines.push(subtitle.textContent.trim());
+  lines.push('');
+  card.querySelectorAll('.stat-card-section').forEach(sec => {
+    const title = sec.querySelector('.stat-card-section-title');
+    if (title) {
+      lines.push('--- ' + title.textContent.trim() + ' ---');
+    }
+    sec.querySelectorAll('.stat-card-table tr').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length === 2) {
+        lines.push(`  ${cells[0].textContent.trim()}: ${cells[1].textContent.trim()}`);
+      }
+    });
+    const interp = sec.querySelector('.stat-card-interp, .stat-card-conservation');
+    if (interp) lines.push('  ' + interp.textContent.trim());
+    const sentence = sec.querySelector('.stat-card-report-sentence');
+    if (sentence) lines.push('  ' + sentence.textContent.trim());
+    const weightsDiv = sec.querySelector('div[style*="monospace"]');
+    if (weightsDiv) lines.push('  ' + weightsDiv.textContent.trim());
+    lines.push('');
+  });
+  const citation = card.querySelector('.stat-card-citation');
+  if (citation) lines.push(citation.textContent.trim());
+
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy report'; }, 2000);
+  }).catch(() => {
+    showToast('Copy failed - select text manually', 'error');
+  });
+}
+
 // Auto-pick the UTM zone for a lon/lat and return its proj4 definition.
 function _utmDefForLonLat(lon, lat) {
   const zone = Math.floor((lon + 180) / 6) + 1;
@@ -9853,10 +10135,12 @@ function runAnalysis(tool) {
   case 'nni': {
     if (pts.length < 3) { showToast('Need at least 3 points', 'error'); return; }
     let sumNN = 0;
+    const nnDists = [];
     pts.forEach((p, i) => {
       let minD = Infinity;
       pts.forEach((q, j) => { if (i !== j) { const d = haversineDist(p, q); if (d < minD) minD = d; } });
       sumNN += minD;
+      nnDists.push(minD);
     });
     const meanNN = sumNN / pts.length;
     const lats = pts.map(p=>p.lat), lons = pts.map(p=>p.lon);
@@ -9864,16 +10148,53 @@ function runAnalysis(tool) {
                   * haversineDist({lat:Math.min(...lats),lon:Math.min(...lons)},{lat:Math.max(...lats),lon:Math.min(...lons)});
     const expectedNN = 0.5 * Math.sqrt(areaM2 / pts.length);
     const nni = meanNN / expectedNN;
-    // Clark-Evans z-test: SE of the mean nearest-neighbour distance under CSR.
     const density = pts.length / areaM2;
     const se = 0.26136 / Math.sqrt(pts.length * pts.length * density);
     const zscore = se > 0 ? (meanNN - expectedNN) / se : NaN;
     const pval = isFinite(zscore) ? _twoTailP(zscore) : NaN;
     const sig = isFinite(pval) && pval < 0.05;
+    const dsNN = _descStats(nnDists.map(d => d / 1000)); // km
     let pattern = 'Random';
     if (sig && nni < 1) pattern = 'Clustered';
     else if (sig && nni > 1) pattern = 'Dispersed';
-    showResult(`<b>Nearest Neighbor Index</b><br><b>NNI:</b> ${nni.toFixed(3)}<br><b>Mean NN dist:</b> ${(meanNN/1000).toFixed(3)} km<br><b>Expected NN dist:</b> ${(expectedNN/1000).toFixed(3)} km<br><b>z-score:</b> ${isFinite(zscore) ? zscore.toFixed(4) : 'n/a'}<br><b>p-value:</b> <span style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(pval) ? pval.toExponential(3) : 'n/a'}</span><br><b>Pattern:</b> <span style="color:${pattern==='Clustered'?'#fc8181':pattern==='Dispersed'?'#68d391':'#f6e05e'}">${pattern}</span><br><span style="color:var(--text-muted)">&lt;1 = clustered, 1 = random, &gt;1 = dispersed. Clark-Evans test, two-tailed at α = 0.05.</span>`);
+    const ci95 = isFinite(se) ? [meanNN - 1.96 * se, meanNN + 1.96 * se] : [NaN, NaN];
+    const interp = !sig
+      ? `The Nearest Neighbor Index (${nni.toFixed(3)}) is not statistically significant (z = ${isFinite(zscore) ? zscore.toFixed(2) : 'n/a'}, p = ${_formatP(pval)}). The point pattern is consistent with Complete Spatial Randomness (CSR). Points are distributed independently of one another.`
+      : `The Nearest Neighbor Index (${nni.toFixed(3)}) is statistically significant (z = ${isFinite(zscore) ? zscore.toFixed(2) : 'n/a'}, p = ${_formatP(pval)}), indicating a ${pattern.toLowerCase()} point pattern. ${nni < 1 ? 'Points are closer together than expected under CSR \u2014 they cluster.' : 'Points are farther apart than expected under CSR \u2014 they are dispersed.'}`;
+    const conservation = sig
+      ? (nni < 1
+        ? `The significant clustering of occurrence points suggests that the species concentrates in specific areas \u2014 likely reflecting preferred habitat or resource patches. Conservation efforts should focus on these clustered zones where the species is most concentrated.`
+        : `The significant dispersion of occurrence points suggests that the species spreads evenly across the landscape \u2014 possibly indicating territorial behaviour, resource competition, or uniform habitat quality. Conservation should maintain the full extent of suitable habitat.`)
+      : `The random distribution of occurrence points suggests no strong spatial structure in the species\u2019 occurrence. This may indicate a generalist species or that the sampling effort was spatially uniform.`;
+    showResult(_statReportCard({
+      title: "Nearest Neighbor Index \u2014 Point Pattern Analysis",
+      subtitle: `data: ${pts.length} points \u00b7 study area: ${(areaM2/1e6).toFixed(1)} km\u00b2`,
+      method: "Clark & Evans (1954); z-test under CSR",
+      nullHyp: "Complete Spatial Randomness (CSR) \u2014 points are independently distributed",
+      altHyp: "Points are clustered (NNI < 1) or dispersed (NNI > 1)",
+      descriptives: { attribute: 'Nearest-neighbor distance (km)', n: dsNN.n, mean: dsNN.mean, sd: dsNN.sd, median: dsNN.median, min: dsNN.min, max: dsNN.max, skewness: dsNN.skewness, kurtosis: dsNN.kurtosis, cv: dsNN.cv },
+      results: [
+        { label: "NNI (R)", value: nni.toFixed(3), highlight: true },
+        { label: "Mean observed NN dist (km)", value: (meanNN/1000).toFixed(3) },
+        { label: "Expected NN dist under CSR (km)", value: (expectedNN/1000).toFixed(3) },
+        { label: "Point density (per km\u00b2)", value: (density/1e6).toFixed(4) },
+        { label: "Std. Error", value: isFinite(se) ? (se/1000).toFixed(6) + ' km' : 'n/a' },
+        { label: "z-score", value: isFinite(zscore) ? zscore.toFixed(4) : 'n/a', highlight: true },
+        { label: "p-value", value: _formatP(pval), pValue: pval, sig: sig, ns: !sig, highlight: true },
+        { label: "95% CI for mean NN dist (km)", value: isFinite(ci95[0]) ? `[${(ci95[0]/1000).toFixed(3)}, ${(ci95[1]/1000).toFixed(3)}]` : 'n/a' },
+        { label: "Pattern", value: pattern, highlight: true, sig: pattern !== 'Random', ns: pattern === 'Random' },
+      ],
+      effectSize: {
+        label: "|NNI - 1| (departure from CSR)",
+        value: Math.abs(nni - 1).toFixed(3),
+        interpretation: `${Math.abs(nni - 1) < 0.1 ? 'Minimal departure from CSR.' : Math.abs(nni - 1) < 0.3 ? 'Moderate departure from CSR.' : 'Strong departure from CSR.'} NNI = 1 indicates perfect randomness; values approaching 0 indicate maximum clustering; values approaching 2.149 indicate maximum dispersion (hexagonal lattice).`
+      },
+      interpretation: interp,
+      conservation: conservation,
+      weights: `Euclidean distances \u00b7 haversine (great-circle) \u00b7 ${pts.length} points`,
+      citation: "Clark, P.J. & Evans, F.C. (1954). Distance to nearest neighbor as a measure of spatial relationships in populations. Ecology, 35(4), 445\u2013453.",
+      reportSentence: `A Clark-Evans nearest neighbor test indicated a ${sig ? 'significant' : 'non-significant'} ${pattern.toLowerCase()} point pattern (NNI = ${nni.toFixed(3)}, z = ${isFinite(zscore) ? zscore.toFixed(2) : 'n/a'}, p ${sig ? '< .05' : '= ' + _formatP(pval)}, n = ${pts.length}).`
+    }));
     break;
   }
 
@@ -9884,25 +10205,46 @@ function runAnalysis(tool) {
     const vals = pts.map(p => parseFloat(p.props[attr]) || 0);
     const r = globalMoran(pts, vals, _analysisWeightOpts());
     const sig = isFinite(r.p) && r.p < 0.05;
-    const sign = r.I > r.E ? 'Positive' : 'Negative';
+    const ds = _descStats(vals);
+    const seI = isFinite(r.varR) ? Math.sqrt(r.varR) : NaN;
+    const ci95 = isFinite(seI) ? [r.I - 1.96 * seI, r.I + 1.96 * seI] : [NaN, NaN];
+    const direction = r.I > r.E ? 'positive' : 'negative';
+    const strength = Math.abs(r.I) < 0.1 ? 'weak' : Math.abs(r.I) < 0.3 ? 'moderate' : 'strong';
     const interp = !sig
-      ? 'Not statistically significant - the pattern is indistinguishable from spatial randomness (CSR).'
-      : (r.I > r.E
-          ? 'Statistically significant <b>positive</b> autocorrelation - similar values cluster together.'
-          : 'Statistically significant <b>negative</b> autocorrelation - dissimilar values are adjacent (checkerboard).');
-    showResult(
-      `<b>Global Moran's I</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
-      `<table style="margin-top:6px;font-size:11px;border-collapse:collapse">` +
-      `<tr><td style="padding:1px 10px 1px 0">Moran's I</td><td><b>${r.I.toFixed(4)}</b></td></tr>` +
-      `<tr><td style="padding:1px 10px 1px 0">Expected I</td><td>${r.E.toFixed(4)}</td></tr>` +
-      `<tr><td style="padding:1px 10px 1px 0">Variance</td><td>${isFinite(r.varR) ? r.varR.toExponential(3) : 'n/a'}</td></tr>` +
-      `<tr><td style="padding:1px 10px 1px 0">z-score</td><td><b>${isFinite(r.z) ? r.z.toFixed(4) : 'n/a'}</b></td></tr>` +
-      `<tr><td style="padding:1px 10px 1px 0">p-value</td><td><b style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(r.p) ? r.p.toExponential(3) : 'n/a'}</b></td></tr>` +
-      `</table>` +
-      `<div style="margin-top:6px">${interp}</div>` +
-      `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">Weights: ${_weightDesc(r)}. ` +
-      `Inference: randomization assumption (Cliff &amp; Ord). Two-tailed at α = 0.05.</div>`
-    );
+      ? `The observed Moran's I (${r.I.toFixed(4)}) is not statistically significant (z = ${isFinite(r.z) ? r.z.toFixed(2) : 'n/a'}, p = ${_formatP(r.p)}). The spatial pattern of ${escapeHtml(attr)} is indistinguishable from Complete Spatial Randomness (CSR). Values are distributed independently of location.`
+      : `The observed Moran's I (${r.I.toFixed(4)}) is statistically significant (z = ${isFinite(r.z) ? r.z.toFixed(2) : 'n/a'}, p = ${_formatP(r.p)}), indicating ${direction} spatial autocorrelation in ${escapeHtml(attr)}. ${r.I > r.E ? 'Similar values cluster together \u2014 high values are near high values and low values near low values.' : 'Dissimilar values are adjacent \u2014 a checkerboard pattern with high values near low values.'}`;
+    const conservation = sig
+      ? (r.I > r.E
+        ? `The ${strength} positive spatial clustering of ${escapeHtml(attr)} suggests that ${escapeHtml(attr)} varies predictably across the landscape. Conservation planning should account for this spatial structure \u2014 protected areas in high-value zones will likely capture similar nearby values.`
+        : `The negative spatial autocorrelation in ${escapeHtml(attr)} indicates a fragmented, alternating pattern. This may reflect habitat heterogeneity or edge effects \u2014 each sampling location tends to differ from its neighbours.`)
+      : `The absence of significant spatial autocorrelation in ${escapeHtml(attr)} suggests that values are distributed independently of location. Conservation decisions based on ${escapeHtml(attr)} need not account for spatial structure at this scale.`;
+    showResult(_statReportCard({
+      title: "Global Moran's I \u2014 Spatial Autocorrelation Test",
+      subtitle: `data: ${pts.length} features \u00b7 attribute: ${escapeHtml(attr)}`,
+      method: "Moran (1950); variance under randomisation (Cliff & Ord, 1981)",
+      nullHyp: "Complete Spatial Randomness (CSR) \u2014 no spatial autocorrelation",
+      altHyp: "Spatial autocorrelation exists (two-tailed)",
+      descriptives: { attribute: attr, n: ds.n, mean: ds.mean, sd: ds.sd, median: ds.median, min: ds.min, max: ds.max, skewness: ds.skewness, kurtosis: ds.kurtosis, cv: ds.cv },
+      results: [
+        { label: "Moran's I (observed)", value: r.I.toFixed(4), highlight: true },
+        { label: "Expected I (under CSR)", value: r.E.toFixed(4) },
+        { label: "Variance", value: isFinite(r.varR) ? r.varR.toExponential(3) : 'n/a' },
+        { label: "Std. Error", value: isFinite(seI) ? seI.toFixed(6) : 'n/a' },
+        { label: "z-score", value: isFinite(r.z) ? r.z.toFixed(4) : 'n/a', highlight: true },
+        { label: "p-value", value: _formatP(r.p), pValue: r.p, sig: sig, ns: !sig, highlight: true },
+        { label: "95% CI for I", value: isFinite(ci95[0]) ? `[${ci95[0].toFixed(4)}, ${ci95[1].toFixed(4)}]` : 'n/a' },
+      ],
+      effectSize: {
+        label: "I / max(I) ratio",
+        value: Math.abs(r.I) < 1 ? Math.abs(r.I).toFixed(4) : 'n/a',
+        interpretation: `${strength.charAt(0).toUpperCase() + strength.slice(1)} ${direction} autocorrelation. ${Math.abs(r.I) < 0.1 ? 'The spatial structure is weak \u2014 location explains little of the value variation.' : Math.abs(r.I) < 0.3 ? 'The spatial structure is moderate \u2014 location explains a meaningful portion of value variation.' : 'The spatial structure is strong \u2014 location is a major driver of value variation.'}`
+      },
+      interpretation: interp,
+      conservation: conservation,
+      weights: `${_weightDesc(r)} \u00b7 ${pts.length} features \u00b7 row-standardised`,
+      citation: "Moran, P.A.P. (1950). Notes on continuous stochastic phenomena. Biometrika, 37(1/2), 17\u201323. &nbsp;|&nbsp; Cliff, A.D. & Ord, J.K. (1981). Spatial Processes: Models and Applications. Pion, London.",
+      reportSentence: `A Global Moran's I test indicated ${sig ? 'significant' : 'non-significant'} ${direction} spatial autocorrelation in ${escapeHtml(attr)} (I = ${r.I.toFixed(3)}, z = ${isFinite(r.z) ? r.z.toFixed(2) : 'n/a'}, p ${sig ? '< .05' : '= ' + _formatP(r.p)}, n = ${pts.length}).`
+    }));
     break;
   }
 
@@ -9933,20 +10275,46 @@ function runAnalysis(tool) {
     markers.forEach(m => analysisOverlays.push(m));
     addAnalysisLayer(`Gi* Hot Spots (${escapeHtml(attr)})`, markers, {type:'FeatureCollection', features});
     const totalSig = counts.h99+counts.h95+counts.h90+counts.c90+counts.c95+counts.c99;
-    showResult(
-      `<b>Getis-Ord Gi* Hot Spot Analysis</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
-      `<div style="margin-top:6px;font-size:11px">` +
-      `<span style="color:#b30000">■</span> Hot 99%: <b>${counts.h99}</b> &nbsp; ` +
-      `<span style="color:#e34a33">■</span> 95%: <b>${counts.h95}</b> &nbsp; ` +
-      `<span style="color:#fc8d59">■</span> 90%: <b>${counts.h90}</b><br>` +
-      `<span style="color:#0c2c84">■</span> Cold 99%: <b>${counts.c99}</b> &nbsp; ` +
-      `<span style="color:#225ea8">■</span> 95%: <b>${counts.c95}</b> &nbsp; ` +
-      `<span style="color:#41b6c4">■</span> 90%: <b>${counts.c90}</b><br>` +
-      `<span style="color:#9aa5b1">■</span> Not significant: <b>${counts.ns}</b></div>` +
-      `<div style="margin-top:6px">${totalSig} of ${pts.length} features are statistically significant hot/cold spots.</div>` +
-      `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">Weights: ${_weightDesc(r)}. ` +
-      `z-scores from Ord &amp; Getis (1995); two-tailed p. ${useFDR ? 'False Discovery Rate (Benjamini-Hochberg) correction applied.' : 'No multiple-comparison correction.'}</div>`
-    );
+    const totalHot = counts.h99+counts.h95+counts.h90;
+    const totalCold = counts.c99+counts.c95+counts.c90;
+    const ds = _descStats(vals);
+    const zScores = r.z.filter(z => isFinite(z));
+    const dsZ = _descStats(zScores);
+    const interp = totalSig === 0
+      ? `No statistically significant hot or cold spots were detected in ${escapeHtml(attr)} at \u03b1 = 0.05. The spatial distribution of values is consistent with random variation.`
+      : `${totalSig} of ${pts.length} features (${(totalSig/pts.length*100).toFixed(1)}%) are statistically significant: ${totalHot} hot spot${totalHot !== 1 ? 's' : ''} (high values surrounded by high values) and ${totalCold} cold spot${totalCold !== 1 ? 's' : ''} (low values surrounded by low values). ${totalHot > totalCold ? 'The prevalence of hot spots suggests concentrated areas of high ' + escapeHtml(attr) + '.' : totalCold > totalHot ? 'The prevalence of cold spots suggests concentrated areas of low ' + escapeHtml(attr) + '.' : 'Hot and cold spots are roughly balanced.'}`;
+    const conservation = totalSig === 0
+      ? `No significant hot/cold spots means that ${escapeHtml(attr)} does not show strong spatial concentration. Conservation priorities based on this attribute should consider other factors or different spatial scales.`
+      : `Hot spots identify priority areas for conservation \u2014 locations where ${escapeHtml(attr)} is significantly high and surrounded by similarly high values. Cold spots may indicate areas of lower priority or different management needs. ${useFDR ? 'FDR correction ensures these results are robust to multiple testing.' : 'Note: without FDR correction, some significant spots may be false positives.'}`;
+    showResult(_statReportCard({
+      title: "Getis-Ord Gi* \u2014 Hot Spot Analysis",
+      subtitle: `data: ${pts.length} features \u00b7 attribute: ${escapeHtml(attr)}`,
+      method: "Getis & Ord (1992, 1995); local Gi* statistic",
+      nullHyp: "No spatial clustering of high or low values (CSR)",
+      altHyp: "Hot spots (high-value clusters) or cold spots (low-value clusters) exist",
+      descriptives: { attribute: attr, n: ds.n, mean: ds.mean, sd: ds.sd, median: ds.median, min: ds.min, max: ds.max, skewness: ds.skewness, kurtosis: ds.kurtosis, cv: ds.cv },
+      results: [
+        { label: "Hot spots (99% conf.)", value: counts.h99, sig: counts.h99 > 0 },
+        { label: "Hot spots (95% conf.)", value: counts.h95, sig: counts.h95 > 0 },
+        { label: "Hot spots (90% conf.)", value: counts.h90, sig: counts.h90 > 0 },
+        { label: "Cold spots (99% conf.)", value: counts.c99, sig: counts.c99 > 0 },
+        { label: "Cold spots (95% conf.)", value: counts.c95, sig: counts.c95 > 0 },
+        { label: "Cold spots (90% conf.)", value: counts.c90, sig: counts.c90 > 0 },
+        { label: "Not significant", value: counts.ns, ns: counts.ns > 0 },
+        { label: "Total significant", value: `${totalSig} / ${pts.length} (${(totalSig/pts.length*100).toFixed(1)}%)`, highlight: true },
+        { label: "Mean Gi* z-score", value: isFinite(dsZ.mean) ? dsZ.mean.toFixed(4) : 'n/a' },
+      ],
+      effectSize: {
+        label: "Proportion significant",
+        value: (totalSig/pts.length).toFixed(3),
+        interpretation: `${(totalSig/pts.length*100).toFixed(1)}% of features are significant. ${totalSig/pts.length > 0.2 ? 'A substantial proportion \u2014 the spatial pattern is strongly non-random.' : totalSig/pts.length > 0.05 ? 'A moderate proportion \u2014 some spatial structure is present.' : 'Few features are significant \u2014 weak spatial structure.'}`
+      },
+      interpretation: interp,
+      conservation: conservation,
+      weights: `${_weightDesc(r)} \u00b7 ${pts.length} features \u00b7 ${useFDR ? 'FDR-corrected (Benjamini-Hochberg)' : 'uncorrected'} \u00b7 \u03b1 = 0.05`,
+      citation: "Getis, A. & Ord, J.K. (1992). The analysis of spatial association by use of distance statistics. Geographical Analysis, 24(3), 189\u2013206. &nbsp;|&nbsp; Ord, J.K. & Getis, A. (1995). Local spatial autocorrelation statistics: distributional issues and an application. Geographical Analysis, 27(4), 286\u2013306.",
+      reportSentence: `A Getis-Ord Gi* hot spot analysis identified ${totalSig} statistically significant ${totalHot > totalCold ? 'hot' : totalCold > totalHot ? 'cold' : 'hot and cold'} spot${totalSig !== 1 ? 's' : ''} in ${escapeHtml(attr)} (${totalSig}/${pts.length} significant, ${useFDR ? 'FDR-corrected' : 'uncorrected'}, \u03b1 = .05, n = ${pts.length}).`
+    }));
     break;
   }
 
@@ -9978,18 +10346,44 @@ function runAnalysis(tool) {
     }
     markers.forEach(m => analysisOverlays.push(m));
     addAnalysisLayer(`LISA Clusters (${escapeHtml(attr)})`, markers, {type:'FeatureCollection', features});
-    showResult(
-      `<b>Local Moran's I (LISA) Cluster &amp; Outlier Analysis</b> &nbsp;<span style="color:var(--text-muted)">attribute: ${escapeHtml(attr)}</span>` +
-      `<div style="margin-top:6px;font-size:11px">` +
-      `<span style="color:#e34a33">■</span> High-High clusters: <b>${counts.HH}</b><br>` +
-      `<span style="color:#2b8cbe">■</span> Low-Low clusters: <b>${counts.LL}</b><br>` +
-      `<span style="color:#fdae61">■</span> High-Low outliers: <b>${counts.HL}</b><br>` +
-      `<span style="color:#abd9e9">■</span> Low-High outliers: <b>${counts.LH}</b><br>` +
-      `<span style="color:#cbd5e0">■</span> Not significant: <b>${counts.ns}</b></div>` +
-      `<div style="color:var(--text-muted);margin-top:6px;font-size:10px">Weights: ${_weightDesc(r)}. ` +
-      `Conditional permutation inference (${perms} permutations), pseudo-p ≤ 0.05. ` +
-      `High-High = conservation hotspots; High-Low = isolated rich sites worth attention.</div>`
-    );
+    const totalSig = counts.HH + counts.LL + counts.HL + counts.LH;
+    const ds = _descStats(vals);
+    const IiVals = r.Ii.filter(v => isFinite(v));
+    const dsI = _descStats(IiVals);
+    const interp = totalSig === 0
+      ? `No statistically significant local clusters or spatial outliers were detected in ${escapeHtml(attr)} at pseudo-p \u2264 0.05. The local spatial structure is consistent with randomness.`
+      : `${totalSig} of ${pts.length} features (${(totalSig/pts.length*100).toFixed(1)}%) are statistically significant: ${counts.HH} High-High cluster${counts.HH !== 1 ? 's' : ''} (hot spots), ${counts.LL} Low-Low cluster${counts.LL !== 1 ? 's' : ''} (cold spots), ${counts.HL} High-Low outlier${counts.HL !== 1 ? 's' : ''}, and ${counts.LH} Low-High outlier${counts.LH !== 1 ? 's' : ''}. ${counts.HH > 0 ? 'High-High clusters indicate areas where high values are surrounded by similarly high values.' : ''} ${counts.HL + counts.LH > 0 ? 'Spatial outliers indicate locations whose values differ significantly from their neighbours.' : ''}`;
+    const conservation = totalSig === 0
+      ? `No significant local clusters in ${escapeHtml(attr)} suggest that conservation priorities do not concentrate spatially at this scale. Consider analysing at a different spatial scale or with different weights.`
+      : `High-High (HH) clusters are priority conservation zones \u2014 areas where ${escapeHtml(attr)} is high and surrounded by similarly high values. Low-Low (LL) clusters may indicate areas requiring different management. High-Low (HL) outliers are isolated high-value sites worth individual protection. Low-High (LH) outliers may indicate degraded or at-risk sites within high-value areas.`;
+    showResult(_statReportCard({
+      title: "Local Moran's I (LISA) \u2014 Cluster & Outlier Analysis",
+      subtitle: `data: ${pts.length} features \u00b7 attribute: ${escapeHtml(attr)} \u00b7 ${perms} permutations`,
+      method: "Anselin (1995); Local Indicators of Spatial Association",
+      nullHyp: "No local spatial clustering or spatial outliers (CSR)",
+      altHyp: "Local clusters (HH/LL) or spatial outliers (HL/LH) exist",
+      descriptives: { attribute: attr, n: ds.n, mean: ds.mean, sd: ds.sd, median: ds.median, min: ds.min, max: ds.max, skewness: ds.skewness, kurtosis: ds.kurtosis, cv: ds.cv },
+      results: [
+        { label: "High-High (hot clusters)", value: counts.HH, sig: counts.HH > 0 },
+        { label: "Low-Low (cold clusters)", value: counts.LL, sig: counts.LL > 0 },
+        { label: "High-Low (outliers)", value: counts.HL, sig: counts.HL > 0 },
+        { label: "Low-High (outliers)", value: counts.LH, sig: counts.LH > 0 },
+        { label: "Not significant", value: counts.ns, ns: counts.ns > 0 },
+        { label: "Total significant", value: `${totalSig} / ${pts.length} (${(totalSig/pts.length*100).toFixed(1)}%)`, highlight: true },
+        { label: "Mean Local I", value: isFinite(dsI.mean) ? dsI.mean.toFixed(4) : 'n/a' },
+        { label: "SD of Local I", value: isFinite(dsI.sd) ? dsI.sd.toFixed(4) : 'n/a' },
+      ],
+      effectSize: {
+        label: "Proportion significant",
+        value: (totalSig/pts.length).toFixed(3),
+        interpretation: `${(totalSig/pts.length*100).toFixed(1)}% of features show significant local spatial structure. ${counts.HH + counts.LL > counts.HL + counts.LH ? 'Clustering dominates over outliers.' : 'Spatial outliers are more common than clusters.'}`
+      },
+      interpretation: interp,
+      conservation: conservation,
+      weights: `${_weightDesc(r)} \u00b7 ${pts.length} features \u00b7 conditional permutation (${perms} perms) \u00b7 pseudo-p \u2264 0.05`,
+      citation: "Anselin, L. (1995). Local indicators of spatial association\u2014LISA. Geographical Analysis, 27(2), 93\u2013115.",
+      reportSentence: `A Local Moran's I (LISA) analysis identified ${totalSig} significant local cluster${totalSig !== 1 ? 's' : ''} and outlier${totalSig !== 1 ? 's' : ''} in ${escapeHtml(attr)} (${counts.HH} HH, ${counts.LL} LL, ${counts.HL} HL, ${counts.LH} LH, pseudo-p \u2264 .05, ${perms} permutations, n = ${pts.length}).`
+    }));
     break;
   }
 
