@@ -4351,7 +4351,23 @@ const MapLegend = L.Control.extend({
       html += this._renderRaster(st.ramp, st.minVal, st.maxVal, st.attrName, st.units, st.classification);
     } else {
       // Simple: inline symbol in title - no redundant "Point" row
-      html += `<div class="map-legend-layer-title">${this._inlineSymbol(st.geomType, color, st.shape)}${name}</div>`;
+      // Gi*/LISA: show per-feature significance classes under the title
+      const hasStatClasses = info.geojsonFeatures && info.geojsonFeatures.some(f => f.properties && (f.properties.gi_class || f.properties.cluster));
+      if (hasStatClasses) {
+        html += `<div class="map-legend-layer-title">${this._inlineSymbol(st.geomType, color, st.shape)}${name}</div>`;
+        const classMap = new Map();
+        info.geojsonFeatures.forEach(f => {
+          const p = f.properties || {};
+          const cls = p.gi_class || p.cluster;
+          const c = p._markerColor;
+          if (cls && c && !classMap.has(cls)) classMap.set(cls, c);
+        });
+        classMap.forEach((c, cls) => {
+          html += this._renderSymbol('Point', c, cls, null, info.id, false);
+        });
+      } else {
+        html += `<div class="map-legend-layer-title">${this._inlineSymbol(st.geomType, color, st.shape)}${name}</div>`;
+      }
     }
     html += '</div>';
     return html;
@@ -10441,7 +10457,7 @@ function runAnalysis(tool) {
         if (z > 0) { color = pr <= 0.01 ? '#b30000' : pr <= 0.05 ? '#e34a33' : '#fc8d59'; cls = 'Hot spot ' + conf; counts[pr <= 0.01 ? 'h99' : pr <= 0.05 ? 'h95' : 'h90']++; }
         else { color = pr <= 0.01 ? '#0c2c84' : pr <= 0.05 ? '#225ea8' : '#41b6c4'; cls = 'Cold spot ' + conf; counts[pr <= 0.01 ? 'c99' : pr <= 0.05 ? 'c95' : 'c90']++; }
       } else counts.ns++;
-      const tip = `<b>${cls}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Gi* z: ${z.toFixed(3)}<br>${useFDR ? 'q' : 'p'}-value: ${pr.toExponential(2)}<br>neighbours: ${r.nb[i]}`;
+      const tip = `<b>${cls}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Gi* z-score: ${z.toFixed(3)}<br>${useFDR ? 'q-value (FDR-adjusted p)' : 'p-value'}: ${pr.toExponential(2)} ${pr <= 0.01 ? '***' : pr <= 0.05 ? '**' : '*'}<br>neighbours: ${r.nb[i]}<br><i style="font-size:9px;color:#666">${useFDR ? 'q-value determines significance' : 'p-value determines significance'}</i>`;
       markers.push(_statMarker(pts[i].lat, pts[i].lon, color, tip));
       features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
         gi_z: +z.toFixed(4), gi_p: +r.p[i].toExponential(4), gi_q: useFDR ? +probs[i].toExponential(4) : null, gi_class: cls, neighbours: r.nb[i], _markerColor: color
@@ -10513,7 +10529,7 @@ function runAnalysis(tool) {
         else key = 'LH';
       }
       counts[key]++;
-      const tip = `<b>${labels[key]}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Local I: ${r.Ii[i].toFixed(3)}<br>pseudo-p: ${r.pval[i].toFixed(3)}`;
+      const tip = `<b>${labels[key]}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Local Moran's I: ${r.Ii[i].toFixed(3)}<br>pseudo-p: ${r.pval[i].toFixed(3)} ${r.pval[i] <= 0.01 ? '***' : r.pval[i] <= 0.05 ? '*' : ''}<br><i style="font-size:9px;color:#666">pseudo-p determines significance (999 permutations)</i>`;
       markers.push(_statMarker(pts[i].lat, pts[i].lon, palette[key], tip));
       features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
         local_I: +r.Ii[i].toFixed(4), lisa_p: +r.pval[i].toFixed(4), cluster: labels[key], _markerColor: palette[key]
