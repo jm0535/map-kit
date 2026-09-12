@@ -3260,13 +3260,36 @@
       <div class="ad-setting-row">
         <label for="heat-palette-select">Colour palette</label>
         <select id="heat-palette-select" onchange="onPaletteChange()">
-          <option value="thermal">Thermal (blue→red)</option>
-          <option value="viridis">Viridis (purple→yellow)</option>
-          <option value="inferno">Inferno (black→yellow)</option>
-          <option value="plasma">Plasma (purple→orange)</option>
-          <option value="magma">Magma (dark→bright)</option>
-          <option value="yrg">Yellow→Red→Green</option>
-          <option value="hot">Hot (black→white)</option>
+          <optgroup label="Sequential (multi-hue)">
+            <option value="thermal">Thermal (blue→red)</option>
+            <option value="viridis">Viridis (purple→yellow)</option>
+            <option value="inferno">Inferno (black→yellow)</option>
+            <option value="plasma">Plasma (purple→orange)</option>
+            <option value="magma">Magma (dark→bright)</option>
+          </optgroup>
+          <optgroup label="Sequential (single-hue)">
+            <option value="gray">Singleband gray</option>
+            <option value="greys">Greys</option>
+            <option value="blues">Blues</option>
+            <option value="greens">Greens</option>
+            <option value="reds">Reds</option>
+            <option value="oranges">Oranges</option>
+            <option value="purples">Purples</option>
+          </optgroup>
+          <optgroup label="Diverging">
+            <option value="spectral">Spectral</option>
+            <option value="rdylgn">Red-Yellow-Green</option>
+            <option value="rdbu">Red-Blue</option>
+            <option value="brbg">Brown-Teal</option>
+            <option value="prgn">Purple-Green</option>
+          </optgroup>
+          <optgroup label="Thematic">
+            <option value="yrg">Yellow→Red→Green</option>
+            <option value="hot">Hot (black→white)</option>
+            <option value="heat">Heat</option>
+            <option value="cool">Cool</option>
+            <option value="terrain">Terrain</option>
+          </optgroup>
         </select>
       </div>
       <div class="ad-setting-row">
@@ -7348,10 +7371,37 @@ function _buildVectorSymbologyBody(info) {
         <input type="number" id="grad-classes-${id}" value="5" min="2" max="10" style="width:52px">
         <label class="sym-label" style="flex:0 0 auto;margin-left:8px;">Ramp</label>
         <select id="grad-ramp-${id}" style="flex:1;">
-          <option value="viridis">Viridis</option>
-          <option value="heat">Heat</option>
-          <option value="cool">Cool</option>
-          <option value="terrain">Terrain</option>
+          <optgroup label="Sequential (multi-hue)">
+            <option value="viridis">Viridis</option>
+            <option value="inferno">Inferno</option>
+            <option value="plasma">Plasma</option>
+            <option value="magma">Magma</option>
+          </optgroup>
+          <optgroup label="Sequential (single-hue)">
+            <option value="greys">Greys</option>
+            <option value="blues">Blues</option>
+            <option value="greens">Greens</option>
+            <option value="reds">Reds</option>
+            <option value="oranges">Oranges</option>
+            <option value="purples">Purples</option>
+          </optgroup>
+          <optgroup label="Diverging">
+            <option value="spectral">Spectral</option>
+            <option value="rdylgn">Red-Yellow-Green</option>
+            <option value="rdbu">Red-Blue</option>
+            <option value="brbg">Brown-Teal</option>
+            <option value="prgn">Purple-Green</option>
+          </optgroup>
+          <optgroup label="Thematic">
+            <option value="heat">Heat</option>
+            <option value="cool">Cool</option>
+            <option value="terrain">Terrain</option>
+          </optgroup>
+          <optgroup label="Qualitative">
+            <option value="accent">Accent</option>
+            <option value="set1">Set 1</option>
+            <option value="dark2">Dark 2</option>
+          </optgroup>
         </select>
       </div>
       <p class="sym-hint">Color features along a ramp using <b>numeric value bands</b> - best for ordinal data (richness, abundance, elevation).</p>
@@ -7411,6 +7461,11 @@ function _buildRasterSymbologyBody(info) {
     gray: 'Singleband gray', thermal: 'Thermal (blue→red)', viridis: 'Viridis',
     inferno: 'Inferno', plasma: 'Plasma', magma: 'Magma',
     yrg: 'Green→Yellow→Red', hot: 'Hot (black→white)',
+    greys: 'Greys', blues: 'Blues', greens: 'Greens', reds: 'Reds',
+    oranges: 'Oranges', purples: 'Purples',
+    spectral: 'Spectral', rdylgn: 'Red-Yellow-Green', rdbu: 'Red-Blue',
+    brbg: 'Brown-Teal', prgn: 'Purple-Green',
+    terrain: 'Terrain', cool: 'Cool', heat: 'Heat',
   };
   const paletteOpts = Object.keys(HEAT_PALETTES).map(k =>
     `<option value="${k}"${k === paletteKey ? ' selected' : ''}>${PALETTE_LABELS[k] || k}</option>`).join('');
@@ -8118,10 +8173,32 @@ function applyCategorized(id) {
 }
 
 const COLOR_RAMPS = {
+  // ── Sequential (single-hue) ──
   viridis: ['#440154','#482777','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'],
-  heat:   ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'],
-  cool:   ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b'],
+  inferno: ['#000004','#1b0c41','#4a0c4b','#781c6d','#a52c60','#cf4446','#ed6925','#fb9b06','#f7d13d','#fcffa4'],
+  plasma:  ['#0d0887','#46039f','#7201a8','#9c179e','#bd3786','#d8576b','#ed7953','#fb9f3a','#fdca26','#f0f921'],
+  magma:   ['#000004','#180f3d','#440f76','#781c6d','#a52c60','#cf4446','#ed6925','#fb9b06','#f7d13d','#fcfdbf'],
+  // ── Sequential (single-hue) ──
+  greys:   ['#ffffff','#f0f0f0','#d9d9d9','#bdbdbd','#969696','#737373','#525252','#252525','#000000'],
+  blues:   ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b'],
+  greens:  ['#f7fcf5','#e5f5e0','#c7e9c0','#a1d99b','#74c476','#41ab5d','#238b45','#006d2c','#00441b'],
+  reds:    ['#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#dc1818','#a50f15','#67000d'],
+  oranges: ['#fff5eb','#fee6ce','#fde0c2','#fdc592','#fdb863','#fdae44','#fd9e26','#fdae36','#f7681e'],
+  purples: ['#fcfbfd','#efedf5','#dadaeb','#bcbddc','#9e9ac8','#807dba','#6a51a3','#54278f','#3f007d'],
+  // ── Diverging ──
+  spectral:['#9e0142','#d53e4f','#f46d43','#fdae61','#fee08b','#ffffbf','#e6f598','#abdda4','#66c2a5','#3288bd','#5e4fa2'],
+  rdylgn:  ['#a50026','#d73027','#f46d43','#fdae61','#fee08b','#ffffbf','#d9ef8b','#a6d96a','#66bd63','#1a9850','#006837'],
+  rdbu:    ['#67001f','#b2182b','#d6604d','#f4a582','#fddbc7','#f7f7f7','#d1e5f0','#92c5de','#4393c3','#2166ac','#053061'],
+  brbg:    ['#543005','#8c510a','#bf812d','#dfc27d','#f6e8c3','#f5f5f5','#c7eae5','#80cdc1','#35978f','#01665e','#003c30'],
+  prgn:    ['#003c30','#006d2c','#238b45','#66bd63','#a6d96a','#f7f7f7','#d9ef8b','#b8e186','#7fbc41','#4d9221','#276419'],
+  // ── Original ramps ──
+  heat:    ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'],
+  cool:    ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b'],
   terrain:['#a50026','#d73027','#f46d43','#fdae61','#fee08b','#ffffbf','#d9ef8b','#a6d96a','#66bd63','#1a9850','#006837'],
+  // ── Qualitative (categorical) ──
+  accent:  ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0','#f0027f','#bf5b17','#666666'],
+  set1:    ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'],
+  dark2:   ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666'],
 };
 
 function applyGraduated(id) {
@@ -9656,6 +9733,21 @@ const HEAT_PALETTES = {
   magma:    {0.0:'#000004',0.25:'#3b0f70',0.5:'#8c2981',0.75:'#de4968',1.0:'#fcfdbf'},
   yrg:      {0.0:'#1a9850',0.25:'#91cf60',0.5:'#fee08b',0.75:'#fc8d59',1.0:'#d73027'},
   hot:      {0.0:'#000000',0.25:'#bd0026',0.5:'#fd8d3c',0.75:'#fecc5c',1.0:'#ffffff'},
+  // ── New ramps ──
+  greys:    {0.0:'#ffffff',0.25:'#d9d9d9',0.5:'#969696',0.75:'#525252',1.0:'#000000'},
+  blues:    {0.0:'#f7fbff',0.25:'#c6dbef',0.5:'#6baed6',0.75:'#2171b5',1.0:'#08306b'},
+  greens:   {0.0:'#f7fcf5',0.25:'#c7e9c0',0.5:'#74c476',0.75:'#238b45',1.0:'#00441b'},
+  reds:     {0.0:'#fff5f0',0.25:'#fcbba1',0.5:'#fb6a4a',0.75:'#dc1818',1.0:'#67000d'},
+  oranges:  {0.0:'#fff5eb',0.25:'#fde0c2',0.5:'#fdb863',0.75:'#fd9e26',1.0:'#f7681e'},
+  purples:  {0.0:'#fcfbfd',0.25:'#dadaeb',0.5:'#9e9ac8',0.75:'#6a51a3',1.0:'#3f007d'},
+  spectral: {0.0:'#9e0142',0.2:'#f46d43',0.4:'#fee08b',0.5:'#ffffbf',0.6:'#e6f598',0.8:'#66c2a5',1.0:'#5e4fa2'},
+  rdylgn:   {0.0:'#a50026',0.2:'#f46d43',0.4:'#fee08b',0.5:'#ffffbf',0.6:'#a6d96a',0.8:'#66bd63',1.0:'#006837'},
+  rdbu:     {0.0:'#67001f',0.2:'#d6604d',0.4:'#fddbc7',0.5:'#f7f7f7',0.6:'#d1e5f0',0.8:'#4393c3',1.0:'#053061'},
+  brbg:     {0.0:'#543005',0.2:'#bf812d',0.4:'#dfc27d',0.5:'#f5f5f5',0.6:'#c7eae5',0.8:'#35978f',1.0:'#003c30'},
+  prgn:     {0.0:'#003c30',0.2:'#238b45',0.4:'#a6d96a',0.5:'#f7f7f7',0.6:'#d9ef8b',0.8:'#4d9221',1.0:'#276419'},
+  terrain:  {0.0:'#a50026',0.2:'#f46d43',0.4:'#fee08b',0.5:'#ffffbf',0.6:'#a6d96a',0.8:'#66bd63',1.0:'#006837'},
+  cool:     {0.0:'#f7fbff',0.25:'#c6dbef',0.5:'#6baed6',0.75:'#2171b5',1.0:'#08306b'},
+  heat:     {0.0:'#ffffcc',0.25:'#fed976',0.5:'#feb24c',0.75:'#fc4e2a',1.0:'#800026'},
 };
 
 let activeHeatLayers = [];
