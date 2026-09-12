@@ -154,7 +154,8 @@ body {
   <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
   <div class="cl-nav" id="cl-nav">
     <div class="cl-nav-group">Releases</div>
-    <a href="#v1.4.0" class="cl-nav-item">v1.4.0 <span class="badge latest">Latest</span></a>
+    <a href="#v1.4.1" class="cl-nav-item">v1.4.1 <span class="badge latest">Latest</span></a>
+    <a href="#v1.4.0" class="cl-nav-item">v1.4.0</a>
     <a href="#v1.3.2" class="cl-nav-item">v1.3.2</a>
     <a href="#v1.3.1" class="cl-nav-item">v1.3.1</a>
     <a href="#v1.3.0" class="cl-nav-item">v1.3.0</a>
@@ -185,12 +186,43 @@ body {
   <div class="cl-legend-item"><span class="cl-entry-label sec">Sec</span> Security</div>
 </div>
 
+<!-- v1.4.1 -->
+<div class="cl-release" id="v1.4.1">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.4.1</span>
+    <span class="cl-release-date">14 September 2026</span>
+    <span class="cl-release-tag latest">Latest</span>
+  </div>
+  <div class="cl-release-title">Color Ramps, Calculate Field Fixes, Legend Label Order</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label new">New</span> New Features</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>17 new colour ramps</b> for vector Graduated symbology (4 → 21 total) and raster/heat/IDW palettes (8 → 22 total). Organized into 5 categories with optgroup labels: Sequential multi-hue (Viridis, Inferno, Plasma, Magma), Sequential single-hue (Greys, Blues, Greens, Reds, Oranges, Purples), Diverging (Spectral, Red-Yellow-Green, Red-Blue, Brown-Teal, Purple-Green), Thematic (Heat, Cool, Terrain, Yellow-Red-Green, Hot), and Qualitative (Accent, Set 1, Dark 2).</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label fix">Fix</span> Bug Fixes</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Calculate Field "Style layer on this field" checkbox</b>: unchecking the checkbox now resets previous graduated/categorized styling to simple. Previously, the else branch read <code>root.legendState</code> (window.legendState) which was <code>undefined</code> because <code>legendState</code> is a <code>const</code> global — not a window property. The reset check was silently skipped, so previous styling persisted.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Calculate Field overwrite behaviour</b>: running Calculate Field with the same output name now overwrites the existing field in place (values updated) instead of creating <code>habitat_score_2</code>, <code>habitat_score_3</code> duplicates. Matches QGIS and ArcGIS Pro behaviour.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>On-map legend break labels reversed</b>: the vertical gradient bar used <code>to top</code> direction (high at top) but break labels were listed in ascending order (low at top). Now the highest value appears at the top, matching the gradient and the Symbology panel's class display.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Calculated field missing from Symbology dropdowns</b>: after Calculate Field, the new field now appears in the Graduated/Categorized column dropdowns. <code>buildSymbologyControls(info)</code> is now called after calculation to rebuild the panel.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Calculated field missing from Analysis filter</b>: <code>refreshAnalysisFilter()</code> is now called after Calculate Field so the new field appears in the analysis filter dropdown.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Calculated field missing from Calculate Field dropdowns</b>: <code>CF.populateFieldSelects()</code> and <code>CF.populateInsertSelect()</code> are now called after Calculate Field so the new field is available for chained calculations.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title"><span class="cl-entry-label enh">Enh</span> Enhancements</div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>User Guide</b>: documented 21 colour ramps with category guidance, habitat proxy score interpretation (0–3 meaning), scaling with more than 3 criteria, checkbox behaviour, overwrite behaviour, and on-map legend break label order.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>FR422 step-by-step guide</b>: updated colour ramp options (21 ramps), added checkbox and overwrite documentation, added habitat score interpretation table, added multi-criteria scaling note.</span></div>
+    <div class="cl-entry enh"><span class="cl-entry-label enh">Enh</span><span class="cl-entry-text"><b>README</b>: updated Graduated ramp list (21 ramps, 5 categories), raster palette list (22 palettes), and Calculate Field section with checkbox and overwrite documentation.</span></div>
+  </div>
+</div>
+
 <!-- v1.4.0 -->
 <div class="cl-release" id="v1.4.0">
   <div class="cl-release-header">
     <span class="cl-release-version">v1.4.0</span>
     <span class="cl-release-date">12 September 2026</span>
-    <span class="cl-release-tag latest">Latest</span>
   </div>
   <div class="cl-release-title">Geodesic Accuracy, In-App Sample Datasets, Open Data Screenshots</div>
 

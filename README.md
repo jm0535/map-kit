@@ -106,7 +106,7 @@ Click a layer name to open **Symbology** controls. Newly loaded layers are auto-
 
 - **Simple Symbol** - fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Marker shapes: circle, square, triangle, diamond, star, cross.
 - **Categorized** - one colour per unique attribute value (16-colour palette). Click legend entries on the map to rename them inline.
-- **Graduated** - numeric attribute divided into 2-10 classes using a colour ramp (Viridis, Heat, Cool, Terrain).
+- **Graduated** - numeric attribute divided into 2-10 classes using a colour ramp. 21 ramps available across 5 categories: Sequential multi-hue (Viridis, Inferno, Plasma, Magma), Sequential single-hue (Greys, Blues, Greens, Reds, Oranges, Purples), Diverging (Spectral, Red-Yellow-Green, Red-Blue, Brown-Teal, Purple-Green), Thematic (Heat, Cool, Terrain, Yellow-Red-Green, Hot), and Qualitative (Accent, Set 1, Dark 2). Classification methods: Equal Interval, Quantile, Natural Breaks (Jenks), Manual.
 - **Reset** - returns the layer to default styling.
 
 #### Raster layers (GeoTIFF)
@@ -114,7 +114,7 @@ Click a layer name to open **Symbology** controls. Newly loaded layers are auto-
 GeoTIFF layers get a dedicated raster symbology panel with QGIS/ArcGIS-style controls:
 
 - **Band selection** - pick which band to render (for multi-band GeoTIFFs).
-- **Colour ramp** - 8 palettes: Singleband Gray, Thermal, Viridis, Inferno, Plasma, Magma, Green→Yellow→Red, Hot.
+- **Colour ramp** - 22 palettes: Singleband Gray, Thermal, Viridis, Inferno, Plasma, Magma, Greys, Blues, Greens, Reds, Oranges, Purples, Spectral, Red-Yellow-Green, Red-Blue, Brown-Teal, Purple-Green, Terrain, Cool, Heat, Hot, Yellow-Red-Green.
 - **Min / Max stretch** - manual min/max controls with a reset button to restore data min/max.
 - **Opacity** - slider for raster transparency.
 - **Continuous** - smooth gradient rendering (every pixel value maps to its own colour along the ramp).
@@ -386,12 +386,18 @@ Divides the plane so that every location is assigned to its nearest point. Compu
 
 Creates a new attribute by combining existing fields using rules you define. Two modes:
 
-- **Weighted conditions**: each row tests one field against a threshold (e.g., `elevation_m between 0 and 2000`, `tree_cover_pct >= 50`), and each test contributes a weight to the final score. A point that passes all tests gets the maximum score.
-- **Expression mode**: write a JavaScript-style expression referencing field names (e.g., `elevation_m * 0.001 + tree_cover_pct * 0.01`).
+- **Weighted conditions**: each row tests one field against a threshold (e.g., `elevation_m between 0 and 2000`, `tree_cover_pct >= 50`), and each test contributes a weight to the final score. A point that passes all tests gets the maximum score. Up to 8 rows.
+- **Expression mode**: write a JavaScript-style expression referencing field names (e.g., `elevation_m * 0.001 + tree_cover_pct * 0.01`). No limit on the number of conditions.
 
-The new field is added to the layer's attribute table and auto-styled with Graduated symbology. A live preview shows the old and new values for the first 5 features before you commit.
+**Output settings:**
 
-**Use it when**: building a habitat suitability score, a composite index, or any derived attribute from multiple fields.
+- **Output field name**: the new column name. If the name already exists, the field is **overwritten in place** (values updated) — matching QGIS and ArcGIS Pro behaviour. If the name is new, a new field is created.
+- **Output type**: Integer, Decimal, or Text.
+- **Style layer on this field** (checkbox, checked by default): automatically applies graduated (numeric) or categorized (text) symbology. Uncheck to keep the layer's current styling. If the layer was previously styled by a calculated field, unchecking resets it to simple single-colour symbology.
+
+The new field is added to the layer's attribute table and (if the checkbox is checked) auto-styled with Graduated symbology. A live preview shows the old and new values for the first 5 features before you commit.
+
+**Use it when**: building a habitat proxy score, a composite index, or any derived attribute from multiple fields. This is not a species distribution model (SDM) or habitat suitability model — it is a transparent, rule-based proxy. Each threshold must be justified by literature for your specific species.
 
 ---
 

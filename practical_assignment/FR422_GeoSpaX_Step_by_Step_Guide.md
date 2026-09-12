@@ -404,7 +404,7 @@ If any element is hidden, toggle it on in the composer sidebar.
 
 1. Set the **Field** dropdown to `tree_cover_pct` (or `elevation_m` if you justify it in your report).
 2. Set **Classes** to **5** (type the number in the classes input).
-3. Choose a **Colour ramp**: Viridis (default), Heat, Cool, or Terrain.
+3. Choose a **Colour ramp**: 21 ramps available, organized into categories (Sequential multi-hue like Viridis/Inferno/Plasma/Magma, Sequential single-hue like Greens/Blues/Reds, Diverging like Spectral/Red-Blue, Thematic like Heat/Cool/Terrain, Qualitative like Accent/Set 1). Viridis is the default.
 4. Click the **Apply** button.
 5. The map now shows points coloured by the selected attribute.
 
@@ -559,6 +559,10 @@ Before touching the software, write down:
 
 1. In the **Output field name** input, type: `habitat_score`
 2. Set **Output type** to **Integer**.
+3. Note the **Style layer on this field** checkbox (checked by default):
+   - **Checked** (default): the layer is automatically styled with Graduated symbology on `habitat_score` after calculation.
+   - **Unchecked**: the field is created but the layer keeps its current styling. Use this if you want to style manually later, or if you are recalculating and do not want to change the current map appearance.
+4. **Overwrite behaviour**: if you run Calculate Field again with the same output name (`habitat_score`), the existing field is **overwritten in place** (values updated) — no `habitat_score_2` duplicate is created. This matches QGIS and ArcGIS Pro. Use a different output name if you want to keep the old field.
 
 ### Step 4: Add your three criteria (Weighted conditions mode)
 
@@ -621,6 +625,19 @@ Example for a species favouring mid-elevation forest with high rainfall:
 3. Scroll right in the table. You should see a new **`habitat_score`** column.
 4. Confirm the values are whole numbers (0, 1, 2, or 3 for three equal-weight criteria).
 
+**What the scores mean:**
+
+| Score | Meaning | Conservation interpretation |
+| --- | --- | --- |
+| 3 | Meets all 3 criteria | Best habitat — optimal conditions |
+| 2 | Meets 2 of 3 criteria | Good habitat — mostly suitable |
+| 1 | Meets 1 criterion | Marginal habitat — suboptimal, edge/transition |
+| 0 | Meets none | Unsuitable — outside environmental tolerance |
+
+**More than 3 criteria:** The score scales automatically. With 5 criteria the range is 0–5; with 8 (the maximum in weighted-conditions mode) the range is 0–8. In expression mode there is no limit. When styling, set the number of classes to match your criteria count + 1 (e.g. 6 classes for 5 criteria: 0, 1, 2, 3, 4, 5), or use **Manual** breaks to set exact class boundaries.
+
+**Important:** This is **not** a species distribution model (SDM) and **not** a habitat suitability model. It is a transparent, rule-based proxy. Each threshold must be justified by literature for your specific species.
+
 > **![screenshots/27_attrtable_habitat_score.png](screenshots/27_attrtable_habitat_score.png)**
 >
 > **Figure 23.** Attribute Table with the new habitat_score column visible, showing integer scores (0-3) for each occurrence record.
@@ -630,7 +647,7 @@ Example for a species favouring mid-elevation forest with high rainfall:
 1. The Calculate Field tool automatically applies **Graduated** styling to the new field.
 2. If you want to adjust: select your species layer in the Layers panel, go to **Symbology, then Graduated**, and confirm the field is `habitat_score`.
 3. Set 4 or 5 classes (e.g., 0, 1, 2, 3 for three equal-weight criteria).
-4. Choose a colour ramp (e.g., Green to Yellow to Red, or Viridis).
+4. Choose a colour ramp (e.g., Greens for habitat quality, Viridis, or Spectral). 21 ramps available.
 5. Click **Apply**.
 
 ### Step 8: Open the composer and export
