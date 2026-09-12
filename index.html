@@ -353,6 +353,8 @@
   .map-legend-ramp { display: flex; align-items: stretch; gap: 0; margin: 2px 0 2px 0; }
   .map-legend-ramp-bar { width: 14px; height: 60px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); }
   .map-legend-ramp-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: var(--text-muted); padding: 0 4px; }
+  .map-legend-ramp-breaks { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; color: var(--text-muted); padding: 0 4px; font-variant-numeric: tabular-nums; }
+  .map-legend-ramp-break { line-height: 1.1; }
   /* Continuous raster gradient (heat / IDW / weighted density) */
   .map-legend-raster { display: flex; flex-direction: column; gap: 2px; margin: 3px 0 4px 0; }
   .map-legend-raster-attr { font-size: 9px; color: var(--text-muted); font-style: italic; }
@@ -4342,8 +4344,6 @@ const MapLegend = L.Control.extend({
       ? buildClassifiedGradientCss(breaks, ramp, 'to top').gradient
       : `linear-gradient(${ramp.join(',')})`;
     const swatch = hasBreaks ? _sampleRamp(ramp, 0.5) : ramp[Math.floor(ramp.length/2)];
-    const topLabel = maxVal != null ? Number(maxVal).toFixed(1) : '';
-    const botLabel = minVal != null ? Number(minVal).toFixed(1) : '';
     let html = `<div class="map-legend-ramp">`;
     if (shape && shape !== 'circle') {
       html += `<div class="map-legend-symbol shape"><svg viewBox="-1.3 -1.3 2.6 2.6" width="12" height="12"><path d="${shape}" fill="${swatch}" stroke="white" stroke-width="0.15"/></svg></div>`;
@@ -4355,7 +4355,18 @@ const MapLegend = L.Control.extend({
       html += `<div class="map-legend-symbol polygon" style="background:${swatch}40;border-color:${swatch}"></div>`;
     }
     html += `<div class="map-legend-ramp-bar" style="background:${gradient}"></div>`;
-    html += `<div class="map-legend-ramp-labels"><span>${topLabel}</span><span>${botLabel}</span></div>`;
+    if (hasBreaks) {
+      // Show each break edge as a label next to the bar
+      html += `<div class="map-legend-ramp-breaks">`;
+      breaks.forEach((b, i) => {
+        html += `<div class="map-legend-ramp-break">${Number(b).toFixed(1)}</div>`;
+      });
+      html += `</div>`;
+    } else {
+      const topLabel = maxVal != null ? Number(maxVal).toFixed(1) : '';
+      const botLabel = minVal != null ? Number(minVal).toFixed(1) : '';
+      html += `<div class="map-legend-ramp-labels"><span>${topLabel}</span><span>${botLabel}</span></div>`;
+    }
     html += '</div>';
     return html;
   }
@@ -11727,26 +11738,54 @@ function _rebuildLegend(visibleLayers) {
         return;
       }
 
-      // GRADUATED: small vertical ramp bar next to layer name.
+      // GRADUATED: classified ramp bar with individual class break values.
       if (sym && sym.mode === 'graduated' && sym.ramp) {
         const block = document.createElement('div');
-        block.style.cssText = 'display:flex;align-items:stretch;gap:6px;margin:4px 0;';
-        const bar = document.createElement('div');
-        bar.style.cssText = `width:10px;height:36px;border-radius:2px;border:1px solid #1a202c;background:linear-gradient(${sym.ramp.join(',')});flex-shrink:0;`;
-        block.appendChild(bar);
-        const right = document.createElement('div');
-        right.style.cssText = 'display:flex;flex-direction:column;justify-content:space-between;';
+        block.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin:6px 0 4px 0;';
         const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-weight:600;font-size:10px;color:#1a202c;';
         nameEl.textContent = displayName;
-        nameEl.style.cssText = 'font-size:10px;line-height:1.1;';
-        right.appendChild(nameEl);
-        const range = document.createElement('div');
-        range.style.cssText = 'font-size:9px;color:#4a5568;';
-        const lo = sym.minVal != null ? Number(sym.minVal).toFixed(1) : '';
-        const hi = sym.maxVal != null ? Number(sym.maxVal).toFixed(1) : '';
-        range.textContent = (lo || hi) ? `${lo} - ${hi}` : '';
-        right.appendChild(range);
-        block.appendChild(right);
+        block.appendChild(nameEl);
+        if (sym.attr) {
+          const attrEl = document.createElement('div');
+          attrEl.style.cssText = 'font-size:9px;color:#4a5568;font-style:italic;';
+          attrEl.textContent = sym.attr;
+          block.appendChild(attrEl);
+        }
+        const hasBreaks = Array.isArray(sym.breaks) && sym.breaks.length >= 2;
+        const { gradient, bandColors } = hasBreaks
+          ? buildClassifiedGradientCss(sym.breaks, sym.ramp, 'to right')
+          : { gradient: `linear-gradient(to right, ${sym.ramp.join(',')})`, bandColors: [] };
+        const bar = document.createElement('div');
+        bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:${gradient};`;
+        block.appendChild(bar);
+        if (hasBreaks) {
+          // Tick labels under each break edge
+          const ticks = document.createElement('div');
+          ticks.style.cssText = 'position:relative;height:11px;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const mn = sym.breaks[0], mx = sym.breaks[sym.breaks.length - 1];
+          const span = (mx - mn) || 1;
+          sym.breaks.forEach((b, i) => {
+            const pct = ((b - mn) / span) * 100;
+            let transform = 'translateX(-50%)';
+            if (i === 0) transform = 'translateX(0)';
+            else if (i === sym.breaks.length - 1) transform = 'translateX(-100%)';
+            const sp = document.createElement('span');
+            sp.style.cssText = `position:absolute;left:${pct.toFixed(2)}%;transform:${transform};white-space:nowrap;`;
+            sp.textContent = Number(b).toFixed(1);
+            ticks.appendChild(sp);
+          });
+          block.appendChild(ticks);
+        } else {
+          // No breaks - just show min and max
+          const labels = document.createElement('div');
+          labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const lo = sym.minVal != null ? Number(sym.minVal).toFixed(1) : '';
+          const hi = sym.maxVal != null ? Number(sym.maxVal).toFixed(1) : '';
+          const loSp = document.createElement('span'); loSp.textContent = lo; labels.appendChild(loSp);
+          const hiSp = document.createElement('span'); hiSp.textContent = hi; labels.appendChild(hiSp);
+          block.appendChild(labels);
+        }
         legendEl.appendChild(block);
         return;
       }
