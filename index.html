@@ -4521,15 +4521,21 @@ const MapLegend = L.Control.extend({
     // Stepped bands (vertical) when classification breaks are present, so the
     // legend matches the classified map rendering. Otherwise smooth gradient.
     const hasBreaks = Array.isArray(breaks) && breaks.length >= 2;
+    // Gradient goes bottom→top (low→high), so the first ramp colour (low
+    // values) is at the bottom and the last ramp colour (high values) is
+    // at the top. Break labels must be listed top→bottom (high→low) to
+    // match the gradient bar visually.
     const gradient = hasBreaks
       ? buildClassifiedGradientCss(breaks, ramp, 'to top').gradient
       : `linear-gradient(${ramp.join(',')})`;
     let html = `<div class="map-legend-ramp">`;
     html += `<div class="map-legend-ramp-bar" style="background:${gradient}"></div>`;
     if (hasBreaks) {
-      // Show each break edge as a label next to the bar
+      // Reverse break labels so the highest value is at the top (matching
+      // the 'to top' gradient where high-value colours are at the top).
       html += `<div class="map-legend-ramp-breaks">`;
-      breaks.forEach((b, i) => {
+      const revBreaks = [...breaks].reverse();
+      revBreaks.forEach(b => {
         html += `<div class="map-legend-ramp-break">${Number(b).toFixed(1)}</div>`;
       });
       html += `</div>`;
