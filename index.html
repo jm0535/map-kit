@@ -3778,7 +3778,7 @@
           <button class="composer-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleComposerSidebar()" title="Collapse sidebar">◂</button>
         </div>
         <div class="composer-sidebar-scroll">
-          <details class="composer-section" open>
+          <details class="composer-section">
             <summary>&#x1F5FA; Map</summary>
             <div class="composer-section-body">
               <button class="lock-btn" id="lock-main-btn" type="button" onclick="toggleLayoutLock('main')" title="Unlock to edit the main map's pan/zoom independently of the source map. Locked = mirrors source map.">
@@ -3792,7 +3792,7 @@
               </label>
             </div>
           </details>
-          <details class="composer-section" open>
+          <details class="composer-section">
             <summary>&#x1F4C4; Paper</summary>
             <div class="composer-section-body">
               <select id="layout-paper-size" onchange="onLayoutPaperChange()" title="Paper size preset">
@@ -3817,7 +3817,7 @@
               <input type="number" id="layout-grid-size" value="10" min="2" max="100" onchange="onLayoutSnapGridChange()" style="width:60px;padding:4px 6px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
             </div>
           </details>
-          <details class="composer-section" open>
+          <details class="composer-section">
             <summary>&#x1F4DD; Title &amp; Text</summary>
             <div class="composer-section-body">
               <input type="text" id="layout-title-input" placeholder="Map title…" oninput="onLayoutTitleChange()" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
@@ -3847,7 +3847,7 @@
               <input type="number" id="layout-grid-interval" placeholder="Auto interval" step="0.1" min="0.1" onchange="onLayoutGridIntervalChange()" title="Override grid interval in degrees (blank = auto)" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:11px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:4px;">
             </div>
           </details>
-          <details class="composer-section" open>
+          <details class="composer-section">
             <summary>&#x1F4CF; Scale Bar</summary>
             <div class="composer-section-body">
               <select id="layout-scalebar-style" onchange="onLayoutScalebarChange()" title="Scalebar style (QGIS/ArcGIS conventions)">
