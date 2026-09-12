@@ -9174,6 +9174,7 @@ function confirmBuffer() {
   if (!features || features.length === 0) return;
   const distM = distKm * 1000;
   const bufferCircles = [];
+  const bufferFeatures = [];
   features.forEach(f => {
     if (!f.geometry) return;
     const centers = [];
@@ -9188,9 +9189,18 @@ function confirmBuffer() {
       const circle = L.circle([c[1], c[0]], {radius:distM, color:'#f6e05e', weight:1.5, dashArray:'4 3', fillColor:'#f6e05e', fillOpacity:0.08});
       analysisOverlays.push(circle);
       bufferCircles.push(circle);
+      // Approximate the buffer as a polygon (circle = 64-segment polygon)
+      const pts = [];
+      for (let a = 0; a <= 360; a += 360/64) {
+        const rad = a * Math.PI / 180;
+        const dx = distM * Math.cos(rad) / 111000;
+        const dy = distM * Math.sin(rad) / (111000 * Math.cos(c[1] * Math.PI / 180) || 1);
+        pts.push([c[0] + dx, c[1] + dy]);
+      }
+      bufferFeatures.push({type:'Feature',geometry:{type:'Polygon',coordinates:[pts]},properties:{buffer_km:distKm}});
     });
   });
-  addAnalysisLayer(`Buffer ${distKm}km`, bufferCircles, null);
+  addAnalysisLayer(`Buffer ${distKm}km`, bufferCircles, {type:'FeatureCollection',features:bufferFeatures});
   showResult(`<b>Buffer</b><br>Distance: ${distKm} km<br>Applied to ${features.length} features - added as layer<br><span style="color:var(--text-muted)">Note: Circular approximation per vertex. For true geometric buffers, use QGIS or PostGIS.</span>`);
 }
 
@@ -10374,6 +10384,7 @@ function runAnalysis(tool) {
       }
     }
     const vColors = ['#f56565','#48bb78','#4299e1','#ed8936','#9f7aea','#ed64a6','#38b2ac','#ecc94b','#667eea','#fc8181'];
+    const voronoiFeatures = [];
     voronoiPolys.forEach((cells, i) => {
       if (cells.length === 0) return;
       cells.forEach(([lat, lon]) => {
@@ -10383,9 +10394,10 @@ function runAnalysis(tool) {
           color: vColors[i%vColors.length], weight:0, fillColor: vColors[i%vColors.length], fillOpacity:0.2
         }).addTo(map);
         analysisOverlays.push(rect);
+        voronoiFeatures.push({type:'Feature',geometry:{type:'Polygon',coordinates:[[[lon-dLon,lat-dLat],[lon+dLon,lat-dLat],[lon+dLon,lat+dLat],[lon-dLon,lat+dLat],[lon-dLon,lat-dLat]]]},properties:{region:i+1}});
       });
     });
-    addAnalysisLayer('Voronoi', analysisOverlays.slice(), null);
+    addAnalysisLayer('Voronoi', analysisOverlays.slice(), {type:'FeatureCollection',features:voronoiFeatures});
     showResult(`<b>Voronoi / Thiessen Polygons</b><br>${pts.length} regions created<br><span style="color:var(--text-muted)">Each color = nearest-point territory. Added as layer.</span>`);
     break;
   }
