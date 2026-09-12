@@ -1600,7 +1600,7 @@
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
-    font-family: Inter, system-ui, sans-serif !important;
+    font-family: Inter, system-ui, sans-serif;
     white-space: nowrap;
     pointer-events: none;
     /* Halo via text-shadow stack - 8 directions for clean outline */
@@ -6692,7 +6692,7 @@ function openLabelPopover(id, btn) {
       </div>
       <div class="lp-section-title">Font</div>
       <div class="lp-row"><label>Family</label>
-        <select onchange="updateLabelStyle('${id}','font',this.value)">
+        <select onchange="updateLabelStyle('${id}','font',this.value);_lpUpdatePreview('${id}')">
           <option value="Inter, system-ui, sans-serif" ${style.font.startsWith('Inter')?'selected':''}>Inter (default)</option>
           <option value="Arial, sans-serif" ${style.font.startsWith('Arial')?'selected':''}>Arial</option>
           <option value="Georgia, serif" ${style.font.startsWith('Georgia')?'selected':''}>Georgia</option>
