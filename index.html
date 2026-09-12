@@ -4567,11 +4567,34 @@ function initLegendState(info) {
     refreshMapLegend();
     return;
   }
+  // Read the actual style from the first Leaflet sub-layer so the
+  // symbology panel and composer reflect what's rendered on the map.
+  let fillColor = info.color, strokeColor = '#ffffff';
+  let fillOpacity = 0.8, strokeOpacity = 0.9, strokeWeight = 1.2;
+  let strokeDashArray = null;
+  if (info.layer && typeof info.layer.eachLayer === 'function') {
+    info.layer.eachLayer(sub => {
+      if (sub.options) {
+        if (sub.options.fillColor) fillColor = sub.options.fillColor;
+        if (sub.options.color) strokeColor = sub.options.color;
+        if (sub.options.fillOpacity != null) fillOpacity = sub.options.fillOpacity;
+        if (sub.options.opacity != null) strokeOpacity = sub.options.opacity;
+        if (sub.options.weight != null) strokeWeight = sub.options.weight;
+        if (sub.options.dashArray) strokeDashArray = sub.options.dashArray;
+      }
+    });
+  }
   legendState[info.id] = {
     mode: 'simple',
     color: info.color,
     geomType: _detectGeomType(info),
     shape: null,
+    fillColor: fillColor,
+    strokeColor: strokeColor,
+    fillOpacity: fillOpacity,
+    strokeOpacity: strokeOpacity,
+    strokeWeight: strokeWeight,
+    strokeDashArray: strokeDashArray,
   };
   refreshMapLegend();
 }
@@ -7164,6 +7187,15 @@ function _buildVectorSymbologyBody(info) {
   const attrs = [...new Set(info.properties.flatMap(Object.keys))];
   const attrOpts = attrs.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
   const id = info.id;
+  // Read the actual style from legendState (populated by initLegendState
+  // from the Leaflet layer's options) so the panel reflects what's on the map.
+  const sym = legendState[id] || {};
+  const fillColor = sym.fillColor || info.color;
+  const strokeColor = sym.strokeColor || '#ffffff';
+  const fillOpPct = Math.round((sym.fillOpacity != null ? sym.fillOpacity : 0.8) * 100);
+  const strokeOpPct = Math.round((sym.strokeOpacity != null ? sym.strokeOpacity : 0.9) * 100);
+  const strokeW = sym.strokeWeight != null ? sym.strokeWeight : 1.2;
+  const strokeStyleName = _dashArrayToStyle(sym.strokeDashArray);
 
   return `
     <!-- Renderer tabs (segmented control) -->
@@ -7177,33 +7209,33 @@ function _buildVectorSymbologyBody(info) {
     <div class="sym-body active" data-tab="simple">
       <div class="sym-field">
         <label class="sym-label">Fill</label>
-        <input type="color" value="${info.color}" onchange="recolorLayer('${id}',this.value)">
+        <input type="color" value="${fillColor}" onchange="recolorLayer('${id}',this.value)">
         ${hasPoints ? `<label class="sym-label" style="flex:0 0 auto;margin-left:8px;">Size</label>
           <input type="number" value="7" min="3" max="30" style="width:52px" onchange="resizeLayer('${id}',this.value)">` : ''}
       </div>
       <div class="sym-field">
         <label class="sym-label">Fill Opacity</label>
-        <input type="range" min="0" max="100" value="80" oninput="fillOpacityLayer('${id}',this.value)" style="flex:1;">
-        <span class="sym-opacity-val" id="fill-opacity-val-${id}" style="min-width:36px;text-align:right;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">80%</span>
+        <input type="range" min="0" max="100" value="${fillOpPct}" oninput="fillOpacityLayer('${id}',this.value)" style="flex:1;">
+        <span class="sym-opacity-val" id="fill-opacity-val-${id}" style="min-width:36px;text-align:right;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${fillOpPct}%</span>
       </div>
       <div class="sym-field">
         <label class="sym-label">Stroke Opacity</label>
-        <input type="range" min="0" max="100" value="90" oninput="strokeOpacityLayer('${id}',this.value)" style="flex:1;">
-        <span class="sym-opacity-val" id="stroke-opacity-val-${id}" style="min-width:36px;text-align:right;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">90%</span>
+        <input type="range" min="0" max="100" value="${strokeOpPct}" oninput="strokeOpacityLayer('${id}',this.value)" style="flex:1;">
+        <span class="sym-opacity-val" id="stroke-opacity-val-${id}" style="min-width:36px;text-align:right;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">${strokeOpPct}%</span>
       </div>
       <div class="sym-field">
         <label class="sym-label">Stroke</label>
-        <input type="color" value="#ffffff" onchange="strokeColorLayer('${id}',this.value)">
+        <input type="color" value="${strokeColor}" onchange="strokeColorLayer('${id}',this.value)">
         <label class="sym-label" style="flex:0 0 auto;margin-left:8px;">Width</label>
-        <input type="number" value="1.2" min="0" max="10" step="0.5" style="width:52px" onchange="strokeWidthLayer('${id}',this.value)">
+        <input type="number" value="${strokeW}" min="0" max="10" step="0.5" style="width:52px" onchange="strokeWidthLayer('${id}',this.value)">
       </div>
       <div class="sym-field">
         <label class="sym-label">Style</label>
         <select onchange="strokeStyleLayer('${id}',this.value)">
-          <option value="solid">Solid</option>
-          <option value="dash">Dashed</option>
-          <option value="dot">Dotted</option>
-          <option value="dashdot">Dash-Dot</option>
+          <option value="solid"${strokeStyleName === 'solid' ? ' selected' : ''}>Solid</option>
+          <option value="dash"${strokeStyleName === 'dash' ? ' selected' : ''}>Dashed</option>
+          <option value="dot"${strokeStyleName === 'dot' ? ' selected' : ''}>Dotted</option>
+          <option value="dashdot"${strokeStyleName === 'dashdot' ? ' selected' : ''}>Dash-Dot</option>
         </select>
       </div>
       ${hasPoints ? `
@@ -7862,6 +7894,23 @@ const DASH_PATTERNS = {
   dot: '2 4',
   dashdot: '10 4 2 4',
 };
+
+// Reverse-lookup: map a dashArray string back to a style name.
+// Handles common patterns used by analysis layers (e.g. '6 4', '4 3').
+function _dashArrayToStyle(dashArray) {
+  if (!dashArray) return 'solid';
+  const da = dashArray.trim();
+  // Exact match first
+  for (const [name, pat] of Object.entries(DASH_PATTERNS)) {
+    if (da === pat) return name;
+  }
+  // Heuristic: two-number pattern with first > 3 → dash
+  const parts = da.split(/[\s,]+/).map(Number);
+  if (parts.length === 2 && parts[0] > 3) return 'dash';
+  if (parts.length === 2 && parts[0] <= 3) return 'dot';
+  if (parts.length >= 3) return 'dashdot';
+  return 'dash';
+}
 
 function strokeStyleLayer(id, style) {
   const info = uploadedLayers.find(l=>l.id===id);
