@@ -516,13 +516,33 @@ body {
       <tbody>
         <tr><td><b>&#x1F534; Single Symbol</b></td><td>Fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Marker shapes: circle, square, triangle, diamond, star, cross.</td></tr>
         <tr><td><b>&#x1F7E2; Categorized</b></td><td>One colour per unique value of a chosen attribute. Click legend entries on the map to rename them.</td></tr>
-        <tr><td><b>&#x1F7E1; Graduated</b></td><td>Numeric attribute divided into 2-10 classes along a colour ramp (Viridis, Heat, Cool, Terrain). Choose classification method and number of classes.</td></tr>
+        <tr><td><b>&#x1F7E1; Graduated</b></td><td>Numeric attribute divided into 2-10 classes along a colour ramp. Choose classification method (Equal Interval, Quantile, Natural Breaks, Manual) and number of classes. 21 colour ramps available (see below).</td></tr>
       </tbody>
     </table>
     <p><b>&#x21BB; Reset</b> returns the layer to its default style.</p>
+    <h3>Colour ramps</h3>
+    <p>GeoSpaX provides 21 colour ramps for vector graduated symbology and 22 palettes for raster/heat/IDW layers, organised into five categories:</p>
+    <table class="ug-table">
+      <thead><tr><th>Category</th><th>Ramps</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr><td><b>Sequential (multi-hue)</b></td><td>Viridis, Inferno, Plasma, Magma</td><td>Perceptually uniform, colour-blind safe. Low &rarr; high values.</td></tr>
+        <tr><td><b>Sequential (single-hue)</b></td><td>Greys, Blues, Greens, Reds, Oranges, Purples</td><td>Light &rarr; dark. Best for ordinal data.</td></tr>
+        <tr><td><b>Diverging</b></td><td>Spectral, Red-Yellow-Green, Red-Blue, Brown-Teal, Purple-Green</td><td>Two hues meeting in the middle. Best for data with a meaningful midpoint (e.g. zero, mean).</td></tr>
+        <tr><td><b>Thematic</b></td><td>Heat, Cool, Terrain, Yellow-Red-Green, Hot</td><td>Custom ramps for specific use cases.</td></tr>
+        <tr><td><b>Qualitative</b></td><td>Accent, Set 1, Dark 2</td><td>Discrete colours for categorical data. Not for ordered data.</td></tr>
+      </tbody>
+    </table>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Choosing a ramp</div>
+      For <b>habitat scores</b> (0 = unsuitable &rarr; 3 = optimal), use a sequential ramp like <b>Greens</b> or <b>Viridis</b> so darker/brighter = better habitat. For <b>elevation</b> or <b>temperature</b>, use <b>Terrain</b> or <b>Spectral</b>. For <b>deviation from a mean</b>, use a <b>diverging</b> ramp (Red-Blue).
+    </div>
     <div class="ug-screenshot">
       <img src="practical_assignment/screenshots/ug_graduated_symbology.png" alt="Graduated symbology on tree_cover_pct field">
       <div class="caption">&#x1F7E1; Graduated symbology applied to the tree_cover_pct field on the Emperor Bird-of-paradise sample data, showing 5 classes along the Viridis colour ramp.</div>
+    </div>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; On-map legend &mdash; break label order</div>
+      The on-map legend shows a vertical gradient bar with break values listed top-to-bottom: <b>highest value at the top</b> (matching the high-value colour at the top of the bar), <b>lowest value at the bottom</b>. The Map Composer legend uses a horizontal gradient bar with the lowest value on the left and the highest on the right. Both match the Symbology panel's class display.
     </div>
     <h3>Raster symbology</h3>
     <p>For GeoTIFF layers, the Symbology panel offers:</p>
@@ -530,7 +550,7 @@ body {
       <thead><tr><th>Control</th><th>Options</th></tr></thead>
       <tbody>
         <tr><td><b>Band</b></td><td>Select which band to display (0-based)</td></tr>
-        <tr><td><b>Colour ramp</b></td><td>Viridis, Heat, Cool, Terrain, Greyscale</td></tr>
+        <tr><td><b>Colour ramp</b></td><td>22 palettes: Thermal, Viridis, Inferno, Plasma, Magma, Greys, Blues, Greens, Reds, Oranges, Purples, Spectral, Red-Yellow-Green, Red-Blue, Brown-Teal, Purple-Green, Terrain, Cool, Heat, Hot, Yellow-Red-Green, Singleband gray</td></tr>
         <tr><td><b>Min / Max</b></td><td>Stretch range. Click &#x21BB; to reset to actual data range.</td></tr>
         <tr><td><b>Render mode</b></td><td><i>Continuous</i> (smooth gradient) or <i>Classified</i> (discrete steps)</td></tr>
         <tr><td><b>Classified</b></td><td>Set number of classes; click <b>Apply</b> to render. <b>Reset to recommended</b> restores defaults.</td></tr>
@@ -1030,9 +1050,9 @@ body {
     </table>
     <h3>Output settings</h3>
     <ul>
-      <li><b>Output field name</b> - the new column name (e.g. <code>score</code>)</li>
+      <li><b>Output field name</b> - the new column name (e.g. <code>habitat_score</code>). If the name already exists, the field is <b>overwritten in place</b> (values updated). If the name is new, a new field is created. This matches QGIS and ArcGIS Pro behaviour.</li>
       <li><b>Output type</b> - Integer, Decimal, or Text</li>
-      <li><b>Style layer on this field</b> - automatically apply graduated (numeric) or categorized (text) symbology</li>
+      <li><b>Style layer on this field</b> - checked (default): automatically applies graduated (numeric) or categorized (text) symbology. Unchecked: the field is created but the layer keeps its current styling. If the layer was previously styled by a calculated field, unchecking this resets it to simple single-colour symbology.</li>
     </ul>
     <h3>Expression mode</h3>
     <div class="ug-tool-desc">
@@ -1068,6 +1088,22 @@ body {
       </tbody>
     </table>
     <div class="ug-tool-desc">This is not a suitability model and not a distribution model. You choose the tests, weights, and meaning. Copy the expression into your methods and record the GeoSpaX version from the page footer and the access date.</div>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Habitat proxy scores &mdash; what the numbers mean</div>
+      A <code>habitat_score</code> is a simple count of how many of your environmental criteria each occurrence point meets. For three equal-weight criteria:
+      <table class="ug-table" style="margin-top:6px;">
+        <thead><tr><th>Score</th><th>Meaning</th><th>Conservation interpretation</th></tr></thead>
+        <tbody>
+          <tr><td><b>3</b></td><td>Meets all 3 criteria</td><td>Best habitat &mdash; optimal conditions for the species</td></tr>
+          <tr><td><b>2</b></td><td>Meets 2 of 3 criteria</td><td>Good habitat &mdash; mostly suitable</td></tr>
+          <tr><td><b>1</b></td><td>Meets 1 criterion</td><td>Marginal habitat &mdash; suboptimal, possibly edge or transition zones</td></tr>
+          <tr><td><b>0</b></td><td>Meets none</td><td>Unsuitable &mdash; outside the species' environmental tolerance</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:6px;"><b>More than 3 criteria:</b> The score scales automatically. With 5 criteria the range is 0&ndash;5; with 8 (the maximum in weighted-conditions mode) the range is 0&ndash;8. In expression mode there is no limit. When styling, set the number of classes to match your criteria count + 1 (e.g. 6 classes for 5 criteria: 0, 1, 2, 3, 4, 5), or use <b>Manual</b> breaks to set exact class boundaries.</p>
+      <p style="margin-top:6px;"><b>Weighted conditions:</b> Each row contributes a weight (default 1). The score is the sum of weights where tests pass. Use weights > 1 when one criterion is more important than others (e.g. tree cover might count double).</p>
+      <p style="margin-top:6px;"><b>Important:</b> This is <b>not</b> a species distribution model (SDM) and <b>not</b> a habitat suitability model. It is a transparent, rule-based proxy. Each threshold must be justified by literature for your specific species.</p>
+    </div>
     <div class="ug-callout">
       <div class="label">&#x1F4A1; Where is the new field stored?</div>
       The calculated field is written <b>directly onto the original layer's features</b> &mdash; it is not a copy or a separate analysis layer. Every feature in the layer now has the new attribute alongside its original fields. The field appears immediately in:
