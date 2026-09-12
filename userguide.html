@@ -1068,6 +1068,40 @@ body {
       </tbody>
     </table>
     <div class="ug-tool-desc">This is not a suitability model and not a distribution model. You choose the tests, weights, and meaning. Copy the expression into your methods and record the GeoSpaX version from the page footer and the access date.</div>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Where is the new field stored?</div>
+      The calculated field is written <b>directly onto the original layer's features</b> &mdash; it is not a copy or a separate analysis layer. Every feature in the layer now has the new attribute alongside its original fields. The field appears immediately in:
+      <ul>
+        <li>The <b>Feature Info</b> panel (click any point)</li>
+        <li>The <b>Attribute Table</b> (open the table for the layer)</li>
+        <li>The <b>Symbology</b> Graduated / Categorized column dropdowns</li>
+        <li>The <b>Analysis</b> attribute and filter dropdowns</li>
+        <li>The <b>Conservation</b> priority score field dropdown</li>
+        <li>The <b>WLC suitability</b> panel field dropdowns</li>
+      </ul>
+    </div>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Exporting the layer with the new field</div>
+      Because the field is on the original layer, you export it the same way you export any layer:
+      <ol>
+        <li>Open the <b>&#x1F4BE; Export</b> panel (left sidebar)</li>
+        <li>Go to <b>Per-Layer Export</b></li>
+        <li>Select your layer from the dropdown</li>
+        <li>Set the <b>Output filename</b> (e.g. <code>Paradisaea_guilielmi_with_habitat_score</code>)</li>
+        <li>Choose the <b>Output CRS</b> (WGS 84 or UTM auto-detect)</li>
+        <li>Choose the <b>Format</b>:
+          <ul>
+            <li><b>GeoJSON</b> &mdash; best for re-importing into GeoSpaX or QGIS</li>
+            <li><b>CSV</b> &mdash; best for Excel or R/Python analysis</li>
+            <li><b>XLSX</b> &mdash; Excel workbook with the new field as a column</li>
+            <li><b>Shapefile</b> &mdash; for ArcGIS (zipped .shp/.dbf/.prj/.shx)</li>
+            <li><b>KML</b> &mdash; for Google Earth</li>
+          </ul>
+        </li>
+        <li>Click <b>&#x1F4BE; Export Layer</b></li>
+      </ol>
+      The exported file includes <b>all original fields plus the calculated field</b>. You can re-import the exported file into GeoSpaX later and the calculated field will be available for styling, filtering, and analysis.
+    </div>
     <div class="ug-screenshot">
       <img src="practical_assignment/screenshots/ug_calcfield_results.png" alt="Calculate Field results showing habitat_score output">
       <div class="caption">&#x1F9EE; Calculate Field (Weighted conditions mode) producing a habitat_score from elevation, tree cover, and rainfall on the Emperor Bird-of-paradise sample data. The results panel shows feature count, min/max/mean, and the exact expression used.</div>
