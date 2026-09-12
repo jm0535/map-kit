@@ -12563,10 +12563,17 @@ function _rebuildLegend(visibleLayers) {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:4px 0;';
       const dot = document.createElement('span');
-      dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${info.color || '#63b3ed'};border:1px solid #1a202c;flex-shrink:0;`;
+      const geomType = sym ? sym.geomType : 'Point';
+      const symColor = info.color || '#63b3ed';
       if (sym && sym.mode === 'categorized') {
-        dot.style.borderRadius = '2px';
-        dot.style.width = '14px'; dot.style.height = '8px';
+        dot.style.cssText = `display:inline-block;width:14px;height:8px;border-radius:2px;background:${symColor};border:1px solid #1a202c;flex-shrink:0;`;
+      } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
+        dot.style.cssText = `display:inline-block;width:16px;height:3px;border-radius:1px;background:${symColor};flex-shrink:0;`;
+      } else if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
+        dot.style.cssText = `display:inline-block;width:12px;height:8px;border-radius:2px;background:${symColor}40;border:1.5px solid ${symColor};flex-shrink:0;`;
+      } else {
+        // Point (default)
+        dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${symColor};border:1px solid #1a202c;flex-shrink:0;`;
       }
       row.appendChild(dot);
       const name = document.createElement('span');
