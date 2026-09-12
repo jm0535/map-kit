@@ -11591,6 +11591,211 @@ function _startLayoutItemResize(e, el, paper, cfg) {
   document.addEventListener('mouseup', onUp);
 }
 
+// Rebuild only the legend DOM inside the layout paper. This is a lightweight
+// rerender that does NOT dispose/recreate the map, so it is safe to call from
+// legend management callbacks (checkbox, label, reorder) and from the
+// legend title/subtitle inputs. `visibleLayers` is optional; when omitted it
+// is recomputed from the current composer state.
+function _rebuildLegend(visibleLayers) {
+  const legendEl = document.getElementById('layout-legend');
+  if (!legendEl) return;
+  const inclLegEl = document.getElementById('layout-include-legend');
+  const inclLeg = inclLegEl ? inclLegEl.checked : true;
+  if (!visibleLayers) {
+    visibleLayers = isComposerPopout
+      ? uploadedLayers.filter(l => l._composerVisible)
+      : uploadedLayers.filter(l => map.hasLayer(l.layer));
+  }
+  const paper = document.getElementById('layout-paper');
+  if (inclLeg) {
+    legendEl.style.display = 'block';
+    legendEl.innerHTML = '';
+    // Legend title (editable from sidebar; defaults to "Legend")
+    const legendTitleInput = document.getElementById('layout-legend-title-input');
+    const legendSubInput = document.getElementById('layout-legend-subtitle-input');
+    const legendTitleText = (legendTitleInput && legendTitleInput.value.trim()) ? legendTitleInput.value.trim() : 'Legend';
+    const legendSubText = legendSubInput ? legendSubInput.value.trim() : '';
+    const head = document.createElement('div');
+    head.className = 'layout-legend-handle';
+    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:var(--text);border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;cursor:move;';
+    head.textContent = legendTitleText;
+    if (legendSubText) {
+      const sub = document.createElement('div');
+      sub.className = 'layout-legend-subtitle';
+      sub.textContent = legendSubText;
+      head.appendChild(sub);
+    }
+    legendEl.appendChild(head);
+    if (visibleLayers.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'font-size:9px;color:#718096;font-style:italic;padding:4px 0;';
+      empty.textContent = 'No visible layers';
+      legendEl.appendChild(empty);
+    }
+    // Apply legend overrides: filter hidden layers, reorder, and rename
+    let orderedLayers = visibleLayers.slice();
+    if (_legendOrder && _legendOrder.length) {
+      orderedLayers.sort((a, b) => {
+        const ka = _getLegendLayerKey(a), kb = _getLegendLayerKey(b);
+        const ia = _legendOrder.indexOf(ka), ib = _legendOrder.indexOf(kb);
+        if (ia === -1 && ib === -1) return 0;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+    }
+    orderedLayers = orderedLayers.filter(info => {
+      const key = _getLegendLayerKey(info);
+      const ov = _legendOverrides[key];
+      return !ov || ov.visible !== false;
+    });
+    orderedLayers.forEach(info => {
+      const key = _getLegendLayerKey(info);
+      const ov = _legendOverrides[key];
+      const displayName = (ov && ov.label) ? ov.label : info.name;
+      const sym = legendState[info.id];
+
+      // RASTER (heat / IDW / weighted density): stacked layout with a wide gradient bar.
+      if (sym && sym.mode === 'raster' && sym.ramp) {
+        const block = document.createElement('div');
+        block.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin:6px 0 4px 0;';
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-weight:600;font-size:10px;color:#1a202c;';
+        nameEl.textContent = displayName;
+        block.appendChild(nameEl);
+        if (sym.attrName) {
+          const attrEl = document.createElement('div');
+          attrEl.style.cssText = 'font-size:9px;color:#4a5568;font-style:italic;';
+          attrEl.textContent = sym.attrName;
+          block.appendChild(attrEl);
+        }
+        const u = sym.units ? ' ' + sym.units : '';
+        const cls = sym.classification;
+        if (cls && cls.method === 'continuous') {
+          const bar = document.createElement('div');
+          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
+          block.appendChild(bar);
+          const labels = document.createElement('div');
+          labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
+          const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
+          const mid = (sym.minVal != null && sym.maxVal != null)
+            ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
+          const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
+          if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
+          const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
+          block.appendChild(labels);
+          legendEl.appendChild(block);
+          return;
+        }
+        if (cls && Array.isArray(cls.breaks) && cls.breaks.length >= 2) {
+          const { gradient } = buildClassifiedGradientCss(cls.breaks, sym.ramp, 'to right');
+          const bar = document.createElement('div');
+          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:${gradient};`;
+          block.appendChild(bar);
+          const ticks = document.createElement('div');
+          ticks.style.cssText = 'position:relative;height:11px;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const mn = cls.breaks[0], mx = cls.breaks[cls.breaks.length - 1];
+          const span = (mx - mn) || 1;
+          cls.breaks.forEach((b, i) => {
+            const pct = ((b - mn) / span) * 100;
+            let transform = 'translateX(-50%)';
+            if (i === 0) transform = 'translateX(0)';
+            else if (i === cls.breaks.length - 1) transform = 'translateX(-100%)';
+            const sp = document.createElement('span');
+            sp.style.cssText = `position:absolute;left:${pct.toFixed(2)}%;transform:${transform};white-space:nowrap;`;
+            sp.textContent = _formatRasterTick(b) + (i === 0 || i === cls.breaks.length - 1 ? u : '');
+            ticks.appendChild(sp);
+          });
+          block.appendChild(ticks);
+        } else {
+          const bar = document.createElement('div');
+          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
+          block.appendChild(bar);
+          const labels = document.createElement('div');
+          labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
+          const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
+          const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
+          const mid = (sym.minVal != null && sym.maxVal != null)
+            ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
+          const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
+          if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
+          const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
+          block.appendChild(labels);
+        }
+        legendEl.appendChild(block);
+        return;
+      }
+
+      // GRADUATED: small vertical ramp bar next to layer name.
+      if (sym && sym.mode === 'graduated' && sym.ramp) {
+        const block = document.createElement('div');
+        block.style.cssText = 'display:flex;align-items:stretch;gap:6px;margin:4px 0;';
+        const bar = document.createElement('div');
+        bar.style.cssText = `width:10px;height:36px;border-radius:2px;border:1px solid #1a202c;background:linear-gradient(${sym.ramp.join(',')});flex-shrink:0;`;
+        block.appendChild(bar);
+        const right = document.createElement('div');
+        right.style.cssText = 'display:flex;flex-direction:column;justify-content:space-between;';
+        const nameEl = document.createElement('div');
+        nameEl.textContent = displayName;
+        nameEl.style.cssText = 'font-size:10px;line-height:1.1;';
+        right.appendChild(nameEl);
+        const range = document.createElement('div');
+        range.style.cssText = 'font-size:9px;color:#4a5568;';
+        const lo = sym.minVal != null ? Number(sym.minVal).toFixed(1) : '';
+        const hi = sym.maxVal != null ? Number(sym.maxVal).toFixed(1) : '';
+        range.textContent = (lo || hi) ? `${lo} - ${hi}` : '';
+        right.appendChild(range);
+        block.appendChild(right);
+        legendEl.appendChild(block);
+        return;
+      }
+
+      // SIMPLE / CATEGORIZED title row.
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:4px 0;';
+      const dot = document.createElement('span');
+      dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${info.color || '#63b3ed'};border:1px solid #1a202c;flex-shrink:0;`;
+      if (sym && sym.mode === 'categorized') {
+        dot.style.borderRadius = '2px';
+        dot.style.width = '14px'; dot.style.height = '8px';
+      }
+      row.appendChild(dot);
+      const name = document.createElement('span');
+      name.textContent = displayName;
+      row.appendChild(name);
+      legendEl.appendChild(row);
+
+      // For categorized, append category swatches under the title.
+      if (sym && sym.mode === 'categorized' && sym.colorMap) {
+        Object.entries(sym.colorMap).forEach(([val, c]) => {
+          const sub = document.createElement('div');
+          sub.style.cssText = 'display:flex;align-items:center;gap:6px;margin:2px 0 2px 6px;';
+          const sw = document.createElement('span');
+          sw.style.cssText = `display:inline-block;width:10px;height:10px;background:${c};border:1px solid #1a202c;flex-shrink:0;border-radius:2px;`;
+          sub.appendChild(sw);
+          const lbl = document.createElement('span');
+          lbl.textContent = String(val);
+          lbl.style.cssText = 'font-size:9px;';
+          sub.appendChild(lbl);
+          legendEl.appendChild(sub);
+        });
+      }
+    });
+    // Re-append resize handle - buildLayout's innerHTML='' above wipes the
+    // handle that _initLayoutItemDrag added, so we must restore it.
+    if (!legendEl.querySelector('.layout-resize-handle')) {
+      const rh = document.createElement('div');
+      rh.className = 'layout-resize-handle';
+      rh.title = 'Drag to resize';
+      rh.addEventListener('mousedown', e => _startLayoutItemResize(e, legendEl, paper, LAYOUT_ITEM_CONFIG.find(c => c.id === 'layout-legend')));
+      legendEl.appendChild(rh);
+    }
+  } else {
+    legendEl.style.display = 'none';
+  }
+}
+
 async function buildLayout() {
   const myToken = ++layoutBuildToken;
   const stale = () => myToken !== layoutBuildToken || !layoutMap;
@@ -11894,194 +12099,10 @@ async function buildLayout() {
   // and legendState, which are available now. Building it before the await
   // ensures it's always populated even if a newer buildLayout() call makes
   // this one stale during the tile wait.
-  const legendEl = document.getElementById('layout-legend');
-  if (inclLeg) {
-    legendEl.style.display = 'block';
-    legendEl.innerHTML = '';
-    // Legend title (editable from sidebar; defaults to "Legend")
-    const legendTitleInput = document.getElementById('layout-legend-title-input');
-    const legendSubInput = document.getElementById('layout-legend-subtitle-input');
-    const legendTitleText = (legendTitleInput && legendTitleInput.value.trim()) ? legendTitleInput.value.trim() : 'Legend';
-    const legendSubText = legendSubInput ? legendSubInput.value.trim() : '';
-    const head = document.createElement('div');
-    head.className = 'layout-legend-handle';
-    head.style.cssText = 'font-weight:bold;font-size:11px;margin-bottom:6px;color:var(--text);border-bottom:1px solid #1a202c;padding-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;cursor:move;';
-    head.textContent = legendTitleText;
-    if (legendSubText) {
-      const sub = document.createElement('div');
-      sub.className = 'layout-legend-subtitle';
-      sub.textContent = legendSubText;
-      head.appendChild(sub);
-    }
-    legendEl.appendChild(head);
-    if (visibleLayers.length === 0) {
-      const empty = document.createElement('div');
-      empty.style.cssText = 'font-size:9px;color:#718096;font-style:italic;padding:4px 0;';
-      empty.textContent = 'No visible layers';
-      legendEl.appendChild(empty);
-    }
-    // Apply legend overrides: filter hidden layers, reorder, and rename
-    let orderedLayers = visibleLayers.slice();
-    if (_legendOrder && _legendOrder.length) {
-      orderedLayers.sort((a, b) => {
-        const ka = _getLegendLayerKey(a), kb = _getLegendLayerKey(b);
-        const ia = _legendOrder.indexOf(ka), ib = _legendOrder.indexOf(kb);
-        if (ia === -1 && ib === -1) return 0;
-        if (ia === -1) return 1;
-        if (ib === -1) return -1;
-        return ia - ib;
-      });
-    }
-    orderedLayers = orderedLayers.filter(info => {
-      const key = _getLegendLayerKey(info);
-      const ov = _legendOverrides[key];
-      return !ov || ov.visible !== false;
-    });
-    orderedLayers.forEach(info => {
-      const key = _getLegendLayerKey(info);
-      const ov = _legendOverrides[key];
-      const displayName = (ov && ov.label) ? ov.label : info.name;
-      const sym = legendState[info.id];
-
-      // RASTER (heat / IDW / weighted density): stacked layout with a wide gradient bar.
-      if (sym && sym.mode === 'raster' && sym.ramp) {
-        const block = document.createElement('div');
-        block.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin:6px 0 4px 0;';
-        const nameEl = document.createElement('div');
-        nameEl.style.cssText = 'font-weight:600;font-size:10px;color:#1a202c;';
-        nameEl.textContent = displayName;
-        block.appendChild(nameEl);
-        if (sym.attrName) {
-          const attrEl = document.createElement('div');
-          attrEl.style.cssText = 'font-size:9px;color:#4a5568;font-style:italic;';
-          attrEl.textContent = sym.attrName;
-          block.appendChild(attrEl);
-        }
-        const u = sym.units ? ' ' + sym.units : '';
-        const cls = sym.classification;
-        if (cls && cls.method === 'continuous') {
-          const bar = document.createElement('div');
-          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
-          block.appendChild(bar);
-          const labels = document.createElement('div');
-          labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
-          const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
-          const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
-          const mid = (sym.minVal != null && sym.maxVal != null)
-            ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
-          const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
-          if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
-          const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
-          block.appendChild(labels);
-          legendEl.appendChild(block);
-          return;
-        }
-        if (cls && Array.isArray(cls.breaks) && cls.breaks.length >= 2) {
-          const { gradient } = buildClassifiedGradientCss(cls.breaks, sym.ramp, 'to right');
-          const bar = document.createElement('div');
-          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:${gradient};`;
-          block.appendChild(bar);
-          const ticks = document.createElement('div');
-          ticks.style.cssText = 'position:relative;height:11px;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
-          const mn = cls.breaks[0], mx = cls.breaks[cls.breaks.length - 1];
-          const span = (mx - mn) || 1;
-          cls.breaks.forEach((b, i) => {
-            const pct = ((b - mn) / span) * 100;
-            let transform = 'translateX(-50%)';
-            if (i === 0) transform = 'translateX(0)';
-            else if (i === cls.breaks.length - 1) transform = 'translateX(-100%)';
-            const sp = document.createElement('span');
-            sp.style.cssText = `position:absolute;left:${pct.toFixed(2)}%;transform:${transform};white-space:nowrap;`;
-            sp.textContent = _formatRasterTick(b) + (i === 0 || i === cls.breaks.length - 1 ? u : '');
-            ticks.appendChild(sp);
-          });
-          block.appendChild(ticks);
-        } else {
-          const bar = document.createElement('div');
-          bar.style.cssText = `width:100%;min-width:120px;height:9px;border-radius:2px;border:1px solid rgba(0,0,0,0.2);background:linear-gradient(to right, ${sym.ramp.join(',')});`;
-          block.appendChild(bar);
-          const labels = document.createElement('div');
-          labels.style.cssText = 'display:flex;justify-content:space-between;font-size:9px;color:#4a5568;font-variant-numeric:tabular-nums;';
-          const lo = sym.minVal != null ? _formatRasterTick(sym.minVal) : 'low';
-          const hi = sym.maxVal != null ? _formatRasterTick(sym.maxVal) : 'high';
-          const mid = (sym.minVal != null && sym.maxVal != null)
-            ? _formatRasterTick((Number(sym.minVal) + Number(sym.maxVal)) / 2) : '';
-          const loSp = document.createElement('span'); loSp.textContent = lo + u; labels.appendChild(loSp);
-          if (mid) { const midSp = document.createElement('span'); midSp.textContent = mid; labels.appendChild(midSp); }
-          const hiSp = document.createElement('span'); hiSp.textContent = hi + u; labels.appendChild(hiSp);
-          block.appendChild(labels);
-        }
-        legendEl.appendChild(block);
-        return;
-      }
-
-      // GRADUATED: small vertical ramp bar next to layer name.
-      if (sym && sym.mode === 'graduated' && sym.ramp) {
-        const block = document.createElement('div');
-        block.style.cssText = 'display:flex;align-items:stretch;gap:6px;margin:4px 0;';
-        const bar = document.createElement('div');
-        bar.style.cssText = `width:10px;height:36px;border-radius:2px;border:1px solid #1a202c;background:linear-gradient(${sym.ramp.join(',')});flex-shrink:0;`;
-        block.appendChild(bar);
-        const right = document.createElement('div');
-        right.style.cssText = 'display:flex;flex-direction:column;justify-content:space-between;';
-        const nameEl = document.createElement('div');
-        nameEl.textContent = displayName;
-        nameEl.style.cssText = 'font-size:10px;line-height:1.1;';
-        right.appendChild(nameEl);
-        const range = document.createElement('div');
-        range.style.cssText = 'font-size:9px;color:#4a5568;';
-        const lo = sym.minVal != null ? Number(sym.minVal).toFixed(1) : '';
-        const hi = sym.maxVal != null ? Number(sym.maxVal).toFixed(1) : '';
-        range.textContent = (lo || hi) ? `${lo} - ${hi}` : '';
-        right.appendChild(range);
-        block.appendChild(right);
-        legendEl.appendChild(block);
-        return;
-      }
-
-      // SIMPLE / CATEGORIZED title row.
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:6px;margin:4px 0;';
-      const dot = document.createElement('span');
-      dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${info.color || '#63b3ed'};border:1px solid #1a202c;flex-shrink:0;`;
-      if (sym && sym.mode === 'categorized') {
-        dot.style.borderRadius = '2px';
-        dot.style.width = '14px'; dot.style.height = '8px';
-      }
-      row.appendChild(dot);
-      const name = document.createElement('span');
-      name.textContent = displayName;
-      row.appendChild(name);
-      legendEl.appendChild(row);
-
-      // For categorized, append category swatches under the title.
-      if (sym && sym.mode === 'categorized' && sym.colorMap) {
-        Object.entries(sym.colorMap).forEach(([val, c]) => {
-          const sub = document.createElement('div');
-          sub.style.cssText = 'display:flex;align-items:center;gap:6px;margin:2px 0 2px 6px;';
-          const sw = document.createElement('span');
-          sw.style.cssText = `display:inline-block;width:10px;height:10px;background:${c};border:1px solid #1a202c;flex-shrink:0;border-radius:2px;`;
-          sub.appendChild(sw);
-          const lbl = document.createElement('span');
-          lbl.textContent = String(val);
-          lbl.style.cssText = 'font-size:9px;';
-          sub.appendChild(lbl);
-          legendEl.appendChild(sub);
-        });
-      }
-    });
-    // Re-append resize handle - buildLayout's innerHTML='' above wipes the
-    // handle that _initLayoutItemDrag added, so we must restore it.
-    if (!legendEl.querySelector('.layout-resize-handle')) {
-      const rh = document.createElement('div');
-      rh.className = 'layout-resize-handle';
-      rh.title = 'Drag to resize';
-      rh.addEventListener('mousedown', e => _startLayoutItemResize(e, legendEl, paper, LAYOUT_ITEM_CONFIG.find(c => c.id === 'layout-legend')));
-      legendEl.appendChild(rh);
-    }
-  } else {
-    legendEl.style.display = 'none';
-  }
+  _rebuildLegend(visibleLayers);
+  // Populate the legend management sidebar now - it only needs uploadedLayers
+  // and _composerVisible flags, both available before tiles finish loading.
+  _populateLegendManagement();
 
   // ── Wait for basemap tiles to actually load (longer at high zoom) ──
   const tileTimeout = layoutMap.getZoom() >= 14 ? 10000 : 5000;
@@ -12805,33 +12826,12 @@ function onLayoutCrsTextChange() {
 
 // Legend title - live update of the legend header text
 function onLegendTitleChange() {
-  const head = document.querySelector('#layout-legend .layout-legend-handle');
-  if (!head) return;
-  const input = document.getElementById('layout-legend-title-input');
-  const text = (input && input.value.trim()) ? input.value.trim() : 'Legend';
-  // Preserve subtitle element if present
-  const sub = head.querySelector('.layout-legend-subtitle');
-  head.textContent = text;
-  if (sub) head.appendChild(sub);
+  _rebuildLegend();
 }
 
 // Legend subtitle - live update of the legend subtitle text
 function onLegendSubtitleChange() {
-  const head = document.querySelector('#layout-legend .layout-legend-handle');
-  if (!head) return;
-  const input = document.getElementById('layout-legend-subtitle-input');
-  const text = input ? input.value.trim() : '';
-  let sub = head.querySelector('.layout-legend-subtitle');
-  if (text) {
-    if (!sub) {
-      sub = document.createElement('div');
-      sub.className = 'layout-legend-subtitle';
-      head.appendChild(sub);
-    }
-    sub.textContent = text;
-  } else if (sub) {
-    sub.remove();
-  }
+  _rebuildLegend();
 }
 
 // North arrow style change
@@ -12907,12 +12907,14 @@ function _populateLegendManagement() {
     chk.onchange = () => {
       _legendOverrides[key] = _legendOverrides[key] || {};
       _legendOverrides[key].visible = chk.checked;
+      _rebuildLegend();
     };
     const txt = document.createElement('input');
     txt.type = 'text'; txt.value = ov.label; txt.placeholder = key;
     txt.onchange = () => {
       _legendOverrides[key] = _legendOverrides[key] || {};
       _legendOverrides[key].label = txt.value || key;
+      _rebuildLegend();
     };
     const upBtn = document.createElement('button');
     upBtn.className = 'lm-btn'; upBtn.textContent = '▲'; upBtn.title = 'Move up';
@@ -12920,6 +12922,7 @@ function _populateLegendManagement() {
       if (idx > 0) {
         [_legendOrder[idx - 1], _legendOrder[idx]] = [_legendOrder[idx], _legendOrder[idx - 1]];
         _populateLegendManagement();
+        _rebuildLegend();
       }
     };
     const dnBtn = document.createElement('button');
@@ -12928,6 +12931,7 @@ function _populateLegendManagement() {
       if (idx < _legendOrder.length - 1) {
         [_legendOrder[idx + 1], _legendOrder[idx]] = [_legendOrder[idx], _legendOrder[idx + 1]];
         _populateLegendManagement();
+        _rebuildLegend();
       }
     };
     row.appendChild(chk); row.appendChild(txt); row.appendChild(upBtn); row.appendChild(dnBtn);
@@ -14803,6 +14807,16 @@ function _serializeComposerState() {
       includeLegend: (document.getElementById('layout-include-legend') || document.getElementById('exp-include-legend') || {}).checked !== false,
       dpi: (document.getElementById('layout-dpi') || document.getElementById('exp-dpi') || {}).value || '300',
     },
+    // Composer-local display settings (legend management, text toggles).
+    composerSettings: {
+      legendTitle: (document.getElementById('layout-legend-title-input') || {}).value || '',
+      legendSubtitle: (document.getElementById('layout-legend-subtitle-input') || {}).value || '',
+      showScaleText: (document.getElementById('layout-show-scaletext') || {}).checked || false,
+      showDate: (document.getElementById('layout-show-date') || {}).checked || false,
+      showCrs: (document.getElementById('layout-show-crs') || {}).checked || false,
+      legendOrder: _legendOrder.slice(),
+      legendOverrides: JSON.parse(JSON.stringify(_legendOverrides || {})),
+    },
     timestamp: Date.now(),
   };
 }
@@ -14973,6 +14987,19 @@ async function _applyComposerState(state) {
     try {
       map.setView([state.view.center.lat, state.view.center.lng], state.view.zoom, { animate: false });
     } catch (e) { /* non-fatal - fit-to-layers mode doesn't need it */ }
+  }
+  // Apply composer-local display settings (legend management, text toggles).
+  const cs = state.composerSettings;
+  if (cs) {
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+    const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+    setVal('layout-legend-title-input', cs.legendTitle);
+    setVal('layout-legend-subtitle-input', cs.legendSubtitle);
+    setChk('layout-show-scaletext', cs.showScaleText);
+    setChk('layout-show-date', cs.showDate);
+    setChk('layout-show-crs', cs.showCrs);
+    if (Array.isArray(cs.legendOrder)) _legendOrder = cs.legendOrder.slice();
+    if (cs.legendOverrides) _legendOverrides = JSON.parse(JSON.stringify(cs.legendOverrides));
   }
   // Rebuild the layout.
   await buildLayout();
