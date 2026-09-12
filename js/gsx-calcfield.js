@@ -743,6 +743,16 @@
     if (styleOn) {
       if (type === 'text') styled = applyCategorizedField(info.id, outName);
       else styled = applyGraduatedField(info.id, outName, 5, 'viridis');
+    } else {
+      // Checkbox unchecked — if the layer currently has graduated/categorized
+      // styling from a previous Calculate Field run, reset to simple so the
+      // map reflects the user's choice to NOT style on this field.
+      // NOTE: legendState is a const global in index.html, NOT on window —
+      // reference it directly, not via root.legendState.
+      var prevSt = (typeof legendState !== 'undefined') ? legendState[info.id] : null;
+      if (prevSt && (prevSt.mode === 'graduated' || prevSt.mode === 'categorized')) {
+        if (typeof root.resetSymbology === 'function') root.resetSymbology(info.id);
+      }
     }
 
     var version = (document.querySelector('meta[name="version"]') || {}).content || CF.version;
