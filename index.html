@@ -3791,12 +3791,12 @@
                 <option value="600">600 DPI (Poster)</option>
               </select>
               <label class="cs-label" style="font-size:10px;color:var(--text-muted);">Map extent</label>
-              <select id="layout-extent" title="Extent mode">
+              <select id="layout-extent" onchange="refreshComposer()" title="Extent mode">
                 <option value="current">Current view</option>
                 <option value="fit" selected>Fit to layers</option>
               </select>
               <label class="layout-toggle" title="Include legend in export">
-                <input type="checkbox" id="layout-include-legend" checked> Include legend
+                <input type="checkbox" id="layout-include-legend" checked onchange="_rebuildLegend()"> Include legend
               </label>
               <label class="layout-toggle" title="Show basemap source/copyright attribution on the map">
                 <input type="checkbox" id="layout-show-attribution" checked onchange="onLayoutAttributionChange()"> Source attribution
