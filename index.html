@@ -4443,7 +4443,27 @@ function _detectGeomType(info) {
   if (info.isRaster) return 'Raster';
   if (info.geomTypes && info.geomTypes.length > 0) {
     const t = info.geomTypes[0];
-    if (t === 'Analysis') return 'Point';
+    if (t === 'Analysis') {
+      // Analysis layers (convex hull, buffer, etc.) — detect actual geometry
+      // from the GeoJSON features rather than defaulting to Point.
+      if (info.geojsonFeatures && info.geojsonFeatures.length > 0) {
+        const gt = info.geojsonFeatures[0].geometry.type;
+        if (gt.includes('Polygon')) return 'Polygon';
+        if (gt.includes('Line')) return 'LineString';
+        if (gt.includes('Point')) return 'Point';
+      }
+      // Fallback: inspect first Leaflet sub-layer
+      if (info.layer && typeof info.layer.eachLayer === 'function') {
+        let detected = 'Point';
+        info.layer.eachLayer(sub => {
+          if (sub instanceof L.Polygon) detected = 'Polygon';
+          else if (sub instanceof L.Polyline && !(sub instanceof L.Polygon)) detected = 'LineString';
+          else if (sub instanceof L.CircleMarker || sub instanceof L.Circle) detected = 'Point';
+        });
+        return detected;
+      }
+      return 'Point';
+    }
     if (t.includes('Line')) return 'LineString';
     if (t.includes('Polygon')) return 'Polygon';
   }
