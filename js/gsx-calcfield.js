@@ -728,6 +728,9 @@
       if (cur === info.id && typeof root.loadAttrTable === 'function') root.loadAttrTable(info.id);
       if (typeof root.refreshAnalysisAttrSelect === 'function') root.refreshAnalysisAttrSelect();
       if (typeof root.refreshExportLayerSelect === 'function') root.refreshExportLayerSelect();
+      // Rebuild the symbology panel so the new field appears in the
+      // Graduated/Categorized column dropdowns.
+      if (typeof root.buildSymbologyControls === 'function') root.buildSymbologyControls(info);
     } catch (e) { /* non-fatal */ }
 
     // styling
