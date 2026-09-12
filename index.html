@@ -2773,7 +2773,8 @@
       </div>
       <div id="bottom-tab-analysis" class="bottom-tab-content" style="display:none;">
         <div id="analysis-results-panel" style="flex:1;overflow-y:auto;">
-          <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
+          <div style="display:flex; justify-content:flex-end; align-items:center; gap:6px; margin-bottom:8px;">
+            <button onclick="copyAnalysisResults()" class="ar-clear-btn" title="Copy all results text to clipboard">📋 Copy text</button>
             <button onclick="clearAnalysisResults()" class="ar-clear-btn" title="Clear results">Clear</button>
           </div>
           <div id="analysis-results-empty" style="color:var(--text-faint); text-align:center; padding:32px 12px; font-size:12px;">Run a spatial analysis tool from the &#x1F9EA; Analysis drawer (right side) to see results here.</div>
@@ -9710,6 +9711,76 @@ function clearAnalysisResults() {
   empty.style.display = '';
 }
 
+// Copy all text from the analysis results panel to clipboard.
+// Extracts plain text from the report cards (preserving structure) and
+// any plain-text results, skipping the canvas/chart elements.
+function copyAnalysisResults() {
+  const content = document.getElementById('analysis-results-content');
+  if (!content || content.style.display === 'none') {
+    showToast('No results to copy', 'error');
+    return;
+  }
+  const lines = [];
+  // Walk through all child nodes of the results content
+  content.childNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node.textContent.trim();
+      if (t) lines.push(t);
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Skip stat-card action buttons (copy report buttons)
+      if (node.classList && node.classList.contains('stat-card-actions')) return;
+      // Skip canvas elements (charts are handled separately)
+      if (node.tagName === 'CANVAS') return;
+      // For stat cards, extract structured text
+      if (node.classList && node.classList.contains('stat-card')) {
+        node.querySelectorAll('.stat-card-section').forEach(sec => {
+          const title = sec.querySelector('.stat-card-section-title');
+          if (title) lines.push('\n--- ' + title.textContent.trim() + ' ---');
+          sec.querySelectorAll('tr').forEach(tr => {
+            const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+            if (cells.length) lines.push('  ' + cells.join('\t'));
+          });
+          const interp = sec.querySelector('.stat-card-interp');
+          if (interp) lines.push('  ' + interp.textContent.trim());
+          const cons = sec.querySelector('.stat-card-conservation');
+          if (cons) lines.push('  ' + cons.textContent.trim());
+          const weights = sec.querySelector('div[style*="monospace"]');
+          if (weights) lines.push('  ' + weights.textContent.trim());
+          const sentence = sec.querySelector('.stat-card-report-sentence');
+          if (sentence) lines.push('  ' + sentence.textContent.trim());
+        });
+        const citation = node.querySelector('.stat-card-citation');
+        if (citation) lines.push('\n' + citation.textContent.trim());
+      } else {
+        // Plain HTML result — extract text with line breaks
+        const text = node.innerText || node.textContent;
+        if (text && text.trim()) lines.push(text.trim());
+      }
+    }
+  });
+  const text = lines.join('\n');
+  if (!text.trim()) {
+    showToast('No text to copy', 'error');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Results copied to clipboard', 'success');
+  }).catch(() => {
+    showToast('Copy failed — select text manually', 'error');
+  });
+}
+
+// Download the Moran scatterplot canvas as a PNG image.
+function downloadMoranScatter() {
+  const canvas = document.getElementById('moran-scatter-canvas');
+  if (!canvas) { showToast('No chart to download', 'error'); return; }
+  const link = document.createElement('a');
+  link.download = 'moran_scatterplot.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('Chart downloaded', 'success');
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // INFERENTIAL SPATIAL STATISTICS (Getis-Ord Gi*, Local & Global Moran's I)
 // ---------------------------------------------------------------------------
@@ -10517,6 +10588,7 @@ function runAnalysis(tool) {
       `z = ${isFinite(gm.z) ? gm.z.toFixed(2) : 'n/a'} · ` +
       `p = <b style="color:${sig ? '#68d391' : '#fc8181'}">${isFinite(gm.p) ? gm.p.toExponential(2) : 'n/a'}</b></div>` +
       `<div style="margin-top:6px;background:#fff;border-radius:6px;padding:6px;width:360px;max-width:100%"><canvas id="moran-scatter-canvas" width="348" height="300"></canvas></div>` +
+      `<div style="margin-top:4px;"><button class="stat-card-btn" onclick="downloadMoranScatter()">📥 Download chart (PNG)</button></div>` +
       `<div style="color:var(--text-muted);margin-top:4px;font-size:10px">x = standardised ${escapeHtml(attr)}; y = spatial lag (mean of neighbours). ` +
       `Upper-right/lower-left = positive autocorrelation. Weights: ${_weightDesc(gm)}. ` +
       `z and p from the global randomisation test.</div>`
