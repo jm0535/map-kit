@@ -719,6 +719,23 @@
   }
   .sym-btn-reset:hover { color: var(--text); border-color: var(--border); }
 
+  /* Graduated class breaks display (QGIS-style class list) */
+  .grad-classes-display { margin-top: 8px; }
+  .grad-classes-display:empty { display: none; }
+  .grad-classes-title {
+    font-size: 10px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;
+  }
+  .grad-class-row {
+    display: flex; align-items: center; gap: 6px; padding: 3px 0;
+    font-size: 11px; color: var(--text); font-variant-numeric: tabular-nums;
+  }
+  .grad-class-swatch {
+    width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.25);
+    flex-shrink: 0;
+  }
+  .grad-class-range { line-height: 1.2; }
+
   /* Helper note shown under tabs (recommended hint for raster classes). */
   .sym-hint {
     font-size: 10px; color: var(--text-muted); font-style: italic;
@@ -7097,6 +7114,7 @@ function _buildVectorSymbologyBody(info) {
         <button class="sym-btn-primary" onclick="applyGraduated('${id}')">Apply</button>
         <button class="sym-btn-reset" onclick="resetSymbology('${id}')">Reset</button>
       </div>
+      <div id="grad-classes-display-${id}" class="grad-classes-display"></div>
     </div>
   `;
 }
@@ -7882,6 +7900,34 @@ function applyGraduated(id) {
   showToast(`Graduated by ${attr} (${numClasses} classes, ${rampName})`, 'success');
   legendState[id] = { mode:'graduated', color:info.color, geomType:_detectGeomType(info), attr, ramp, minVal, maxVal, numClasses, breaks, bandColors, shape:null };
   refreshMapLegend();
+  _renderGraduatedClassesDisplay(id, breaks, bandColors, attr);
+}
+
+// Render the QGIS-style class breaks list in the symbology panel.
+// Shows each class as a colored swatch + range (e.g., "1.2 – 20.9").
+function _renderGraduatedClassesDisplay(id, breaks, bandColors, attr) {
+  const container = document.getElementById(`grad-classes-display-${id}`);
+  if (!container || !Array.isArray(breaks) || breaks.length < 2) return;
+  container.innerHTML = '';
+  const title = document.createElement('div');
+  title.className = 'grad-classes-title';
+  title.textContent = `${breaks.length - 1} classes — ${attr}`;
+  container.appendChild(title);
+  for (let i = 0; i < breaks.length - 1; i++) {
+    const row = document.createElement('div');
+    row.className = 'grad-class-row';
+    const sw = document.createElement('span');
+    sw.className = 'grad-class-swatch';
+    sw.style.background = bandColors[i] || '#888';
+    row.appendChild(sw);
+    const range = document.createElement('span');
+    range.className = 'grad-class-range';
+    const lo = Number(breaks[i]).toFixed(1);
+    const hi = Number(breaks[i + 1]).toFixed(1);
+    range.textContent = `${lo} – ${hi}`;
+    row.appendChild(range);
+    container.appendChild(row);
+  }
 }
 
 function resetSymbology(id) {
@@ -7898,6 +7944,9 @@ function resetSymbology(id) {
   }
   showToast('Symbology reset', 'success');
   initLegendState(info);
+  // Clear any graduated class breaks display
+  const gradDisplay = document.getElementById(`grad-classes-display-${id}`);
+  if (gradDisplay) gradDisplay.innerHTML = '';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
