@@ -7637,6 +7637,9 @@ function recolorLayer(id, color) {
   const swatch = document.querySelector(`[data-layer-id="${id}"] .layer-color-swatch`);
   if (swatch) swatch.style.background = color;
   if (legendState[id]) { legendState[id].color = color; legendState[id].mode = 'simple'; }
+  // Persist fill color for composer cloning
+  if (!legendState[id]) legendState[id] = { mode: 'simple', color, geomType: _detectGeomType(info) };
+  legendState[id].fillColor = color;
   refreshMapLegend();
 }
 
@@ -7672,6 +7675,9 @@ function fillOpacityLayer(id, val) {
       if (sub.setStyle) sub.setStyle({ fillOpacity: opacity });
     });
   }
+  // Persist fill opacity for composer cloning
+  if (!legendState[id]) legendState[id] = { mode: 'simple', color: info.color, geomType: _detectGeomType(info) };
+  legendState[id].fillOpacity = opacity;
 }
 
 function strokeOpacityLayer(id, val) {
@@ -7685,6 +7691,9 @@ function strokeOpacityLayer(id, val) {
       if (sub.setStyle) sub.setStyle({ opacity });
     });
   }
+  // Persist stroke opacity for composer cloning
+  if (!legendState[id]) legendState[id] = { mode: 'simple', color: info.color, geomType: _detectGeomType(info) };
+  legendState[id].strokeOpacity = opacity;
 }
 
 function strokeColorLayer(id, color) {
@@ -7696,6 +7705,9 @@ function strokeColorLayer(id, color) {
       if (sub instanceof L.CircleMarker) sub.setStyle({ color });
     });
   }
+  // Persist stroke color for composer cloning
+  if (!legendState[id]) legendState[id] = { mode: 'simple', color: info.color, geomType: _detectGeomType(info) };
+  legendState[id].strokeColor = color;
 }
 
 function strokeWidthLayer(id, weight) {
@@ -7706,6 +7718,9 @@ function strokeWidthLayer(id, weight) {
       if (sub.setStyle) sub.setStyle({ weight: parseFloat(weight) });
     });
   }
+  // Persist stroke width for composer cloning
+  if (!legendState[id]) legendState[id] = { mode: 'simple', color: info.color, geomType: _detectGeomType(info) };
+  legendState[id].strokeWeight = parseFloat(weight);
 }
 
 const DASH_PATTERNS = {
@@ -7722,6 +7737,9 @@ function strokeStyleLayer(id, style) {
   info.layer.eachLayer(sub => {
     if (sub.setStyle) sub.setStyle({ dashArray });
   });
+  // Persist stroke dash style for composer cloning
+  if (!legendState[id]) legendState[id] = { mode: 'simple', color: info.color, geomType: _detectGeomType(info) };
+  legendState[id].strokeDashArray = dashArray;
 }
 
 function lineWidthLayer(id, weight) {
@@ -12274,13 +12292,23 @@ async function buildLayout() {
         }
       }).addTo(layoutMap);
     } else {
+      // Simple mode: read persisted style from legendState (set by recolorLayer,
+      // strokeColorLayer, fillOpacityLayer, strokeOpacityLayer, strokeWidthLayer,
+      // strokeStyleLayer). Fall back to info.color / defaults if not set.
+      const fillColor = (sym && sym.fillColor) || info.color || '#63b3ed';
+      const strokeColor = (sym && sym.strokeColor) || '#ffffff';
+      const fillOp = (sym && sym.fillOpacity != null) ? sym.fillOpacity : 0.8;
+      const strokeOp = (sym && sym.strokeOpacity != null) ? sym.strokeOpacity : 0.9;
+      const strokeW = (sym && sym.strokeWeight != null) ? sym.strokeWeight : 1.2;
+      const dashArr = (sym && sym.strokeDashArray) || null;
       newLayer = L.geoJSON(geojson, {
         style: () => ({
-          color: info.color || '#63b3ed', weight: 2.5, fillOpacity: 0.25
+          color: strokeColor, weight: strokeW, fillColor: fillColor,
+          fillOpacity: fillOp, opacity: strokeOp, dashArray: dashArr
         }),
         pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-          radius: 7, color: 'white', weight: 1.2,
-          fillColor: info.color || '#63b3ed', fillOpacity: 0.9
+          radius: 7, color: strokeColor, weight: strokeW,
+          fillColor: fillColor, fillOpacity: fillOp, opacity: strokeOp
         })
       }).addTo(layoutMap);
     }
