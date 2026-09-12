@@ -727,15 +727,38 @@ body {
     <table class="ug-table">
       <thead><tr><th>Button</th><th>Action</th></tr></thead>
       <tbody>
+        <tr><td>&#x1F7E0; <b>Render status</b></td><td>Shows <b>"Rendering map&hellip;"</b> (orange, with spinner) while tiles and layers load, then <b>"Map ready"</b> (green) when the layout is complete. The Export button is disabled until the map is ready.</td></tr>
         <tr><td>&#x21BB; <b>Refresh</b></td><td>Pick up layer, symbology, and basemap changes without losing your layout</td></tr>
         <tr><td>&#x29C9; <b>Detach</b></td><td>Open the composer in its own window (drag to a second monitor). The source map stays in the main window.</td></tr>
-        <tr><td>&#x1F4BE; <b>Export PNG</b></td><td>Export the layout as PNG at the chosen DPI</td></tr>
+        <tr><td>&#x1F4BE; <b>Export PNG</b></td><td>Export the layout as PNG at the chosen DPI. <b>Disabled</b> while the map is rendering &mdash; wait for the green "Map ready" indicator before clicking.</td></tr>
         <tr><td><b>Close</b></td><td>Close the composer (attached mode only)</td></tr>
       </tbody>
     </table>
     <div class="ug-callout">
       <div class="label">&#x1F4A1; Lock vs. Unlock</div>
       When a map element is <b>locked</b>, it mirrors the source map. When <b>unlocked</b>, you can pan and zoom it independently. Use unlock to create inset maps or to fine-tune the layout without affecting the main map view.
+    </div>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Render status indicator</div>
+      The composer must load basemap tiles and clone all visible vector layers before the export is ready. Watch the <b>render status badge</b> in the sidebar footer:
+      <ul>
+        <li><span style="color:#f59e0b;font-weight:600;">&#x1F7E0; "Rendering map&hellip;"</span> &mdash; tiles are loading. The Export button is disabled. Wait.</li>
+        <li><span style="color:#48bb78;font-weight:600;">&#x1F7E2; "Map ready"</span> &mdash; all tiles and layers are loaded. The Export button is enabled. A toast notification also appears.</li>
+      </ul>
+      If the basemap is slow to load (e.g. at high zoom or on a slow connection), the indicator stays orange until tiles finish. Do not click Export until the badge turns green.
+    </div>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Moving the title and subtitle</div>
+      The title and subtitle labels can be <b>freely dragged</b> anywhere on the paper &mdash; including partially outside the map area. They are not clamped to the paper bounds. Click and drag either label to reposition it. The position is saved automatically and restored when you reopen the composer. Other furniture items (scale bar, north arrow, legend, overview) are clamped to the paper edges.
+    </div>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; Gi* and LISA in the composer</div>
+      When you run Getis-Ord Gi* or LISA analysis and then open the composer, the significance class colours are preserved on every point:
+      <ul>
+        <li><b>Gi*:</b> deep red (99% hot), red (95%), orange (90%), grey (not sig.), light blue (90% cold), blue (95% cold), dark blue (99% cold)</li>
+        <li><b>LISA:</b> red (HH), blue (LL), orange (HL outlier), light blue (LH outlier), grey (not sig.)</li>
+      </ul>
+      The composer legend also shows each significance class as a separate row with its own coloured dot and label, so the exported map legend matches the on-map legend.
     </div>
     <div class="ug-screenshot">
       <img src="practical_assignment/screenshots/ug_map_composer.png" alt="Map Layout Composer with map elements">
@@ -768,7 +791,7 @@ body {
       </tbody>
     </table>
     <p>At the top of the drawer, select a <b>Layer</b> and (for some tools) an <b>Attribute</b>. Results appear in the bottom <b>Analysis Results</b> tab and are added as new exportable layers.</p>
-    <p>Click <b>Clear</b> in the Analysis Results tab to remove all analysis overlays from the map.</p>
+    <p>Click <b>Clear</b> in the Analysis Results tab to remove all analysis overlays from the map. Click <b>&#x1F4CB; Copy text</b> to copy all results text to the clipboard.</p>
   </div>
 </div>
 
@@ -862,7 +885,7 @@ body {
         <tr><td><b>&#x1F4CF; Distance band</b></td><td>Two features are neighbours if they are within <i>d</i> km. Default: the minimum distance that gives every feature at least one neighbour. Best for regular grids or continuous fields.</td></tr>
         <tr><td><b>&#x1F5FA; K-nearest neighbours (KNN)</b></td><td>Each feature's <i>k</i> nearest features are its neighbours (default k = 8). Every feature always gets exactly <i>k</i> neighbours regardless of density. Best for irregular sampling or variable-density data.</td></tr>
         <tr><td><b>&#x1F6F0; UTM auto-projection</b></td><td>Distances are computed on an auto-selected UTM zone (not raw degrees), removing distortion near the equator and at high latitudes.</td></tr>
-        <tr><td><b>&#x2696; FDR correction</b></td><td>Benjamini-Hochberg False Discovery Rate adjustment prevents spurious hot spots when many features are tested at once. Leave it checked for confirmatory analysis; uncheck only for exploratory work.</td></tr>
+        <tr><td><b>&#x2696; FDR correction</b></td><td>Benjamini-Hochberg False Discovery Rate adjustment prevents spurious hot spots when many features are tested at once. The checkbox is in the <b>Spatial Weights</b> settings card, below the Analysis variable dropdown, inside the Inferential Hotspots & Autocorrelation section. It is <b>checked by default</b> &mdash; leave it checked for confirmatory analysis; uncheck only for exploratory work.</td></tr>
       </tbody>
     </table>
     <div class="ug-tool">
@@ -884,6 +907,20 @@ body {
         <div class="label">&#x1F4A1; How to use results</div>
         A 95%+ hot spot cluster indicates a zone where high values are not random - likely a refugium, optimal habitat, or resource concentration worth prioritising for conservation. A cold spot cluster may indicate habitat degradation or harsh microclimate. Features marked "not significant" may simply lack enough neighbours - try increasing the band distance or switching to KNN.
       </div>
+      <div class="ug-callout">
+        <div class="label">&#x1F4A1; Which value determines the colour?</div>
+        When you hover over a coloured point on the map, the tooltip shows:
+        <ul>
+          <li><b>Gi* z-score</b> &mdash; the strength and direction of clustering (positive = hot, negative = cold)</li>
+          <li><b>q-value (FDR-adjusted p)</b> &mdash; <i>this is the value that determines the point's colour.</i> If FDR is checked, the q-value (not the raw p-value) decides whether the point is coloured as a hot/cold spot or left grey. Significance stars: <code>***</code> = 99%, <code>**</code> = 95%, <code>*</code> = 90%.</li>
+          <li><b>neighbours</b> &mdash; how many features were within the distance band or k-nearest set</li>
+        </ul>
+        If FDR is <i>unchecked</i>, the raw p-value is used instead. The tooltip tells you which one applies.
+      </div>
+      <div class="ug-callout">
+        <div class="label">&#x1F4A1; Legend and composer</div>
+        The on-map legend and the Map Composer legend both show each Gi* significance class as a separate row (e.g. "Hot spot 99%", "Cold spot 99%", "Not significant") with its own coloured dot. The composer preserves the per-feature colours on every point, so the exported map matches what you see on screen.
+      </div>
     </div>
     <div class="ug-screenshot">
       <img src="practical_assignment/screenshots/19_gistar_results.png" alt="Getis-Ord Gi* results panel">
@@ -903,6 +940,23 @@ body {
         </tbody>
       </table>
       <div class="ug-tool-desc"><i>High / Low are relative to the global mean.</i> The pseudo-p-value comes from conditional permutation - how often a random re-labelling of neighbours produces a more extreme local Moran's I than the observed value.</div>
+      <div class="ug-callout">
+        <div class="label">&#x1F4A1; Which value determines the colour?</div>
+        When you hover over a coloured point on the map, the tooltip shows:
+        <ul>
+          <li><b>Local Moran's I</b> &mdash; the strength of local autocorrelation</li>
+          <li><b>pseudo-p</b> &mdash; <i>this is the value that determines the point's colour.</i> If pseudo-p &le; 0.05, the point is coloured as HH, LL, HL, or LH. If pseudo-p > 0.05, it is grey (not significant). Significance stars: <code>***</code> = 99%, <code>*</code> = 95%.</li>
+        </ul>
+        The tooltip also notes that GeoSpaX uses 999 permutations for LISA significance.
+      </div>
+      <div class="ug-callout">
+        <div class="label">&#x1F4A1; Gi* vs LISA &mdash; which to report?</div>
+        <ul>
+          <li><b>Gi*</b> identifies <i>clusters</i> only &mdash; hot spots (high-high) and cold spots (low-low). It does <b>not</b> detect spatial outliers.</li>
+          <li><b>LISA</b> identifies both <i>clusters</i> (HH, LL) <i>and outliers</i> (HL = high value surrounded by low, LH = low value surrounded by high).</li>
+        </ul>
+        For the FR422 assignment, report <b>one</b> primary analysis. Use Gi* if you want to identify priority forest blocks (hot spots) and degraded areas (cold spots). Use LISA if you also want to flag spatial outliers &mdash; micro-refugia (HL) or degradation signals (LH). Do not combine Gi* and LISA counts into one result; if you report both, label one as primary and the other as supplementary.
+      </div>
     </div>
     <div class="ug-screenshot">
       <img src="practical_assignment/screenshots/20_lisa.png" alt="LISA cluster map">
@@ -944,6 +998,20 @@ body {
         </tbody>
       </table>
       <div class="ug-tool-desc">Points far from the origin in HH/LL correspond to LISA HH/LL clusters. Hover a point to see its site name and value.</div>
+    </div>
+    <h3>Copying and downloading results</h3>
+    <p>Three ways to get analysis output into your report:</p>
+    <table class="ug-table">
+      <thead><tr><th>Button</th><th>Location</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td>&#x1F4CB; <b>Copy text</b></td><td>Analysis Results panel toolbar (top right)</td><td>Copies all visible result text &mdash; report cards, tables, interpretation, conservation relevance, weights, report sentences, and citations &mdash; to the clipboard as plain text. Paste directly into a report or thesis.</td></tr>
+        <tr><td>&#x1F4CB; <b>Copy report</b></td><td>Bottom of each statistical report card (Moran's I, NNI, Gi*, LISA)</td><td>Copies that individual report card as formatted plain text.</td></tr>
+        <tr><td>&#x1F4E5; <b>Download chart (PNG)</b></td><td>Below the Moran scatterplot</td><td>Saves the scatterplot as <code>moran_scatterplot.png</code>. Insert directly into a report.</td></tr>
+      </tbody>
+    </table>
+    <div class="ug-callout">
+      <div class="label">&#x1F4A1; APA report sentence</div>
+      Each statistical report card includes an APA-style report sentence (e.g. "A Getis-Ord Gi* hot spot analysis identified 114 statistically significant hot spots in tree_cover_pct (114/128 significant, FDR-corrected, &alpha; = .05, n = 128)."). Use the <b>Copy report</b> button to copy this sentence along with the full card content.
     </div>
   </div>
 </div>
