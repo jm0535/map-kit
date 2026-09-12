@@ -727,10 +727,15 @@
       var cur = $('attr-layer-select') ? $('attr-layer-select').value : '';
       if (cur === info.id && typeof root.loadAttrTable === 'function') root.loadAttrTable(info.id);
       if (typeof root.refreshAnalysisAttrSelect === 'function') root.refreshAnalysisAttrSelect();
+      if (typeof root.refreshAnalysisFilter === 'function') root.refreshAnalysisFilter();
       if (typeof root.refreshExportLayerSelect === 'function') root.refreshExportLayerSelect();
       // Rebuild the symbology panel so the new field appears in the
       // Graduated/Categorized column dropdowns.
       if (typeof root.buildSymbologyControls === 'function') root.buildSymbologyControls(info);
+      // Refresh the Calculate Field field dropdowns and insert-field
+      // select so the new field is available for the next calculation.
+      CF.populateFieldSelects();
+      CF.populateInsertSelect();
     } catch (e) { /* non-fatal */ }
 
     // styling
