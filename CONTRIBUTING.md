@@ -104,7 +104,12 @@ The Web GIS is a single-file application. When modifying:
 
 ### Security
 
-- All user-controlled data must be HTML-escaped via `escapeHtml()` before DOM insertion to prevent XSS
+- All user-controlled data must be HTML-escaped via `escapeHtml()` (in `index.html`) or `esc()` (in external JS modules: `geospax-conservation.js`, `geospax-project.js`, `geospax-sdm-fix.js`, `gsx-calcfield.js`) before DOM insertion to prevent XSS
+- Leaflet `bindPopup()` and `bindTooltip()` render content as HTML — always escape property values before passing them
+- When adding a new external JS module, include an `esc()` helper at the top that delegates to `root.escapeHtml` if available, with a complete fallback that escapes `&`, `<`, `>`, `"`, `'`
+- Do not use `eval()` or `new Function()` — the Calculate Field expression evaluator uses a custom AST parser with a function whitelist; extend the whitelist in `gsx-calcfield.js` if new functions are needed
+- A Content-Security-Policy is enforced via `vercel.json` headers and a `<meta>` tag in `index.html`. If you add a new external resource (CDN, API), update the CSP `connect-src` or `img-src` directive accordingly
+- File uploads are limited to 200 MB in `processFile()` — do not remove this check
 - Object URLs must be revoked with `setTimeout(1000)` delay to ensure downloads complete
 
 ### UI/UX

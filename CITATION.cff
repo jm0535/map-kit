@@ -8,7 +8,7 @@ authors:
 type: software
 repository-code: "https://github.com/jm0535/map-kit"
 url: "https://geospax.in4metrix.dev/"
-version: 1.4.1
+version: 1.4.2
 date-released: "2026-09-14"
 keywords:
   - GIS

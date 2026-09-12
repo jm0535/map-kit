@@ -798,7 +798,11 @@ To restore the native popup for a single control, add `data-gsx-select="off"` to
 
 ### Security
 
-- All user-controlled data (layer names, attribute values) is HTML-escaped before DOM insertion to prevent XSS.
+- **Content-Security-Policy** enforced via both `vercel.json` headers and a `<meta>` tag in `index.html`. Script execution is restricted to `'self'` + `'unsafe-inline'` + `'unsafe-eval'` (needed by vendored libraries). Styles are restricted to `'self'` + `'unsafe-inline'`. Images, fonts, and workers are scoped to `'self'` + `data:` + `blob:` + `https:`. `frame-ancestors 'self'` prevents clickjacking.
+- **XSS prevention**: all user-controlled data (layer names, field names, attribute values, file names, sheet names, metadata values, warning messages) is HTML-escaped via `escapeHtml()` (in `index.html`) or `esc()` helpers (in external JS modules) before DOM insertion. Leaflet popup and tooltip content is also escaped.
+- **Expression sandbox**: the Calculate Field expression evaluator uses a custom AST parser with a function whitelist (`abs`, `min`, `max`, `round`, `floor`, `ceil`, `sqrt`, `log`, `exp`, `pow`, `coalesce`, `isnull`, `if`, `length`, `concat`, `lower`, `upper`, `to_int`, `to_num`, `to_text`). No `eval()`, no `new Function()`, no access to `window`, `document`, `fetch`, or `localStorage`.
+- **File upload limit**: 200 MB maximum file size enforced in `processFile()` to prevent memory exhaustion.
+- **Security headers** in `vercel.json`: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`.
 - Object URLs are revoked after download to prevent memory leaks.
 
 ---

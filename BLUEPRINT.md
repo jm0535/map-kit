@@ -1,6 +1,6 @@
 # GeoSpaX - Blueprint & Changelog
 
-**Version:** 1.4.1
+**Version:** 1.4.2
 **Author:** Jimmy Moses  
 **Affiliation:** School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology  
 **URL:** https://geospax.in4metrix.dev/  
@@ -11,7 +11,7 @@
 
 ## How to Cite
 
-> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.4.1) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
+> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.4.2) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
 
 See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, and BibTeX formats with copy-to-clipboard.
 
@@ -19,7 +19,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 ## Version History
 
-### v1.4.1 (2026-09-14) - Interactive Minimap, Save Workspace Dialog, Documentation
+### v1.4.2 (2026-09-14) - Interactive Minimap, Save Workspace Dialog, Documentation
 
 #### Interactive Overview Minimap
 - **Click to pan**: single click on the minimap in the right panel Overview section recenters the main map to the clicked location
@@ -398,6 +398,14 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 | UI controls | `gsx-select.js` - dropdown popup replacement (no dependencies) |
 | Python pkg | GeoPandas, Matplotlib, Folium, Contextily |
 | Hosting | Vercel (primary) + GitHub Pages (mirror) |
+
+### Security
+
+- **Content-Security-Policy**: enforced via `vercel.json` headers and `<meta>` tag in `index.html`. `script-src 'self' 'unsafe-inline' 'unsafe-eval'` (unsafe-eval needed by vendored turf/georaster), `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob: https:`, `connect-src 'self' https:`, `worker-src 'self' blob:`, `frame-ancestors 'self'`
+- **Security headers**: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
+- **XSS prevention**: `escapeHtml()` in `index.html` + `esc()` helpers in external JS modules. All user-controlled data (layer names, field names, attribute values, file names, metadata) is escaped before DOM insertion, including Leaflet popups and tooltips
+- **Expression sandbox**: Calculate Field uses a custom AST parser with a function whitelist — no `eval()`, no `new Function()`, no global scope access
+- **File upload limit**: 200 MB max in `processFile()` to prevent memory DoS
 
 ---
 

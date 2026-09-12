@@ -154,7 +154,8 @@ body {
   <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
   <div class="cl-nav" id="cl-nav">
     <div class="cl-nav-group">Releases</div>
-    <a href="#v1.4.1" class="cl-nav-item">v1.4.1 <span class="badge latest">Latest</span></a>
+    <a href="#v1.4.2" class="cl-nav-item">v1.4.2 <span class="badge latest">Latest</span></a>
+    <a href="#v1.4.1" class="cl-nav-item">v1.4.1</a>
     <a href="#v1.4.0" class="cl-nav-item">v1.4.0</a>
     <a href="#v1.3.2" class="cl-nav-item">v1.3.2</a>
     <a href="#v1.3.1" class="cl-nav-item">v1.3.1</a>
@@ -186,12 +187,45 @@ body {
   <div class="cl-legend-item"><span class="cl-entry-label sec">Sec</span> Security</div>
 </div>
 
+<!-- v1.4.2 -->
+<div class="cl-release" id="v1.4.2">
+  <div class="cl-release-header">
+    <span class="cl-release-version">v1.4.2</span>
+    <span class="cl-release-date">14 September 2026</span>
+    <span class="cl-release-tag latest">Latest</span>
+  </div>
+  <div class="cl-release-title">Security Hardening</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Security</div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Content-Security-Policy</b> added via both a <code><meta></code> tag in <code>index.html</code> and a <code>vercel.json</code> header. Restricts script execution, styles, images, fonts, connections, and workers to approved sources. <code>frame-ancestors 'self'</code> prevents clickjacking.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Security headers</b> added to <code>vercel.json</code>: <code>Strict-Transport-Security</code> (HSTS with 2-year max-age, preload), <code>Permissions-Policy</code> (disables camera, microphone, geolocation, interest-cohort).</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>XSS prevention</b>: all user-controlled data (layer names, field names, attribute values, file names, XLSX sheet names, metadata values, warning messages) is now HTML-escaped before DOM insertion. Fixed in <code>index.html</code>, <code>geospax-conservation.js</code>, <code>geospax-project.js</code>, <code>geospax-sdm-fix.js</code>, and <code>gsx-calcfield.js</code>. Leaflet popup and tooltip content is also escaped.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Attribute table sort header XSS</b>: replaced inline <code>onclick</code> handler with data-attribute + event listener to prevent field-name injection breaking out of the attribute.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>esc() fallback</b> in <code>gsx-calcfield.js</code> now escapes <code>></code>, <code>"</code>, and <code>'</code> in addition to <code>&</code> and <code><</code>.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>File upload limit</b>: 200 MB maximum enforced in <code>processFile()</code> to prevent memory exhaustion DoS.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Documentation</div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>README</b> security section expanded with CSP, HSTS, Permissions-Policy, XSS prevention, expression sandbox, and file upload limit details.</span></div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>CONTRIBUTING.md</b> security guidelines expanded with <code>esc()</code> helper instructions for external JS modules, CSP update guidance, and expression sandbox rules.</span></div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>BLUEPRINT.md</b> security section added documenting CSP, headers, XSS prevention, expression sandbox, and file upload limit.</span></div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>User Guide</b> FAQ updated: file size limit changed from "no hard limit" to 200 MB.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Version Sync</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Version references</b> updated across all files: <code>index.html</code> cache-bust param, <code>pyproject.toml</code>, <code>src/geospax/__init__.py</code>, <code>gsx-calcfield.js</code> fallback version, changelog roadmap.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Documentation accuracy</b>: vector Thematic category corrected (removed Yellow-Red-Green and Hot, which are raster-only palettes). Basemap count corrected from 6 to 10 in README and in-app help.</span></div>
+  </div>
+</div>
+
 <!-- v1.4.1 -->
 <div class="cl-release" id="v1.4.1">
   <div class="cl-release-header">
     <span class="cl-release-version">v1.4.1</span>
     <span class="cl-release-date">14 September 2026</span>
-    <span class="cl-release-tag latest">Latest</span>
   </div>
   <div class="cl-release-title">Color Ramps, Calculate Field Fixes, Legend Label Order</div>
 

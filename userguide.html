@@ -141,7 +141,7 @@ body {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <div>
         <h1>&#x1F9EA; GeoSpaX</h1>
-        <div class="version">User Guide v1.4.1</div>
+        <div class="version">User Guide v1.4.2</div>
       </div>
       <button id="ug-theme-toggle" onclick="ugToggleTheme()" title="Toggle dark/light theme" style="background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:15px;color:var(--muted);line-height:1;transition:all .15s;">&#x1F319;</button>
     </div>
@@ -198,7 +198,7 @@ body {
 <div class="ug-page-header">
   <div class="breadcrumb"><a href="https://geospax.in4metrix.dev">GeoSpaX</a> &rsaquo; Documentation</div>
   <h2>&#x1F9EA; User Guide</h2>
-  <div class="subtitle">Complete reference for every GeoSpaX tool, panel, and analysis method. Covers v1.4.1.</div>
+  <div class="subtitle">Complete reference for every GeoSpaX tool, panel, and analysis method. Covers v1.4.2.</div>
 </div>
 
 <!-- GETTING STARTED -->
@@ -1392,7 +1392,7 @@ body {
   <div class="ug-section-title"><span class="ug-ico">&#x1F4DA;</span> How to Cite</div>
   <div class="ug-section-body">
     <p>Open the <b>How to Cite</b> tab in the bottom panel. GeoSpaX provides ready-formatted citations in four styles: APA (7th ed.), Chicago (17th ed.), Harvard, and BibTeX. Each has a <b>Copy</b> button.</p>
-    <p>Citation follows the <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number (v1.4.1) and access date.</p>
+    <p>Citation follows the <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number (v1.4.2) and access date.</p>
     <div class="ug-callout">
       <div class="label">&#x1F4A1; Tip</div>
       A DOI will be assigned via Zenodo or DataCite for future releases. For now, use the repository URL (<code>https://geospax.in4metrix.dev/</code>) as the persistent identifier.
@@ -1474,7 +1474,7 @@ body {
     <p>When you import a CSV or XLSX, a column mapper dialog appears. Set the <b>Source CRS</b> to match your data (e.g. UTM zone 55S for Papua New Guinea). GeoSpaX will reproject the coordinates to WGS 84 (EPSG:4326) on import using proj4js.</p>
 
     <p><b>Q: What is the maximum file size?</b></p>
-    <p>There is no hard limit, but performance depends on your browser's memory. Files under 50 MB generally load instantly. Files over 200 MB may take several seconds and can be slow to render. Very large GeoTIFFs are tiled on the fly by GeoRaster.</p>
+    <p>The maximum file size is <b>200 MB</b>. Files under 50 MB generally load instantly. Files approaching the limit may take several seconds and can be slow to render. Very large GeoTIFFs are tiled on the fly by GeoRaster. If you need to work with larger datasets, consider splitting them or downsampling before import.</p>
 
     <p><b>Q: Can I import data from ArcGIS or QGIS?</b></p>
     <p>Yes. Export your data from ArcGIS or QGIS as GeoJSON, Shapefile (zip), KML, or CSV and import it into GeoSpaX. For raster data, export as GeoTIFF.</p>
@@ -1546,7 +1546,7 @@ body {
     <h3>Citation and licensing</h3>
 
     <p><b>Q: How do I cite GeoSpaX in my thesis or paper?</b></p>
-    <p>Open the <b>How to Cite</b> tab in the bottom panel for ready-formatted citations in APA (7th ed.), Chicago (17th ed.), Harvard, and BibTeX. Always include the version number (v1.4.1) and access date. See the <a href="#how-to-cite">How to Cite</a> section and the <a href="#references">References</a> section for details.</p>
+    <p>Open the <b>How to Cite</b> tab in the bottom panel for ready-formatted citations in APA (7th ed.), Chicago (17th ed.), Harvard, and BibTeX. Always include the version number (v1.4.2) and access date. See the <a href="#how-to-cite">How to Cite</a> section and the <a href="#references">References</a> section for details.</p>
 
     <p><b>Q: Can I use GeoSpaX for commercial purposes?</b></p>
     <p>Yes. GeoSpaX is licensed under the MIT License, which permits commercial use, modification, and distribution. See the <a href="#licenses">Licenses &amp; Attribution</a> section for third-party library licenses.</p>
@@ -1631,7 +1631,7 @@ body {
       <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
       <tbody>
         <tr><td>26</td><td>Smith, A. M. et al. (2016). Software citation principles with FORCE11. <i>PeerJ Computer Science</i> 2: e86.</td><td>How to Cite format</td></tr>
-        <tr><td>27</td><td>Moses, J. (2026). GeoSpaX: Interactive Web GIS &amp; Spatial Analysis, Version 1.4.1. School of Forestry, University of Technology, Papua New Guinea. Available at: https://geospax.in4metrix.dev/</td><td>GeoSpaX self-citation</td></tr>
+        <tr><td>27</td><td>Moses, J. (2026). GeoSpaX: Interactive Web GIS &amp; Spatial Analysis, Version 1.4.2. School of Forestry, University of Technology, Papua New Guinea. Available at: https://geospax.in4metrix.dev/</td><td>GeoSpaX self-citation</td></tr>
       </tbody>
     </table>
   </div>

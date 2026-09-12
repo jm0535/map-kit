@@ -1,6 +1,6 @@
 [project]
 name = "geospax"
-version = "1.4.1"
+version = "1.4.2"
 description = "GeoSpaX — a modern geospatial web application that combines interactive mapping capabilities with powerful visualization tools for spatial data analysis, plus a Python pipeline for publication-ready static maps."
 readme = "README.md"
 license = "MIT"
