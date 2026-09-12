@@ -4567,22 +4567,36 @@ function initLegendState(info) {
     refreshMapLegend();
     return;
   }
-  // Read the actual style from the first Leaflet sub-layer so the
+  // Read the actual style from the first styled Leaflet sub-layer so the
   // symbology panel and composer reflect what's rendered on the map.
+  // For layers with multiple sub-layers (e.g. Mean Center = marker + circle),
+  // we read the FIRST sub-layer that has style options — this matches the
+  // primary geometry, not auxiliary overlays.
   let fillColor = info.color, strokeColor = '#ffffff';
   let fillOpacity = 0.8, strokeOpacity = 0.9, strokeWeight = 1.2;
   let strokeDashArray = null;
+  let found = false;
+  function readStyle(sub) {
+    if (found || !sub.options) return;
+    // Recurse into nested layer groups (e.g. Simplify creates L.geoJSON
+    // sub-layers which are themselves FeatureGroups containing polygons).
+    // Always recurse first, then check this layer's own options.
+    if (typeof sub.eachLayer === 'function') {
+      sub.eachLayer(readStyle);
+    }
+    if (found) return;
+    if (!sub.setStyle) return;
+    if (sub.options.fillColor) fillColor = sub.options.fillColor;
+    else if (sub.options.color) fillColor = sub.options.color; // circleMarker uses color for fill
+    if (sub.options.color) strokeColor = sub.options.color;
+    if (sub.options.fillOpacity != null) fillOpacity = sub.options.fillOpacity;
+    if (sub.options.opacity != null) strokeOpacity = sub.options.opacity;
+    if (sub.options.weight != null) strokeWeight = sub.options.weight;
+    if (sub.options.dashArray) strokeDashArray = sub.options.dashArray;
+    found = true;
+  }
   if (info.layer && typeof info.layer.eachLayer === 'function') {
-    info.layer.eachLayer(sub => {
-      if (sub.options) {
-        if (sub.options.fillColor) fillColor = sub.options.fillColor;
-        if (sub.options.color) strokeColor = sub.options.color;
-        if (sub.options.fillOpacity != null) fillOpacity = sub.options.fillOpacity;
-        if (sub.options.opacity != null) strokeOpacity = sub.options.opacity;
-        if (sub.options.weight != null) strokeWeight = sub.options.weight;
-        if (sub.options.dashArray) strokeDashArray = sub.options.dashArray;
-      }
-    });
+    info.layer.eachLayer(readStyle);
   }
   legendState[info.id] = {
     mode: 'simple',
