@@ -10444,7 +10444,7 @@ function runAnalysis(tool) {
       const tip = `<b>${cls}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Gi* z: ${z.toFixed(3)}<br>${useFDR ? 'q' : 'p'}-value: ${pr.toExponential(2)}<br>neighbours: ${r.nb[i]}`;
       markers.push(_statMarker(pts[i].lat, pts[i].lon, color, tip));
       features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
-        gi_z: +z.toFixed(4), gi_p: +r.p[i].toExponential(4), gi_q: useFDR ? +probs[i].toExponential(4) : null, gi_class: cls, neighbours: r.nb[i]
+        gi_z: +z.toFixed(4), gi_p: +r.p[i].toExponential(4), gi_q: useFDR ? +probs[i].toExponential(4) : null, gi_class: cls, neighbours: r.nb[i], _markerColor: color
       })});
     }
     markers.forEach(m => analysisOverlays.push(m));
@@ -10516,7 +10516,7 @@ function runAnalysis(tool) {
       const tip = `<b>${labels[key]}</b><br>${escapeHtml(attr)}: ${vals[i]}<br>Local I: ${r.Ii[i].toFixed(3)}<br>pseudo-p: ${r.pval[i].toFixed(3)}`;
       markers.push(_statMarker(pts[i].lat, pts[i].lon, palette[key], tip));
       features.push({type:'Feature', geometry:{type:'Point', coordinates:[pts[i].lon, pts[i].lat]}, properties:Object.assign({}, pts[i].props, {
-        local_I: +r.Ii[i].toFixed(4), lisa_p: +r.pval[i].toFixed(4), cluster: labels[key]
+        local_I: +r.Ii[i].toFixed(4), lisa_p: +r.pval[i].toFixed(4), cluster: labels[key], _markerColor: palette[key]
       })});
     }
     markers.forEach(m => analysisOverlays.push(m));
@@ -12637,6 +12637,41 @@ function _rebuildLegend(visibleLayers) {
       const dot = document.createElement('span');
       const geomType = sym ? sym.geomType : 'Point';
       const symColor = info.color || '#63b3ed';
+
+      // Gi* / LISA: per-feature significance classes with individual colors
+      const hasStatClasses = info.geojsonFeatures && info.geojsonFeatures.some(f => f.properties && (f.properties.gi_class || f.properties.cluster));
+      if (hasStatClasses) {
+        // Layer title row
+        dot.style.cssText = `display:inline-block;width:12px;height:12px;border-radius:50%;background:${symColor};border:1px solid #1a202c;flex-shrink:0;`;
+        row.appendChild(dot);
+        const name = document.createElement('span');
+        name.textContent = displayName;
+        row.appendChild(name);
+        legendEl.appendChild(row);
+        // Collect unique class→color pairs preserving order
+        const classMap = new Map();
+        info.geojsonFeatures.forEach(f => {
+          const p = f.properties || {};
+          const cls = p.gi_class || p.cluster;
+          const color = p._markerColor;
+          if (cls && color && !classMap.has(cls)) classMap.set(cls, color);
+        });
+        // Render each class as a sub-row
+        classMap.forEach((color, cls) => {
+          const sub = document.createElement('div');
+          sub.style.cssText = 'display:flex;align-items:center;gap:6px;margin:2px 0 2px 6px;';
+          const sw = document.createElement('span');
+          sw.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};border:1px solid #1a202c;flex-shrink:0;`;
+          sub.appendChild(sw);
+          const lbl = document.createElement('span');
+          lbl.textContent = cls;
+          lbl.style.cssText = 'font-size:9px;color:#4a5568;';
+          sub.appendChild(lbl);
+          legendEl.appendChild(sub);
+        });
+        return;
+      }
+
       if (sym && sym.mode === 'categorized') {
         dot.style.cssText = `display:inline-block;width:14px;height:8px;border-radius:2px;background:${symColor};border:1px solid #1a202c;flex-shrink:0;`;
       } else if (geomType === 'LineString' || geomType === 'MultiLineString') {
@@ -12906,21 +12941,27 @@ async function buildLayout() {
       // Simple mode: read persisted style from legendState (set by recolorLayer,
       // strokeColorLayer, fillOpacityLayer, strokeOpacityLayer, strokeWidthLayer,
       // strokeStyleLayer). Fall back to info.color / defaults if not set.
+      // For Gi*/LISA analysis layers, each feature has its own _markerColor
+      // (significance class color) — use that instead of the single legendState color.
       const fillColor = (sym && sym.fillColor) || info.color || '#63b3ed';
       const strokeColor = (sym && sym.strokeColor) || '#ffffff';
       const fillOp = (sym && sym.fillOpacity != null) ? sym.fillOpacity : 0.8;
       const strokeOp = (sym && sym.strokeOpacity != null) ? sym.strokeOpacity : 0.9;
       const strokeW = (sym && sym.strokeWeight != null) ? sym.strokeWeight : 1.2;
       const dashArr = (sym && sym.strokeDashArray) || null;
+      const hasPerFeatureColor = geojson.features.some(f => f.properties && f.properties._markerColor);
       newLayer = L.geoJSON(geojson, {
-        style: () => ({
-          color: strokeColor, weight: strokeW, fillColor: fillColor,
-          fillOpacity: fillOp, opacity: strokeOp, dashArray: dashArr
-        }),
-        pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-          radius: 7, color: strokeColor, weight: strokeW,
-          fillColor: fillColor, fillOpacity: fillOp, opacity: strokeOp
-        })
+        style: (f) => {
+          const fc = (f.properties && f.properties._markerColor) ? f.properties._markerColor : fillColor;
+          return { color: strokeColor, weight: strokeW, fillColor: fc, fillOpacity: fillOp, opacity: strokeOp, dashArray: dashArr };
+        },
+        pointToLayer: (f, latlng) => {
+          const fc = (f.properties && f.properties._markerColor) ? f.properties._markerColor : fillColor;
+          return L.circleMarker(latlng, {
+            radius: 7, color: strokeColor, weight: strokeW,
+            fillColor: fc, fillOpacity: fillOp, opacity: strokeOp
+          });
+        }
       }).addTo(layoutMap);
     }
     layoutLayers.push(newLayer);
