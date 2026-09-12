@@ -682,14 +682,16 @@
     var type = $('gsx-calc-type').value;
     var styleOn = ($('gsx-calc-style') || {}).checked;
 
-    // existing field? never silent-overwrite — write name_2, name_3, …
+    // existing field? overwrite in place (matches QGIS/ArcGIS behaviour
+    // where Calculate Field with the same field name updates the values).
     var usedFields = [];
     (info.properties || []).forEach(function (p) {
       Object.keys(p || {}).forEach(function (k) { if (usedFields.indexOf(k) < 0) usedFields.push(k); });
     });
-    var outName = fieldName, renamed = false, n = 2;
-    while (usedFields.indexOf(outName) >= 0) { outName = fieldName + '_' + n; n++; renamed = true; }
-    if (renamed) root.showToast('Field "' + fieldName + '" already exists — written as "' + outName + '"', 'info');
+    var outName = fieldName;
+    if (usedFields.indexOf(outName) >= 0) {
+      root.showToast('Updating existing field "' + outName + '"', 'info');
+    }
 
     var expr = CF._mode === 'expr' ? $('gsx-calc-expr').value : CF.buildExpression();
     var parsed = parseExpr(expr, layerFields(false));
@@ -769,7 +771,7 @@
     var html =
       '<b>Calculate field</b><br>' +
       'Layer: ' + esc(info.name) + '<br>' +
-      'Output field: <b>' + esc(outName) + '</b>' + (renamed ? ' <span style="color:var(--text-muted)">(renamed — "' + esc(fieldName) + '" existed)</span>' : '') + '<br>' +
+      'Output field: <b>' + esc(outName) + '</b>' + (usedFields.indexOf(fieldName) >= 0 ? ' <span style="color:var(--text-muted)">(updated existing)</span>' : '') + '<br>' +
       'Features written: <b>' + feats.length + '</b><br>' +
       'Null outputs: <b>' + nulls + '</b>';
     if (nums.length) {
