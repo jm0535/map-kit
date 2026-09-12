@@ -735,6 +735,25 @@
     flex-shrink: 0;
   }
   .grad-class-range { line-height: 1.2; }
+  .grad-class-break-input {
+    width: 56px; padding: 2px 4px; font-size: 11px; text-align: center;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .grad-class-break-input:focus { border-color: var(--accent); outline: none; }
+  .grad-class-del-btn {
+    padding: 1px 5px; font-size: 12px; line-height: 1; color: var(--text-muted);
+    background: transparent; border: 1px solid transparent; border-radius: 3px;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .grad-class-del-btn:hover { color: #e53e3e; border-color: #e53e3e; }
+  .grad-add-class-btn {
+    margin-top: 4px; padding: 3px 8px; font-size: 10px;
+    color: var(--text-muted); background: transparent;
+    border: 1px dashed var(--border); border-radius: 4px; cursor: pointer;
+  }
+  .grad-add-class-btn:hover { color: var(--text); border-color: var(--accent); }
 
   /* Helper note shown under tabs (recommended hint for raster classes). */
   .sym-hint {
@@ -4576,7 +4595,12 @@ function _classifyJenks(values, n) {
 function computeClassificationBreaks(method, values, n, manualBreaks) {
   if (method === 'manual' && Array.isArray(manualBreaks) && manualBreaks.length >= 2) {
     const sorted = manualBreaks.map(Number).filter(v => isFinite(v)).sort((a, b) => a - b);
-    return sorted.length >= 2 ? sorted : null;
+    // Deduplicate near-equal values (avoid zero-width bands)
+    const deduped = [];
+    for (const v of sorted) {
+      if (deduped.length === 0 || Math.abs(v - deduped[deduped.length - 1]) > 1e-9) deduped.push(v);
+    }
+    return deduped.length >= 2 ? deduped : null;
   }
   if (method === 'quantile') return _classifyQuantile(values, n);
   if (method === 'jenks')    return _classifyJenks(values, n);
@@ -7089,6 +7113,15 @@ function _buildVectorSymbologyBody(info) {
         <select id="grad-attr-${id}" style="flex:1;">${attrOpts}</select>
       </div>
       <div class="sym-field">
+        <label class="sym-label">Method</label>
+        <select id="grad-method-${id}" onchange="setGradMethod('${id}', this.value)" style="flex:1;">
+          <option value="equal">Equal Interval</option>
+          <option value="quantile">Quantile</option>
+          <option value="jenks">Jenks (Natural Breaks)</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+      <div class="sym-field">
         <label class="sym-label">Classes</label>
         <input type="number" id="grad-classes-${id}" value="5" min="2" max="10" style="width:52px">
         <label class="sym-label" style="flex:0 0 auto;margin-left:8px;">Ramp</label>
@@ -7840,6 +7873,8 @@ function applyGraduated(id) {
   const attr = document.getElementById(`grad-attr-${id}`).value;
   const numClasses = parseInt(document.getElementById(`grad-classes-${id}`).value) || 5;
   const rampName = document.getElementById(`grad-ramp-${id}`).value;
+  const methodSel = document.getElementById(`grad-method-${id}`);
+  const method = methodSel ? methodSel.value : 'equal';
   if (!attr) { showToast('Select a column', 'error'); return; }
 
   // Get numeric values
@@ -7850,9 +7885,18 @@ function applyGraduated(id) {
   const maxVal = Math.max(...numVals);
   const ramp = COLOR_RAMPS[rampName] || COLOR_RAMPS.viridis;
 
-  // Classify into numClasses equal-interval bands and derive one colour per
-  // band from the ramp, so the Classes control actually drives the rendering.
-  const breaks = computeClassificationBreaks('equal', numVals, numClasses) || [minVal, maxVal];
+  // Read manual breaks from the display inputs if method is manual
+  let manualBreaks = null;
+  if (method === 'manual') {
+    const container = document.getElementById(`grad-classes-display-${id}`);
+    if (container) {
+      const inputs = container.querySelectorAll('.grad-class-break-input');
+      manualBreaks = Array.from(inputs).map(inp => parseFloat(inp.value)).filter(v => isFinite(v));
+    }
+  }
+
+  // Classify using the selected method
+  const breaks = computeClassificationBreaks(method, numVals, numClasses, manualBreaks) || [minVal, maxVal];
   const { bandColors } = buildClassifiedGradientCss(breaks, ramp);
 
   function getColorForValue(v) {
@@ -7887,22 +7931,45 @@ function applyGraduated(id) {
     }
   }).addTo(map);
 
-  showToast(`Graduated by ${attr} (${numClasses} classes, ${rampName})`, 'success');
-  legendState[id] = { mode:'graduated', color:info.color, geomType:_detectGeomType(info), attr, ramp, minVal, maxVal, numClasses, breaks, bandColors, shape:null };
+  showToast(`Graduated by ${attr} (${breaks.length - 1} classes, ${rampName})`, 'success');
+  legendState[id] = { mode:'graduated', color:info.color, geomType:_detectGeomType(info), attr, ramp, minVal, maxVal, numClasses: breaks.length - 1, breaks, bandColors, shape:null, method };
   refreshMapLegend();
-  _renderGraduatedClassesDisplay(id, breaks, bandColors, attr);
+  _renderGraduatedClassesDisplay(id, breaks, bandColors, attr, method);
+}
+
+// Handle method dropdown change - disable Classes input for Manual mode
+// and pre-populate the class display with current breaks for editing.
+function setGradMethod(id, method) {
+  const classesInp = document.getElementById(`grad-classes-${id}`);
+  if (classesInp) classesInp.disabled = (method === 'manual');
+  // Pre-populate manual breaks display with current breaks
+  if (method === 'manual') {
+    const st = legendState[id];
+    if (st && st.mode === 'graduated' && Array.isArray(st.breaks) && st.breaks.length >= 2) {
+      _renderGraduatedClassesDisplay(id, st.breaks, st.bandColors, st.attr, 'manual');
+    }
+  } else {
+    // Switch back to read-only display
+    const st = legendState[id];
+    if (st && st.mode === 'graduated' && Array.isArray(st.breaks) && st.breaks.length >= 2) {
+      _renderGraduatedClassesDisplay(id, st.breaks, st.bandColors, st.attr, method);
+    }
+  }
 }
 
 // Render the QGIS-style class breaks list in the symbology panel.
-// Shows each class as a colored swatch + range (e.g., "1.2 – 20.9").
-function _renderGraduatedClassesDisplay(id, breaks, bandColors, attr) {
+// In Manual mode, break values are editable inputs with add/remove controls.
+function _renderGraduatedClassesDisplay(id, breaks, bandColors, attr, method) {
   const container = document.getElementById(`grad-classes-display-${id}`);
   if (!container || !Array.isArray(breaks) || breaks.length < 2) return;
   container.innerHTML = '';
+  const isManual = method === 'manual';
+
   const title = document.createElement('div');
   title.className = 'grad-classes-title';
-  title.textContent = `${breaks.length - 1} classes — ${attr}`;
+  title.textContent = `${breaks.length - 1} classes — ${attr}${isManual ? ' (manual)' : ''}`;
   container.appendChild(title);
+
   for (let i = 0; i < breaks.length - 1; i++) {
     const row = document.createElement('div');
     row.className = 'grad-class-row';
@@ -7910,14 +7977,123 @@ function _renderGraduatedClassesDisplay(id, breaks, bandColors, attr) {
     sw.className = 'grad-class-swatch';
     sw.style.background = bandColors[i] || '#888';
     row.appendChild(sw);
-    const range = document.createElement('span');
-    range.className = 'grad-class-range';
-    const lo = Number(breaks[i]).toFixed(1);
-    const hi = Number(breaks[i + 1]).toFixed(1);
-    range.textContent = `${lo} – ${hi}`;
-    row.appendChild(range);
+
+    if (isManual) {
+      // Editable lower break
+      const loInput = document.createElement('input');
+      loInput.type = 'number';
+      loInput.step = 'any';
+      loInput.className = 'grad-class-break-input';
+      loInput.value = Number(breaks[i]).toFixed(1);
+      loInput.title = 'Lower bound (editable)';
+      row.appendChild(loInput);
+
+      const dash = document.createElement('span');
+      dash.textContent = '–';
+      dash.style.cssText = 'color:var(--text-muted);';
+      row.appendChild(dash);
+
+      // Editable upper break
+      const hiInput = document.createElement('input');
+      hiInput.type = 'number';
+      hiInput.step = 'any';
+      hiInput.className = 'grad-class-break-input';
+      hiInput.value = Number(breaks[i + 1]).toFixed(1);
+      hiInput.title = 'Upper bound (editable)';
+      row.appendChild(hiInput);
+
+      // Delete class button (not on first or last if only 2 classes)
+      if (breaks.length > 3) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'grad-class-del-btn';
+        delBtn.textContent = '✕';
+        delBtn.title = 'Remove this class';
+        delBtn.onclick = () => {
+          // Remove the upper break of this class (merge with next)
+          const newBreaks = breaks.slice();
+          newBreaks.splice(i + 1, 1);
+          _reapplyGradBreaks(id, newBreaks);
+        };
+        row.appendChild(delBtn);
+      }
+    } else {
+      const range = document.createElement('span');
+      range.className = 'grad-class-range';
+      const lo = Number(breaks[i]).toFixed(1);
+      const hi = Number(breaks[i + 1]).toFixed(1);
+      range.textContent = `${lo} – ${hi}`;
+      row.appendChild(range);
+    }
     container.appendChild(row);
   }
+
+  // Add class button (manual mode only)
+  if (isManual) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'grad-add-class-btn';
+    addBtn.textContent = '+ Add class';
+    addBtn.onclick = () => {
+      // Insert a new break at the midpoint of the largest gap
+      let maxGap = 0, gapIdx = 0;
+      for (let i = 0; i < breaks.length - 1; i++) {
+        const gap = breaks[i + 1] - breaks[i];
+        if (gap > maxGap) { maxGap = gap; gapIdx = i; }
+      }
+      const newBreak = (breaks[gapIdx] + breaks[gapIdx + 1]) / 2;
+      const newBreaks = breaks.slice();
+      newBreaks.splice(gapIdx + 1, 0, newBreak);
+      _reapplyGradBreaks(id, newBreaks);
+    };
+    container.appendChild(addBtn);
+  }
+}
+
+// Re-apply graduated symbology with new manual breaks (no full recompute).
+function _reapplyGradBreaks(id, breaks) {
+  const info = uploadedLayers.find(l => l.id === id);
+  if (!info) return;
+  const st = legendState[id];
+  if (!st || st.mode !== 'graduated') return;
+  const ramp = st.ramp;
+  const attr = st.attr;
+  const { bandColors } = buildClassifiedGradientCss(breaks, ramp);
+
+  function getColorForValue(v) {
+    return bandColors[_classIndexForValue(v, breaks)];
+  }
+
+  const geojson = { type: 'FeatureCollection', features: info.geojsonFeatures || [] };
+  if (geojson.features.length === 0) {
+    info.layer.eachLayer(sub => { if (sub.toGeoJSON) geojson.features.push(sub.toGeoJSON()); });
+  }
+  map.removeLayer(info.layer);
+  info.layer = L.geoJSON(geojson, {
+    style: feature => {
+      const v = feature.properties && parseFloat(feature.properties[attr]);
+      const c = isFinite(v) ? getColorForValue(v) : '#718096';
+      const gt = feature.geometry.type;
+      if (gt.includes('Polygon')) return { color:c, weight:2, fillColor:c, fillOpacity:0.3 };
+      if (gt.includes('Line')) return { color:c, weight:2.5, opacity:0.9 };
+      return {};
+    },
+    pointToLayer: (feature, latlng) => {
+      const v = feature.properties && parseFloat(feature.properties[attr]);
+      const c = isFinite(v) ? getColorForValue(v) : '#718096';
+      return L.circleMarker(latlng, { radius:7, color:'white', weight:1.2, fillColor:c, fillOpacity:0.9 });
+    },
+    onEachFeature: (feature, layer) => {
+      const props = feature.properties || {};
+      const label = props.site || props.name || props.NAME || props.Name || props.label || props.Label || props.id || '';
+      if (label) layer.bindTooltip(String(label), {className:'site-tooltip', direction:'top', offset:[0,-8]});
+      layer.on('click', () => showFeatureInfo(props, info.id, layer));
+    }
+  }).addTo(map);
+
+  st.breaks = breaks;
+  st.bandColors = bandColors;
+  st.numClasses = breaks.length - 1;
+  refreshMapLegend();
+  _renderGraduatedClassesDisplay(id, breaks, bandColors, attr, 'manual');
 }
 
 function resetSymbology(id) {
@@ -7937,6 +8113,10 @@ function resetSymbology(id) {
   // Clear any graduated class breaks display
   const gradDisplay = document.getElementById(`grad-classes-display-${id}`);
   if (gradDisplay) gradDisplay.innerHTML = '';
+  const gradMethod = document.getElementById(`grad-method-${id}`);
+  if (gradMethod) gradMethod.value = 'equal';
+  const gradClasses = document.getElementById(`grad-classes-${id}`);
+  if (gradClasses) gradClasses.disabled = false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
