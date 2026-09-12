@@ -12411,6 +12411,7 @@ function _initLayoutItemDrag(paper) {
       el.style.top = saved.top + 'px';
       el.style.right = 'auto';
       el.style.bottom = 'auto';
+      el.style.transform = 'none'; // clear centering transform once user has moved the item
       if (cfg.resizable && saved.w != null) {
         el.style.width = Math.max(saved.w, LAYOUT_ITEM_MIN_W) + 'px';
         el.style.height = Math.max(saved.h, LAYOUT_ITEM_MIN_H) + 'px';
@@ -12435,6 +12436,19 @@ function _initLayoutItemDrag(paper) {
 
 function _startLayoutItemDrag(e, el, paper, cfg) {
   e.preventDefault(); e.stopPropagation();
+  // Clear centering transform so the element stays where dropped.
+  // The CSS uses `left:50%; transform:translateX(-50%)` for initial centering.
+  // Once the user drags, we switch to absolute pixel positioning and must
+  // account for the transform offset so the element doesn't jump.
+  const hadTransform = el.style.transform && el.style.transform !== 'none';
+  if (!el.style.transform && getComputedStyle(el).transform !== 'none') {
+    // CSS transform (not inline) — clear it and adjust start position
+    const visualLeft = el.offsetLeft - el.offsetWidth / 2;
+    el.style.transform = 'none';
+    el.style.left = visualLeft + 'px';
+  } else if (hadTransform) {
+    el.style.transform = 'none';
+  }
   const startLeft = el.offsetLeft, startTop = el.offsetTop;
   const startX = e.clientX, startY = e.clientY;
   el.style.left = startLeft + 'px';
@@ -12446,8 +12460,11 @@ function _startLayoutItemDrag(e, el, paper, cfg) {
   function onMove(ev) {
     const dx = ev.clientX - startX, dy = ev.clientY - startY;
     const w = el.offsetWidth, h = el.offsetHeight;
-    let left = Math.max(0, Math.min(startLeft + dx, paper.clientWidth - w));
-    let top = Math.max(0, Math.min(startTop + dy, paper.clientHeight - h));
+    // Allow free movement — no clamping to paper bounds.
+    // Items can be placed anywhere the user wants, including partially
+    // outside the paper edge (useful for titles that extend beyond the map).
+    let left = startLeft + dx;
+    let top = startTop + dy;
     const g = _getSnapGrid();
     if (g > 0) { left = Math.round(left / g) * g; top = Math.round(top / g) * g; }
     el.style.left = left + 'px';
@@ -13287,7 +13304,10 @@ async function buildLayout() {
 // partially or fully outside the paper are repositioned to the nearest valid
 // position. This is called after every buildLayout() and on popout resize.
 function _clampLayoutItemsToPaper(paper, paperW, paperH) {
+  // Title and subtitle are freely movable — never clamp them.
+  const FREE_ITEMS = new Set(['layout-title', 'layout-subtitle']);
   LAYOUT_ITEM_CONFIG.forEach(cfg => {
+    if (FREE_ITEMS.has(cfg.id)) return;
     const el = document.getElementById(cfg.id);
     if (!el) return;
     // Resolve current position - prefer inline style, fall back to offset.
@@ -16112,6 +16132,8 @@ function _rescaleLayoutItems(oldW, oldH, newW, newH) {
   if (!oldW || !oldH || (oldW === newW && oldH === newH)) return;
   const sx = newW / oldW;
   const sy = newH / oldH;
+  // Title and subtitle are freely movable — don't clamp them during rescale.
+  const FREE_ITEMS = new Set(['layout-title', 'layout-subtitle']);
   LAYOUT_ITEM_CONFIG.forEach(cfg => {
     const el = document.getElementById(cfg.id);
     if (!el) return;
@@ -16143,9 +16165,11 @@ function _rescaleLayoutItems(oldW, oldH, newW, newH) {
     // Get item dimensions for clamping (re-read after size change)
     const iw = el.offsetWidth;
     const ih = el.offsetHeight;
-    // Clamp position so item stays fully within the paper
-    newLeft = Math.max(2, Math.min(newLeft, newW - iw - 4));
-    newTop = Math.max(2, Math.min(newTop, newH - ih - 4));
+    // Clamp position so item stays fully within the paper (skip free items)
+    if (!FREE_ITEMS.has(cfg.id)) {
+      newLeft = Math.max(2, Math.min(newLeft, newW - iw - 4));
+      newTop = Math.max(2, Math.min(newTop, newH - ih - 4));
+    }
     el.style.left = Math.round(newLeft) + 'px';
     el.style.top = Math.round(newTop) + 'px';
     el.style.right = 'auto';
