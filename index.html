@@ -2301,6 +2301,31 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* Composer render-status indicator */
+  #layout-render-status {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+    transition: background 0.3s, color 0.3s;
+  }
+  #layout-render-status.loading {
+    background: rgba(245, 158, 11, 0.15); color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  #layout-render-status.ready {
+    background: rgba(72, 187, 120, 0.15); color: #48bb78;
+    border: 1px solid rgba(72, 187, 120, 0.3);
+  }
+  #layout-render-status .status-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  }
+  #layout-render-status.loading .status-dot {
+    background: #f59e0b; animation: spin 0.8s linear infinite;
+    border: 2px solid rgba(245, 158, 11, 0.2); border-top-color: #f59e0b;
+  }
+  #layout-render-status.ready .status-dot { background: #48bb78; }
+  #layout-export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   /* ── Large desktop (≥1600px) ────────────────────────────────────────────── */
   @media (min-width: 1600px) {
     #topbar { height: 48px; padding: 0 20px; gap: 14px; }
@@ -3932,9 +3957,10 @@
           </details>
         </div>
         <div class="composer-sidebar-footer">
+          <div id="layout-render-status" class="loading"><span class="status-dot"></span><span id="layout-render-status-text">Loading…</span></div>
           <button class="btn-secondary" id="layout-refresh-btn" onclick="refreshComposer()" title="Refresh the composer to pick up layer, symbology and basemap changes without losing your layout.">&#x21bb; Refresh</button>
           <button class="btn-secondary composer-attached-only" id="layout-detach-btn" onclick="detachComposerWindow()" title="Open the composer in its own window so you can drag it to a second monitor. The source map stays in this window.">&#x29c9; Detach</button>
-          <button class="btn-primary" id="layout-export-btn" onclick="layoutExport(document.getElementById('layout-export-format') ? document.getElementById('layout-export-format').value : exportFormat)">Export PNG</button>
+          <button class="btn-primary" id="layout-export-btn" onclick="layoutExport(document.getElementById('layout-export-format') ? document.getElementById('layout-export-format').value : exportFormat)" disabled>Export PNG</button>
           <button class="btn-secondary composer-attached-only" onclick="closeLayoutModal()">Close</button>
         </div>
       </aside>
@@ -12159,6 +12185,17 @@ function _repositionLayoutLabels() {
 }
 
 let layoutBuildToken = 0;
+
+function _setRenderStatus(state, text) {
+  const el = document.getElementById('layout-render-status');
+  const txt = document.getElementById('layout-render-status-text');
+  const btn = document.getElementById('layout-export-btn');
+  if (!el || !txt) return;
+  el.classList.remove('loading', 'ready');
+  el.classList.add(state);
+  txt.textContent = text;
+  if (btn) btn.disabled = (state !== 'ready');
+}
 let mainLocked = false;
 let overviewLocked = false;
 let _composerRefresh = false; // true during a refresh - preserves current view
@@ -13032,6 +13069,7 @@ async function buildLayout() {
 
   // ── Show loading spinner ──
   document.getElementById('layout-loading').classList.add('show');
+  _setRenderStatus('loading', 'Rendering map…');
 
   // ── Set view ── (honor lock: restore user's edits to the layout map)
   if (mainLocked && lockedMainState) {
@@ -13241,6 +13279,8 @@ async function buildLayout() {
   _clampLayoutItemsToPaper(paper, paperW, paperH);
 
   document.getElementById('layout-loading').classList.remove('show');
+  _setRenderStatus('ready', 'Map ready');
+  showToast('Map ready for export', 'success');
 }
 
 // Ensure all furniture items are within the paper bounds. Items that would be
@@ -14110,6 +14150,7 @@ async function previewExport() {
 
 async function layoutExport(fmt) {
   showToast('Rendering export... please wait');
+  _setRenderStatus('loading', 'Exporting…');
   const paper = document.getElementById('layout-paper');
   // Toggle `exporting` class to hide editing-only chrome (lock badges) during capture.
   paper.classList.add('exporting');
@@ -14162,9 +14203,11 @@ async function layoutExport(fmt) {
       pdf.save(`map_export_${targetDpi}dpi.pdf`);
     }
     showToast(`${fmt.toUpperCase()} exported at ${targetDpi} DPI`, 'success');
+    _setRenderStatus('ready', 'Map ready');
   } catch (e) {
     console.error('Export failed:', e);
     showToast('Export failed: ' + e.message, 'error');
+    _setRenderStatus('ready', 'Map ready');
   } finally {
     paper.classList.remove('exporting');
   }
