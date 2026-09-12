@@ -141,7 +141,7 @@ body {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <div>
         <h1>&#x1F9EA; GeoSpaX</h1>
-        <div class="version">User Guide v1.4.0</div>
+        <div class="version">User Guide v1.4.1</div>
       </div>
       <button id="ug-theme-toggle" onclick="ugToggleTheme()" title="Toggle dark/light theme" style="background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:15px;color:var(--muted);line-height:1;transition:all .15s;">&#x1F319;</button>
     </div>
@@ -198,7 +198,7 @@ body {
 <div class="ug-page-header">
   <div class="breadcrumb"><a href="https://geospax.in4metrix.dev">GeoSpaX</a> &rsaquo; Documentation</div>
   <h2>&#x1F9EA; User Guide</h2>
-  <div class="subtitle">Complete reference for every GeoSpaX tool, panel, and analysis method. Covers v1.4.0.</div>
+  <div class="subtitle">Complete reference for every GeoSpaX tool, panel, and analysis method. Covers v1.4.1.</div>
 </div>
 
 <!-- GETTING STARTED -->
@@ -1392,7 +1392,7 @@ body {
   <div class="ug-section-title"><span class="ug-ico">&#x1F4DA;</span> How to Cite</div>
   <div class="ug-section-body">
     <p>Open the <b>How to Cite</b> tab in the bottom panel. GeoSpaX provides ready-formatted citations in four styles: APA (7th ed.), Chicago (17th ed.), Harvard, and BibTeX. Each has a <b>Copy</b> button.</p>
-    <p>Citation follows the <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number (v1.4.0) and access date.</p>
+    <p>Citation follows the <a href="https://force11.org/info/software-citation-principles-published-2016" target="_blank" rel="noopener noreferrer">FORCE11 Software Citation Principles</a>. For reproducibility, always include the version number (v1.4.1) and access date.</p>
     <div class="ug-callout">
       <div class="label">&#x1F4A1; Tip</div>
       A DOI will be assigned via Zenodo or DataCite for future releases. For now, use the repository URL (<code>https://geospax.in4metrix.dev/</code>) as the persistent identifier.
@@ -1502,7 +1502,7 @@ body {
     <p>Common causes: (1) too few features (need at least 30 for reliable inference), (2) distance band too small (no neighbours within the band - try increasing it or switching to KNN), (3) values have no spatial structure (the result is correct - there is no clustering). Check the weights matrix report in the results panel.</p>
 
     <p><b>Q: Is IDW the same as kriging?</b></p>
-    <p>No. IDW is a deterministic interpolation method that weights nearby points by inverse distance. It does not model spatial autocorrelation and can produce "bull's-eye" artefacts around isolated extreme values. Kriging uses a fitted variogram model and is statistically optimal under certain assumptions. GeoSpaX provides IDW for quick exploratory surfaces; kriging is planned for v1.4.0.</p>
+    <p>No. IDW is a deterministic interpolation method that weights nearby points by inverse distance. It does not model spatial autocorrelation and can produce "bull's-eye" artefacts around isolated extreme values. Kriging uses a fitted variogram model and is statistically optimal under certain assumptions. GeoSpaX provides IDW for quick exploratory surfaces; kriging is planned for a future release.</p>
 
     <p><b>Q: What is the difference between BIOCLIM and MaxEnt?</b></p>
     <p>BIOCLIM is a simple bioclimatic envelope model that uses percentile ranges of environmental variables at presence points. MaxEnt uses maximum entropy modelling with a more sophisticated machine-learning approach. BIOCLIM is faster and fully client-side; MaxEnt requires an API call. For most teaching and exploratory work, BIOCLIM is sufficient. For publication, consider MaxEnt or ensemble approaches.</p>
@@ -1546,7 +1546,7 @@ body {
     <h3>Citation and licensing</h3>
 
     <p><b>Q: How do I cite GeoSpaX in my thesis or paper?</b></p>
-    <p>Open the <b>How to Cite</b> tab in the bottom panel for ready-formatted citations in APA (7th ed.), Chicago (17th ed.), Harvard, and BibTeX. Always include the version number (v1.4.0) and access date. See the <a href="#how-to-cite">How to Cite</a> section and the <a href="#references">References</a> section for details.</p>
+    <p>Open the <b>How to Cite</b> tab in the bottom panel for ready-formatted citations in APA (7th ed.), Chicago (17th ed.), Harvard, and BibTeX. Always include the version number (v1.4.1) and access date. See the <a href="#how-to-cite">How to Cite</a> section and the <a href="#references">References</a> section for details.</p>
 
     <p><b>Q: Can I use GeoSpaX for commercial purposes?</b></p>
     <p>Yes. GeoSpaX is licensed under the MIT License, which permits commercial use, modification, and distribution. See the <a href="#licenses">Licenses &amp; Attribution</a> section for third-party library licenses.</p>
@@ -1631,7 +1631,7 @@ body {
       <thead><tr><th>#</th><th>Reference</th><th>Used in</th></tr></thead>
       <tbody>
         <tr><td>26</td><td>Smith, A. M. et al. (2016). Software citation principles with FORCE11. <i>PeerJ Computer Science</i> 2: e86.</td><td>How to Cite format</td></tr>
-        <tr><td>27</td><td>Moses, J. (2026). GeoSpaX: Interactive Web GIS &amp; Spatial Analysis, Version 1.4.0. School of Forestry, University of Technology, Papua New Guinea. Available at: https://geospax.in4metrix.dev/</td><td>GeoSpaX self-citation</td></tr>
+        <tr><td>27</td><td>Moses, J. (2026). GeoSpaX: Interactive Web GIS &amp; Spatial Analysis, Version 1.4.1. School of Forestry, University of Technology, Papua New Guinea. Available at: https://geospax.in4metrix.dev/</td><td>GeoSpaX self-citation</td></tr>
       </tbody>
     </table>
   </div>

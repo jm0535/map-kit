@@ -1,6 +1,6 @@
 # GeoSpaX - Blueprint & Changelog
 
-**Version:** 1.3.2
+**Version:** 1.4.1
 **Author:** Jimmy Moses  
 **Affiliation:** School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology  
 **URL:** https://geospax.in4metrix.dev/  
@@ -11,7 +11,7 @@
 
 ## How to Cite
 
-> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.3.2) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
+> Moses, J. (2026). GeoSpaX: Interactive Web GIS & Spatial Analysis (Version 1.4.1) [Computer software]. School of Forestry, Faculty of Natural Resources, Papua New Guinea University of Technology. Retrieved [access date], from https://geospax.in4metrix.dev/
 
 See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, and BibTeX formats with copy-to-clipboard.
 
@@ -19,7 +19,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 ## Version History
 
-### v1.3.2 (2026-09-11) - Interactive Minimap, Save Workspace Dialog, Documentation
+### v1.4.1 (2026-09-14) - Interactive Minimap, Save Workspace Dialog, Documentation
 
 #### Interactive Overview Minimap
 - **Click to pan**: single click on the minimap in the right panel Overview section recenters the main map to the clicked location
@@ -43,7 +43,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 ---
 
-### v1.3.1 (2026-09-11) - UI Fixes, Keyboard Shortcuts, Documentation
+### v1.3.1 (2026-09-14) - UI Fixes, Keyboard Shortcuts, Documentation
 
 #### Digitizing Toolbar Relocation
 - **Moved to top-center**: floating edit tools (draw point, line, polygon, edit, select, undo, redo, cancel) moved from vertical right-side stack to horizontal bar at top-center of map
@@ -84,7 +84,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 
 #### GeoTIFF Raster Symbology (QGIS/ArcGIS workflow)
 - **Direct Symbology styling**: GeoTIFF layers are auto-selected in the Symbology panel on load - no need to visit the Analysis panel first
-- **Shared raster controls**: Band selection, Colour ramp (8 palettes including Singleband Gray), Min/Max stretch with reset, Opacity slider
+- **Shared raster controls**: Band selection, Colour ramp (22 palettes including Singleband Gray), Min/Max stretch with reset, Opacity slider
 - **Continuous rendering**: smooth gradient mapping every pixel value to its own colour along the ramp
 - **Classified rendering**: Equal Interval, Quantile, Natural Breaks (Jenks), Manual breaks; 2-10 classes
 - **Live palette switching**: `updateColors()` API for real-time colour function updates on GeoRasterLayer
@@ -290,7 +290,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 - [x] **GBIF common-name search** - search by common name, user-controlled limits with pagination *(v1.3.0)*
 - [x] **Fine-grained zoom** - 0.25 zoom increments in main map and composer *(v1.3.0)*
 
-### v1.4.0 (Planned)
+### Future Roadmap
 - [ ] **Kriging interpolation** - ordinary kriging with variogram fitting (replace IDW limitation)
 - [ ] **Geographically Weighted Regression (GWR)** - local regression for spatial non-stationarity
 - [ ] **Point Pattern Analysis** - Ripley's K, kernel density estimation with bandwidth selection
