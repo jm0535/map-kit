@@ -34,6 +34,17 @@
   var GSX = root.GSX;
   if (!GSX) throw new Error('geospax-conservation.js must load first');
 
+  // HTML-escape helper — prevents XSS from user-controlled data.
+  function esc(s) {
+    if (root.escapeHtml) return root.escapeHtml(String(s));
+    return String(s)
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, '&#39;');
+  }
+
   /* ===================================================================
      1. ENVIRONMENTAL SAMPLING  (fixes 1 & 2)
      =================================================================== */
@@ -550,7 +561,7 @@
     if (result.warnings && result.warnings.length) {
       parts.push('<div class="gsx-warn"><b>⚠ ' + result.warnings.length +
         ' warning' + (result.warnings.length > 1 ? 's' : '') + '</b><ul>' +
-        result.warnings.map(function (w) { return '<li>' + w + '</li>'; }).join('') +
+        result.warnings.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') +
         '</ul></div>');
     }
     host.innerHTML = parts.join('');
@@ -596,7 +607,7 @@
       onEachFeature: function (f, l) {
         var s = Math.round((f.properties._suitability || 0) * 100);
         var extra = f.properties._limiting
-          ? '<br>Limiting variable: ' + f.properties._limiting : '';
+          ? '<br>Limiting variable: ' + esc(f.properties._limiting) : '';
         if (f.properties._nodata) extra += '<br><i>no environmental data</i>';
         l.bindPopup('<b>Suitability: ' + s + '%</b>' + extra);
       }

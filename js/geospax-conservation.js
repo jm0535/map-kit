@@ -20,6 +20,18 @@
   var T = root.turf;
   var GSX = {};
 
+  // HTML-escape helper — prevents XSS from user-controlled layer names and
+  // property values inserted into innerHTML and Leaflet popups.
+  function esc(s) {
+    if (root.escapeHtml) return root.escapeHtml(String(s));
+    return String(s)
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, '&#39;');
+  }
+
   /* ===================================================================
      P0-3 — UNITS
      =================================================================== */
@@ -761,7 +773,7 @@
         },
         onEachFeature: function (f, l) {
           var site = f.properties.site || f.properties.gbifID || '(no id)';
-          l.bindPopup('<b>Priority conservation area</b><br>Site: ' + site +
+          l.bindPopup('<b>Priority conservation area</b><br>Site: ' + esc(site) +
             '<br>Habitat score: ' + f.properties._score +
             '<br>Status: Unprotected high-quality habitat');
         }
@@ -803,7 +815,7 @@
       var habVal = habSel.value;
       habSel.innerHTML = '<option value="">— select habitat layer —</option>' +
         layers.map(function (l) {
-          return '<option value="' + l.id + '">' + (l.name || l.id) + '</option>';
+          return '<option value="' + l.id + '">' + esc(l.name || l.id) + '</option>';
         }).join('');
       if (habVal && layers.some(function (l) { return l.id === habVal; })) habSel.value = habVal;
     }
@@ -811,7 +823,7 @@
       var paVal = paSel.value;
       paSel.innerHTML = '<option value="">— select protected areas —</option>' +
         layers.map(function (l) {
-          return '<option value="' + l.id + '">' + (l.name || l.id) + '</option>';
+          return '<option value="' + l.id + '">' + esc(l.name || l.id) + '</option>';
         }).join('');
       if (paVal && layers.some(function (l) { return l.id === paVal; })) paSel.value = paVal;
     }
@@ -830,7 +842,7 @@
     if (fields.indexOf('habitat_score') === -1) fields.unshift('habitat_score');
     var cur = fldSel.value || 'habitat_score';
     fldSel.innerHTML = fields.map(function (f) {
-      return '<option value="' + f + '"' + (f === cur ? ' selected' : '') + '>' + f + '</option>';
+      return '<option value="' + esc(f) + '"' + (f === cur ? ' selected' : '') + '>' + esc(f) + '</option>';
     }).join('');
   };
 
@@ -874,7 +886,7 @@
       '<div class="gsx-crit" data-idx="' + i + '" data-layer="' + l.id + '">' +
         '<div class="ad-row">' +
           '<label><input type="checkbox" id="gsx-c-on-' + i + '"> ' +
-            (l.name || 'Layer ' + (i + 1)) + '</label>' +
+            esc(l.name || 'Layer ' + (i + 1)) + '</label>' +
         '</div>' +
         '<div class="ad-row">' +
           '<label>Weight</label>' +
@@ -906,7 +918,7 @@
             '<label>Field</label>' +
             '<select id="gsx-c-fld-' + i + '">' +
               (fields.length
-                ? fields.map(function (f) { return '<option value="' + f + '">' + f + '</option>'; }).join('')
+                ? fields.map(function (f) { return '<option value="' + esc(f) + '">' + esc(f) + '</option>'; }).join('')
                 : '<option value="">(no numeric fields)</option>') +
             '</select>' +
           '</span>' +
@@ -1056,8 +1068,8 @@
       '<th>Parameter</th><th>Weight</th><th>Normalised</th>' +
       '</tr></thead><tbody>' +
       rows.map(function (r) {
-        return '<tr><td>' + r.criterion + '</td><td>' + r.method + '</td>' +
-               '<td>' + r.direction + '</td><td>' + r.parameter + '</td>' +
+        return '<tr><td>' + esc(r.criterion) + '</td><td>' + esc(r.method) + '</td>' +
+               '<td>' + esc(r.direction) + '</td><td>' + esc(r.parameter) + '</td>' +
                '<td>' + r.rawWeight + '</td><td>' + r.normalisedWeight + '</td></tr>';
       }).join('') +
       '</tbody></table>' +

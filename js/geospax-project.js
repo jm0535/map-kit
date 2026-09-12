@@ -21,6 +21,19 @@
   var FORMAT_VERSION = 1;
   var AUTOSAVE_KEY = 'gsx_project_autosave';
 
+  // HTML-escape helper — prevents XSS from user-controlled layer names and
+  // metadata values inserted into innerHTML. Uses the global escapeHtml()
+  // from index.html when available; falls back to a complete local escape.
+  function esc(s) {
+    if (root.escapeHtml) return root.escapeHtml(String(s));
+    return String(s)
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, '&#39;');
+  }
+
   /* `uploadedLayers` and `map` are declared with let/const in the main
      <script>, so they are NOT properties of window. Resolve them through
      the global lexical scope at call time instead of via `root`. */
@@ -318,11 +331,11 @@
     var host = document.getElementById('gsx-meta-form');
     if (!host) return;
     host.innerHTML =
-      '<div class="ad-subhead">Provenance — ' + (l.name || '') + '</div>' +
+      '<div class="ad-subhead">Provenance — ' + esc(l.name || '') + '</div>' +
       META_FIELDS.map(function (f) {
         return '<div class="ad-row"><label>' + f[1] + '</label>' +
           '<input id="gsx-meta-' + f[0] + '" type="text" value="' +
-          String(m[f[0]] || '').replace(/"/g, '&quot;') + '"></div>';
+          esc(m[f[0]] || '') + '"></div>';
       }).join('') +
       '<div class="ad-row"><button class="export-btn primary" ' +
       'onclick="GSX.uiSaveMeta(\'' + layerId + '\')">Save provenance</button></div>';
@@ -361,7 +374,7 @@
           var v = r[c] || '';
           var flag = (!v && miss.indexOf(c) !== -1);
           return '<td' + (flag ? ' class="gsx-missing"' : '') + '>' +
-                 (v || (flag ? '— required —' : '')) + '</td>';
+                 esc(v || (flag ? '— required —' : '')) + '</td>';
         }).join('') + '</tr>';
       }).join('') +
       '</tbody></table>' +

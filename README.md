@@ -75,7 +75,7 @@ After import the layer appears in the **Layers** panel and the map zooms to its 
 
 **Keyboard shortcuts**: `+` / `−` zoom in/out, `F` toggle fullscreen, `L` toggle left panel, `A` toggle Analysis drawer, `Esc` cancel digitizing / close modals, `Enter` confirm inline rename, `Ctrl+Z` undo, `Ctrl+Y` / `Ctrl+Shift+Z` redo, `Ctrl+D` duplicate selected features. Shortcuts are suppressed when typing in text inputs.
 
-**Basemaps**: OpenTopoMap (Topo), Esri World Imagery (Satellite), OpenStreetMap (Streets), Esri Shaded Relief (Relief), Esri World Topo (Terrain), CartoDB Dark Matter (Dark).
+**Basemaps**: 10 free basemaps — Esri World Topo (Topo), Esri World Imagery (Satellite), OpenStreetMap (Streets), Esri Hillshade, OpenTopoMap, CartoDB Positron (Light), CartoDB Dark Matter (Dark), USGS Topo, USGS Imagery, USGS Shaded Relief.
 
 ---
 
@@ -106,7 +106,7 @@ Click a layer name to open **Symbology** controls. Newly loaded layers are auto-
 
 - **Simple Symbol** - fill colour, marker size, opacity, stroke colour / width / style (solid, dashed, dotted, dash-dot). Marker shapes: circle, square, triangle, diamond, star, cross.
 - **Categorized** - one colour per unique attribute value (16-colour palette). Click legend entries on the map to rename them inline.
-- **Graduated** - numeric attribute divided into 2-10 classes using a colour ramp. 21 ramps available across 5 categories: Sequential multi-hue (Viridis, Inferno, Plasma, Magma), Sequential single-hue (Greys, Blues, Greens, Reds, Oranges, Purples), Diverging (Spectral, Red-Yellow-Green, Red-Blue, Brown-Teal, Purple-Green), Thematic (Heat, Cool, Terrain, Yellow-Red-Green, Hot), and Qualitative (Accent, Set 1, Dark 2). Classification methods: Equal Interval, Quantile, Natural Breaks (Jenks), Manual.
+- **Graduated** - numeric attribute divided into 2-10 classes using a colour ramp. 21 ramps available across 5 categories: Sequential multi-hue (Viridis, Inferno, Plasma, Magma), Sequential single-hue (Greys, Blues, Greens, Reds, Oranges, Purples), Diverging (Spectral, Red-Yellow-Green, Red-Blue, Brown-Teal, Purple-Green), Thematic (Heat, Cool, Terrain), and Qualitative (Accent, Set 1, Dark 2). Classification methods: Equal Interval, Quantile, Natural Breaks (Jenks), Manual.
 - **Reset** - returns the layer to default styling.
 
 #### Raster layers (GeoTIFF)

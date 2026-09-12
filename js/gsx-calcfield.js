@@ -369,12 +369,12 @@
   // ─────────────────────────────────────────────────────────────────────────
   // UI wiring
   // ─────────────────────────────────────────────────────────────────────────
-  var CF = { version: '1.2.0' };
+  var CF = { version: '1.4.1' };
   root.GSXCF = CF;
   var MAX_ROWS = 8;
 
   function $(id) { return document.getElementById(id); }
-  function esc(s) { return root.escapeHtml ? root.escapeHtml(String(s)) : String(s).replace(/&/g, '&').replace(/</g, '<'); }
+  function esc(s) { return root.escapeHtml ? root.escapeHtml(String(s)) : String(s).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, '&#39;'); }
 
   CF.currentLayerId = function () {
     var sel = $('analysis-layer-select');
