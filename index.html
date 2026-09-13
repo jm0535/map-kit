@@ -3151,11 +3151,11 @@
     <!-- Layer selector -->
     <div style="margin-bottom:2px;">
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">Select the layer to analyse, then click any tool below.</div>
-      <select id="analysis-layer-select" class="ad-layer-select" onchange="refreshAnalysisAttrSelect(); refreshAnalysisFilter()">
-        <option value=""> - Select layer - </option>
+      <select id="analysis-layer-select" class="ad-layer-select" onchange="refreshAnalysisAttrSelect(); refreshAnalysisFilter()" title="Layer A — primary layer for analysis">
+        <option value=""> - Layer A: select layer - </option>
       </select>
-      <select id="analysis-layer-select-b" style="display:none">
-        <option value=""> - Second layer - </option>
+      <select id="analysis-layer-select-b" style="display:none" title="Layer B — second layer for overlay, protection gap, change detection">
+        <option value=""> - Layer B: select second layer - </option>
       </select>
       <div id="analysis-filter-wrapper" style="margin-top:4px; display:none;">
         <select id="analysis-filter-field" class="ad-layer-select" style="margin-bottom:4px; font-size:11px;" onchange="refreshAnalysisFilterValues()" title="Select the field to filter by">
@@ -3484,8 +3484,8 @@
     <!-- Old WLC and SDM panels removed - replaced by GSX module panels below -->
 
     <!-- ── SECTION 9: Conservation Planning (M1) ── -->
-    <div class="ad-section-title" id="gsx-conservation-section" onclick="toggleAnalysisSection(this)"><span>&#x1F333; Conservation Planning</span><span class="arrow">&#x25BC;</span></div>
-    <div class="ad-hint">Vector overlay toolkit, protection-gap reporting, and weighted linear combination (WLC) suitability mapping.</div>
+    <div class="ad-section-title" id="gsx-conservation-section" onclick="toggleAnalysisSection(this); toggleSecondLayer(this)"><span>&#x1F333; Conservation Planning</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-hint">Vector overlay toolkit, protection-gap reporting, and weighted linear combination (WLC) suitability mapping. <b>Requires two layers</b> — select Layer A and Layer B from the dropdowns at the top of this drawer.</div>
 
     <div class="ad-subhead">Vector Overlay</div>
     <div class="ad-tool-desc">Union, intersect, or erase the two selected layers (A and B above).</div>
@@ -3548,7 +3548,7 @@
     <div id="gsx-wlc-table"></div>
 
     <!-- ── SECTION 10: Landscape Metrics (M2) ── -->
-    <div class="ad-section-title" id="gsx-m2-section" onclick="toggleAnalysisSection(this)"><span>&#x1F5FA;&#xFE0F; Landscape Metrics</span><span class="arrow">&#x25BC;</span></div>
+    <div class="ad-section-title" id="gsx-m2-section" onclick="toggleAnalysisSection(this); toggleSecondLayer(this)"><span>&#x1F5FA;&#xFE0F; Landscape Metrics</span><span class="arrow">&#x25BC;</span></div>
     <div class="ad-hint">Equal-area reporting, patch fragmentation, connectivity graph, and two-date change detection.</div>
 
     <div class="ad-subhead">Area Reporting</div>
@@ -9181,7 +9181,7 @@ let analysisOverlays = [];
 function refreshAnalysisLayerSelect() {
   const sel = document.getElementById('analysis-layer-select');
   const prev = sel.value;
-  sel.innerHTML = '<option value=""> - Select layer - </option>';
+  sel.innerHTML = '<option value=""> - Layer A: select layer - </option>';
   sel.innerHTML += '<option value="__all__">All visible features</option>';
   uploadedLayers.forEach(l => {
     sel.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
@@ -9192,7 +9192,7 @@ function refreshAnalysisLayerSelect() {
   const selB = document.getElementById('analysis-layer-select-b');
   if (selB) {
     const prevB = selB.value;
-    selB.innerHTML = '<option value=""> - Second layer - </option>';
+    selB.innerHTML = '<option value=""> - Layer B: select second layer - </option>';
     uploadedLayers.forEach(l => {
       selB.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
     });
@@ -11163,6 +11163,16 @@ function toggleAnalysisSection(title) {
     el.classList.toggle('ad-collapsed', collapsed);
     el = el.nextElementSibling;
   }
+}
+
+// Show/hide the second layer selector (Layer B) when a section that needs
+// two layers (Conservation Planning, Landscape Metrics change detection) is
+// expanded. Hide it again when the section is collapsed.
+function toggleSecondLayer(title) {
+  const selB = document.getElementById('analysis-layer-select-b');
+  if (!selB) return;
+  const collapsed = title.classList.contains('collapsed');
+  selB.style.display = collapsed ? 'none' : 'block';
 }
 
 // Collapse every collapsible section in the left, right and analysis panels on

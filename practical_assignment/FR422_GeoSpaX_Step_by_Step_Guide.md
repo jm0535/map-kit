@@ -764,16 +764,18 @@ This step is optional for the four required maps but strongly recommended for Pa
 ### Step 2: Run the Protection Gap tool
 
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
-2. Scroll to the **🌳 Conservation Planning** section.
-3. In the **Protection Gap** subsection, the tool uses Layer A and Layer B from the top of the Analysis drawer.
-4. Set **Layer A** to your species layer (or your convex hull layer - the hull is the planning region).
-5. Set **Layer B** to the protected-areas layer.
-6. Click **Run Protection Gap**.
-7. The results panel shows:
+2. At the **top** of the Analysis drawer, you see two layer dropdowns: **Layer A** and **Layer B**. (Layer B appears when you open the Conservation Planning section.)
+3. Set **Layer A** (the first dropdown) to your species layer (or your convex hull layer - the hull is the planning region).
+4. Set **Layer B** (the second dropdown, labelled "Layer B: select second layer") to the protected-areas layer.
+5. Scroll down to the **🌳 Conservation Planning** section and click the header to expand it.
+6. Find the **Protection Gap** subsection.
+7. Click **Run Protection Gap**.
+8. The results panel (bottom panel, **Analysis Results** tab) shows:
    - **Total habitat area:** the area of your hull (or species points' extent) in hectares
-   - **Protected area:** how much of your habitat is inside existing protected areas
-   - **Gap area:** how much of your habitat is NOT inside any protected area
-   - **Gap percentage:** the percentage of your habitat that is unprotected
+   - **Inside protected areas:** how much of your habitat is inside existing protected areas
+   - **Outside protected areas (gap):** how much of your habitat is NOT inside any protected area
+   - **Protected proportion:** the percentage of your habitat that is protected
+   - **Protected areas intersected:** the names of the protected areas that overlap your habitat
 
 > **![screenshots/protection_gap_results.png](screenshots/protection_gap_results.png)**
 >
