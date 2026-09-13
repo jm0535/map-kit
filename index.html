@@ -3488,7 +3488,15 @@
     <div class="ad-hint">Vector overlay toolkit, protection-gap reporting, and weighted linear combination (WLC) suitability mapping. <b>Requires two layers</b> — select Layer A and Layer B from the dropdowns at the top of this drawer.</div>
 
     <div class="ad-subhead">Vector Overlay</div>
-    <div class="ad-tool-desc">Union, intersect, or erase the two selected layers (A and B above).</div>
+    <div class="ad-tool-desc">Union, intersect, or erase two layers.</div>
+    <div class="ad-form-row">
+      <label>Layer A</label>
+      <select id="gsx-overlay-layer-a" onchange="syncLayerA(this.value)"><option value=""> - select layer A - </option></select>
+    </div>
+    <div class="ad-form-row">
+      <label>Layer B</label>
+      <select id="gsx-overlay-layer-b" onchange="syncLayerB(this.value)"><option value=""> - select layer B - </option></select>
+    </div>
     <div class="ad-form-row">
       <label>Overlay Operation</label>
       <select id="gsx-overlay-op">
@@ -3502,7 +3510,15 @@
     </div>
 
     <div class="ad-subhead">Protection Gap</div>
-    <div class="ad-tool-desc">Measures how much of layer A (e.g. forest extent) is covered by layer B (e.g. protected areas).</div>
+    <div class="ad-tool-desc">Measures how much of Layer A (e.g. habitat/hull) is covered by Layer B (e.g. protected areas).</div>
+    <div class="ad-form-row">
+      <label>Layer A (habitat / hull)</label>
+      <select id="gsx-protectgap-layer-a" onchange="syncLayerA(this.value)"><option value=""> - select habitat layer - </option></select>
+    </div>
+    <div class="ad-form-row">
+      <label>Layer B (protected areas)</label>
+      <select id="gsx-protectgap-layer-b" onchange="syncLayerB(this.value)"><option value=""> - select protected areas - </option></select>
+    </div>
     <div class="ad-btn-row">
       <button class="export-btn primary" onclick="GSX.uiProtectionGap()">Run Protection Gap</button>
     </div>
@@ -9178,6 +9194,17 @@ function rebuildProfileFromCheckboxes() {
 
 let analysisOverlays = [];
 
+// Sync an inline Conservation Planning dropdown back to the top-level Layer A selector
+function syncLayerA(val) {
+  const sel = document.getElementById('analysis-layer-select');
+  if (sel && val && sel.querySelector(`option[value="${val}"]`)) sel.value = val;
+}
+// Sync an inline Conservation Planning dropdown back to the top-level Layer B selector
+function syncLayerB(val) {
+  const sel = document.getElementById('analysis-layer-select-b');
+  if (sel && val && sel.querySelector(`option[value="${val}"]`)) sel.value = val;
+}
+
 function refreshAnalysisLayerSelect() {
   const sel = document.getElementById('analysis-layer-select');
   const prev = sel.value;
@@ -9198,6 +9225,33 @@ function refreshAnalysisLayerSelect() {
     });
     if (selB.querySelector(`option[value="${prevB}"]`)) selB.value = prevB;
   }
+
+  // Inline layer dropdowns in Conservation Planning section (mirror the top selectors)
+  const inlineA = ['gsx-overlay-layer-a', 'gsx-protectgap-layer-a'];
+  const inlineB = ['gsx-overlay-layer-b', 'gsx-protectgap-layer-b'];
+  inlineA.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prev = el.value;
+    el.innerHTML = '<option value=""> - select layer - </option>';
+    uploadedLayers.forEach(l => {
+      el.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+    });
+    if (el.querySelector(`option[value="${prev}"]`)) el.value = prev;
+    // Sync from top selector if inline is empty but top has a value
+    if (!el.value && sel.value && el.querySelector(`option[value="${sel.value}"]`)) el.value = sel.value;
+  });
+  inlineB.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prev = el.value;
+    el.innerHTML = '<option value=""> - select layer - </option>';
+    uploadedLayers.forEach(l => {
+      el.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+    });
+    if (el.querySelector(`option[value="${prev}"]`)) el.value = prev;
+    if (!el.value && selB && selB.value && el.querySelector(`option[value="${selB.value}"]`)) el.value = selB.value;
+  });
 
   // Refresh WLC panel criteria + constraint, SDM env rows, raster layer select
   if (typeof GSX !== 'undefined') {

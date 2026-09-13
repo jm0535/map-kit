@@ -764,13 +764,12 @@ This step is optional for the four required maps but strongly recommended for Pa
 ### Step 2: Run the Protection Gap tool
 
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
-2. At the **top** of the Analysis drawer, you see two layer dropdowns: **Layer A** and **Layer B**. (Layer B appears when you open the Conservation Planning section.)
-3. Set **Layer A** (the first dropdown) to your species layer (or your convex hull layer - the hull is the planning region).
-4. Set **Layer B** (the second dropdown, labelled "Layer B: select second layer") to the protected-areas layer.
-5. Scroll down to the **🌳 Conservation Planning** section and click the header to expand it.
-6. Find the **Protection Gap** subsection.
-7. Click **Run Protection Gap**.
-8. The results panel (bottom panel, **Analysis Results** tab) shows:
+2. Scroll down to the **🌳 Conservation Planning** section and click the header to expand it.
+3. Find the **Protection Gap** subsection. It has its own **Layer A** and **Layer B** dropdowns.
+4. Set **Layer A (habitat / hull)** to your species layer (or your convex hull layer - the hull is the planning region).
+5. Set **Layer B (protected areas)** to the protected-areas layer.
+6. Click **Run Protection Gap**.
+7. The results panel (bottom panel, **Analysis Results** tab) shows:
    - **Total habitat area:** the area of your hull (or species points' extent) in hectares
    - **Inside protected areas:** how much of your habitat is inside existing protected areas
    - **Outside protected areas (gap):** how much of your habitat is NOT inside any protected area
