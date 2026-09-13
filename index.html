@@ -61,6 +61,10 @@
 <!-- Shapefile export -->
 <script src="vendor/shp-write/shpwrite.js"></script>
 
+<!-- GeoPackage import (SQLite WASM) -->
+<script src="vendor/sqljs/sql-wasm.js"></script>
+<script src="js/geospax-gpkg.js"></script>
+
 <!-- Spatial analysis & raster -->
 <script src="vendor/turf-6.5.0.min.js"></script>
 <script src="vendor/geotiff-2.1.3.js"></script>
@@ -2452,10 +2456,10 @@
              ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
           <div class="upload-icon">&#x1f4c2;</div>
           <div>Drag &amp; drop files here<br>or <b>click to browse</b></div>
-          <div class="formats">CSV &middot; XLSX &middot; GeoJSON &middot; Shapefile (.zip) &middot; KML &middot; GPX &middot; GeoTIFF</div>
+          <div class="formats">CSV &middot; XLSX &middot; GeoJSON &middot; Shapefile (.zip) &middot; KML &middot; GPX &middot; GeoTIFF &middot; GeoPackage (.gpkg)</div>
         </div>
         <input type="file" id="upload-file" multiple
-               accept=".csv,.xlsx,.xls,.geojson,.json,.zip,.kml,.kmz,.gpx,.tif,.tiff"
+               accept=".csv,.xlsx,.xls,.geojson,.json,.zip,.kml,.kmz,.gpx,.tif,.tiff,.gpkg"
                onchange="handleFiles(this.files)">
         <div class="processing" id="processing">
           <div class="spinner"></div>
@@ -2916,7 +2920,7 @@
         <!-- ── GETTING STARTED ── -->
         <div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:3px;margin-top:2px;">&#x25B6; Getting Started</div>
         Drag &amp; drop any supported file onto the map, or click the <b>Data Sources</b> panel and use <b>Choose file</b>.<br>
-        Supported formats: <b>GeoJSON</b>, <b>KML/KMZ</b>, <b>GPX</b>, <b>Shapefile (.zip)</b>, <b>CSV</b>, <b>XLSX</b>, <b>GeoTIFF</b>.<br>
+        Supported formats: <b>GeoJSON</b>, <b>KML/KMZ</b>, <b>GPX</b>, <b>Shapefile (.zip)</b>, <b>CSV</b>, <b>XLSX</b>, <b>GeoTIFF</b>, <b>GeoPackage (.gpkg)</b>.<br>
         CSV and XLSX files open a column mapper - pick the latitude, longitude, optional label, and elevation columns, and set the source CRS if your coordinates are projected (e.g. UTM).<br>
         Try the built-in sample: click <b>Species Richness</b> in the <b>Sample Datasets</b> section of <b>Data Sources</b> to load ready-made data and explore all analysis tools.<br><br>
 
@@ -8555,6 +8559,26 @@ async function processFile(file) {
   }
   else if (ext === 'tif' || ext === 'tiff') {
     await loadGeoTIFFFile(file, name);
+  }
+  else if (ext === 'gpkg') {
+    showProcessing('Reading GeoPackage...');
+    try {
+      const layers = await GeoSpaXGpkg.readGeoPackage(file);
+      if (!layers.length) {
+        showToast('GeoPackage has no feature layers', 'error');
+        return;
+      }
+      for (const lyr of layers) {
+        addUploadedGeoJSON(lyr.featureCollection, `${name} [${lyr.name}]`);
+      }
+      showToast(`Loaded ${layers.length} layer(s) from GeoPackage`, 'success');
+    } catch (e) {
+      console.error('GeoPackage read error:', e);
+      showToast('Failed to read GeoPackage: ' + e.message, 'error');
+    }
+    finally {
+      hideProcessing();
+    }
   }
   else {
     showToast(`Unsupported file type: .${ext}`, 'error');
