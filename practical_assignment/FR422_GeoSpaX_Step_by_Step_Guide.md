@@ -780,7 +780,7 @@ This step is optional for the four required maps but strongly recommended for Pa
 >
 > **Figure 25.** Protection Gap analysis results showing total habitat area, protected area, gap area, and gap percentage for the training file.
 >
-> *Example result (training file): Total habitat area 807,358 ha, inside protected areas 59,918 ha, gap 747,437 ha, protected proportion 7.4%, protected areas intersected: Nusareng and YUS.*
+> *Example result: Total habitat area 776,895 ha, inside protected areas 43,755 ha, gap 734,995 ha, protected proportion 5.6%, protected areas intersected: Nusareng and YUS.*
 
 ### Step 3: Interpret the gap
 
