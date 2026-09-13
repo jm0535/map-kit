@@ -656,18 +656,22 @@
   function twoLayers() {
     var a = document.getElementById('analysis-layer-select').value;
     var b = document.getElementById('analysis-layer-select-b').value;
-    // Fallback: check inline Conservation Planning dropdowns if top selectors are empty
+    // Fallback: check inline Conservation Planning / Landscape Metrics dropdowns if top selectors are empty
     if (!a) {
       var oa = document.getElementById('gsx-overlay-layer-a');
       var pa = document.getElementById('gsx-protectgap-layer-a');
+      var ca = document.getElementById('gsx-changedet-layer-a');
       if (oa && oa.value) a = oa.value;
       else if (pa && pa.value) a = pa.value;
+      else if (ca && ca.value) a = ca.value;
     }
     if (!b) {
       var ob = document.getElementById('gsx-overlay-layer-b');
       var pb = document.getElementById('gsx-protectgap-layer-b');
+      var cb = document.getElementById('gsx-changedet-layer-b');
       if (ob && ob.value) b = ob.value;
       else if (pb && pb.value) b = pb.value;
+      else if (cb && cb.value) b = cb.value;
     }
     if (!a || !b) { root.showToast('Select two layers (Layer A and Layer B)', 'error'); return null; }
     if (a === b)  { root.showToast('Select two different layers', 'error'); return null; }
