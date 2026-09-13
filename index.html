@@ -3491,11 +3491,11 @@
     <div class="ad-tool-desc">Union, intersect, or erase two layers.</div>
     <div class="ad-form-row">
       <label>Layer A</label>
-      <select id="gsx-overlay-layer-a" onchange="syncLayerA(this.value)"><option value=""> - select layer A - </option></select>
+      <select id="gsx-overlay-layer-a"><option value=""> - select layer A - </option></select>
     </div>
     <div class="ad-form-row">
       <label>Layer B</label>
-      <select id="gsx-overlay-layer-b" onchange="syncLayerB(this.value)"><option value=""> - select layer B - </option></select>
+      <select id="gsx-overlay-layer-b"><option value=""> - select layer B - </option></select>
     </div>
     <div class="ad-form-row">
       <label>Overlay Operation</label>
@@ -3513,11 +3513,11 @@
     <div class="ad-tool-desc">Measures how much of Layer A (e.g. habitat/hull) is covered by Layer B (e.g. protected areas).</div>
     <div class="ad-form-row">
       <label>Layer A (habitat / hull)</label>
-      <select id="gsx-protectgap-layer-a" onchange="syncLayerA(this.value)"><option value=""> - select habitat layer - </option></select>
+      <select id="gsx-protectgap-layer-a"><option value=""> - select habitat layer - </option></select>
     </div>
     <div class="ad-form-row">
       <label>Layer B (protected areas)</label>
-      <select id="gsx-protectgap-layer-b" onchange="syncLayerB(this.value)"><option value=""> - select protected areas - </option></select>
+      <select id="gsx-protectgap-layer-b"><option value=""> - select protected areas - </option></select>
     </div>
     <div class="ad-btn-row">
       <button class="export-btn primary" onclick="GSX.uiProtectionGap()">Run Protection Gap</button>
@@ -3607,11 +3607,11 @@
     <div class="ad-tool-desc">Layer 1 = earlier extent (T1). Layer 2 = later extent (T2).</div>
     <div class="ad-form-row">
       <label>Layer 1 (T1 — earlier)</label>
-      <select id="gsx-changedet-layer-a" onchange="syncLayerA(this.value)"><option value=""> - select layer - </option></select>
+      <select id="gsx-changedet-layer-a"><option value=""> - select layer - </option></select>
     </div>
     <div class="ad-form-row">
       <label>Layer 2 (T2 — later)</label>
-      <select id="gsx-changedet-layer-b" onchange="syncLayerB(this.value)"><option value=""> - select layer - </option></select>
+      <select id="gsx-changedet-layer-b"><option value=""> - select layer - </option></select>
     </div>
     <div class="ad-form-row">
       <label>Year T1</label>
@@ -9202,17 +9202,6 @@ function rebuildProfileFromCheckboxes() {
 
 let analysisOverlays = [];
 
-// Sync an inline Conservation Planning dropdown back to the top-level Layer A selector
-function syncLayerA(val) {
-  const sel = document.getElementById('analysis-layer-select');
-  if (sel && val && sel.querySelector(`option[value="${val}"]`)) sel.value = val;
-}
-// Sync an inline Conservation Planning dropdown back to the top-level Layer B selector
-function syncLayerB(val) {
-  const sel = document.getElementById('analysis-layer-select-b');
-  if (sel && val && sel.querySelector(`option[value="${val}"]`)) sel.value = val;
-}
-
 function refreshAnalysisLayerSelect() {
   const sel = document.getElementById('analysis-layer-select');
   const prev = sel.value;
@@ -9234,7 +9223,7 @@ function refreshAnalysisLayerSelect() {
     if (selB.querySelector(`option[value="${prevB}"]`)) selB.value = prevB;
   }
 
-  // Inline layer dropdowns in Conservation Planning section (mirror the top selectors)
+  // Inline layer dropdowns in Conservation Planning section (independent per tool)
   const inlineA = ['gsx-overlay-layer-a', 'gsx-protectgap-layer-a', 'gsx-changedet-layer-a'];
   const inlineB = ['gsx-overlay-layer-b', 'gsx-protectgap-layer-b', 'gsx-changedet-layer-b'];
   inlineA.forEach(id => {
@@ -9246,8 +9235,6 @@ function refreshAnalysisLayerSelect() {
       el.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
     });
     if (el.querySelector(`option[value="${prev}"]`)) el.value = prev;
-    // Sync from top selector if inline is empty but top has a value
-    if (!el.value && sel.value && el.querySelector(`option[value="${sel.value}"]`)) el.value = sel.value;
   });
   inlineB.forEach(id => {
     const el = document.getElementById(id);
@@ -9258,7 +9245,6 @@ function refreshAnalysisLayerSelect() {
       el.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
     });
     if (el.querySelector(`option[value="${prev}"]`)) el.value = prev;
-    if (!el.value && selB && selB.value && el.querySelector(`option[value="${selB.value}"]`)) el.value = selB.value;
   });
 
   // Refresh WLC panel criteria + constraint, SDM env rows, raster layer select

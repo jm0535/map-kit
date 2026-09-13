@@ -653,27 +653,27 @@
     try { root.localStorage.setItem('gsx_area_unit', u); } catch (e) {}
   };
 
+  // Read two layer IDs from specific dropdown element IDs.
+  // Falls back to the top-level analysis selectors if the inline ones are empty.
+  function twoLayersFrom(aId, bId) {
+    var aEl = document.getElementById(aId);
+    var bEl = document.getElementById(bId);
+    var a = aEl ? aEl.value : '';
+    var b = bEl ? bEl.value : '';
+    // Fallback to top-level selectors if inline dropdowns are empty
+    if (!a) a = document.getElementById('analysis-layer-select').value;
+    if (!b) b = document.getElementById('analysis-layer-select-b').value;
+    if (!a || !b) { root.showToast('Select two layers (Layer A and Layer B)', 'error'); return null; }
+    if (a === b)  { root.showToast('Select two different layers', 'error'); return null; }
+    return { aId: a, bId: b, a: featuresOf(a), b: featuresOf(b),
+             aName: nameOf(a), bName: nameOf(b) };
+  }
+
+  // Legacy: read from top-level selectors only (used by tools without inline dropdowns)
   function twoLayers() {
     var a = document.getElementById('analysis-layer-select').value;
     var b = document.getElementById('analysis-layer-select-b').value;
-    // Fallback: check inline Conservation Planning / Landscape Metrics dropdowns if top selectors are empty
-    if (!a) {
-      var oa = document.getElementById('gsx-overlay-layer-a');
-      var pa = document.getElementById('gsx-protectgap-layer-a');
-      var ca = document.getElementById('gsx-changedet-layer-a');
-      if (oa && oa.value) a = oa.value;
-      else if (pa && pa.value) a = pa.value;
-      else if (ca && ca.value) a = ca.value;
-    }
-    if (!b) {
-      var ob = document.getElementById('gsx-overlay-layer-b');
-      var pb = document.getElementById('gsx-protectgap-layer-b');
-      var cb = document.getElementById('gsx-changedet-layer-b');
-      if (ob && ob.value) b = ob.value;
-      else if (pb && pb.value) b = pb.value;
-      else if (cb && cb.value) b = cb.value;
-    }
-    if (!a || !b) { root.showToast('Select two layers (Layer A and Layer B)', 'error'); return null; }
+    if (!a || !b) { root.showToast('Select two layers', 'error'); return null; }
     if (a === b)  { root.showToast('Select two different layers', 'error'); return null; }
     return { aId: a, bId: b, a: featuresOf(a), b: featuresOf(b),
              aName: nameOf(a), bName: nameOf(b) };
@@ -684,7 +684,7 @@
   }
 
   GSX.uiOverlay = function (mode) {
-    var L2 = twoLayers(); if (!L2) return;
+    var L2 = twoLayersFrom('gsx-overlay-layer-a', 'gsx-overlay-layer-b'); if (!L2) return;
     root.showToast('Running ' + mode + '…', 'info');
     var res = GSX.overlay(L2.a, L2.b, mode);
     if (!res.ok) { root.showToast(res.error, 'error'); return; }
@@ -715,7 +715,7 @@
   };
 
   GSX.uiProtectionGap = function () {
-    var L2 = twoLayers(); if (!L2) return;
+    var L2 = twoLayersFrom('gsx-protectgap-layer-a', 'gsx-protectgap-layer-b'); if (!L2) return;
     root.showToast('Computing protection gap…', 'info');
     var res = GSX.protectionGap(L2.a, L2.b);
     if (!res.ok) { root.showToast(res.error, 'error'); return; }

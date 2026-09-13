@@ -442,8 +442,13 @@
   };
 
   GSX.uiChangeDetection = function () {
-    var aId = document.getElementById('analysis-layer-select').value;
-    var bId = document.getElementById('analysis-layer-select-b').value;
+    var aEl = document.getElementById('gsx-changedet-layer-a');
+    var bEl = document.getElementById('gsx-changedet-layer-b');
+    var aId = aEl ? aEl.value : '';
+    var bId = bEl ? bEl.value : '';
+    // Fallback to top-level selectors if inline dropdowns are empty
+    if (!aId) aId = document.getElementById('analysis-layer-select').value;
+    if (!bId) bId = document.getElementById('analysis-layer-select-b').value;
     if (!aId || !bId) { root.showToast('Select two layers', 'error'); return; }
     if (aId === bId)  { root.showToast('Select two different layers', 'error'); return; }
     var y1 = parseInt((document.getElementById('gsx-year-t1') || {}).value, 10) || null;
