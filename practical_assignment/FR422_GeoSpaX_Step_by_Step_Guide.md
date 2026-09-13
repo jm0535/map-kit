@@ -2,10 +2,12 @@
 
 **Course:** FR422 Forest Wildlife and Habitat
 **Semester:** 2, 2026
-**Tool:** GeoSpaX (<https://geospax.in4metrix.dev>)
+**Tool:** GeoSpaX (<https://geospax.in4metrix.dev>) and QGIS
 **Prerequisite:** Your species choice approved by the lecturer and your species GeoJSON issued to you
 
-This guide walks you through creating all four required maps entirely in GeoSpaX, with no QGIS install needed. Record the GeoSpaX version (shown in the page footer) and today's date in your provenance table.
+This guide walks you through creating all four required maps using GeoSpaX for data preparation, analysis, and Map 3, and QGIS for the convex hull (Map 1), the habitat proxy score (Map 4), and the final project submission (.qgz or GeoPackage). Record the GeoSpaX version (shown in the page footer) and today's date in your provenance table.
+
+> **How GeoSpaX and QGIS split the work:** The assignment brief specifies that the convex hull (Map 1) and the habitat proxy score (Map 4) are built in QGIS, and that Map 3 (Gi* or LISA) is done in GeoSpaX. GeoSpaX is also used to import your file, reproject to the correct UTM zone, and run the spatial pattern analysis. You then export the reprojected points from GeoSpaX and load them into QGIS for the hull, the habitat proxy, and the final .qgz or GeoPackage submission. Map 2 (graduated attribute map) can be done in either tool; this guide shows the GeoSpaX workflow.
 
 > **Full reference:** For detailed explanations of every tool, panel, and analysis method, see the [GeoSpaX User Guide](https://geospax.in4metrix.dev/userguide.html). For version history and release notes, see the [Changelog](https://geospax.in4metrix.dev/changelog.html).
 
@@ -266,6 +268,9 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 
 **Required:** Convex hull, points with site labels, legend, scale bar, north arrow, CRS text, source line.
 **File name:** `Surname_lab_map1_study_area.pdf`
+**Tool:** QGIS (the assignment brief specifies the hull is built in QGIS after the points are saved to EPSG:32755)
+
+> **Workflow:** Use GeoSpaX to import your species file and export it to the correct UTM zone (see the export steps above). Then load the reprojected GeoJSON into QGIS to build the convex hull, label the points, and compose the final map. You can also use GeoSpaX to preview the hull and verify your data before switching to QGIS.
 
 ### Understanding this tool: Convex Hull
 
@@ -277,84 +282,55 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 
 **What the hull area is NOT:** The hull area is not forest area, not species range, not habitat area, and not a population estimate. It is the area of the convex polygon enclosing your survey points. Always report it as "hull area" with the CRS.
 
-### Step 1: Run Convex Hull
+### Step 1: Build the Convex Hull in QGIS
 
-1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
-2. Select your species layer from the **Layer** dropdown at the top of the Analysis drawer.
-3. Find the **📍 Point Pattern** section and click the **⬡ Convex Hull** button.
-4. A new "Convex Hull" layer appears on the map and in the Layers panel.
-5. The results panel (bottom panel, **Analysis Results** tab) shows:
-   - **Vertices:** (e.g., 7 for the training file)
-   - **Perimeter:** (e.g., 356.95 km)
-   - **Area:** in km²
-6. **Record the area and write your CRS (e.g., "CRS: EPSG:32755") next to it.** Do not call this number "forest area". It is the convex hull area of your survey points.
-7. **If your points span mainland and islands:** Set the **field filter** (below the layer selector in the Analysis drawer) to `stateProvince` and select your chosen landmass value before running the hull. Keep the filter on for all four maps. See the "If your species occurs on both mainland and islands" section above.
+1. Open QGIS and load your reprojected species GeoJSON (the one you exported from GeoSpaX to the correct UTM zone, e.g., EPSG:32755).
+2. If your points span mainland and islands, filter by `stateProvince` first: right-click the layer → **Filter** → enter `"stateProvince" = 'Western'` (or your chosen landmass). Keep this filter on for all four maps.
+3. Open **Processing** → **Toolbox** → search for **Convex Hull** (under Vector Geometry).
+4. Set the input layer to your species points.
+5. Run the tool. A new Convex Hull layer appears.
+6. The hull properties (vertices, perimeter, area) are shown in the processing results. **Record the area and write your CRS (e.g., "CRS: EPSG:32755") next to it.** Do not call this number "forest area". It is the convex hull area of your survey points.
 
-> **![screenshots/04_convex_hull.png](screenshots/04_convex_hull.png)**
->
-> **Figure 9.** Convex hull layer added to the map after running the Convex Hull tool. The Analysis Results panel shows vertices, perimeter, and area.
+> **Preview in GeoSpaX (optional):** You can preview the hull in GeoSpaX before switching to QGIS. Open the Analysis drawer → Point Pattern → Convex Hull. This gives you the same hull geometry and area, but the brief requires the final hull to be built in QGIS.
 
-### Step 2: Label the points with site codes
+### Step 2: Label the points with site codes in QGIS
 
-1. In the **Layers** panel (left side), find your species layer row.
-2. Click the **tag icon** (🏷) on the layer row. This opens the **Label popover**.
-3. In the label popover, find the **field dropdown** and select **`site`**.
-4. The site codes (e.g., GBIF_5459819072) now appear next to each point on the map.
-5. Adjust font size or style in the popover if needed. Click the tag icon again to close the popover.
+1. Right-click your species layer in QGIS → **Properties** → **Labels**.
+2. Set the label field to `site`.
+3. The site codes (e.g., GBIF_5459819072) now appear next to each point on the map.
+4. Adjust font size or placement as needed.
 
-> **![screenshots/05_labels.png](screenshots/05_labels.png)**
->
-> **Figure 10.** Species points labelled with site codes using the label popover (tag icon on the layer row).
+### Step 3: Style the hull in QGIS
 
-### Step 3: Style the hull
+1. Right-click the Convex Hull layer in QGIS → **Properties** → **Symbology**.
+2. Set the fill to transparent (no fill or 0% opacity) and the stroke colour to a visible colour (e.g., dark red).
+3. Set stroke width to 1.5 to 2 mm so the hull boundary is clear on the map.
 
-1. Click the **Convex Hull** layer in the Layers panel.
-2. In the **Symbology** panel (right side), set the fill opacity to 0% (transparent) and the stroke colour to a visible colour (e.g., dark red).
-3. Set stroke width to 1.5 to 2 px so the hull boundary is clear on the map.
+### Step 4: Open the QGIS Print Layout
 
-> **![screenshots/06_style_hull.png](screenshots/06_style_hull.png)**
->
-> **Figure 11.** Convex hull styled with transparent fill and a visible stroke colour in the Symbology panel.
+**What it does:** The QGIS Print Layout (also called "Map Composer" or "Layout View" in ArcGIS) takes your interactive map and arranges it on a printable page. It adds **map furniture** — title, legend, scale bar, north arrow, CRS text, and source line — and exports the result as a PNG or PDF at a chosen DPI.
 
-### Step 4: Open the Map Composer
+**Why this assignment uses it:** A screenshot of the map is not a map. A map must have a title, legend explaining the symbols, a scale bar showing distance, a north arrow showing orientation, the CRS, and a source line crediting the data. These elements are required by the assignment rubric and are standard in all published maps.
 
-#### Understanding this tool: Map Composer
-
-**What it does:** The Map Composer (also called "Print Layout" in QGIS or "Layout View" in ArcGIS) takes your interactive map and arranges it on a printable page. It adds **map furniture** - title, legend, scale bar, north arrow, CRS text, and source line - and exports the result as a PNG or PDF at a chosen DPI. The composer freezes the current map view: what you see is what gets exported.
-
-**Why this assignment uses it:** A screenshot of the map is not a map. A map must have a title, legend explaining the symbols, a scale bar showing distance, a north arrow showing orientation, the CRS, and a source line crediting the data. These elements are required by the assignment rubric and are standard in all published maps. The composer ensures every map you submit has all required elements in a consistent layout.
-
-**What it means in real-world conservation:** Every conservation plan submitted to a government agency, funding body, or community meeting includes formatted maps with these same elements. A map without a scale bar is useless for field planning - the reader cannot judge distances. A map without a source line is not citable. A map without a legend is not interpretable. The Map Composer teaches the professional habit of producing publication-ready maps, not screenshots.
-
-1. In the **left panel**, expand the **Export** section, then expand the **🗺️ Map Image** subsection. Click **🖼️ Export as PNG** or **📄 Export as PDF**.
-2. A floating **Export Map** dialog appears with options for DPI, map extent, and legend.
-3. Click **Preview** to open the Map Composer. The composer opens as a modal overlay showing your map with furniture elements.
-3. Set the paper size to **A4 Landscape** (or as directed).
-
-> **![screenshots/07_composer_open.png](screenshots/07_composer_open.png)**
->
-> **Figure 12.** Map Composer opened from the Export section, showing the map canvas with default furniture elements.
+1. In QGIS, go to **Project** → **New Print Layout** (or press `Ctrl+P`). Name it `Map1_StudyArea`.
+2. Set the paper size to **A4 Landscape** (or as directed).
+3. Use the **Add Map** tool to place your map on the layout.
+4. Use the **Add Legend**, **Add Scale Bar**, and **Add North Arrow** tools to add map furniture.
 
 ### Step 5: Add the title
 
-1. In the composer sidebar, find the **Title** input field.
+1. Use the **Add Label** tool in the QGIS Print Layout to add a title text box.
 2. Enter: `FR422 study area, [Your Species Common Name] ([Scientific Name])`
 3. Example: `FR422 study area, Emperor Bird-of-paradise (Paradisaea guilielmi)`
-4. Add a **Subtitle** with the source line: `GBIF PNG teaching extract, [access date], not a census`
+4. Add a second label with the source line: `GBIF PNG teaching extract, [access date], not a census`
 
-> **![screenshots/08_composer_titled.png](screenshots/08_composer_titled.png)**
->
-> **Figure 13.** Map Composer with the title and subtitle added in the sidebar, displayed on the map layout.
+### Step 6: Add CRS text
 
-### Step 6: Enable CRS text
-
-1. In the composer sidebar, find the **Spatial ref** checkbox (under the map elements section).
-2. Check the box. The CRS text (e.g., "EPSG:4326") appears in the bottom-right of the map.
-3. Note: The CRS text shows the map's display CRS. Write your CRS (e.g., "CRS: EPSG:32755") in your title or subtitle to meet the assignment requirement.
+1. Add a text label with your CRS (e.g., `CRS: EPSG:32755`) in the bottom-right of the layout.
 
 ### Step 7: Verify map elements
 
-Check that the following are visible on the composer:
+Check that the following are visible on the print layout:
 
 - **Points** with site labels
 - **Convex hull** boundary
@@ -364,11 +340,9 @@ Check that the following are visible on the composer:
 - **Title** and **subtitle** (top of the map)
 - **CRS text** (bottom-right)
 
-If any element is hidden, toggle it on in the composer sidebar.
-
 ### Step 8: Export the map
 
-1. In the composer, click **Export PNG** or **Export PDF**.
+1. In the QGIS Print Layout, go to **Layout** → **Export as PDF** (or **Export as PNG**).
 2. Set DPI to **300** for the final version.
 3. Save as `Surname_lab_map1_study_area.pdf`.
 
@@ -415,13 +389,16 @@ If any element is hidden, toggle it on in the composer sidebar.
 3. Example: 0 to 20%, 20 to 40%, 40 to 60%, 60 to 80%, 80 to 100%.
 4. You will state the number of classes and the break values in your report.
 
-### Step 4: Open the composer and export
+### Step 4: Compose and export in QGIS
 
-1. Open the **Composer**: in the **left panel**, expand **Export** → **🗺️ Map Image**, click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
-2. Set the title to: `Attribute map: tree cover (%) - [Your Species Name]`
-3. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
-4. Verify the legend shows the graduated classes with break values.
-5. Export as `Surname_lab_map2_attribute.pdf` at 300 DPI.
+> **Note:** Map 2 can be styled in either GeoSpaX or QGIS. Since the assignment requires a .qgz or GeoPackage submission, composing the final map in QGIS is recommended so all four maps are in one QGIS project.
+
+1. In QGIS, style your species layer with **Graduated** symbology on `tree_cover_pct` (or `elevation_m`).
+2. Open a new Print Layout (**Project** → **New Print Layout**).
+3. Set the title to: `Attribute map: tree cover (%) - [Your Species Name]`
+4. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
+5. Verify the legend shows the graduated classes with break values.
+6. Export as `Surname_lab_map2_attribute.pdf` at 300 DPI (**Layout** → **Export as PDF**).
 
 ---
 
@@ -504,17 +481,19 @@ If you prefer Local Moran's I (LISA):
 >
 > **Figure 18.** LISA cluster map showing High-High, Low-Low, and outlier classes with 999-permutation significance.
 
-### Step 5: Open the composer and export
+### Step 5: Export the Gi*/LISA layer and compose in QGIS
 
-1. Open the **Composer**: in the **left panel**, expand **Export** → **🗺️ Map Image**, click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
-2. Set the title to: `Spatial pattern: Gi* on tree cover - [Your Species Name]`
-3. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
-4. Verify the legend shows the Gi* significance classes (or LISA cluster types).
-5. Export as `Surname_lab_map3_pattern.pdf` at 300 DPI.
+The Gi* or LISA analysis runs in GeoSpaX. To compose the final map in QGIS (so all four maps live in one .qgz project):
 
-> **![screenshots/21_map3_complete.png](screenshots/21_map3_complete.png)**
->
-> **Figure 19.** Completed Map 3 in the Map Composer, showing Gi* significance classes with legend, scale bar, north arrow, and CRS text.
+1. In GeoSpaX, export the Gi*/LISA result layer: open **Export** → **� Per-Layer Export**, select the Gi*/LISA layer, set format to **GeoJSON**, and save as `Surname_lab_species_pattern.geojson`.
+2. Load this GeoJSON into QGIS as a new layer.
+3. In QGIS, open a new Print Layout (**Project** → **New Print Layout**).
+4. Set the title to: `Spatial pattern: Gi* on tree cover - [Your Species Name]`
+5. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
+6. Verify the legend shows the Gi* significance classes (or LISA cluster types).
+7. Export as `Surname_lab_map3_pattern.pdf` at 300 DPI (**Layout** → **Export as PDF**).
+
+> **Alternative:** You can also compose Map 3 directly in GeoSpaX using its Map Composer (Export → Map Image → Preview), then export as PDF. However, for a single .qgz submission, loading the Gi*/LISA layer into QGIS and composing there keeps all four maps in one project.
 
 ---
 
@@ -522,17 +501,17 @@ If you prefer Local Moran's I (LISA):
 
 **Required:** A `habitat_score` field calculated from at least three attributes (`elevation_m`, `tree_cover_pct`, `rainfall_mm`), with thresholds and weights justified by literature for your approved species. Graduated styling. Not a species distribution model.
 **File name:** `Surname_lab_map4_habitat_proxy.pdf`
-**Tool:** GeoSpaX Calculate Field tool
+**Tool:** QGIS (the assignment brief specifies the habitat proxy is built in QGIS)
 
-### Understanding this tool: Calculate Field (Weighted Conditions)
+> **Workflow:** The assignment brief states that the habitat proxy score is "built in QGIS from at least three attributes" and that "GeoSpaX has no multi-criteria evaluation tool to click." You will use QGIS Field Calculator to create the `habitat_score` field. GeoSpaX can still be used to prepare and verify your data, and to run Map 3 (Gi*/LISA) before you switch to QGIS for Map 4.
 
-**What it does:** The Calculate Field tool creates a new attribute by combining existing fields using rules you define. In **Weighted conditions** mode, each row tests one field against a threshold (e.g., `elevation_m between 0 and 2000`, `tree_cover_pct >= 50`), and each test contributes a weight to the final score. A point that passes all three tests gets a score of 3 (for equal weights of 1 each); a point that passes none gets 0.
+### Understanding this tool: QGIS Field Calculator
 
-**Why this assignment uses it:** No single environmental variable defines habitat quality for a forest species. A site at the right elevation but with no tree cover is not good habitat. A site with 90% tree cover but at sea level (wrong elevation band) is not good habitat either. The habitat score combines multiple criteria into a single ranking that reflects the species' overall requirements. The thresholds and weights must come from published literature on your species - this forces you to research the species before touching the software.
+**What it does:** The QGIS Field Calculator creates a new attribute by combining existing fields using an expression you write. For the habitat proxy, you write a conditional expression that tests each environmental field against a threshold (e.g., `elevation_m between 0 and 2000`, `tree_cover_pct >= 50`, `rainfall_mm >= 2500`) and sums the results. A point that passes all three tests gets a score of 3; a point that passes none gets 0.
 
-**What it means in real-world conservation:** This is a simplified version of **Multi-Criteria Evaluation (MCE)**, also called Weighted Linear Combination (WLC) - one of the most widely used methods in conservation planning and land-use suitability analysis. Real-world tools like Marxan, the GeoMOD module in QGIS, or ArcGIS's Weighted Overlay tool do the same thing at a more sophisticated level: they combine multiple spatial criteria with weights to produce a suitability or priority surface. The principle is identical: (1) identify the criteria that matter for your species, (2) set thresholds from literature or expert knowledge, (3) assign weights reflecting the relative importance of each criterion, (4) combine into a single score.
+**Why this assignment uses it:** No single environmental variable defines habitat quality for a forest species. A site at the right elevation but with no tree cover is not good habitat. A site with 90% tree cover but at sea level (wrong elevation band) is not good habitat either. The habitat score combines multiple criteria into a single ranking that reflects the species' overall requirements. The thresholds and weights must come from published literature on your species — this forces you to research the species before touching the software.
 
-**What it is NOT:** The habitat score is not a species distribution model (SDM). It does not use presence-absence modelling, MaxEnt, or machine learning. It does not predict where the species could occur - it only ranks the sites where the species has already been recorded. The title must say "habitat proxy", not "distribution model" or "suitability". This distinction matters because an SDM extrapolates beyond known sites, while a habitat proxy only scores known sites.
+**What it is NOT:** The habitat score is not a species distribution model (SDM). It does not use presence-absence modelling, MaxEnt, or machine learning. It does not predict where the species could occur — it only ranks the sites where the species has already been recorded. The title must say "habitat proxy", not "distribution model" or "suitability". This distinction matters because an SDM extrapolates beyond known sites, while a habitat proxy only scores known sites. GeoSpaX has no multi-criteria evaluation (MCE) tool — the brief explicitly states this. Do not look for one. The QGIS Field Calculator is the tool you use.
 
 ### Step 1: Prepare your thresholds
 
@@ -544,86 +523,57 @@ Before touching the software, write down:
 4. The **weight** for each criterion. Example: 1, 1, 1 (equal weights) or 2, 1, 1.
 5. The **citations** for each threshold.
 
-### Step 2: Open Calculate Field
+### Step 2: Open the QGIS Field Calculator
 
-1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
-2. Select your species layer from the **Layer** dropdown at the top.
-3. Scroll down to the **🧮 Attributes** section.
-4. If the section is collapsed, click the **Attributes** header to expand it.
+1. Open QGIS and load your reprojected species GeoJSON (the one you exported from GeoSpaX to the correct UTM zone).
+2. Open the attribute table (right-click the layer → Open Attribute Table, or click the table icon in the toolbar).
+3. Click the **Open Field Calculator** button (the abacus icon at the top of the attribute table, or `Ctrl+I`).
+4. Check **Create a new field**.
+5. Set **Output field name** to `habitat_score`.
+6. Set **Output field type** to **Integer** (or Whole Number).
+7. Set **Output field length** to 2 (enough for scores up to 99).
 
-> **![screenshots/22_calcfield_section.png](screenshots/22_calcfield_section.png)**
->
-> **Figure 20.** Calculate Field section in the Analysis drawer, showing the Weighted conditions mode with three empty criterion rows.
+### Step 3: Write the expression
 
-### Step 3: Set the output field name
+Write a conditional expression that sums 1 for each criterion met. The QGIS expression syntax is:
 
-1. In the **Output field name** input, type: `habitat_score`
-2. Set **Output type** to **Integer**.
-3. Note the **Style layer on this field** checkbox (checked by default):
-   - **Checked** (default): the layer is automatically styled with Graduated symbology on `habitat_score` after calculation.
-   - **Unchecked**: the field is created but the layer keeps its current styling. Use this if you want to style manually later, or if you are recalculating and do not want to change the current map appearance.
-4. **Overwrite behaviour**: if you run Calculate Field again with the same output name (`habitat_score`), the existing field is **overwritten in place** (values updated) — no `habitat_score_2` duplicate is created. This matches QGIS and ArcGIS Pro. Use a different output name if you want to keep the old field.
+```
+CASE WHEN "elevation_m" >= 0 AND "elevation_m" <= 2000 THEN 1 ELSE 0 END
++ CASE WHEN "tree_cover_pct" >= 50 THEN 1 ELSE 0 END
++ CASE WHEN "rainfall_mm" >= 2500 THEN 1 ELSE 0 END
+```
 
-### Step 4: Add your three criteria (Weighted conditions mode)
+Replace the thresholds (0, 2000, 50, 2500) with the values you justified from literature for your species. For weighted criteria, multiply each `THEN 1` by your weight (e.g., `THEN 2` for a criterion with weight 2).
 
-The Calculate Field tool opens in **Weighted conditions** mode by default, with 3 empty rows. Fill in three rows (one per criterion):
+**Table 6.** Example habitat proxy criteria for three equal-weight conditions.
 
-**Table 6.** Example Calculate Field criteria for three weighted conditions (elevation, tree cover, rainfall).
-
-| Row | Field | Test | Value | Max (if between) | Weight |
+| Criterion | Field | Test | Value | Max | Weight |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `elevation_m` | between | [low] | [high] | [weight] |
-| 2 | `tree_cover_pct` | >= | [percent] | - | [weight] |
-| 3 | `rainfall_mm` | >= | [millimetres] | - | [weight] |
-
-For each row:
-
-1. Click the **Field** dropdown and select the field name.
-2. Click the **Test** dropdown and select the operator (`between`, `>=`, `>`, `<=`, `<`, `=`, `!=`).
-3. If you chose `between`, two input boxes appear: **min** and **max**. Fill both.
-4. For other tests, fill the **value** input box.
-5. Set the **Weight** (the × column) to your chosen weight (default is 1).
+| Elevation | `elevation_m` | between | [low] | [high] | 1 |
+| Tree cover | `tree_cover_pct` | >= | [percent] | - | 1 |
+| Rainfall | `rainfall_mm` | >= | [millimetres] | - | 1 |
 
 Example for a species favouring mid-elevation forest with high rainfall:
 
-**Table 7.** Example Calculate Field criteria for a species favouring mid-elevation forest with high rainfall.
+**Table 7.** Example habitat proxy criteria for a species favouring mid-elevation forest with high rainfall.
 
-| Row | Field | Test | Value | Max | Weight |
+| Criterion | Field | Test | Value | Max | Weight |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `elevation_m` | between | 0 | 2000 | 1 |
-| 2 | `tree_cover_pct` | >= | 50 | - | 1 |
-| 3 | `rainfall_mm` | >= | 2500 | - | 1 |
+| Elevation | `elevation_m` | between | 0 | 2000 | 1 |
+| Tree cover | `tree_cover_pct` | >= | 50 | - | 1 |
+| Rainfall | `rainfall_mm` | >= | 2500 | - | 1 |
 
-### Step 5: Preview and run
+### Step 4: Run the calculation
 
-1. The **live preview** (below the rows) shows the first 5 features with old value to new value.
-2. Check that the preview values make sense (scores should be 0, 1, 2, or 3 for equal weights).
-3. Click the **🧮 Calculate field** button.
-4. The **Analysis Results** panel (bottom panel, **Analysis Results** tab) shows:
-   - **Layer:** your species layer name
-   - **Output field:** habitat_score
-   - **Features written:** 128 (or your count)
-   - **Null outputs:** 0
-   - **Min:** 0, **Max:** 3, **Mean:** (e.g., 2.742)
-   - **Layer styled graduated on habitat_score**
-   - The **exact expression** used, e.g.:
-     `(elevation_m >= 0 && elevation_m <= 2000 ? 1 : 0) + (tree_cover_pct >= 50 ? 1 : 0) + (rainfall_mm >= 2500 ? 1 : 0)`
-5. **Copy the expression** from the results panel. Paste it into your report methods section.
+1. Click **OK** in the Field Calculator. The new `habitat_score` column appears in the attribute table.
+2. Verify the values are whole numbers (0, 1, 2, or 3 for three equal-weight criteria).
+3. **Copy the expression** you used. Paste it into your report methods section.
+4. Toggle editing off (click the pencil icon in the attribute table) and save when prompted.
 
-> **![screenshots/25_calcfield_preview.png](screenshots/25_calcfield_preview.png)**
->
-> **Figure 21.** Calculate Field live preview showing the first five features with old and new habitat_score values before running the calculation.
->
-> **![screenshots/26_calcfield_results.png](screenshots/26_calcfield_results.png)**
->
-> **Figure 22.** Calculate Field results in the Analysis Results panel, showing feature count, min/max/mean, and the exact expression used.
+### Step 5: Verify the habitat_score field
 
-### Step 6: Verify the habitat_score field
-
-1. Open the **Attribute Table** (right panel).
-2. Select your species layer from the dropdown.
-3. Scroll right in the table. You should see a new **`habitat_score`** column.
-4. Confirm the values are whole numbers (0, 1, 2, or 3 for three equal-weight criteria).
+1. In the QGIS attribute table, scroll right. You should see a new **`habitat_score`** column.
+2. Confirm the values are whole numbers (0, 1, 2, or 3 for three equal-weight criteria).
 
 **What the scores mean:**
 
@@ -634,34 +584,28 @@ Example for a species favouring mid-elevation forest with high rainfall:
 | 1 | Meets 1 criterion | Marginal habitat — suboptimal, edge/transition |
 | 0 | Meets none | Unsuitable — outside environmental tolerance |
 
-**More than 3 criteria:** The score scales automatically. With 5 criteria the range is 0–5; with 8 (the maximum in weighted-conditions mode) the range is 0–8. In expression mode there is no limit. When styling, set the number of classes to match your criteria count + 1 (e.g. 6 classes for 5 criteria: 0, 1, 2, 3, 4, 5), or use **Manual** breaks to set exact class boundaries.
+**More than 3 criteria:** The score scales automatically. With 5 criteria the range is 0–5; with 8 the range is 0–8. When styling, set the number of classes to match your criteria count + 1 (e.g. 6 classes for 5 criteria: 0, 1, 2, 3, 4, 5), or use **Manual** breaks to set exact class boundaries.
 
 **Important:** This is **not** a species distribution model (SDM) and **not** a habitat suitability model. It is a transparent, rule-based proxy. Each threshold must be justified by literature for your specific species.
 
-> **![screenshots/27_attrtable_habitat_score.png](screenshots/27_attrtable_habitat_score.png)**
->
-> **Figure 23.** Attribute Table with the new habitat_score column visible, showing integer scores (0-3) for each occurrence record.
+### Step 6: Style the habitat_score in QGIS
 
-### Step 7: Style the habitat_score
+1. Right-click your species layer in the QGIS Layers panel → **Properties** → **Symbology**.
+2. Change the renderer to **Graduated**.
+3. Set the **Value** field to `habitat_score`.
+4. Set the number of classes (e.g., 4 for three equal-weight criteria: 0, 1, 2, 3).
+5. Choose a colour ramp (e.g., Greens for habitat quality, Viridis, or Spectral).
+6. Click **Classify** and then **Apply**.
 
-1. The Calculate Field tool automatically applies **Graduated** styling to the new field.
-2. If you want to adjust: select your species layer in the Layers panel, go to **Symbology, then Graduated**, and confirm the field is `habitat_score`.
-3. Set 4 or 5 classes (e.g., 0, 1, 2, 3 for three equal-weight criteria).
-4. Choose a colour ramp (e.g., Greens for habitat quality, Viridis, or Spectral). 21 ramps available.
-5. Click **Apply**.
+### Step 7: Compose and export the map in QGIS
 
-### Step 8: Open the composer and export
-
-1. Open the **Composer**: in the **left panel**, expand **Export** → **🗺️ Map Image**, click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
-2. Set the title to: `Habitat proxy of GBIF points - [Your Species Name]`
-3. **Important:** The title must say "habitat proxy of GBIF points", NOT "species distribution" or "habitat suitability".
-4. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
-5. Verify the legend shows the habitat_score classes.
-6. Export as `Surname_lab_map4_habitat_proxy.pdf` at 300 DPI.
-
-> **![screenshots/29_map4_complete.png](screenshots/29_map4_complete.png)**
->
-> **Figure 24.** Completed Map 4 in the Map Composer, showing graduated habitat_score classes with legend, scale bar, north arrow, and CRS text.
+1. In QGIS, open **Project** → **New Print Layout** (or press `Ctrl+P`).
+2. Add the map, legend, scale bar, north arrow, and title as you would in any QGIS print layout.
+3. Set the title to: `Habitat proxy of GBIF points - [Your Species Name]`
+4. **Important:** The title must say "habitat proxy of GBIF points", NOT "species distribution" or "habitat suitability".
+5. Add a subtitle with the source line: `GBIF PNG teaching extract, [access date], not a census`
+6. Verify the legend shows the habitat_score classes.
+7. Export as `Surname_lab_map4_habitat_proxy.pdf` at 300 DPI (Layout → Export as PDF).
 
 ---
 
@@ -800,26 +744,27 @@ In Part B of your report:
 
 ## After All Four Maps
 
-### Export your data
+### Export your data from GeoSpaX
 
-1. Open the **Export** panel.
-2. Set **Output CRS** to the UTM zone shown by the auto-detect hint (or manually select the correct zone for your data - see the export section above).
+GeoSpaX is used to import your file, reproject to the correct UTM zone, and run Map 3 (Gi*/LISA). Export these layers from GeoSpaX so you can load them into QGIS for the final submission:
+
+1. Open the **Export** panel in GeoSpaX.
+2. Set **Output CRS** to the UTM zone shown by the auto-detect hint (or manually select the correct zone for your data — see the export section above).
 3. Export your species layer as **GeoJSON** (`Surname_lab_species_points_utmXXS_WGS84.geojson`). **Replace `Surname` with your actual surname.**
-4. Export your species layer as **CSV** (`Surname_lab_species_points_utmXXS_WGS84.csv`) if needed.
-5. Export your Convex Hull layer as **GeoJSON** (`Surname_lab_species_hull.geojson`).
-6. Export your Gi*/LISA layer as **GeoJSON** (`Surname_lab_species_pattern.geojson`).
+4. Export your Gi*/LISA layer as **GeoJSON** (`Surname_lab_species_pattern.geojson`).
 
-### Save the project
+### Save the QGIS project (.qgz)
 
-1. Click the **💾 Save** button in the topbar.
-2. A dialog appears with a filename input pre-filled with `project_geospax.gspx`. Edit the name to `Surname_lab.gspx`.
-3. Click **Save**.
-4. In Chrome or Edge, the browser's native Save As dialog opens so you can choose where to save the file. In Firefox, the file is saved to your Downloads folder.
-5. This saves all layers, symbology, digitized features, bookmarks, and analysis results as a `.gspx` file.
+The assignment brief requires you to submit "the QGIS project (.qgz) or a GeoPackage of the lab points, the hull, and the scored points." Build this in QGIS:
 
-> **![screenshots/30_save_project.png](screenshots/30_save_project.png)**
->
-> **Figure 27.** Save Workspace dialog with the filename field pre-filled, ready to save the project as a .gspx file.
+1. In QGIS, load all your layers: the reprojected species points, the convex hull (built in QGIS in Map 1), the Gi*/LISA layer (exported from GeoSpaX), and the scored points (with `habitat_score` from Map 4).
+2. Go to **Project** → **Save As**.
+3. Name the file `Surname_lab.qgz` (replace `Surname` with your actual surname). Do not submit `final2_new.qgz`.
+4. Click **Save**.
+
+> **Alternative — GeoPackage:** Instead of a .qgz, you can export all layers to a single GeoPackage file (`Surname_lab.gpkg`) using **DB Manager** or the **Export** dialog for each layer (right-click → Export → Save Features As → format GeoPackage, same database). The brief accepts either format.
+
+> **Optional — GeoSpaX .gspx project:** You can also save a GeoSpaX project file (.gspx) as a working backup of your GeoSpaX session. Click the 💾 **Save** button in the GeoSpaX topbar and name it `Surname_lab.gspx`. This is not required by the brief but may be useful if you need to revisit your GeoSpaX analysis later.
 
 ### Complete the provenance table
 
@@ -834,17 +779,17 @@ Fill in the provenance table with:
 - **Environmental fields:** WorldClim 2.1 BIO1/BIO12/BIO15, elevation; FR422 tree-cover proxy from ESA WorldCover 2021 class 10
 - **n = [your record count]** ([your unique-site count] unique sites). Not a census.
 - **Analysis CRS:** Your correct UTM zone (EPSG:32754, 32755, or 32756)
-- **Calculate field expression:** (paste from the results panel)
+- **Calculate field expression:** (paste the QGIS Field Calculator expression you used)
 
 ### Checklist before submission
 
-- [ ] Map 1: `Surname_lab_map1_study_area.pdf`: hull, points, labels, legend, scale bar, north arrow, CRS, source line
+- [ ] Map 1: `Surname_lab_map1_study_area.pdf`: hull (built in QGIS), points, labels, legend, scale bar, north arrow, CRS, source line
 - [ ] Map 2: `Surname_lab_map2_attribute.pdf`: graduated classes, legend, CRS, source line
-- [ ] Map 3: `Surname_lab_map3_pattern.pdf`: Gi* or LISA classes, legend, CRS, source line
-- [ ] Map 4: `Surname_lab_map4_habitat_proxy.pdf`: habitat_score classes, legend, CRS, source line, title says "habitat proxy"
+- [ ] Map 3: `Surname_lab_map3_pattern.pdf`: Gi* or LISA classes (run in GeoSpaX), legend, CRS, source line
+- [ ] Map 4: `Surname_lab_map4_habitat_proxy.pdf`: habitat_score classes (built in QGIS), legend, CRS, source line, title says "habitat proxy"
 - [ ] Provenance table with GeoSpaX version and access date
 - [ ] Exported GeoJSON in the correct UTM zone (EPSG:32754, 32755, or 32756)
-- [ ] Saved `.gspx` project file
+- [ ] QGIS project (.qgz) or GeoPackage containing the lab points, the hull, and the scored points
 - [ ] Three thresholds, three weights, and citations written in the report
 - [ ] No forest-loss hectares, no protected-area percentage, no clan names unless from a cited source
 - [ ] (Recommended) Gap analysis run with WDPA layer, gap percentage reported with citation
@@ -897,28 +842,33 @@ The output is a new vector polygon layer added to the Layers panel.
 
 ---
 
-## Quick Reference: GeoSpaX Tools Used
+## Quick Reference: Tools Used
 
-**Table 9.** Quick reference of GeoSpaX tools used for each map and their location in the interface.
+**Table 9.** Quick reference of tools used for each map and where they live.
 
-| Map | Tool | Where in GeoSpaX |
+| Map | Tool | Where |
 | --- | --- | --- |
-| Map 1 | Import, Convex Hull, Feature labels, Composer | Data Sources (left panel), 🧪 Analysis drawer → 📍 Point Pattern → ⬡ Convex Hull, Layers panel (left), Composer |
-| Map 2 | Graduated symbology, Composer | 🎨 Symbology panel (right), Graduated tab, Composer |
-| Map 3 | Getis-Ord Gi* (or LISA), Composer | 🧪 Analysis drawer → 📊 Inferential Hotspots & Autocorrelation → 🔥 Getis-Ord Gi* (or 🗺️ LISA), Composer |
-| Map 4 | Calculate field, Graduated symbology, Composer | 🧪 Analysis drawer → 🧮 Attributes → 🧮 Calculate field, 🎨 Symbology panel (right), Composer |
-| Step 5 (optional) | Protection Gap, Priority Area Identification | 🧪 Analysis drawer → 🌳 Conservation Planning → Run Protection Gap / Identify Priority Areas |
+| All | Import, reproject to UTM | GeoSpaX: Data Sources (left panel), Export → Per-Layer Export |
+| Map 1 | Convex Hull, labels, Print Layout | QGIS: Processing → Convex Hull; Layer Properties → Labels; Project → New Print Layout |
+| Map 2 | Graduated symbology, Print Layout | QGIS: Layer Properties → Symbology → Graduated; Project → New Print Layout |
+| Map 3 | Getis-Ord Gi* (or LISA) | GeoSpaX: 🧪 Analysis drawer → 📊 Inferential Hotspots & Autocorrelation → 🔥 Getis-Ord Gi* (or 🗺️ LISA) |
+| Map 3 | Compose and export | QGIS: load exported Gi*/LISA GeoJSON, Project → New Print Layout |
+| Map 4 | Field Calculator, Graduated symbology, Print Layout | QGIS: Attribute Table → Field Calculator; Layer Properties → Symbology → Graduated; Project → New Print Layout |
+| Submission | QGIS project (.qgz) or GeoPackage | QGIS: Project → Save As (.qgz); or Export layers to GeoPackage |
+| Step 5 (optional) | Protection Gap, Priority Area Identification | GeoSpaX: 🧪 Analysis drawer → 🌳 Conservation Planning → Run Protection Gap / Identify Priority Areas |
 
 ## Rules to Remember
 
 1. **Use your issued file only.** Not the training file, not a classmate's file, not the built-in sample.
-2. **One analysis CRS: your correct UTM zone** (EPSG:32754, 32755, or 32756 - use the auto-detect hint in the Export panel). Export your data to this CRS.
+2. **One analysis CRS: your correct UTM zone** (EPSG:32754, 32755, or 32756 — use the auto-detect hint in the GeoSpaX Export panel). Export your data to this CRS before loading into QGIS.
 3. **Record the GeoSpaX version and access date** in your provenance table.
-4. **Title Map 4 as "habitat proxy"**, not "distribution model" or "suitability".
-5. **State your weights and thresholds** with citations in the report.
-6. **If n or unique sites < 30, Map 3 is exploratory.** Say so in the caption.
-7. **Do not report forest-loss hectares or protected-area percentages** unless you load a named layer and cite it.
-8. **The convex hull area is not forest area.** Call it the hull area and quote the CRS.
-9. **If your points span mainland and islands, choose one landmass.** Set the field filter to `stateProvince`, select the landmass with more points, and keep the filter on for all four maps. State your choice and the filtered point count in your report.
-10. **Conservation planning is done at the hull scale, not the national scale.** Your hull is the planning region. The gap analysis tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
-11. **Follow SCP principles in your report.** State how your proposed actions achieve representation (covering different habitat types), complementarity (each action adds something new), and efficiency (smallest area, highest return).
+4. **Map 1 (convex hull) and Map 4 (habitat proxy) are built in QGIS**, as specified in the assignment brief. Map 3 (Gi*/LISA) is run in GeoSpaX. Map 2 can be done in either tool.
+5. **Title Map 4 as "habitat proxy"**, not "distribution model" or "suitability".
+6. **State your weights and thresholds** with citations in the report.
+7. **If n or unique sites < 30, Map 3 is exploratory.** Say so in the caption.
+8. **Do not report forest-loss hectares or protected-area percentages** unless you load a named layer and cite it.
+9. **The convex hull area is not forest area.** Call it the hull area and quote the CRS.
+10. **If your points span mainland and islands, choose one landmass.** Filter by `stateProvince` (in GeoSpaX or QGIS), select the landmass with more points, and keep the filter on for all four maps. State your choice and the filtered point count in your report.
+11. **Conservation planning is done at the hull scale, not the national scale.** Your hull is the planning region. The gap analysis tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
+12. **Submit a QGIS project (.qgz) or GeoPackage** containing the lab points, the hull, and the scored points. File names use your surname, lab, and the layer. Do not submit `final2_new.qgz`.
+13. **Follow SCP principles in your report.** State how your proposed actions achieve representation (covering different habitat types), complementarity (each action adds something new), and efficiency (smallest area, highest return).
