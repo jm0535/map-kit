@@ -971,6 +971,8 @@ Fill in the provenance table with:
 
 ### Submit your work
 
+**Due: Friday 2 October 2026 (Week 11), 4:00 pm** — submit everything through Google Classroom.
+
 - **Google Classroom — five maps (PNG or PDF):** map 1, map 2, map 3, map 4, and map 5 (gap analysis). Name them Surname_lab_map1_study_area, Surname_lab_map2_attribute, Surname_lab_map3_pattern, Surname_lab_map4_habitat_proxy, and Surname_lab_map5_gap_analysis.
 - **Google Classroom — Part B report PDF:** with the filled provenance table inside it or as a one-page attachment, and the statistical outputs from the Analysis Results panel in the report body.
 - Six files in total are submitted via Google Classroom: the five maps and the report PDF.
