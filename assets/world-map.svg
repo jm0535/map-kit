@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="World map">
+  <!--
+    GeoSpaX world-map mark: the 🗺️ emoji at font-size 90 in a 100x100 viewBox.
+    Recovered verbatim from the app's original favicon (inline data URI in
+    index.html, added in commit e9a9428 "Add emoji favicon"), which was the
+    browser-tab icon before favicon unification replaced it with logo.svg.
+    The mark is drawn by the platform emoji font, so it renders slightly
+    differently per OS/browser, as the original favicon did.
+  -->
+  <text y=".9em" font-size="90">🗺️</text>
+</svg>
