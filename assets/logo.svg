@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GeoSpaX logo">
+  <!--
+    GeoSpaX logo: folded map with a location pin on the app/docs teal accent.
+    Used as the favicon and brand mark across index.html, userguide.html and
+    changelog.html. Keep shapes bold and few — this must stay legible at 16px.
+  -->
+  <defs>
+    <linearGradient id="gx-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#43a6b3"/>
+      <stop offset="1" stop-color="#0a7177"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#gx-bg)"/>
+  <!-- folded map sheet: three panels, middle panel shaded to suggest a fold -->
+  <path d="M12 19 L25 15 V45 L12 49 Z" fill="#ffffff" opacity="0.94"/>
+  <path d="M27 15 V45 L39 49 V19 Z" fill="#ffffff" opacity="0.7"/>
+  <path d="M41 19 L52 16 V46 L41 49 Z" fill="#ffffff" opacity="0.94"/>
+  <!-- location pin -->
+  <path d="M32 21 a8 8 0 0 1 8 8 c0 5.3 -4.7 8.8 -8 13.2 c-3.3 -4.4 -8 -7.9 -8 -13.2 a8 8 0 0 1 8 -8 Z" fill="#083c40"/>
+  <circle cx="32" cy="29" r="3.2" fill="#ffffff"/>
+</svg>

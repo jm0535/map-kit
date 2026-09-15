@@ -663,7 +663,7 @@ map-kit/                      # Repository name (app is branded "GeoSpaX")
 │   └── playwright/           # Browser test suite (standalone scripts; see CONTRIBUTING.md)
 ├── geospax_conservation_roadmap/  # Conservation module roadmap docs + reference JS copies
 ├── practical_assignment/     # FR422 teaching materials
-├── assets/                   # Static assets (og-banner.svg)
+├── assets/                   # Static assets (logo.svg, og-banner.svg)
 ├── google4e0cf157f76f6227.html  # Google Search Console verification
 ├── vendor/                   # All third-party JS/CSS libraries (no CDN at runtime)
 │   ├── leaflet/
