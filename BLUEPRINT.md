@@ -402,7 +402,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 ### Security
 
 - **Content-Security-Policy**: enforced via `vercel.json` headers and `<meta>` tag in `index.html`. `script-src 'self' 'unsafe-inline' 'unsafe-eval'` (unsafe-eval needed by vendored turf/georaster), `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob: https:`, `connect-src 'self' https:`, `worker-src 'self' blob:`, `frame-ancestors 'self'`
-- **Security headers**: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
+- **Security headers**: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
 - **XSS prevention**: `escapeHtml()` in `index.html` + `esc()` helpers in external JS modules. All user-controlled data (layer names, field names, attribute values, file names, metadata) is escaped before DOM insertion, including Leaflet popups and tooltips
 - **Expression sandbox**: Calculate Field uses a custom AST parser with a function whitelist — no `eval()`, no `new Function()`, no global scope access
 - **File upload limit**: 200 MB max in `processFile()` to prevent memory DoS
