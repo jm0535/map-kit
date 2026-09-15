@@ -41,7 +41,7 @@ GeoSpaX has four main areas:
 | Location | Panels | What you do here |
 | --- | --- | --- |
 | **Left panel** | Data Sources, Open Data, Layers, Basemap, Export (🗺 Map Image, 📄 Per-Layer Export, 📈 Elevation Profile, 📦 Bulk Data Export) | Import files, manage layers, change basemap, export data and maps |
-| **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks, User Guide | Inspect features, view/edit attribute table, style layers |
+| **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks | Inspect features, view/edit attribute table, style layers |
 | **Analysis drawer** (right side, opens on demand) | 🧪 Analysis with 13 sections (Point Pattern, Inferential Hotspots, Conservation Planning, etc.) | Click the 🧪 Analysis button in the top toolbar or press `A` to open |
 | **Bottom panel** | Elevation Profile, Analysis Results, How to Cite | View analysis results, elevation profiles, citation formats |
 
