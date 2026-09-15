@@ -2,20 +2,16 @@
 
 **Course:** FR422 Forest Wildlife and Habitat
 **Semester:** 2, 2026
-**Tool:** GeoSpaX (<https://geospax.in4metrix.dev>) — QGIS and ArcGIS are alternatives
+**Tool:** GeoSpaX (<https://geospax.in4metrix.dev>)
 **Prerequisite:** Your species choice approved by the lecturer and your species GeoJSON issued to you
 
-This guide walks you through creating all four required maps entirely in GeoSpaX, with no software install needed. Record the GeoSpaX version (shown in the page footer) and today's date in your provenance table.
-
-> **GeoSpaX is the primary tool for all four maps.** QGIS and ArcGIS Pro are fully supported alternatives — the same GIS concepts (convex hull, graduated symbology, hot-spot analysis, field calculator) exist in all three. If you prefer QGIS or ArcGIS, you can export your data from GeoSpaX at any time and continue in those tools. The assignment brief accepts a QGIS project (.qgz), a GeoPackage, or a GeoSpaX project (.gspx) as the project submission.
+This guide walks you through creating all four required maps entirely in GeoSpaX, with no QGIS install needed. Record the GeoSpaX version (shown in the page footer) and today's date in your provenance table.
 
 > **Full reference:** For detailed explanations of every tool, panel, and analysis method, see the [GeoSpaX User Guide](https://geospax.in4metrix.dev/userguide.html). For version history and release notes, see the [Changelog](https://geospax.in4metrix.dev/changelog.html).
 
 > **Naming convention:** Throughout this guide, file names use the placeholder `Surname`. **Replace `Surname` with your actual surname** in every file name (e.g., `Moses_lab_...`, `Wari_lab_...`, `Bani_lab_...`). Do not submit files with the literal word "Surname" in the name.
 
-> **Verified:** Every step in this guide was tested against the lab training file (`lab_Paradisaea_guilielmi_occurrences.geojson`, 128 GBIF records, Emperor Bird-of-paradise) using the live GeoSpaX application. The screenshots in the `screenshots/` folder show each step.
-
----
+> **Verified:** Every step in this guide was tested against the lab training file (lab_Paradisaea_guilielmi_occurrences.geojson, 128 GBIF records, Emperor Bird-of-paradise) using the live GeoSpaX application. The screenshots in the screenshots/ folder show each step.
 
 ## Before You Start
 
@@ -23,17 +19,17 @@ This guide walks you through creating all four required maps entirely in GeoSpaX
 
 1. Your **issued species GeoJSON** file, sent to you by the lecturer via Google Drive (not the training file, not a classmate's file, not the built-in sample).
 2. The **FR422_SHARED_DATA_2026.zip** file, shared on Google Classroom (same for all students).
-3. The **training file** `lab_Paradisaea_guilielmi_occurrences.geojson`, shared on Google Classroom for the Week 9 lab session.
+3. The **training file** lab_Paradisaea_guilielmi_occurrences.geojson, shared on Google Classroom for the Week 9 lab session.
 4. A web browser (Chrome, Firefox, or Edge). Internet access is needed for GeoSpaX and basemap tiles.
 5. A notebook or text file to record class breaks, weights, and citations.
 
 ### How you get your species file
 
-1. Open `FR422_Assignment_Species_List_2026.xlsx` (shared on Google Classroom). Go to the **Species list** sheet to see the 23 species you can choose from, with record counts and notes. Go to the **My pick** sheet and fill in the next empty row: column A for your name, column B for your student ID, column C to pick your species from the dropdown, column D for a backup species, and column E for today's date. Do not overwrite another student's row. First student to claim a species gets it. No two students the same species.
+1. Open FR422_Assignment_Species_List_2026.xlsx (shared on Google Classroom). Go to the **Species list** sheet to see the 23 species you can choose from, with record counts and notes. Go to the **My pick** sheet and fill in the next empty row: column A for your name, column B for your student ID, column C to pick your species from the dropdown, column D for a backup species, and column E for today's date. Do not overwrite another student's row. The first student to claim a species gets it. No two students will use the same species.
 2. Email the lecturer your scientific name, common name, IUCN Red List category, and the date you checked it. Do this by the deadline.
-3. The lecturer checks your choice against the **My pick** sheet. First approved, no two students the same species.
-4. After approval, the lecturer sends **your** species GeoJSON to you via Google Drive (shared link or email attachment). The file is named `<Species>_occurrences.geojson` (e.g., `Harpyopsis_novaeguineae_occurrences.geojson`).
-5. The full assignment brief is in `FR422_Assignment_Brief_Habitat_Conservation_Plan.docx`, posted on Google Classroom. This guide covers only the GIS practical (Part A, 12% of FR422).
+3. The lecturer checks your choice against the **My pick** sheet. First approved, no two students will use the same species.
+4. After approval, the lecturer sends **your** species GeoJSON to you via Google Drive (shared link or email attachment). The file is named \<Species\>_occurrences.geojson (e.g., Harpyopsis_novaeguineae_occurrences.geojson).
+5. The full assignment brief is in FR422_Assignment_Brief_Habitat_Conservation_Plan.docx, posted on Google Classroom. This guide covers only the GIS practical (Part A, 12% of FR422).
 
 > **Tip:** The **Species list** sheet in the Excel file has an amber row colour for species where Map 3 is exploratory (n or unique sites below 30). You are not marked down for fewer hot spots than a classmate with 1000 rows.
 
@@ -49,11 +45,11 @@ The following files are posted on Google Classroom for everyone:
 
 | File | What it is |
 | --- | --- |
-| `FR422_Assignment_Brief_Habitat_Conservation_Plan.docx` | Full assignment brief and rubric |
-| `FR422_Assignment_Species_List_2026.xlsx` | Excel workbook with species list, **My pick** sheet, and instructions |
-| `FR422_GeoSpaX_Step_by_Step_Guide.docx` | This guide |
-| `lab_Paradisaea_guilielmi_occurrences.geojson` | Week 9 lab training file (practice only) |
-| `FR422_SHARED_DATA_2026.zip` | Shared GIS data package (rasters and vectors) |
+| FR422_Assignment_Brief_Habitat_Conservation_Plan.docx | Full assignment brief and rubric |
+| FR422_Assignment_Species_List_2026.xlsx | Excel workbook with species list, **My pick** sheet, and instructions |
+| FR422_GeoSpaX_Step_by_Step_Guide.docx | This guide |
+| lab_Paradisaea_guilielmi_occurrences.geojson | Week 9 lab training file (practice only) |
+| FR422_SHARED_DATA_2026.zip | Shared GIS data package (rasters and vectors) |
 
 **2. Google Drive (sent to you individually after your species choice is approved)**
 
@@ -63,43 +59,43 @@ The lecturer sends your species file directly to you. No one else receives your 
 
 | File | What it is |
 | --- | --- |
-| `<Species>_occurrences.geojson` | Your assigned species occurrence data with environmental fields. This is the file you import into GeoSpaX for all four maps. |
+| \<Species\>_occurrences.geojson | Your assigned species occurrence data with environmental fields. This is the file you import into GeoSpaX for all four maps. |
 
 ### What is inside FR422_SHARED_DATA_2026.zip
 
-Unzip this to a folder called `FR422_SHARED_DATA_2026`. Inside you will find:
+Unzip this to a folder called FR422_SHARED_DATA_2026. Inside you will find:
 
 **Table 3.** Contents of the FR422_SHARED_DATA_2026.zip package, organised by folder.
 
 | Folder | File | Type | What it is |
 | --- | --- | --- | --- |
-| `BOUNDARIES` | `png_provinces.geojson` | Vector | PNG province boundaries (22 provinces, EPSG:4326) |
-| `BOUNDARIES` | `png_boundary_valid.gpkg` | Vector | PNG national boundary (EPSG:4326) |
-| `CLIMATE` | `PNG_BIO1_30s.tif` | Raster | WorldClim BIO1 annual mean temperature |
-| `CLIMATE` | `PNG_BIO12_30s.tif` | Raster | WorldClim BIO12 annual precipitation |
-| `CLIMATE` | `PNG_BIO15_30s.tif` | Raster | WorldClim BIO15 precipitation seasonality |
-| `ELEVATION` | `PNG_elevation_2.5m.tif` | Raster | WorldClim elevation, 2.5 arc-minutes |
-| `LANDCOVER` | `PNG_WorldCover_2021_10m.tif` | Raster | ESA WorldCover 2021 land cover, 10 m |
-| `DERIVED` | `PNG_tree_cover_pct_30s_FR422.tif` | Raster | Tree-cover percentage proxy (0 to 100), derived from WorldCover class 10 |
-| `PROTECTED_AREAS` | `PNG_protected_areas.gpkg` | Vector | WDPA protected-area polygons and points |
-| `METADATA` | `SHARED_DATA_SOURCES.txt` | Text | Full source citations and licences |
-| `METADATA` | `GBIF_processing_notes.txt` | Text | GBIF extraction and QC notes |
+| BOUNDARIES | png_provinces.geojson | Vector | PNG province boundaries (22 provinces, EPSG:4326) |
+| BOUNDARIES | png_boundary_valid.gpkg | Vector | PNG national boundary (EPSG:4326) |
+| CLIMATE | PNG_BIO1_30s.tif | Raster | WorldClim BIO1 annual mean temperature |
+| CLIMATE | PNG_BIO12_30s.tif | Raster | WorldClim BIO12 annual precipitation |
+| CLIMATE | PNG_BIO15_30s.tif | Raster | WorldClim BIO15 precipitation seasonality |
+| ELEVATION | PNG_elevation_2.5m.tif | Raster | WorldClim elevation, 2.5 arc-minutes |
+| LANDCOVER | PNG_WorldCover_2021_10m.tif | Raster | ESA WorldCover 2021 land cover, 10 m |
+| DERIVED | PNG_tree_cover_pct_30s_FR422.tif | Raster | Tree-cover percentage proxy (0 to 100), derived from WorldCover class 10 |
+| PROTECTED_AREAS | PNG_protected_areas.gpkg | Vector | WDPA protected-area polygons and points |
+| METADATA | SHARED_DATA_SOURCES.txt | Text | Full source citations and licences |
+| METADATA | GBIF_processing_notes.txt | Text | GBIF extraction and QC notes |
 
 ### Which files do you actually use in GeoSpaX?
 
-For the four required maps, the environmental fields (`elevation_m`, `tree_cover_pct`, `rainfall_mm`, `bio1`, `bio15`, `worldcover_label`) are already embedded in your issued species GeoJSON. You do not need to load the shared rasters into GeoSpaX to complete Maps 1 through 4.
+For the four required maps, the environmental fields (elevation_m, tree_cover_pct, rainfall_mm, bio1, bio15, worldcover_label) are already embedded in your issued species GeoJSON. You do not need to load the shared rasters into GeoSpaX to complete Maps 1 through 4.
 
 The shared rasters and vectors are for **optional extra analysis** if you want to:
 
-- Load `png_provinces.geojson` as a base boundary layer for context.
-- Load `PNG_protected_areas.gpkg` to check whether your points fall inside a protected area (cite the source if you do this).
-- Load `PNG_tree_cover_pct_30s_FR422.tif` as a raster backdrop (but note the tree-cover values at each point are already in your species file's `tree_cover_pct` field).
+1. Load png_provinces.geojson as a base boundary layer for context.
+2. Load PNG_protected_areas.gpkg to check whether your points fall inside a protected area (cite the source if you do this).
+3. Load PNG_tree_cover_pct_30s_FR422.tif as a raster backdrop (but note the tree-cover values at each point are already in your species file's tree_cover_pct field).
 
-**Do not** load `PNG_WorldCover_2021_10m.tif` as a national map. The land-cover class at each point is already in your species file's `worldcover_label` field.
+**Do not** load PNG_WorldCover_2021_10m.tif as a national map. The land-cover class at each point is already in your species file's worldcover_label field.
 
 ### Training file (Week 9 lab, practice only)
 
-`lab_Paradisaea_guilielmi_occurrences.geojson` (Emperor Bird-of-paradise, 128 records) is posted on Google Classroom. Everyone uses this file to practice the click-path before switching to their own issued species file. Do not submit maps made from the training file unless that is the species you were issued.
+lab_Paradisaea_guilielmi_occurrences.geojson (Emperor Bird-of-paradise, 128 records) is posted on Google Classroom. Everyone uses this file to practice the click-path before switching to their own issued species file. Do not submit maps made from the training file unless that is the species you were issued.
 
 ### If your species has fewer than 30 records or unique sites
 
@@ -107,49 +103,49 @@ Map 3 (Gi* or LISA) is exploratory. State the record count and unique-site count
 
 ### If your species occurs on both mainland and islands
 
-Several species in the list have GBIF records on mainland PNG and also on islands (New Britain, New Ireland, Bougainville, Manus, Milne Bay islands). Check your attribute table `stateProvince` column to see if you have points on more than one landmass.
+Several species in the list have GBIF records on mainland PNG and also on islands (New Britain, New Ireland, Bougainville, Manus, Milne Bay islands). Check your attribute table stateProvince column to see if you have points on more than one landmass.
 
 **If you have points on both mainland and islands, choose ONE landmass and use only that subset for all four maps.** This simplifies your workflow and produces a cleaner, more defensible analysis. You do not need to run separate analyses for each landmass.
 
 **Which one to choose:**
 
-- **Choose the landmass with more points.** More points mean a more reliable hull, better hot-spot detection, and a more meaningful habitat score. If you have 800 mainland points and 50 island points, choose the mainland.
-- **If the island has a large, distinct population** (e.g., 200+ points on New Britain), you may choose the island instead - but only if you justify it in your report (e.g., "I chose the New Britain population because it is geographically isolated and faces different threats from the mainland").
-- **State your choice in your report.** Write: "My species has records on both mainland PNG and New Britain. I chose the mainland subset (n = 800) for all four maps because it has the larger population. The island records (n = 50) are noted but not analysed."
+1. **Choose the landmass with more points.** More points mean a more reliable hull, better hot-spot detection, and a more meaningful habitat score. If you have 800 mainland points and 50 island points, choose the mainland.
+2. **If the island has a large, distinct population** (e.g., 200+ points on New Britain), you may choose the island instead - but only if you justify it in your report (e.g., "I chose the New Britain population because it is geographically isolated and faces different threats from the mainland").
+3. **State your choice in your report.** Write: "My species has records on both mainland PNG and New Britain. I chose the mainland subset (n = 800) for all four maps because it has the larger population. The island records (n = 50) are noted but not analysed."
 
-#### Understanding this tool: Field Filter
+#### *Understanding this tool: Field Filter*
 
-**What it does:** The field filter subsets your layer by an attribute value. Select a field (e.g., `stateProvince`), then select a value (e.g., `Western`), and all analysis tools (convex hull, Gi*, calculate field) will operate only on the features matching that value. The filter is generic - you can filter by any field, not just `stateProvince`.
+**What it does:** The field filter subsets your layer by an attribute value. Select a field (e.g., stateProvince), then select a value (e.g., Western), and all analysis tools (convex hull, Gi*, calculate field) will operate only on the features matching that value. The filter is generic - you can filter by any field, not just stateProvince.
 
-**Why this assignment uses it:** A single convex hull drawn around points spanning mainland PNG and New Britain will include hundreds of kilometres of ocean - meaningless for a forest species. Filtering by `stateProvince` lets you isolate one landmass and run all your analysis on that subset only, producing a hull that reflects the actual land distribution. This is not a manual editing trick - the tool subsets the data programmatically.
+**Why this assignment uses it:** A single convex hull drawn around points spanning mainland PNG and New Britain will include hundreds of kilometres of ocean - meaningless for a forest species. Filtering by stateProvince lets you isolate one landmass and run all your analysis on that subset only, producing a hull that reflects the actual land distribution. This is not a manual editing trick - the tool subsets the data programmatically.
 
 **What it means in real-world conservation:** Subsetting analysis by administrative boundaries, ecological zones, or landmass type is standard practice. Real conservation plans are often stratified by province, watershed, or island group because each has different threats, land tenure systems, and management authorities. In PNG, a conservation plan for a species on the mainland (where logging and agriculture are the main threats) will differ from a plan for the same species on New Britain (where palm oil expansion and volcanic hazards are more relevant). Choosing one stratum and planning for it is more practical than trying to plan for everything at once.
 
-GeoSpaX has a **field filter** in the Analysis drawer (below the layer selector). It has two dropdowns: first select the **field** to filter by (for example, `stateProvince`), then select the **value** to keep (for example, Western). Once set, the filter stays active for all analysis tools - convex hull, Gi*, calculate field, and all other tools will operate only on the filtered subset.
+GeoSpaX has a **field filter** in the Analysis drawer (below the layer selector). It has two dropdowns: first select the **field** to filter by (for example, stateProvince), then select the **value** to keep (for example, Western). Once set, the filter stays active for all analysis tools - convex hull, Gi*, calculate field, and all other tools will operate only on the filtered subset.
 
 **How to apply the filter for all four maps:**
 
-1. **Check your data:** Open the Attribute Table and look at the `stateProvince` column. Count how many points are on each landmass. Choose the landmass with more points.
-2. **Set the filter:** In the Analysis drawer, set the field filter to `stateProvince` and select your chosen landmass value (for example, `Western` for mainland, `West New Britain` for islands).
+1. **Check your data:** Open the Attribute Table and look at the stateProvince column. Count how many points are on each landmass. Choose the landmass with more points.
+2. **Set the filter:** In the Analysis drawer, set the field filter to stateProvince and select your chosen landmass value (for example, Western for mainland, West New Britain for islands).
 3. **Keep the filter on for all four maps.** Do not remove it between maps. Every map (1-4) will be based on the same subset.
 4. **Record the filter in your provenance table.** Write: "Filtered by stateProvince = [your chosen value], n = [filtered point count] out of [total] total records."
 5. **Do not** manually redraw the hull to exclude ocean. Use the field filter to subset your points and let GeoSpaX compute the hull for your chosen subset.
 
 Species most likely to span mainland and islands: Students 01, 03, 07, 09, 11, 13, 14, 15, 17, 19, 20, 21, and 23. Check your data to confirm.
 
-> **![screenshots/filter_field_dropdown.png](screenshots/filter_field_dropdown.png)**
->
-> **Figure 1.** Field filter dropdown in the Analysis drawer, showing the stateProvince field selected for filtering by landmass.
->
-> **![screenshots/filter_hull_western.png](screenshots/filter_hull_western.png)**
->
+![Field filter](final_guide_images/image3.png)
+
+> **Figure 1.** Field filter dropdown in the Analysis drawer, showing the *stateProvince* field selected for filtering by landmass.
+
+![Convex hull on mainland subset](final_guide_images/image10.png)
+
 > **Figure 2.** Convex hull computed on the mainland subset, showing the hull boundary around filtered occurrence points in Morobe Province.
->
-> **![screenshots/filter_hull_wnb.png](screenshots/filter_hull_wnb.png)**
->
+
+![Convex hull on Morobe subset](final_guide_images/image5.png)
+
 > **Figure 3.** Convex hull computed on the Morobe Province subset (Huon Peninsula area near Lae), demonstrating the field filter applied to isolate a single province before running the hull.
->
-> **![screenshots/filter_hull_all.png](screenshots/filter_hull_all.png)**
+
+> ![Convex hull on all points](final_guide_images/image15.png)
 >
 > **Figure 4.** Convex hull computed on all points without a filter, showing the hull boundary around the full set of occurrence points.
 
@@ -158,8 +154,8 @@ Species most likely to span mainland and islands: Students 01, 03, 07, 09, 11, 1
 1. Go to <https://geospax.in4metrix.dev> in your browser.
 2. Record the **version number** from the page footer and the **access date**. You will need these for your provenance table.
 
-> **![screenshots/00_home_page.png](screenshots/00_home_page.png)**
->
+![GeoSpaX home page](final_guide_images/image9.png)
+
 > **Figure 5.** GeoSpaX home page on first load, showing the empty map canvas, top toolbar, and collapsible left and right panels.
 
 ### GeoSpaX panel layout
@@ -169,7 +165,7 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 **Table 4.** GeoSpaX panel layout showing the location and purpose of each UI area.
 
 | Location | Panels / sections | What you do here |
-|----------|-------------------|------------------|
+| --- | --- | --- |
 | **Left panel** | Data Sources, Open Data, Layers, Basemap, Export (🗺️ Map Image, 📄 Per-Layer Export, 📈 Elevation Profile, 📦 Bulk Data Export) | Import files, manage layers, change basemap, export map as PNG/PDF (via Map Composer), export layer data |
 | **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks | Inspect feature properties, view/edit attribute table, style layers, see overview map (click minimap to pan main map, double-click to zoom) |
 | **Analysis drawer** (right side, opens on demand) | 🧪 Analysis drawer with 13 sections: 📍 Point Pattern, 📊 Inferential Hotspots & Autocorrelation, 🌡️ Interpolation & Density, 🧩 Clustering, 📐 Lines & Polygons, 🧮 Attributes, 🛰️ Raster Analysis, ⚖️ Multi-Criteria Evaluation, 🌳 Conservation Planning, 🗺️ Landscape Metrics, 🦌 SDM, 📠 Raster Reclassify & Polygonize, 📋 Provenance & Project | Click the 🧪 **Analysis** button in the top toolbar to open this drawer. Contains all analysis tools. The drawer is hidden by default and slides in next to the right panel when opened. |
@@ -187,39 +183,41 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 
 ### Import your species file
 
-#### Understanding this step: GeoJSON Import and Attribute Table
+#### *Understanding this step: GeoJSON Import and Attribute Table*
 
-**What it does:** GeoSpaX imports GeoJSON files - the open standard for geographic data on the web. Each feature (point, line, or polygon) has a geometry and a set of properties (attributes). Your species file contains point features (one per GBIF occurrence record) with properties like `site`, `gbifID`, `elevation_m`, `tree_cover_pct`, `rainfall_mm`, `bio1`, `worldcover_label`, and `year`. The Attribute Table lets you inspect these properties in a spreadsheet-like view with pagination, search, and sorting.
+**What it does:** GeoSpaX imports GeoJSON files - the open standard for geographic data on the web. Each feature (point, line, or polygon) has a geometry and a set of properties (attributes). Your species file contains point features (one per GBIF occurrence record) with properties like site, gbifID, elevation_m, tree_cover_pct, rainfall_mm, bio1, worldcover_label, and year. The Attribute Table lets you inspect these properties in a spreadsheet-like view with pagination, search, and sorting.
 
 **Why this assignment uses it:** Before running any analysis, you must verify that you have the correct file with the correct fields. The Attribute Table is your quality-control checkpoint: confirm the feature count matches what the lecturer told you, confirm the environmental fields are present, and check for unexpected values (nulls, zeros, extreme values). If the count or fields do not match, you have the wrong file and should stop.
 
 **What it means in real-world conservation:** Data verification is the first step in any GIS workflow. In a real conservation project, you would check the coordinate system, the date range of records, the taxonomy (is the species identification correct?), and the spatial coverage (are there gaps or clustering artefacts?). The GBIF data in your file are teaching extracts - they are not a complete census of the species' occurrence. Understanding what is in your data (and what is not) is essential for honest interpretation of all subsequent maps.
 
 1. In the **left panel**, open **Data Sources** (click the section header to expand it) or simply **drag your issued species file onto the map**.
-2. If using the file picker, click the **Drag & drop files here** zone and select the `<Species>_occurrences.geojson` file the lecturer sent you via Google Drive. If you are practising in the Week 9 lab, use `lab_Paradisaea_guilielmi_occurrences.geojson` from Google Classroom instead.
+2. If using the file picker, click the **Drag & drop files here** zone and select the \<Species\>_occurrences.geojson file the lecturer sent you via Google Drive. If you are practising in the Week 9 lab, use lab_Paradisaea_guilielmi_occurrences.geojson from Google Classroom instead.
 3. The map zooms to your species points. The layer appears in the **Layers** panel (left side).
-4. **Checkpoint:** Open **Attribute Table** (right panel, "Attribute Table" section header). Select your layer from the dropdown. Confirm the feature count matches your issued file. Check the fields are present: `site`, `gbifID`, `elevation_m`, `tree_cover_pct`, `rainfall_mm`, `bio1`, `worldcover_label`, `year`. The table shows 50 rows per page with **Prev** and **Next** buttons at the bottom. Use the **Search** box to filter rows by any text (for example, type a province name to see only records from that province).
+4. **Checkpoint:** Open **Attribute Table** (right panel, "Attribute Table" section header). Select your layer from the dropdown. Confirm the feature count matches your issued file. Check the fields are present: site, gbifID, elevation_m, tree_cover_pct, rainfall_mm, bio1, worldcover_label, year. The table shows 50 rows per page with **Prev** and **Next** buttons at the bottom. Use the **Search** box to filter rows by any text (for example, type a province name to see only records from that province).
+
    - **Alternative:** Right-click the layer in the **Layers** section (left panel) and select **📄 View Fields** to see all field names, types, descriptions, and sample values in a single table.
+
 5. If the count or fields do not match, you have the wrong file. Stop and reload the correct issued file.
 
-> **![screenshots/01_imported.png](screenshots/01_imported.png)**
->
+![Species points imported](final_guide_images/image18.png)
+
 > **Figure 6.** Species occurrence points imported into GeoSpaX. The map auto-zooms to the data extent and the layer appears in the Layers panel.
->
-> **![screenshots/attr_table_paginated.png](screenshots/attr_table_paginated.png)**
->
+
+![Attribute Table](final_guide_images/image11.png)
+
 > **Figure 7.** Attribute Table showing paginated species records (50 rows per page) with Prev/Next navigation and a search box for filtering rows.
 
 ### Export to the correct UTM zone (analysis CRS)
 
-#### Understanding this step: Coordinate Reference Systems
+#### *Understanding this step: Coordinate Reference Systems*
 
 **What it does:** A Coordinate Reference System (CRS) defines how coordinates on a flat map relate to positions on the Earth's surface. EPSG:4326 (WGS 84) uses latitude and longitude in degrees - it is the default for GPS, GBIF, and web maps. UTM (Universal Transverse Mercator) divides the Earth into 60 zones, each 6° of longitude wide, numbered 1-60 from west to east. Each zone has a northern (N) and southern (S) half. The correct UTM zone for your data depends on where your species occurs:
 
 **Table 5.** UTM zone lookup by longitude range for Papua New Guinea, with corresponding EPSG codes.
 
 | Longitude range | UTM zone | Example EPSG (South) | Example EPSG (North) |
-|-----------------|----------|---------------------|---------------------|
+| --- | --- | --- | --- |
 | 138°E to 144°E | 54 | EPSG:32754 | EPSG:32654 |
 | 144°E to 150°E | 55 | EPSG:32755 | EPSG:32655 |
 | 150°E to 156°E | 56 | EPSG:32756 | EPSG:32656 |
@@ -238,37 +236,33 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 >
 > Both methods are far more accurate than the Haversine formula (which assumes a perfect sphere and can be off by up to 0.5% in PNG). When you report a distance or area in your assignment, state that it was computed using geodesic (ellipsoidal) methods.
 
-#### Steps to export
+#### *Steps to export*
 
 1. Open the **Export** section in the **left panel** (expand the Export section header).
 2. Expand the **📄 Per-Layer Export** section. The **Output CRS** dropdown and the auto-detect hint are located **inside this section**.
 3. Select your species layer from the dropdown at the top of the Per-Layer Export section.
-4. **Type a filename** in the **Output filename** field using the convention: `Surname_lab_species_points_utmXXS_WGS84` (e.g., `Moses_lab_birdofparadise_points_utm55S_WGS84`). **Replace `Surname` with your actual surname** (e.g., `Moses`, `Wari`, `Bani`). This rich filename tells you and anyone else exactly what the file contains: whose assignment it is, what species, what geometry type, what UTM zone, and what datum. The field auto-fills with the layer name, but you should replace it with this convention. You can also click the "Click to use" link in the hint to auto-fill the suggested name, then edit it to replace `Surname` with your actual surname.
+4. **Type a filename** in the **Output filename** field using the convention: Surname_lab_species_points_utmXXS_WGS84 (e.g., Moses_lab_birdofparadise_points_utm55S_WGS84). **Replace Surname with your actual surname** (e.g., Moses, Wari, Bani). This rich filename tells you and anyone else exactly what the file contains: whose assignment it is, what species, what geometry type, what UTM zone, and what datum. The field auto-fills with the layer name, but you should replace it with this convention. You can also click the "Click to use" link in the hint to auto-fill the suggested name, then edit it to replace Surname with your actual surname.
 5. **Look at the hint below the Output CRS dropdown** - it shows your data's centroid longitude and the correct UTM zone. **Click the link** to auto-select it.
 6. If the hint does not appear, manually select the correct UTM zone from the **Output CRS** dropdown. For PNG species, use:
    - **UTM Zone 54S / WGS 84 (PNG west, EPSG:32754)** - if your data is west of 144°E
    - **UTM Zone 55S / WGS 84 (PNG central, EPSG:32755)** - if your data is between 144°E and 150°E
    - **UTM Zone 56S / WGS 84 (PNG east, EPSG:32756)** - if your data is east of 150°E
-   
-   For data outside PNG, use the **Custom EPSG code** option and enter the correct EPSG code (e.g., 32618 for UTM Zone 18N / New York).
+   - For data outside PNG, use the **Custom EPSG code** option and enter the correct EPSG code (e.g., 32618 for UTM Zone 18N / New York).
 7. Set **Format** to **GeoJSON**.
-8. Click **💾 Export Layer**. The file downloads as `Surname_lab_species_points_utmXXS_WGS84.geojson` (using the filename you typed in step 4).
+8. Click **💾 Export Layer**. The file downloads as Surname_lab_species_points_utmXXS_WGS84.geojson (using the filename you typed in step 4).
 9. This reprojected file is your working copy for all four maps. Remove the original layer and re-import the reprojected file so all analysis runs on the reprojected version.
 10. **Record the EPSG code** in your provenance table (e.g., "Exported to EPSG:32755, UTM Zone 55S").
 
-> **![screenshots/03_export_crs.png](screenshots/03_export_crs.png)**
->
+![Export panel](final_guide_images/image16.png)
+
 > **Figure 8.** Export panel with the Per-Layer Export section expanded, showing the Output CRS dropdown and the UTM auto-detect hint.
 >
 > **Note:** GeoSpaX computes distances using auto-UTM projection (the Gi* results panel confirms the zone automatically, e.g., "UTM 55S"), so analysis results are accurate regardless of the display CRS. The export ensures your submitted data file matches the correct UTM zone for your data.
 
----
-
 ## Map 1: Study Area and Sites
 
 **Required:** Convex hull, points with site labels, legend, scale bar, north arrow, CRS text, source line.
-**File name:** `Surname_lab_map1_study_area.pdf`
-**Tool:** GeoSpaX (QGIS and ArcGIS Pro are alternatives — same concepts, different click-paths)
+**File name:** Surname_lab_map1_study_area.pdf
 
 ### Understanding this tool: Convex Hull
 
@@ -280,7 +274,7 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 
 **What the hull area is NOT:** The hull area is not forest area, not species range, not habitat area, and not a population estimate. It is the area of the convex polygon enclosing your survey points. Always report it as "hull area" with the CRS.
 
-### Step 1: Run Convex Hull in GeoSpaX
+### Step 1: Run Convex Hull
 
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
 2. Select your species layer from the **Layer** dropdown at the top of the Analysis drawer.
@@ -291,41 +285,37 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
    - **Perimeter:** (e.g., 356.95 km)
    - **Area:** in km²
 6. **Record the area and write your CRS (e.g., "CRS: EPSG:32755") next to it.** Do not call this number "forest area". It is the convex hull area of your survey points.
-7. **If your points span mainland and islands:** Set the **field filter** (below the layer selector in the Analysis drawer) to `stateProvince` and select your chosen landmass value before running the hull. Keep the filter on for all four maps. See the "If your species occurs on both mainland and islands" section above.
+7. **If your points span mainland and islands:** Set the **field filter** (below the layer selector in the Analysis drawer) to stateProvince and select your chosen landmass value before running the hull. Keep the filter on for all four maps. See the "If your species occurs on both mainland and islands" section above.
 
-> **QGIS alternative:** In QGIS, load the reprojected GeoJSON, then use Processing → Toolbox → Convex Hull (Vector Geometry). The result is identical.
+![Convex hull](final_guide_images/image12.png)
 
-> **![screenshots/04_convex_hull.png](screenshots/04_convex_hull.png)**
->
 > **Figure 9.** Convex hull layer added to the map after running the Convex Hull tool. The Analysis Results panel shows vertices, perimeter, and area.
 
-### Step 2: Label the points with site codes in GeoSpaX
+### Step 2: Label the points with site codes
 
 1. In the **Layers** panel (left side), find your species layer row.
 2. Click the **tag icon** (🏷) on the layer row. This opens the **Label popover**.
-3. In the label popover, find the **field dropdown** and select **`site`**.
+3. In the label popover, find the **field dropdown** and select **site and the click Show All**.
 4. The site codes (e.g., GBIF_5459819072) now appear next to each point on the map.
 5. Adjust font size or style in the popover if needed. Click the tag icon again to close the popover.
 
-> **QGIS alternative:** Right-click the layer → Properties → Labels → set the label field to `site`.
+![Labels](final_guide_images/image20.png)
 
-> **![screenshots/05_labels.png](screenshots/05_labels.png)**
->
 > **Figure 10.** Species points labelled with site codes using the label popover (tag icon on the layer row).
 
-### Step 3: Style the hull in GeoSpaX
+### Step 3: Style the hull
 
 1. Click the **Convex Hull** layer in the Layers panel.
-2. In the **Symbology** panel (right side), set the fill opacity to 0% (transparent) and the stroke colour to a visible colour (e.g., dark red).
+2. In the **Symbology** panel (right side), set the fill opacity to 0% (transparent) and the stroke colour to a visible colour (e.g., dark red) and its opacity to 100%.
 3. Set stroke width to 1.5 to 2 px so the hull boundary is clear on the map.
 
-> **QGIS alternative:** Right-click the hull layer → Properties → Symbology → set fill to transparent, stroke to dark red.
+![Styled hull](final_guide_images/image14.png)
 
-> **![screenshots/06_style_hull.png](screenshots/06_style_hull.png)**
->
 > **Figure 11.** Convex hull styled with transparent fill and a visible stroke colour in the Symbology panel.
 
-### Step 4: Open the Map Composer in GeoSpaX
+### Step 4: Open the Map Composer
+
+#### *Understanding this tool: Map Composer*
 
 **What it does:** The Map Composer (also called "Print Layout" in QGIS or "Layout View" in ArcGIS) takes your interactive map and arranges it on a printable page. It adds **map furniture** - title, legend, scale bar, north arrow, CRS text, and source line - and exports the result as a PNG or PDF at a chosen DPI. The composer freezes the current map view: what you see is what gets exported.
 
@@ -338,24 +328,22 @@ For PNG (southern hemisphere), use the 327xx codes. For northern hemisphere loca
 3. Click **Preview** to open the Map Composer. The composer opens as a modal overlay showing your map with furniture elements.
 4. Set the paper size to **A4 Landscape** (or as directed).
 
-> **QGIS alternative:** Project → New Print Layout (Ctrl+P). Use Add Map, Add Legend, Add Scale Bar, Add North Arrow tools.
+![Map Composer](final_guide_images/image17.png)
 
-> **![screenshots/07_composer_open.png](screenshots/07_composer_open.png)**
->
 > **Figure 12.** Map Composer opened from the Export section, showing the map canvas with default furniture elements.
 
-### Step 5: Add the title in GeoSpaX
+### Step 5: Add the title
 
 1. In the composer sidebar, find the **Title** input field.
 2. Enter: `FR422 study area, [Your Species Common Name] ([Scientific Name])`
 3. Example: `FR422 study area, Emperor Bird-of-paradise (Paradisaea guilielmi)`
 4. Add a **Subtitle** with the source line: `GBIF PNG teaching extract, [access date], not a census`
 
-> **![screenshots/08_composer_titled.png](screenshots/08_composer_titled.png)**
+> ![Composer title](final_guide_images/image22.png)
 >
 > **Figure 13.** Map Composer with the title and subtitle added in the sidebar, displayed on the map layout.
 
-### Step 6: Enable CRS text in GeoSpaX
+### Step 6: Enable CRS text
 
 1. In the composer sidebar, find the **Spatial ref** checkbox (under the map elements section).
 2. Check the box. The CRS text (e.g., "EPSG:4326") appears in the bottom-right of the map.
@@ -377,22 +365,22 @@ If any element is hidden, toggle it on in the composer sidebar.
 
 ### Step 8: Export the map
 
-1. In the GeoSpaX composer, click **Export PNG** or **Export PDF**.
-2. Set DPI to **300** for the final version.
-3. Save as `Surname_lab_map1_study_area.pdf`.
+1. From Export, click **Export PNG** or **Export PDF**
+2. Set DPI to **300** for the final version and **select export**.
+3. Save as Surname_lab_map1_study_area.pdf.
 
-> **QGIS alternative:** Layout → Export as PDF at 300 DPI.
+![Export dialog](final_guide_images/image21.png)
 
-> **![screenshots/11_export_dialog.png](screenshots/11_export_dialog.png)**
->
 > **Figure 14.** Export dialog in the Map Composer, showing DPI and format options for the final map output.
 
----
+![Final exported map 1](final_guide_images/image4.png)
+
+> **Figure 15.** Final exported map 1.
 
 ## Map 2: Attribute Map (Graduated)
 
-**Required:** Graduated classes of `tree_cover_pct` (or `elevation_m`), legend, same extent, CRS, source line.
-**File name:** `Surname_lab_map2_attribute.pdf`
+**Required:** Graduated classes of tree_cover_pct (or elevation_m), legend, same extent, CRS, source line.
+**File name:** Surname_lab_map2_attribute.pdf
 
 ### Understanding this tool: Graduated Symbology
 
@@ -407,41 +395,54 @@ If any element is hidden, toggle it on in the composer sidebar.
 1. In the **Layers** panel, click your species layer name to select it.
 2. In the **Symbology** panel (right side), click the **Graduated** tab (next to "Single Symbol" and "Categorized").
 
-> **![screenshots/12_graduated_tab.png](screenshots/12_graduated_tab.png)**
->
-> **Figure 15.** Symbology panel switched to the Graduated tab, showing the field, classes, and colour ramp controls.
+![Graduated tab](final_guide_images/image19.png)
+
+> **Figure 16.** Symbology panel switched to the Graduated tab, showing the field (Column), classes, and colour ramp controls.
 
 ### Step 2: Set the field and classes
 
-1. Set the **Field** dropdown to `tree_cover_pct` (or `elevation_m` if you justify it in your report).
+1. Set the **Field** dropdown to tree_cover_pct (or elevation_m if you justify it in your report).
 2. Set **Classes** to **5** (type the number in the classes input).
-3. Choose a **Colour ramp**: 21 ramps available, organized into categories (Sequential multi-hue like Viridis/Inferno/Plasma/Magma, Sequential single-hue like Greens/Blues/Reds, Diverging like Spectral/Red-Blue, Thematic like Heat/Cool/Terrain, Qualitative like Accent/Set 1). Viridis is the default.
+3. Choose a **Colour ramp**: Viridis (default), Heat, Cool, or Terrain.
 4. Click the **Apply** button.
 5. The map now shows points coloured by the selected attribute.
 
+> ![Field classes](final_guide_images/image25.png)
+>
+> Figure 17. Field classes from the tree cover percentage.
+
 ### Step 3: Record the class breaks
 
-1. Look at the **legend** on the map (bottom-right area). It now shows a colour ramp with break values.
+1. Look at the **legend** on the map (bottom-left area). It now shows a colour ramp with break values.
 2. **Write down the class break values** in your notebook.
 3. Example: 0 to 20%, 20 to 40%, 40 to 60%, 60 to 80%, 80 to 100%.
 4. You will state the number of classes and the break values in your report.
 
-### Step 4: Open the composer and export in GeoSpaX
+![Class breaks](final_guide_images/image1.png)
 
-1. Open the **Composer**: in the **left panel**, expand **Export** → **🗺️ Map Image**, click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
+Figure 18. Details of the class breaks.
+
+### Step 4: Open the composer and export
+
+1. Open the **Composer**: in the **left panel**, expand **Export** → click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
 2. Set the title to: `Attribute map: tree cover (%) - [Your Species Name]`
 3. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
 4. Verify the legend shows the graduated classes with break values.
-5. Export as `Surname_lab_map2_attribute.pdf` at 300 DPI.
+5. Export as Surname_lab_map2_attribute.pdf at 300 DPI.
 
-> **QGIS alternative:** Project → New Print Layout → add map, legend, title, scale bar → Layout → Export as PDF.
+![Class breaks on composer](final_guide_images/image28.png)
 
----
+Figure 19. Class breaks shown on the map composer.
+
+![Final export map 2](final_guide_images/image8.png)
+
+Figure 20. Final export map 2.
 
 ## Map 3: Spatial Pattern (Getis-Ord Gi* or LISA)
 
-**Required:** Gi* or LISA on `tree_cover_pct`, legend with significance classes, CRS, source line.
-**File name:** `Surname_lab_map3_pattern.pdf`
+**Required:** Gi* or LISA on tree_cover_pct, legend with significance classes, CRS, source line.
+**File name:** Surname_lab_map3_pattern.pdf
+
 **Tool:** GeoSpaX (this map must be done in GeoSpaX)
 
 ### Understanding this tool: Getis-Ord Gi* and LISA
@@ -461,24 +462,40 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
 2. Select your species layer from the **Layer** dropdown at the top.
 3. Find the **Analysis variable** dropdown (in the settings area above the tool buttons).
-4. Set it to `tree_cover_pct`.
+4. Set it to tree_cover_pct.
 
-> **![screenshots/16_analysis_variable.png](screenshots/16_analysis_variable.png)**
+> ![Analysis variable](final_guide_images/image24.png)
 >
-> **Figure 16.** Analysis drawer showing the analysis variable dropdown set to tree_cover_pct for hot-spot analysis.
+> **Figure 21.** Analysis drawer showing the analysis variable dropdown set to tree_cover_pct for hot-spot analysis.
 
 ### Step 2: Set spatial weights
 
 1. Find the **Weights type** dropdown (next to the analysis variable).
-2. Select **Distance band** (auto-computed. The results will show the band distance, e.g., "53.87 km").
-   - **Why distance band, not KNN:** The *P. guilielmi* training file has 128 records with tree_cover_pct values mostly near 99 (mean = 92.6, SD = 20). With K-nearest neighbours k = 8, each point only has 9 neighbours (including itself). The Gi* z-score denominator depends on the neighbour count — with only 9 neighbours the maximum possible z-score is ~1.14, which is below the 90% threshold (z ≥ 1.65). This means KNN k = 8 **cannot detect any hot spots** on this dataset. The distance band (53.87 km) gives each point ~40–80 neighbours, producing z-scores high enough to identify the 100 hot spots at 99% confidence.
-   - **K-nearest neighbours** with k = 8 is still a valid choice for other datasets with more variable data or fewer points, but for this training file, use **Distance band** to reproduce the example results below.
-3. Leave **Apply FDR correction** (Benjamini-Hochberg) **checked**. Write in your report that FDR was applied.
+2. Choose either:
+   - **Distance band** (auto-computed. The results will show the band distance, e.g., "53.87 km"), or
+   - **K-nearest neighbours** with k = 8 (default. Change the **Neighbours (k)** input if needed).
+   - Recommended: **Distance Band**
+3. Set the **Analysis variable** to tree_cover_pct
+4. Leave **Apply FDR correction** (Benjamini-Hochberg) **checked**. Write in your report that FDR was applied.
+
+**Note:** **Distance band.** For this assignment, students should use **Distance band** — not K-nearest neighbours.
+
+> *Why?*
+>
+> 1. **The guide's training file example only works with distance band** — 100 hot spots at 99%, 14 cold spots at 99%, 14 not significant, band = 53.87 km. KNN k=8 produces 0 hot spots on this dataset.
+>
+> 2. **The math** — with KNN k=8, each point has only 9 neighbours (including itself). The Gi* z-score scales with neighbour count. With 9 neighbours, the maximum possible z-score is ~1.14 — below even the 90% threshold (1.65). Hot spots are mathematically impossible to detect.
+>
+> 3. **The data** — tree_cover_pct values are mostly near 99 (mean 92.6, 115 of 128 points ≥ 90). The distance band gives each point ~40–80 neighbours, which provides enough statistical power to distinguish the high-value clusters from the few low-value points.
+>
+> *When would KNN be appropriate?*
+>
+> KNN k=8 is still a valid choice for **other datasets** — ones with more variable data, fewer points, or irregular spacing. But for the ***P. guilielmi*** training file in FR422, students must use **Distance band** to get the results the guide describes.
 
 ### Step 3: Run Getis-Ord Gi*
 
-1. Find the **📊 Inferential Hotspots & Autocorrelation** section.
-2. Click the **🔥 Getis-Ord Gi* Hot Spots** button.
+1. Under **📊 Inferential Hotspots & Autocorrelation** section.
+2. Click the **🔥 Getis-Ord Gi\* Hot Spots** button.
 3. Wait a few seconds for the analysis to complete.
 
 ### Step 4: Read the results
@@ -498,50 +515,127 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 3. **State the row count and unique-site count** of your file in the map caption. If either is below 30, write that Map 3 is exploratory.
 4. If you ran Gi* on every row, write that stacked coordinates are present.
 
-> **![screenshots/19_gistar_results.png](screenshots/19_gistar_results.png)**
+> ![Gi* results](final_guide_images/image37.png)
 >
-> **Figure 17.** Getis-Ord Gi* results displayed on the map and in the Analysis Results panel, showing hot spots (red) and cold spots (blue) by significance level.
+> **Figure 22.** Getis-Ord Gi\* results displayed on the map and in the Analysis Results panel, showing hot spots (red) and cold spots (blue) by significance level.
 >
-> **Training file example:** With the *P. guilielmi* training file (128 records), the Gi* results show 100 hot spots at 99% and 14 cold spots at 99%, with 14 not significant. The distance band was 53.87 km in UTM 55S.
+> **Training file example:** With the *P. guilielmi* training file (128 records), the Gi\* results show 100 hot spots at 99% and 14 cold spots at 99%, with 14 not significant. The distance band was 53.87 km in UTM 55S.
+>
+> **Distance Band Results (Displayed in the Analysis Results tab on bottom panel)**
+>
+> **Getis-Ord Gi\* — Hot Spot Analysis**
+>
+> **data: 128 features · attribute: tree_cover_pct**
+>
+> **--- Descriptive Statistics ---**
+>
+> **Attribute: tree_cover_pct**
+>
+> **n (observations): 128**
+>
+> **Mean: 92.64**
+>
+> **SD: 20.11**
+>
+> **Median: 98.52**
+>
+> **Min: 0.00**
+>
+> **Max: 100.00**
+>
+> **Skewness: -3.687**
+>
+> **Excess Kurtosis: 12.591**
+>
+> **CV (coefficient of variation): 0.217**
+>
+> **--- Test Results ---**
+>
+> **Hot spots (99% conf.): 100**
+>
+> **Hot spots (95% conf.): 0**
+>
+> **Hot spots (90% conf.): 0**
+>
+> **Cold spots (99% conf.): 14**
+>
+> **Cold spots (95% conf.): 0**
+>
+> **Cold spots (90% conf.): 0**
+>
+> **Not significant: 14**
+>
+> **Total significant: 114 / 128 (89.1%)**
+>
+> **Mean Gi\* z-score: 2.1769**
+>
+> **--- Effect Size ---**
+>
+> **Proportion significant: 0.891**
+>
+> **89.1% of features are significant. A substantial proportion — the spatial pattern is strongly non-random.**
+>
+> **--- Interpretation ---**
+>
+> **114 of 128 features (89.1%) are statistically significant: 100 hot spots (high values surrounded by high values) and 14 cold spots (low values surrounded by low values). The prevalence of hot spots suggests concentrated areas of high tree_cover_pct.**
+>
+> **--- Conservation Relevance ---**
+>
+> **Hot spots identify priority areas for conservation — locations where tree_cover_pct is significantly high and surrounded by similarly high values. Cold spots may indicate areas of lower priority or different management needs. FDR correction ensures these results are robust to multiple testing.**
+>
+> **--- Spatial Weights ---**
+>
+> **distance band = 53.87 km · UTM 55S · 128 features · FDR-corrected (Benjamini-Hochberg) · α = 0.05**
+>
+> **--- Report Sentence (APA style) ---**
+>
+> ***A Getis-Ord Gi\* hot spot analysis identified 114 statistically significant hot spots in tree_cover_pct (114/128 significant, FDR-corrected, α = .05, n = 128).***
+>
+> **Getis, A. & Ord, J.K. (1992). The analysis of spatial association by use of distance statistics. Geographical Analysis, 24(3), 189–206. | Ord, J.K. & Getis, A. (1995). Local spatial autocorrelation statistics: distributional issues and an application. Geographical Analysis, 27(4), 286–306.**
 
 ### Alternative: Run LISA instead
 
 If you prefer Local Moran's I (LISA):
 
 1. Click the **🗺️ LISA Cluster & Outlier Map** button (next to the Gi* button, in the **📊 Inferential Hotspots & Autocorrelation** section).
-2. Same field (`tree_cover_pct`), same weights choice (**Distance band** recommended — see Step 2 above for why KNN k = 8 does not work for this dataset).
+2. Same field (tree_cover_pct), same weights choice.
 3. The legend shows HH (High-High), LL (Low-Low), HL (High-Low outlier), LH (Low-High outlier), and Not significant.
 4. GeoSpaX uses 999 permutations. Write that number in your report.
 
-> **![screenshots/20_lisa.png](screenshots/20_lisa.png)**
+> ![LISA cluster map](final_guide_images/image32.png)
 >
-> **Figure 18.** LISA cluster map showing High-High, Low-Low, and outlier classes with 999-permutation significance.
+> **Figure 23.** LISA cluster map showing High-High, Low-Low, and outlier classes with 999-permutation significance.
 
-### Step 5: Open the composer and export in GeoSpaX
+### Step 5: Open the composer and export
 
-1. Open the **Composer**: in the **left panel**, expand **Export** → **🗺️ Map Image**, click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
+1. Open the **Composer**: in the **left panel**, expand **Export** → click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
 2. Set the title to: `Spatial pattern: Gi* on tree cover - [Your Species Name]`
 3. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
 4. Verify the legend shows the Gi* significance classes (or LISA cluster types).
-5. Export as `Surname_lab_map3_pattern.pdf` at 300 DPI.
+5. Export as Surname_lab_map3_pattern.pdf at 300 DPI.
 
-> **QGIS alternative:** Export the Gi*/LISA result layer from GeoSpaX as GeoJSON, load it into QGIS, and compose in a QGIS Print Layout.
+> ![Completed Map 3](final_guide_images/image34.png)
+>
+> **Figure 24.** Completed Map 3 in the Map Composer, showing Gi\* significance classes with legend, scale bar, north arrow, and CRS text.
 
----
+![Final exported map 3](final_guide_images/image7.png)
+
+Figure 25. Final exported map 3.
 
 ## Map 4: Habitat Proxy Score
 
-**Required:** A `habitat_score` field calculated from at least three attributes (`elevation_m`, `tree_cover_pct`, `rainfall_mm`), with thresholds and weights justified by literature for your approved species. Graduated styling. Not a species distribution model.
-**File name:** `Surname_lab_map4_habitat_proxy.pdf`
-**Tool:** GeoSpaX Calculate Field (QGIS Field Calculator and ArcGIS Calculate Field are alternatives)
+**Required:** A habitat_score field calculated from at least three attributes (elevation_m, tree_cover_pct, rainfall_mm), with thresholds and weights justified by literature for your approved species. Graduated styling. Not a species distribution model.
+**File name:** Surname_lab_map4_habitat_proxy.pdf (your final map)
+
+**Tool:** GeoSpaX Calculate Field tool
 
 ### Understanding this tool: Calculate Field (Weighted Conditions)
 
-**What it does:** The Calculate Field tool creates a new attribute by combining existing fields using rules you define. In **Weighted conditions** mode, each row tests one field against a threshold (e.g., `elevation_m between 0 and 2000`, `tree_cover_pct >= 50`), and each test contributes a weight to the final score. A point that passes all three tests gets a score of 3 (for equal weights of 1 each); a point that passes none gets 0.
+**What it does:** The Calculate Field tool creates a new attribute by combining existing fields using rules you define. In **Weighted conditions** mode, each row tests one field against a threshold (e.g., elevation_m between 0 and 2000, tree_cover_pct >= 50), and each test contributes a weight to the final score. A point that passes all three tests gets a score of 3 (for equal weights of 1 each); a point that passes none gets 0.
 
 **Why this assignment uses it:** No single environmental variable defines habitat quality for a forest species. A site at the right elevation but with no tree cover is not good habitat. A site with 90% tree cover but at sea level (wrong elevation band) is not good habitat either. The habitat score combines multiple criteria into a single ranking that reflects the species' overall requirements. The thresholds and weights must come from published literature on your species - this forces you to research the species before touching the software.
 
-**What it means in real-world conservation:** This is a simplified version of rule-based habitat scoring used in conservation planning. Real-world tools like Marxan, the GeoMOD module in QGIS, or ArcGIS's Weighted Overlay tool do the same thing at a more sophisticated level: they combine multiple spatial criteria with weights to produce a suitability or priority surface. The principle is identical: (1) identify the criteria that matter for your species, (2) set thresholds from literature or expert knowledge, (3) assign weights reflecting the relative importance of each criterion, (4) combine into a single score.
+**What it means in real-world conservation:** This is a simplified version of **Multi-Criteria Evaluation (MCE)**, also called Weighted Linear Combination (WLC) - one of the most widely used methods in conservation planning and land-use suitability analysis. Real-world tools like Marxan, the GeoMOD module in QGIS, or ArcGIS's Weighted Overlay tool do the same thing at a more sophisticated level: they combine multiple spatial criteria with weights to produce a suitability or priority surface. The principle is identical: (1) identify the criteria that matter for your species, (2) set thresholds from literature or expert knowledge, (3) assign weights reflecting the relative importance of each criterion, (4) combine into a single score.
 
 **What it is NOT:** The habitat score is not a species distribution model (SDM). It does not use presence-absence modelling, MaxEnt, or machine learning. It does not predict where the species could occur - it only ranks the sites where the species has already been recorded. The title must say "habitat proxy", not "distribution model" or "suitability". This distinction matters because an SDM extrapolates beyond known sites, while a habitat proxy only scores known sites.
 
@@ -555,27 +649,21 @@ Before touching the software, write down:
 4. The **weight** for each criterion. Example: 1, 1, 1 (equal weights) or 2, 1, 1.
 5. The **citations** for each threshold.
 
-### Step 2: Open Calculate Field in GeoSpaX
+### Step 2: Open Calculate Field
 
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
 2. Select your species layer from the **Layer** dropdown at the top.
 3. Scroll down to the **🧮 Attributes** section.
 4. If the section is collapsed, click the **Attributes** header to expand it.
 
-> **QGIS alternative:** Open the attribute table → click the Field Calculator button (abacus icon, or Ctrl+I) → check "Create a new field" → set output field name to `habitat_score`, type to Integer.
-
-> **![screenshots/22_calcfield_section.png](screenshots/22_calcfield_section.png)**
+> ![Calculate Field section](final_guide_images/image2.png)
 >
-> **Figure 20.** Calculate Field section in the Analysis drawer, showing the Weighted conditions mode with three empty criterion rows.
+> **Figure 26.** Calculate Field section in the Analysis drawer, showing the Weighted conditions mode with three empty criterion rows.
 
 ### Step 3: Set the output field name
 
-1. In the **Output field name** input, type: `habitat_score`
+1. In the **Output field name** input, type: habitat_score
 2. Set **Output type** to **Integer**.
-3. Note the **Style layer on this field** checkbox (checked by default):
-   - **Checked** (default): the layer is automatically styled with Graduated symbology on `habitat_score` after calculation.
-   - **Unchecked**: the field is created but the layer keeps its current styling. Use this if you want to style manually later, or if you are recalculating and do not want to change the current map appearance.
-4. **Overwrite behaviour**: if you run Calculate Field again with the same output name (`habitat_score`), the existing field is **overwritten in place** (values updated) — no `habitat_score_2` duplicate is created. This matches QGIS and ArcGIS Pro. Use a different output name if you want to keep the old field.
 
 ### Step 4: Add your three criteria (Weighted conditions mode)
 
@@ -585,15 +673,15 @@ The Calculate Field tool opens in **Weighted conditions** mode by default, with 
 
 | Row | Field | Test | Value | Max (if between) | Weight |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `elevation_m` | between | [low] | [high] | [weight] |
-| 2 | `tree_cover_pct` | >= | [percent] | - | [weight] |
-| 3 | `rainfall_mm` | >= | [millimetres] | - | [weight] |
+| 1 | elevation_m | between | [low] | [high] | [weight] |
+| 2 | tree_cover_pct | >= | [percent] | - | [weight] |
+| 3 | rainfall_mm | >= | [millimetres] | - | [weight] |
 
 For each row:
 
 1. Click the **Field** dropdown and select the field name.
-2. Click the **Test** dropdown and select the operator (`between`, `>=`, `>`, `<=`, `<`, `=`, `!=`).
-3. If you chose `between`, two input boxes appear: **min** and **max**. Fill both.
+2. Click the **Test** dropdown and select the operator (between, >=, >, <=, <, =, !=).
+3. If you chose between, two input boxes appear: **min** and **max**. Fill both.
 4. For other tests, fill the **value** input box.
 5. Set the **Weight** (the × column) to your chosen weight (default is 1).
 
@@ -603,9 +691,9 @@ Example for a species favouring mid-elevation forest with high rainfall:
 
 | Row | Field | Test | Value | Max | Weight |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `elevation_m` | between | 0 | 2000 | 1 |
-| 2 | `tree_cover_pct` | >= | 50 | - | 1 |
-| 3 | `rainfall_mm` | >= | 2500 | - | 1 |
+| 1 | elevation_m | between | 0 | 2000 | 1 |
+| 2 | tree_cover_pct | >= | 50 | - | 1 |
+| 3 | rainfall_mm | >= | 2500 | - | 1 |
 
 ### Step 5: Preview and run
 
@@ -623,71 +711,53 @@ Example for a species favouring mid-elevation forest with high rainfall:
      `(elevation_m >= 0 && elevation_m <= 2000 ? 1 : 0) + (tree_cover_pct >= 50 ? 1 : 0) + (rainfall_mm >= 2500 ? 1 : 0)`
 5. **Copy the expression** from the results panel. Paste it into your report methods section.
 
-> **QGIS alternative expression:**
-> ```
-> CASE WHEN "elevation_m" >= 0 AND "elevation_m" <= 2000 THEN 1 ELSE 0 END
-> + CASE WHEN "tree_cover_pct" >= 50 THEN 1 ELSE 0 END
-> + CASE WHEN "rainfall_mm" >= 2500 THEN 1 ELSE 0 END
-> ```
-
-> **![screenshots/25_calcfield_preview.png](screenshots/25_calcfield_preview.png)**
+> ![Calculate Field preview](final_guide_images/image6.png)
 >
-> **Figure 21.** Calculate Field live preview showing the first five features with old and new habitat_score values before running the calculation.
+> **Figure 27.** Calculate Field live preview showing the first five features with old and new habitat_score values before running the calculation.
 >
-> **![screenshots/26_calcfield_results.png](screenshots/26_calcfield_results.png)**
+> ![Calculate Field results](final_guide_images/image31.png)
 >
-> **Figure 22.** Calculate Field results in the Analysis Results panel, showing feature count, min/max/mean, and the exact expression used.
+> **Figure 28.** Calculate Field results in the Analysis Results panel, showing feature count, min/max/mean, and the exact expression used.
 
 ### Step 6: Verify the habitat_score field
 
 1. Open the **Attribute Table** (right panel).
 2. Select your species layer from the dropdown.
-3. Scroll right in the table. You should see a new **`habitat_score`** column.
+3. Scroll right in the table. You should see a new **habitat_score** column.
 4. Confirm the values are whole numbers (0, 1, 2, or 3 for three equal-weight criteria).
 
-**What the scores mean:**
-
-| Score | Meaning | Conservation interpretation |
-| --- | --- | --- |
-| 3 | Meets all 3 criteria | Best habitat — optimal conditions |
-| 2 | Meets 2 of 3 criteria | Good habitat — mostly suitable |
-| 1 | Meets 1 criterion | Marginal habitat — suboptimal, edge/transition |
-| 0 | Meets none | Unsuitable — outside environmental tolerance |
-
-**More than 3 criteria:** The score scales automatically. With 5 criteria the range is 0–5; with 8 (the maximum in weighted-conditions mode) the range is 0–8. In expression mode there is no limit. When styling, set the number of classes to match your criteria count + 1 (e.g. 6 classes for 5 criteria: 0, 1, 2, 3, 4, 5), or use **Manual** breaks to set exact class boundaries.
-
-**Important:** This is **not** a species distribution model (SDM) and **not** a habitat suitability model. It is a transparent, rule-based proxy. Each threshold must be justified by literature for your specific species.
-
-> **![screenshots/27_attrtable_habitat_score.png](screenshots/27_attrtable_habitat_score.png)**
+> ![Attribute Table habitat_score](final_guide_images/image27.png)
 >
-> **Figure 23.** Attribute Table with the new habitat_score column visible, showing integer scores (0-3) for each occurrence record.
+> **Figure 29.** Attribute Table with the new habitat_score column visible, showing integer scores (0-3) for each occurrence record.
 
-### Step 7: Style the habitat_score in GeoSpaX
+### Step 7: Style the habitat_score
 
 1. The Calculate Field tool automatically applies **Graduated** styling to the new field.
-2. If you want to adjust: select your species layer in the Layers panel, go to **Symbology → Graduated**, and confirm the field is `habitat_score`.
+2. If you want to adjust: select your species layer in the Layers panel, go to **Symbology, then Graduated**, and confirm the field is habitat_score.
 3. Set 4 or 5 classes (e.g., 0, 1, 2, 3 for three equal-weight criteria).
-4. Choose a colour ramp (e.g., Greens for habitat quality, Viridis, or Spectral). 21 ramps available.
+4. Choose a colour ramp (e.g., Green to Yellow to Red, or Viridis).
 5. Click **Apply**.
 
-> **QGIS alternative:** Right-click the layer → Properties → Symbology → Graduated → set Value to `habitat_score` → Classify → Apply.
+![Habitat scores plotted](final_guide_images/image35.png)
 
-### Step 8: Open the composer and export in GeoSpaX
+Figure 30. Habitat scores plotted on the map generated by field calculations.
+
+### Step 8: Open the composer and export
 
 1. Open the **Composer**: in the **left panel**, expand **Export** → **🗺️ Map Image**, click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
 2. Set the title to: `Habitat proxy of GBIF points - [Your Species Name]`
 3. **Important:** The title must say "habitat proxy of GBIF points", NOT "species distribution" or "habitat suitability".
 4. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census`
 5. Verify the legend shows the habitat_score classes.
-6. Export as `Surname_lab_map4_habitat_proxy.pdf` at 300 DPI.
+6. Export as Surname_lab_map4_habitat_proxy.pdf at 300 DPI.
 
-> **QGIS alternative:** Project → New Print Layout → add map, legend, title, scale bar → Layout → Export as PDF.
-
-> **![screenshots/29_map4_complete.png](screenshots/29_map4_complete.png)**
+> ![Completed Map 4](final_guide_images/image36.png)
 >
-> **Figure 24.** Completed Map 4 in the Map Composer, showing graduated habitat_score classes with legend, scale bar, north arrow, and CRS text.
+> **Figure 31.** Completed Map 4 in the Map Composer, showing graduated habitat_score classes with legend, scale bar, north arrow, and CRS text.
 
----
+![Final exported map 4](final_guide_images/image33.png)
+
+Figure 32. Final exported map 4.
 
 ## Systematic Conservation Planning: Why We Work at the Hull Scale
 
@@ -704,12 +774,12 @@ The full SCP framework (Pressey & Bottrill, 2009) has 11 stages. For this assign
 **Table 8.** The five key stages of systematic conservation planning and how each maps onto the assignment.
 
 | SCP Stage | What it means | Your assignment maps onto |
-|-----------|---------------|--------------------------|
+| --- | --- | --- |
 | **1. Collect biodiversity data** | Map where the species actually occurs | **Map 1**: GBIF occurrence points and convex hull define the study area |
 | **2. Describe the environment** | Understand habitat conditions at occurrence sites | **Map 2**: Graduated tree cover / elevation shows the environmental gradient |
 | **3. Identify spatial patterns** | Find clusters of high-quality or low-quality habitat | **Map 3**: Gi* / LISA hot spots and cold spots reveal spatial structure |
 | **4. Score habitat quality** | Rank sites by suitability for the target species | **Map 4**: Habitat proxy score combines elevation, tree cover, and rainfall |
-| **5. Gap analysis & prioritisation** | Compare habitat with existing protection; identify unprotected priority sites | **Step 5 below**: Load protected areas, run Protection Gap, identify priority areas |
+| **5. Gap analysis & prioritisation** | Compare habitat with existing protection; identify priority sites | **Step 5 below**: Load protected areas, run Protection Gap, identify unprotected priority areas |
 
 **How this maps to real-world SCP:** In a full SCP exercise (e.g., the Marxan-based planning used for the Great Barrier Reef Marine Park rezoning in 2004), stages 1-4 are the data preparation phase. Stage 5 is where the actual prioritisation happens - software like Marxan runs thousands of iterations to find the most efficient set of sites that meets conservation targets at the lowest cost. Your assignment does a simplified version: you manually score habitat (Map 4), then manually identify gaps (Step 5). The logic is the same; the automation is different.
 
@@ -721,18 +791,16 @@ Your convex hull (Map 1) is not just a drawing exercise - it defines the **plann
 
 **Key SCP principles to mention in your report:**
 
-- **Representation**: Your conservation actions should cover the range of environmental conditions where the species occurs (different elevations, tree-cover levels, rainfall zones). Maps 2 and 4 show this range. In real-world SCP, representation targets are quantitative (e.g., "protect at least 30% of each forest type") - the Kunming-Montreal Global Biodiversity Framework (2022) adopted the "30 by 30" target, aiming to protect 30% of land and sea by 2030.
-- **Complementarity**: Each proposed conservation action should add something the others do not. If you propose two actions, they should protect different habitat types or different hot-spot clusters, not the same area twice. This is the core principle that distinguishes SCP from ad-hoc conservation - it asks "what does this site add that the other sites do not?"
-- **Efficiency**: Focus on the smallest area that achieves the most protection. The hot-spot map (Map 3) shows where high-quality habitat is concentrated - protecting those areas is more efficient than protecting random sites. In real-world SCP, efficiency is measured as the cost of achieving targets - Marxan minimises a cost function while meeting representation targets.
-- **Irreplaceability**: Some sites cannot be replaced - if your species only occurs in one high-elevation forest patch, that patch is irreplaceable. Your habitat score (Map 4) and hot-spot analysis (Map 3) help identify these sites. In real-world SCP, irreplaceability is computed as the proportion of solutions in which a site is selected - a site that appears in 100% of Marxan runs is fully irreplaceable.
+1. **Representation**: Your conservation actions should cover the range of environmental conditions where the species occurs (different elevations, tree-cover levels, rainfall zones). Maps 2 and 4 show this range. In real-world SCP, representation targets are quantitative (e.g., "protect at least 30% of each forest type") - the Kunming-Montreal Global Biodiversity Framework (2022) adopted the "30 by 30" target, aiming to protect 30% of land and sea by 2030.
+2. **Complementarity**: Each proposed conservation action should add something the others do not. If you propose two actions, they should protect different habitat types or different hot-spot clusters, not the same area twice. This is the core principle that distinguishes SCP from ad-hoc conservation - it asks "what does this site add that the other sites do not?"
+3. **Efficiency**: Focus on the smallest area that achieves the most protection. The hot-spot map (Map 3) shows where high-quality habitat is concentrated - protecting those areas is more efficient than protecting random sites. In real-world SCP, efficiency is measured as the cost of achieving targets - Marxan minimises a cost function while meeting representation targets.
+4. **Irreplaceability**: Some sites cannot be replaced - if your species only occurs in one high-elevation forest patch, that patch is irreplaceable. Your habitat score (Map 4) and hot-spot analysis (Map 3) help identify these sites. In real-world SCP, irreplaceability is computed as the proportion of solutions in which a site is selected - a site that appears in 100% of Marxan runs is fully irreplaceable.
 
 ### Reference
 
 - Margules, C.R. & Pressey, R.L. (2000). Systematic conservation planning. *Nature*, 405, 243-253.
 - Pressey, R.L. & Bottrill, M.C. (2009). Systematic conservation planning. In *Encyclopedia of Life Sciences*. Wiley.
 - CBD (2022). Kunming-Montreal Global Biodiversity Framework. Convention on Biological Diversity, Montreal.
-
----
 
 ## Step 5 (Optional but Recommended): Conservation Gap Analysis
 
@@ -742,7 +810,7 @@ This step is optional for the four required maps but strongly recommended for Pa
 
 **What the Protection Gap tool does:** It overlays your habitat layer (Layer A) with a protected-areas layer (Layer B) and computes how much of your habitat falls inside versus outside existing protected areas. The result is a gap percentage: the proportion of your species' habitat that is NOT currently protected. It also names the specific protected areas that overlap your habitat.
 
-**What the Priority Area Identification tool does:** It takes your species points (which have a `habitat_score` from Map 4), checks each point against the protected-areas layer, and identifies points that are both **high-quality** (score above your threshold) AND **unprotected** (outside any PA polygon). These are the sites where new conservation action would have the highest return - they are good habitat that is currently not safeguarded.
+**What the Priority Area Identification tool does:** It takes your species points (which have a habitat_score from Map 4), checks each point against the protected-areas layer, and identifies points that are both **high-quality** (score above your threshold) AND **unprotected** (outside any PA polygon). These are the sites where new conservation action would have the highest return - they are good habitat that is currently not safeguarded.
 
 **Why this assignment uses them:** The four maps (1-4) tell you where your species occurs, what the environment looks like, where habitat clusters, and which sites score highest. But they do not tell you whether any of this habitat is already protected. Without gap analysis, a conservation plan might propose protecting an area that is already a national park. The gap analysis closes this loop: it connects your habitat assessment to the existing protected-area network and identifies the actual gaps that need filling.
 
@@ -752,31 +820,30 @@ This step is optional for the four required maps but strongly recommended for Pa
 
 ### What you need
 
-- Your species layer with `habitat_score` (from Map 4)
-- The shared `PNG_protected_areas.gpkg` file from `FR422_SHARED_DATA_2026.zip`
+1. Your species layer with habitat_score (from Map 4)
+2. The shared PNG_protected_areas.gpkg file from FR422_SHARED_DATA_2026.zip
 
 ### Step 1: Load the protected areas layer
 
-1. In GeoSpaX, open **Data Sources** in the left panel and load `PNG_protected_areas.gpkg` from the `PROTECTED_AREAS` folder.
-2. A new layer appears showing protected-area polygons. Note the layer name (e.g., `PNG_protected_areas`).
-3. Cite the source in your provenance table: *World Database on Protected Areas (WDPA), UNEP-WCMC, accessed via the PNG Environment Data Portal / SPREP mirror. See `SHARED_DATA_SOURCES.txt` for full citation.*
+1. In GeoSpaX, open **Data Sources** in the left panel and load PNG_protected_areas.gpkg from the PROTECTED_AREAS folder.
+2. A new layer appears showing protected-area polygons. Note the layer name (e.g., PNG_protected_areas).
+3. Cite the source in your provenance table: *World Database on Protected Areas (WDPA), UNEP-WCMC, accessed via the PNG Environment Data Portal / SPREP mirror. See SHARED_DATA_SOURCES.txt for full citation.*
 
 ### Step 2: Run the Protection Gap tool
 
 1. Open the **Analysis** drawer (click the 🧪 **Analysis** button in the toolbar - the drawer opens on the right side, next to the Feature Info panel).
-2. Scroll down to the **🌳 Conservation Planning** section and click the header to expand it.
-3. Find the **Protection Gap** subsection. It has its own **Layer A** and **Layer B** dropdowns.
-4. Set **Layer A (habitat / hull)** to your species layer (or your convex hull layer - the hull is the planning region).
-5. Set **Layer B (protected areas)** to the protected-areas layer.
+2. Scroll to the **🌳 Conservation Planning** section.
+3. In the **Protection Gap** subsection, the tool uses Layer A and Layer B from the top of the Analysis drawer.
+4. Set **Layer A** to your species layer (or your convex hull layer - the hull is the planning region).
+5. Set **Layer B** to the protected-areas layer.
 6. Click **Run Protection Gap**.
-7. The results panel (bottom panel, **Analysis Results** tab) shows:
+7. The results panel shows:
    - **Total habitat area:** the area of your hull (or species points' extent) in hectares
-   - **Inside protected areas:** how much of your habitat is inside existing protected areas
-   - **Outside protected areas (gap):** how much of your habitat is NOT inside any protected area
-   - **Protected proportion:** the percentage of your habitat that is protected
-   - **Protected areas intersected:** the names of the protected areas that overlap your habitat
+   - **Protected area:** how much of your habitat is inside existing protected areas
+   - **Gap area:** how much of your habitat is NOT inside any protected area
+   - **Gap percentage:** the percentage of your habitat that is unprotected
 
-> **![screenshots/protection_gap_results.png](screenshots/protection_gap_results.png)**
+> ![Protection Gap results](final_guide_images/image26.png)
 >
 > **Figure 25.** Protection Gap analysis results showing total habitat area, protected area, gap area, and gap percentage for the training file.
 >
@@ -784,19 +851,23 @@ This step is optional for the four required maps but strongly recommended for Pa
 
 ### Step 3: Interpret the gap
 
-1. **If the gap is large (e.g., > 70%):** Most of your species' habitat is unprotected. Your conservation plan should prioritise the unprotected high-quality areas.
-2. **If the gap is small (e.g., < 30%):** Much of the habitat is already inside protected areas. Your plan should focus on maintaining and monitoring existing protection, and filling the remaining gaps.
-3. **If the gap is 100%:** None of your species' habitat is currently protected. Your entire plan is about new protection.
-4. **Write the gap percentage in your report** with the citation. State that this is the gap between your hull extent and the WDPA layer, not a national assessment.
+1. **If the protected proportion is low (e.g., < 10%):** Most of your species' habitat is unprotected. Your conservation plan should prioritise the unprotected high-quality areas for new protection.
+2. **If the protected proportion is moderate (e.g., 10-30%):** Some habitat is safeguarded but significant gaps remain. Your plan should focus on filling the gaps while maintaining existing protection.
+3. **If the protected proportion is high (e.g., > 30%):** Much of the habitat is already inside protected areas. Your plan should focus on monitoring and managing existing protection, and filling any remaining gaps.
+4. **If the protected proportion is 0%:** None of your species' habitat is currently protected. Your entire plan is about new protection.
+
+**In your example (5.6% protected):** 94.4% of the hull extent is unprotected - a large gap. The conservation plan should prioritise the unprotected high-quality habitat (habitat_score ≥ 2) for new conservation action.
+
+**Write the protected proportion in your report** with the citation. State that this is the proportion of your hull extent that overlaps the WDPA protected-areas layer, not a national assessment of PNG's protected-area coverage. Do not generalise it to a national figure.
 
 ### Step 4: Identify priority conservation areas
 
 Use the **Priority Area Identification** tool to find sites that are both high-quality habitat AND unprotected:
 
 1. In the **🌳 Conservation Planning** section, find the **Priority Area Identification** subsection.
-2. Set **Habitat layer** to your species layer (the one with `habitat_score`).
+2. Set **Habitat layer** to your species layer (the one with habitat_score).
 3. Set **Protected areas layer** to the protected-areas layer.
-4. Set **Score field** to `habitat_score` (this is the default).
+4. Set **Score field** to habitat_score (this is the default).
 5. Set **Minimum habitat score** to the threshold you want (e.g., 2 out of 3, meaning sites meeting at least 2 of your 3 criteria).
 6. Click **Identify Priority Areas**.
 7. The tool creates a new layer showing points that are:
@@ -804,58 +875,56 @@ Use the **Priority Area Identification** tool to find sites that are both high-q
    - Outside existing protected areas (the gap)
 8. These are your **priority conservation areas** - the sites most in need of new protection.
 
-> **![screenshots/priority_area_map.png](screenshots/priority_area_map.png)**
+> ![Priority Area results](final_guide_images/image23.png)
 >
 > **Figure 26.** Priority Area Identification results showing high-quality, unprotected sites as a new layer on the map.
 >
 > *Example result (training file): 128 total points, 111 priority (high-quality & unprotected), 12 already protected, 5 below score threshold of 2.*
 
+**Interpret the priority area results:**
+
+- **111 priority points (86.7% of total):** The vast majority of high-quality habitat points are unprotected. These are your priority conservation sites - good habitat that falls outside the existing protected-area network.
+- **12 already protected (9.4%):** These high-quality points are already inside protected areas (Nusareng or YUS). No new action needed here, but monitor and maintain existing protection.
+- **5 below threshold (3.9%):** These points have habitat_score < 2 and are not considered high-quality. They are excluded from priority consideration regardless of protection status.
+
+**What this means for your species:** With only 5.6% of the hull extent protected and 111 of 128 high-quality points unprotected, the gap between habitat quality and existing protection is large. The 111 priority points are where new conservation action would have the highest return.
+
 ### Step 5: Use the results in your conservation plan
 
 In Part B of your report:
 
-1. **State the gap percentage** and cite the WDPA source.
-2. **Name the priority areas** by their site codes or geographic description (e.g., "the high-elevation forest cluster in Western Province, sites GBIF_6195567946 and GBIF_6179346071, which have habitat scores of 3 but fall outside the existing protected-area network").
-3. **Propose two or three spatially explicit actions** for these priority areas, using the legal instruments from the assignment brief.
-4. **Explain how your plan follows SCP principles**: representation (covering different habitat types), complementarity (each action adds something new), and efficiency (focusing on the smallest area with the highest return).
+1. **State the protected proportion and cite the WDPA source.** Example: "Only 5.6% of the species' hull extent (43,755 ha of 776,895 ha) falls inside existing protected areas (Nusareng and YUS). Source: World Database on Protected Areas (WDPA), UNEP-WCMC, accessed via the PNG Environment Data Portal / SPREP mirror."
+2. **Name the priority areas by their site codes or geographic description.** Open the attribute table of the new Priority Areas layer to see which site codes are included. Example: "Priority sites include GBIF_6195567946 and GBIF_6179346071 in the high-elevation forest cluster of Morobe Province, which have habitat scores of 3 but fall outside the existing protected-area network."
+3. **Propose two or three spatially explicit actions for these priority areas, using the legal instruments from the assignment brief.** Each action should name a specific geographic area and a specific legal tool (e.g., Wildlife Management Area, Conservation Area, national park).
+4. **Explain how your plan follows SCP principles:**
+   - **Representation:** Your actions cover different habitat types (e.g., lowland and montane forest) within the hull.
+   - **Complementarity:** Each action adds something new — not duplicating the existing Nusareng and YUS protected areas, but filling gaps they don't cover.
+   - **Efficiency:** Focusing on the 111 unprotected high-quality points rather than the entire hull, so the smallest area delivers the highest conservation return.
 
-> **Important:** The gap analysis uses your hull extent, not the national boundary. It tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
-
----
+**Important:** The gap analysis uses your hull extent, not the national boundary. It tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
 
 ## After All Four Maps
 
-### Export your data from GeoSpaX
+### Export your data
 
-GeoSpaX is the primary tool for all four maps. Export your layers for backup and for submission:
-
-1. Open the **Export** panel in GeoSpaX.
-2. Set **Output CRS** to the UTM zone shown by the auto-detect hint (or manually select the correct zone for your data — see the export section above).
-3. Export your species layer as **GeoJSON** (`Surname_lab_species_points_utmXXS_WGS84.geojson`). **Replace `Surname` with your actual surname.**
-4. Export your species layer as **CSV** (`Surname_lab_species_points_utmXXS_WGS84.csv`) if needed.
-5. Export your Convex Hull layer as **GeoJSON** (`Surname_lab_species_hull.geojson`).
-6. Export your Gi*/LISA layer as **GeoJSON** (`Surname_lab_species_pattern.geojson`).
+1. Open the **Export** panel.
+2. Set **Output CRS** to the UTM zone shown by the auto-detect hint (or manually select the correct zone for your data - see the export section above).
+3. Export your species layer as **GeoJSON** (Surname_lab_species_points_utmXXS_WGS84.geojson). **Replace Surname with your actual surname.**
+4. Export your species layer as **CSV** (Surname_lab_species_points_utmXXS_WGS84.csv) if needed.
+5. Export your Convex Hull layer as **GeoJSON** (Surname_lab_convex_hull_polygon_utm55S_WGS84.geojson).
+6. Export your Gi*/LISA layer as **GeoJSON** (Moses_lab_gihotspots_treecoverpct_points_utm55S_WGS84.geojson).
 
 ### Save the project
 
-GeoSpaX can save a complete project file (.gspx) with all layers, symbology, and analysis results. The assignment brief accepts a GeoSpaX project (.gspx), a QGIS project (.qgz), or a GeoPackage as the project submission.
-
-**Option A — GeoSpaX project (.gspx):**
-
-1. Click the **💾 Save** button in the GeoSpaX topbar.
-2. A dialog appears with a filename input pre-filled with `project_geospax.gspx`. Edit the name to `Surname_lab.gspx`.
+1. Click the **💾 Save** button in the topbar.
+2. A dialog appears with a filename input pre-filled with project_geospax.gspx. Edit the name to Surname_lab.gspx.
 3. Click **Save**.
 4. In Chrome or Edge, the browser's native Save As dialog opens so you can choose where to save the file. In Firefox, the file is saved to your Downloads folder.
-5. This saves all layers, symbology, digitized features, bookmarks, and analysis results as a `.gspx` file.
+5. This saves all layers, symbology, digitized features, bookmarks, and analysis results as a .gspx file.
 
-**Option B — QGIS project (.qgz) or GeoPackage (if you used QGIS as an alternative):**
-
-1. In QGIS, load all your layers: the reprojected species points, the convex hull, the Gi*/LISA layer (exported from GeoSpaX), and the scored points (with `habitat_score`).
-2. Go to **Project** → **Save As**.
-3. Name the file `Surname_lab.qgz` (replace `Surname` with your actual surname). Do not submit `final2_new.qgz`.
-4. Click **Save**.
-
-> **GeoPackage alternative:** Instead of a .qgz, you can export all layers to a single GeoPackage file (`Surname_lab.gpkg`) using QGIS DB Manager or the Export dialog for each layer (right-click → Export → Save Features As → format GeoPackage, same database). The brief accepts either format.
+> ![Save Workspace](final_guide_images/image29.png)
+>
+> **Figure 27.** Save Workspace dialog with the filename field pre-filled, ready to save the project as a .gspx file.
 
 ### Complete the provenance table
 
@@ -864,29 +933,27 @@ Fill in the provenance table with:
 - **GeoSpaX version** (from the page footer)
 - **Access date** (today's date)
 - **Dataset:** GBIF PNG teaching extract, [Your Species Name]
-- **File:** the `<Species>_occurrences.geojson` file the lecturer sent you via Google Drive
-- **Shared data:** `FR422_SHARED_DATA_2026.zip` from Google Classroom (see `SHARED_DATA_SOURCES.txt` inside the ZIP for full citations)
+- **File:** the \<Species\>_occurrences.geojson file the lecturer sent you via Google Drive
+- **Shared data:** FR422_SHARED_DATA_2026.zip from Google Classroom (see SHARED_DATA_SOURCES.txt inside the ZIP for full citations)
 - **Filters:** country=PG, hasCoordinate=true, hasGeospatialIssue=false
 - **Environmental fields:** WorldClim 2.1 BIO1/BIO12/BIO15, elevation; FR422 tree-cover proxy from ESA WorldCover 2021 class 10
 - **n = [your record count]** ([your unique-site count] unique sites). Not a census.
 - **Analysis CRS:** Your correct UTM zone (EPSG:32754, 32755, or 32756)
-- **Calculate field expression:** (paste from the GeoSpaX results panel or the QGIS Field Calculator expression you used)
+- **Calculate field expression:** (paste from the results panel)
 
 ### Checklist before submission
 
-- [ ] Map 1: `Surname_lab_map1_study_area.pdf`: hull, points, labels, legend, scale bar, north arrow, CRS, source line
-- [ ] Map 2: `Surname_lab_map2_attribute.pdf`: graduated classes, legend, CRS, source line
-- [ ] Map 3: `Surname_lab_map3_pattern.pdf`: Gi* or LISA classes, legend, CRS, source line
-- [ ] Map 4: `Surname_lab_map4_habitat_proxy.pdf`: habitat_score classes, legend, CRS, source line, title says "habitat proxy"
+- [ ] Map 1: Surname_lab_map1_study_area.pdf: hull, points, labels, legend, scale bar, north arrow, CRS, source line
+- [ ] Map 2: Surname_lab_map2_attribute.pdf: graduated classes, legend, CRS, source line
+- [ ] Map 3: Surname_lab_map3_pattern.pdf: Gi* or LISA classes, legend, CRS, source line
+- [ ] Map 4: Surname_lab_map4_habitat_proxy.pdf: habitat_score classes, legend, CRS, source line, title says "habitat proxy"
 - [ ] Provenance table with GeoSpaX version and access date
 - [ ] Exported GeoJSON in the correct UTM zone (EPSG:32754, 32755, or 32756)
-- [ ] Project file: GeoSpaX (.gspx), QGIS (.qgz), or GeoPackage (.gpkg) containing the lab points, the hull, and the scored points
+- [ ] Saved .gspx project file
 - [ ] Three thresholds, three weights, and citations written in the report
 - [ ] No forest-loss hectares, no protected-area percentage, no clan names unless from a cited source
 - [ ] (Recommended) Gap analysis run with WDPA layer, gap percentage reported with citation
 - [ ] (Recommended) Priority areas identified and named in the conservation plan
-
----
 
 ## Optional: Loading and Reclassifying Raster Data
 
@@ -894,48 +961,46 @@ The four required maps use environmental fields already embedded in your species
 
 ### Loading a GeoTIFF
 
-1. Open the **Analysis drawer** (click **Analysis** in the top toolbar).
-2. Expand the **Raster Analysis** section.
-3. Click **Select GeoTIFF** and choose a `.tif` file (e.g. `PNG_BIO1_30s.tif` from the shared data package).
-4. Enter a **Layer Name** (e.g. `BIO1 Temperature`).
-5. Click **Load GeoTIFF**.
+1. Import PNG_BIO1_30s.tif from the **Data Sources** panel
+2. Open the **Analysis drawer** (click **Analysis** in the top toolbar).
+3. Expand the **Raster Analysis** section.
+4. Click **Select GeoTIFF** and choose a .tif file (e.g. PNG_BIO1_30s.tif from the shared data package).
+5. Enter a **Layer Name** (e.g. BIO1 Temperature).
+6. Click **Load GeoTIFF**.
 
 The raster appears on the map with a default colour ramp. Use the **Symbology** panel (right panel) to change the band, colour ramp, min/max, and switch between continuous and classified mode.
 
-> **![screenshots/raster_loaded.png](screenshots/raster_loaded.png)**
+> ![GeoTIFF raster](final_guide_images/image38.png)
 >
-> **Figure 28.** GeoTIFF raster (WorldClim BIO1 annual mean temperature) loaded and styled with a colour ramp on the map.
-> A GeoTIFF (WorldClim BIO1 annual mean temperature) loaded and styled on the map.
+> **Figure 28.** GeoTIFF raster (WorldClim BIO1 annual mean temperature) loaded and styled with a colour ramp on the map. A GeoTIFF (WorldClim BIO1 annual mean temperature) loaded and styled on the map.
 
 ### Reclassify and Polygonize
 
 To convert a raster to vector polygons (e.g. identify all areas above a temperature threshold):
 
 1. In the Analysis drawer, expand the **Raster Reclassify & Polygonize** section.
-2. Select the **Raster layer** from the dropdown.
-3. Set the **Band** (0 for single-band rasters).
-4. Click **Histogram + Otsu** to view the value distribution and get an auto-suggested threshold.
-5. Set the **Threshold** value and choose the comparison operator (>=, >, <=, <).
+2. Select the **Raster layer -> BIO1 Temperature** from the dropdown.
+3. Set the **Band** (0 for single-band rasters). Set to **0**.
+4. Click **Histogram + Otsu** to view the value distribution and get an auto-suggested threshold. Threshold value will automatically be filled when you clicked the Histogram + Otsu button.
+5. Set the **Threshold** value to your choice example **21.2570** and choose the comparison operator (>=, >, <=, <). You want temperatures equal to 21.2570 degrees celcius and above only. You can also manually adjust.
 6. Tick **Merge into patches** to dissolve adjacent cells into single polygons.
 7. Click **Reclassify & Polygonize**.
 
 The output is a new vector polygon layer added to the Layers panel.
 
-> **![screenshots/raster_reclassify_histogram.png](screenshots/raster_reclassify_histogram.png)**
+> ![Raster Reclassify histogram](final_guide_images/image30.png)
 >
-> **Figure 29.** Raster Reclassify and Polygonize section showing the value distribution histogram with an Otsu-suggested threshold.
-> Raster Reclassify section showing the histogram with Otsu threshold.
-
-> **![screenshots/raster_polygonized.png](screenshots/raster_polygonized.png)**
+> **Figure 29.** Raster Reclassify and Polygonize section showing the value distribution histogram with an Otsu-suggested threshold. Raster Reclassify section showing the histogram with Otsu threshold.
 >
-> **Figure 30.** Polygonized raster output: raster cells above the threshold converted to vector polygons and added as a new layer.
-> Polygonized output: raster cells above the threshold converted to vector polygons.
+> ![Polygonized output](final_guide_images/image13.png)
+>
+> **Figure 30.** Polygonized raster output: raster cells above the threshold converted to vector polygons and added as a new layer. Polygonized output: raster cells above the threshold converted to vector polygons.
 
----
+You can further save the new reclassified raster to polygon layer for later use. Note that this is a vector polygon layer showing temperatures (degrees) from 21.2570 and above.
 
-## Quick Reference: Tools Used
+## Quick Reference: GeoSpaX Tools Used
 
-**Table 9.** Quick reference of tools used for each map and where they live.
+**Table 9.** Quick reference of GeoSpaX tools used for each map and their location in the interface.
 
 | Map | Tool | Where in GeoSpaX |
 | --- | --- | --- |
@@ -943,23 +1008,18 @@ The output is a new vector polygon layer added to the Layers panel.
 | Map 2 | Graduated symbology, Composer | 🎨 Symbology panel (right), Graduated tab, Composer |
 | Map 3 | Getis-Ord Gi* (or LISA), Composer | 🧪 Analysis drawer → 📊 Inferential Hotspots & Autocorrelation → 🔥 Getis-Ord Gi* (or 🗺️ LISA), Composer |
 | Map 4 | Calculate field, Graduated symbology, Composer | 🧪 Analysis drawer → 🧮 Attributes → 🧮 Calculate field, 🎨 Symbology panel (right), Composer |
-| Submission | GeoSpaX project (.gspx) | 💾 Save button in topbar |
 | Step 5 (optional) | Protection Gap, Priority Area Identification | 🧪 Analysis drawer → 🌳 Conservation Planning → Run Protection Gap / Identify Priority Areas |
-
-> **QGIS and ArcGIS alternatives:** All four maps can also be produced in QGIS or ArcGIS Pro. Export your data from GeoSpaX as GeoJSON at any time and continue in those tools. The assignment brief accepts a .gspx, .qgz, or GeoPackage as the project submission.
 
 ## Rules to Remember
 
 1. **Use your issued file only.** Not the training file, not a classmate's file, not the built-in sample.
 2. **One analysis CRS: your correct UTM zone** (EPSG:32754, 32755, or 32756 - use the auto-detect hint in the Export panel). Export your data to this CRS.
 3. **Record the GeoSpaX version and access date** in your provenance table.
-4. **GeoSpaX is the primary tool for all four maps.** QGIS and ArcGIS Pro are fully supported alternatives. The same GIS concepts exist in all three tools.
-5. **Title Map 4 as "habitat proxy"**, not "distribution model" or "suitability".
-6. **State your weights and thresholds** with citations in the report.
-7. **If n or unique sites < 30, Map 3 is exploratory.** Say so in the caption.
-8. **Do not report forest-loss hectares or protected-area percentages** unless you load a named layer and cite it.
-9. **The convex hull area is not forest area.** Call it the hull area and quote the CRS.
-10. **If your points span mainland and islands, choose one landmass.** Set the field filter to `stateProvince`, select the landmass with more points, and keep the filter on for all four maps. State your choice and the filtered point count in your report.
-11. **Conservation planning is done at the hull scale, not the national scale.** Your hull is the planning region. The gap analysis tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
-12. **Submit a project file** — GeoSpaX (.gspx), QGIS (.qgz), or GeoPackage (.gpkg) — containing the lab points, the hull, and the scored points. File names use your surname, lab, and the layer. Do not submit `final2_new.qgz`.
-13. **Follow SCP principles in your report.** State how your proposed actions achieve representation (covering different habitat types), complementarity (each action adds something new), and efficiency (smallest area, highest return).
+4. **Title Map 4 as "habitat proxy"**, not "distribution model" or "suitability".
+5. **State your weights and thresholds** with citations in the report.
+6. **If n or unique sites < 30, Map 3 is exploratory.** Say so in the caption.
+7. **Do not report forest-loss hectares or protected-area percentages** unless you load a named layer and cite it.
+8. **The convex hull area is not a forest area.** Call it the hull area and quote the CRS.
+9. **If your points span mainland and islands, choose one landmass.** Set the field filter to stateProvince, select the landmass with more points, and keep the filter on for all four maps. State your choice and the filtered point count in your report.
+10. **Conservation planning is done at the hull scale, not the national scale.** Your hull is the planning region. The gap analysis tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
+11. **Follow SCP principles in your report.** State how your proposed actions achieve representation (covering different habitat types), complementarity (each action adds something new), and efficiency (smallest area, highest return).
