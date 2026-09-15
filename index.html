@@ -6328,6 +6328,9 @@ function addUploadedGeoJSON(geojson, name, color, opts) {
 
       // Click → feature info
       const fi = featureCount - 1;
+      // Keep the source-feature index on the Leaflet sub-layer so analysis
+      // filtering can hide/show map features without mutating the source data.
+      layer._mkFeatureIndex = fi;
       layer.on('click', () => {
         showFeatureInfo(props, id, layer, fi);
       });
@@ -9276,6 +9279,9 @@ function refreshAnalysisLayerSelect() {
   } else {
     refreshAnalysisFilter();
   }
+  // Re-apply after restoring the previous field/value selection so the map
+  // and the analysis subset remain identical.
+  applyAnalysisFilterToMap();
 }
 
 function refreshGSXWLCConstraint() {
@@ -9329,6 +9335,72 @@ function refreshGSXRasterLayerSelect() {
   if (sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
 }
 
+function _analysisFilterState() {
+  const fieldSel = document.getElementById('analysis-filter-field');
+  const filterSel = document.getElementById('analysis-filter-select');
+  return {
+    field: fieldSel ? fieldSel.value : '',
+    value: filterSel ? filterSel.value : ''
+  };
+}
+
+function _analysisFeatureMatchesFilter(feature, state) {
+  if (!state.field || !state.value) return true;
+  const value = feature && feature.properties ? feature.properties[state.field] : null;
+  return value !== null && value !== undefined && String(value).trim() === state.value;
+}
+
+// Keep the map in sync with the analysis subset. The source feature array is
+// deliberately left untouched so exports, editing, and later filter changes
+// can restore every feature. Only Leaflet sub-layers are removed/re-added.
+let _analysisFilterLayerId = null;
+function applyAnalysisFilterToMap() {
+  const select = document.getElementById('analysis-layer-select');
+  const layerId = select ? select.value : '';
+  if (_analysisFilterLayerId && _analysisFilterLayerId !== layerId) {
+    const previous = uploadedLayers.find(l => l.id === _analysisFilterLayerId);
+    if (previous && previous._analysisFilterLayers && previous.layer) {
+      previous._analysisFilterLayers.forEach(sub => {
+        if (!previous.layer.hasLayer(sub)) previous.layer.addLayer(sub);
+      });
+      previous.filteredFeatureCount = (previous.geojsonFeatures || []).length;
+      previous.activeAnalysisFilter = null;
+    }
+  }
+  _analysisFilterLayerId = layerId || null;
+  const state = _analysisFilterState();
+  const active = !!(layerId && layerId !== '__all__' && state.field && state.value);
+  const info = uploadedLayers.find(l => l.id === layerId);
+  if (!info || !info.layer || typeof info.layer.eachLayer !== 'function') return;
+
+  const features = info.geojsonFeatures || [];
+  if (!info._analysisFilterLayers) {
+    info._analysisFilterLayers = [];
+    info.layer.eachLayer(sub => info._analysisFilterLayers.push(sub));
+  }
+  const subLayers = info._analysisFilterLayers;
+  let visibleCount = 0;
+  subLayers.forEach((sub, position) => {
+    const index = Number.isInteger(sub._mkFeatureIndex) ? sub._mkFeatureIndex : position;
+    const feature = features[index];
+    const visible = !active || _analysisFeatureMatchesFilter(feature, state);
+    if (visible) {
+      visibleCount++;
+      if (!info.layer.hasLayer(sub)) info.layer.addLayer(sub);
+    } else if (info.layer.hasLayer(sub)) {
+      info.layer.removeLayer(sub);
+    }
+  });
+
+  // The layer count remains the total dataset size; expose the subset count
+  // separately for status messages and future UI consumers.
+  info.filteredFeatureCount = active ? visibleCount : features.length;
+  info.activeAnalysisFilter = active ? { field: state.field, value: state.value } : null;
+  if (active) {
+    showToast(`Map filtered: ${visibleCount} of ${features.length} features`, 'info');
+  }
+}
+
 function refreshAnalysisFilter() {
   const layerId = document.getElementById('analysis-layer-select').value;
   const filterSel = document.getElementById('analysis-filter-select');
@@ -9342,21 +9414,22 @@ function refreshAnalysisFilter() {
   list.style.display = 'none';
   label.textContent = 'All features (no filter)';
   fieldSel.innerHTML = '<option value=""> - Filter by field - </option>';
-  if (!layerId || layerId === '__all__') { wrapper.style.display = 'none'; return; }
+  if (!layerId || layerId === '__all__') { wrapper.style.display = 'none'; applyAnalysisFilterToMap(); return; }
   const ul = uploadedLayers.find(l => l.id === layerId);
-  if (!ul || !ul.geojsonFeatures) { wrapper.style.display = 'none'; return; }
+  if (!ul || !ul.geojsonFeatures) { wrapper.style.display = 'none'; applyAnalysisFilterToMap(); return; }
   // Collect all property keys
   const allKeys = new Set();
   ul.geojsonFeatures.forEach(f => {
     if (f.properties) Object.keys(f.properties).forEach(k => allKeys.add(k));
   });
-  if (allKeys.size === 0) { wrapper.style.display = 'none'; return; }
+  if (allKeys.size === 0) { wrapper.style.display = 'none'; applyAnalysisFilterToMap(); return; }
   wrapper.style.display = '';
   Array.from(allKeys).sort().forEach(k => {
     fieldSel.innerHTML += `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`;
   });
   // Clear value dropdown until a field is selected
   list.innerHTML = '';
+  applyAnalysisFilterToMap();
 }
 
 function refreshAnalysisFilterValues() {
@@ -9370,15 +9443,19 @@ function refreshAnalysisFilterValues() {
   list.innerHTML = '';
   list.style.display = 'none';
   label.textContent = 'All features (no filter)';
-  if (!field) return;
+  if (!field) { applyAnalysisFilterToMap(); return; }
   const ul = uploadedLayers.find(l => l.id === layerId);
-  if (!ul || !ul.geojsonFeatures) return;
+  if (!ul || !ul.geojsonFeatures) { applyAnalysisFilterToMap(); return; }
   const values = new Set();
   ul.geojsonFeatures.forEach(f => {
     const v = f.properties && f.properties[field];
     if (v !== null && v !== '' && v !== undefined) values.add(String(v).trim());
   });
-  if (values.size < 2) { label.textContent = 'Only one value (no filter needed)'; return; }
+  if (values.size < 2) {
+    label.textContent = 'Only one value (no filter needed)';
+    applyAnalysisFilterToMap();
+    return;
+  }
   const allOpt = document.createElement('div');
   allOpt.textContent = 'All features (no filter)';
   allOpt.style.cssText = 'padding:6px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--border);';
@@ -9420,6 +9497,7 @@ function setAnalysisFilter(value) {
   label.textContent = value || 'All features (no filter)';
   list.style.display = 'none';
   refreshAnalysisAttrSelect();
+  applyAnalysisFilterToMap();
 }
 
 function refreshAnalysisAttrSelect() {
