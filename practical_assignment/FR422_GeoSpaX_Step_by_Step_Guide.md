@@ -804,7 +804,7 @@ Your convex hull (Map 1) is not just a drawing exercise - it defines the **plann
 
 ## Step 5: Conservation Gap Analysis (required — the gap-analysis map is submitted)
 
-This step produces the fifth submitted map (the gap-analysis map). It uses the shared protected-areas layer to check whether your species' high-quality habitat is already protected or falls in a gap. The gap-analysis map is exported and emailed to the lecturer together with Maps 1-4; the results also feed directly into Part B (the conservation plan).
+This step produces the fifth submitted map (the gap-analysis map). It uses the shared protected-areas layer to check whether your species' high-quality habitat is already protected or falls in a gap. The gap-analysis map is exported and submitted through Google Classroom together with Maps 1-4; the results also feed directly into Part B (the conservation plan).
 
 ### Understanding these tools: Protection Gap and Priority Area Identification
 
@@ -911,7 +911,7 @@ The gap-analysis map is the fifth submitted map. Compose it the same way as Maps
 2. Set the title to: `Protection gap and priority areas - [Your Species Name]`
 3. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census; Protected areas: WDPA (UNEP-WCMC), [access date]`
 4. Verify the legend shows the gap and/or priority layers, plus the scale bar, north arrow, and CRS text.
-5. Export as Surname_lab_gap_analysis.pdf at 300 DPI and email it to the lecturer together with Maps 1-4.
+5. Export as Surname_lab_gap_analysis.pdf at 300 DPI and submit it through Google Classroom together with Maps 1-4.
 
 ## After All Four Maps
 
@@ -971,8 +971,8 @@ Fill in the provenance table with:
 
 ### Submit your work
 
-- **Email to the lecturer:** the five map files (PNG or PDF) — map 1, map 2, map 3, map 4, and the gap-analysis map. Name them Surname_lab_map1_study_area, Surname_lab_map2_attribute, Surname_lab_map3_pattern, Surname_lab_map4_habitat_proxy, and Surname_lab_gap_analysis.
-- **Google Classroom:** the Part B report PDF, with the filled provenance table inside it or as a one-page attachment.
+- **Google Classroom — five maps (PNG or PDF):** map 1, map 2, map 3, map 4, and the gap-analysis map. Name them Surname_lab_map1_study_area, Surname_lab_map2_attribute, Surname_lab_map3_pattern, Surname_lab_map4_habitat_proxy, and Surname_lab_gap_analysis.
+- **Google Classroom — Part B report PDF:** with the filled provenance table inside it or as a one-page attachment, and the statistical outputs from the Analysis Results panel in the report body.
 - No project file (.gspx, .qgz, or .gpkg) is submitted. No GeoJSON files are submitted — keep your exports for your own records.
 
 ## Optional: Loading and Reclassifying Raster Data
