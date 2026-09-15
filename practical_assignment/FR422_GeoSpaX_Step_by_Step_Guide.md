@@ -200,6 +200,25 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 
 5. If the count or fields do not match, you have the wrong file. Stop and reload the correct issued file.
 
+#### Field dictionary — what each attribute means
+
+Your species GeoJSON contains point features (one per GBIF occurrence record). Each point has the following attributes. Understanding what these fields mean is essential for choosing thresholds in the habitat-score calculation (Map 4) and for writing your conservation plan (Part B).
+
+| Field | Type | Unit | What it means | Why it matters for your species |
+| --- | --- | --- | --- | --- |
+| `site` | Text | — | Site code or locality name from the GBIF record | Identifies individual sampling sites. Use these codes to name priority areas in Part B. |
+| `gbifID` | Text | — | Unique GBIF occurrence record identifier | Distinguishes individual records. Multiple records can share the same site. |
+| `stateProvince` | Text | — | PNG province where the record falls (e.g., Morobe, Western) | Used to filter by landmass or province before analysis. Different provinces have different threats. |
+| `elevation_m` | Number | metres | Elevation above sea level at the record point. Derived from WorldClim 2.1 elevation surface. | Many forest species are restricted to an elevation band (e.g., lowland 0–800 m, montane 1000–2000 m). Use this to set your habitat-score threshold. |
+| `tree_cover_pct` | Number | % (0–100) | Tree-canopy cover percentage at the record point. Derived from ESA WorldCover 2021 (class 10 = tree cover). | Higher values mean denser forest. Forest-dependent species typically require ≥ 50% or ≥ 75% canopy cover. |
+| `rainfall_mm` | Number | mm/year | Total annual rainfall at the record point. Derived from WorldClim 2.1 BIO12. | Moisture-dependent species need high rainfall (e.g., ≥ 2500 mm/year). Dry-tolerant species can survive lower values. |
+| `bio1` | Number | °C | Annual mean temperature at the record point. WorldClim 2.1 BIO1. Averaged from 1970–2000 monthly means. | Lower values = cooler sites (usually higher elevation). Species restricted to montane forest have a lower temperature limit. |
+| `bio15` | Number | (coefficient of variation × 100) | Precipitation seasonality at the record point. WorldClim 2.1 BIO15. Higher values mean more variation between wet and dry months. | High seasonality means a pronounced dry season. Species sensitive to dry-season stress may be absent from high-BIO15 areas. |
+| `worldcover_label` | Text | — | ESA WorldCover 2021 land-cover class at the record point (e.g., "Tree cover", "Cropland", "Grassland") | Confirms whether the record falls in forest or non-forest. Use this to check for records in degraded or converted habitat. |
+| `year` | Number | year | Year the GBIF occurrence was recorded | Older records may no longer reflect current habitat. Recent records (post-2000) are more reliable for conservation planning. |
+
+> **Note:** The environmental fields (`elevation_m`, `tree_cover_pct`, `rainfall_mm`, `bio1`, `bio15`, `worldcover_label`) are extracted from global datasets at each GBIF point. They are teaching extracts, not field measurements. Cite WorldClim 2.1 and ESA WorldCover 2021 in your provenance table.
+
 ![Species points imported](final_guide_images/image18.png)
 
 > **Figure 6.** Species occurrence points imported into GeoSpaX. The map auto-zooms to the data extent and the layer appears in the Layers panel.
