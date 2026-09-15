@@ -1,9 +1,12 @@
 """Test 09: Bookmarks, measure tool, search/geocoding, citation."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -18,10 +21,7 @@ async def main():
         bm_input = page.locator("#bookmark-name")
         if await bm_input.count() > 0:
             await bm_input.fill("Test Bookmark")
-            # Click save button next to it
-            save_bm = page.locator("button").filter(has_text="Save").first
             # Find the bookmark save button specifically
-            bm_save = page.locator("#bookmarks-panel button, #bookmarks-list button").first
             # Try clicking the save button in the bookmarks section
             await page.evaluate("""() => {
                 const inp = document.getElementById('bookmark-name');
@@ -79,7 +79,7 @@ async def main():
             # Click on map to add measure points
             map_box = await page.locator("#map").bounding_box()
             if map_box:
-                cx, cy = map_box['x'] + map_box['width']/2, map_box['y'] + map_box['height']/2
+                cx, cy = map_box["x"] + map_box["width"] / 2, map_box["y"] + map_box["height"] / 2
                 await page.mouse.click(cx, cy)
                 await page.wait_for_timeout(300)
                 await page.mouse.click(cx + 50, cy + 30)
@@ -112,7 +112,11 @@ async def main():
             await page.wait_for_timeout(1500)
             # Check map moved (center should be near -6, 146)
             center = await page.evaluate("map.getCenter()")
-            report("Search/goto coordinate", abs(center["lat"] - (-6)) < 1 and abs(center["lng"] - 146) < 1, f"center={center}")
+            report(
+                "Search/goto coordinate",
+                abs(center["lat"] - (-6)) < 1 and abs(center["lng"] - 146) < 1,
+                f"center={center}",
+            )
         else:
             report("Search input exists", False, "no #goto-search")
 
@@ -142,6 +146,7 @@ async def main():
         errs = await close(page)
         report("Misc tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

@@ -53,11 +53,49 @@ Pre-commit hooks run automatically on `git commit`. To run manually:
 pre-commit run --all-files
 ```
 
+## Running the Tests
+
+The browser test suite lives in `tests/playwright/`. Each file is a
+standalone Playwright (Python) script that drives Chrome against a local
+static server on port 8931.
+
+### One-time setup
+
+```bash
+# Python dependencies (includes the dev extras with playwright)
+pip install -e ".[dev]"
+
+# A Chrome/Chromium binary. On Debian/Ubuntu:
+sudo apt-get install chromium
+# On other systems, install Google Chrome and ensure `google-chrome`
+# is on PATH (override the binary with the GSX_CHROME env var).
+```
+
+### Running
+
+```bash
+# Terminal 1 — serve the repo root (tests load http://localhost:8931/index.html)
+make serve-8931            # or: python -m http.server 8931
+
+# Terminal 2 — run one test file or all of them
+python tests/playwright/test_01_import.py
+for f in tests/playwright/test_*.py; do python "$f"; done
+```
+
+Each script prints `PASS`/`FAIL` per assertion and ends with a
+`=== N passed, M failed ===` summary. Tests that call live external APIs
+(GBIF, Natural Earth, World Bank, Overpass) accept graceful API failures so
+the suite also passes offline, but an app crash or JS error always fails.
+
 ## Project Structure
 
 ```text
 map-kit/                    # Repository name (app is branded "GeoSpaX")
 ├── index.html              # Web GIS frontend (standalone, zero-backend)
+├── userguide.html          # In-depth illustrated user guide
+├── changelog.html          # Release history
+├── api/
+│   └── sdm.py              # Vercel Python serverless function (MaxEnt SDM endpoint)
 ├── js/                     # GeoSpaX JS modules (loaded by index.html)
 │   ├── geospax-conservation.js      # Overlay, WLC, gap analysis
 │   ├── geospax-conservation-m2.js   # Fragmentation, connectivity, change detection
@@ -65,8 +103,12 @@ map-kit/                    # Repository name (app is branded "GeoSpaX")
 │   ├── geospax-project.js           # Provenance, project save/load
 │   ├── geospax-raster.js            # Reclassify, polygonize
 │   ├── geospax-opendata.js          # Open data connectors (Overpass, GBIF, WWF, World Bank, USGS)
+│   ├── geospax-gpkg.js              # GeoPackage (.gpkg) import
 │   ├── gsx-select.js                # Dropdown popup replacement (app-wide)
 │   └── gsx-calcfield.js             # Calculate field tool (expression parser + weighted conditions)
+├── samples/                # Bundled demo datasets (loaded via Data Sources ▸ Sample Datasets)
+├── tests/
+│   └── playwright/         # Browser test suite (see "Running the Tests" above)
 ├── src/
 │   ├── make_maps.py        # Legacy script (kept for backward compatibility)
 │   └── geospax/            # Python package
@@ -74,7 +116,7 @@ map-kit/                    # Repository name (app is branded "GeoSpaX")
 │       ├── cli.py          # CLI entry point (geospax)
 │       ├── data.py         # Study site data constants
 │       └── maps.py         # Map generation functions
-├── data/                   # Sample datasets
+├── data/                   # Local data files (git-ignored, not synced)
 ├── docs/                   # Generated output maps
 ├── pyproject.toml          # Project config, dependencies, tool settings
 └── Makefile                # Common development tasks

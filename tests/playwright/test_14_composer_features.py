@@ -1,9 +1,12 @@
 """Test 14: Composer features — templates, scalebar, north arrow, grid, snap, subtitle, date, CRS."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -51,8 +54,10 @@ async def main():
             if (inp) { inp.value = 'Test Title'; inp.dispatchEvent(new Event('input', {bubbles:true})); }
         }""")
         await page.wait_for_timeout(300)
-        title = await page.evaluate("""() => document.getElementById('layout-title')?.textContent""")
-        report("Title updates on input", title and 'Test Title' in title, f"text='{title}'")
+        title = await page.evaluate(
+            """() => document.getElementById('layout-title')?.textContent"""
+        )
+        report("Title updates on input", title and "Test Title" in title, f"text='{title}'")
 
         # ── Subtitle input ──
         await page.evaluate("""() => {
@@ -60,8 +65,14 @@ async def main():
             if (inp) { inp.value = 'Test Subtitle'; inp.dispatchEvent(new Event('input', {bubbles:true})); }
         }""")
         await page.wait_for_timeout(300)
-        subtitle = await page.evaluate("""() => document.getElementById('layout-subtitle')?.textContent""")
-        report("Subtitle updates on input", subtitle and 'Test Subtitle' in subtitle, f"text='{subtitle}'")
+        subtitle = await page.evaluate(
+            """() => document.getElementById('layout-subtitle')?.textContent"""
+        )
+        report(
+            "Subtitle updates on input",
+            subtitle and "Test Subtitle" in subtitle,
+            f"text='{subtitle}'",
+        )
 
         # ── Scalebar style change ──
         scalebar_changed = await page.evaluate("""() => {
@@ -115,8 +126,14 @@ async def main():
             if (cb) { cb.checked = true; cb.dispatchEvent(new Event('change', {bubbles:true})); }
         }""")
         await page.wait_for_timeout(500)
-        legend_title = await page.evaluate("""() => { const el = document.querySelector('#layout-legend .layout-legend-handle'); return el ? el.textContent : null; }""")
-        report("Legend title updates", legend_title and 'My Legend' in legend_title, f"text='{legend_title}'")
+        legend_title = await page.evaluate(
+            """() => { const el = document.querySelector('#layout-legend .layout-legend-handle'); return el ? el.textContent : null; }"""
+        )
+        report(
+            "Legend title updates",
+            legend_title and "My Legend" in legend_title,
+            f"text='{legend_title}'",
+        )
 
         # ── Save template ──
         template_saved = await page.evaluate("""() => {
@@ -158,8 +175,14 @@ async def main():
             return before;
         }""")
         await page.wait_for_timeout(500)
-        template_after = await page.evaluate("""() => document.getElementById('layout-template-list')?.children.length || 0""")
-        report("Delete template", template_after < template_deleted, f"{template_deleted}->{template_after}")
+        template_after = await page.evaluate(
+            """() => document.getElementById('layout-template-list')?.children.length || 0"""
+        )
+        report(
+            "Delete template",
+            template_after < template_deleted,
+            f"{template_deleted}->{template_after}",
+        )
 
         # ── Paper background change ──
         bg_changed = await page.evaluate("""() => {
@@ -192,6 +215,7 @@ async def main():
         errs = await close(page)
         report("Composer feature tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
 print(f"\n=== Composer feature tests: {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
-sys.exit(1 if COUNTS['fail'] else 0)
+sys.exit(1 if COUNTS["fail"] else 0)

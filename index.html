@@ -6592,8 +6592,8 @@ function openLabelPopover(id, btn) {
         </select>
       </div>
       <div class="lp-section-title">Colour</div>
-      <div class="lp-row"><label>Text</label><input type="color" value="${style.color}" oninput="updateLabelStyle('${id}','color',this.value);_lpUpdatePreview('${id}')"></div>
-      <div class="lp-row"><label>Halo</label><input type="color" value="${style.halo}" oninput="updateLabelStyle('${id}','halo',this.value);_lpUpdatePreview('${id}')"></div>
+      <div class="lp-row"><label>Text</label><input type="color" value="${_cssColorToHex(style.color, '#1a1a1a')}" oninput="updateLabelStyle('${id}','color',this.value);_lpUpdatePreview('${id}')"></div>
+      <div class="lp-row"><label>Halo</label><input type="color" value="${_cssColorToHex(style.halo, '#ffffff')}" oninput="updateLabelStyle('${id}','halo',this.value);_lpUpdatePreview('${id}')"></div>
       <div class="lp-row"><label>Halo width</label><input type="range" min="0" max="5" step="0.5" value="${style.haloWidth}" oninput="updateLabelStyle('${id}','haloWidth',+this.value);_lpUpdatePreview('${id}')"><span class="lp-val" id="lp-hw-${id}">${style.haloWidth}px</span></div>
       <div class="lp-section-title">Placement</div>
       <div class="lp-row"><label>Anchor</label>
@@ -7077,6 +7077,25 @@ function setSymbologyTab(layerId, tabName) {
 }
 
 // Vector-layer tabbed body - Simple / Categorized / Graduated.
+// Convert any CSS color to the #rrggbb form required by <input type="color">.
+// Leaflet styles routinely use keywords (e.g. color:'white' for circleMarker
+// outlines); assigning such a value to a color input is invalid and makes
+// Chrome log "The specified value ... does not conform to the required format".
+function _cssColorToHex(c, fallback) {
+  const fb = fallback || '#3388ff';
+  if (typeof c !== 'string' || !c) return fb;
+  if (/^#[0-9a-fA-F]{6}$/.test(c)) return c;
+  if (/^#[0-9a-fA-F]{3}$/.test(c)) return '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3];
+  try {
+    const ctx = _cssColorToHex._ctx || (_cssColorToHex._ctx = document.createElement('canvas').getContext('2d'));
+    ctx.fillStyle = '#000000';
+    ctx.fillStyle = c;
+    const v = ctx.fillStyle;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
+  } catch (e) { /* canvas unavailable — fall through */ }
+  return fb;
+}
+
 function _buildVectorSymbologyBody(info) {
   const hasPoints = info.geomTypes.some(g => g.includes('Point'));
   const hasLines = info.geomTypes.some(g => g.includes('Line'));
@@ -7086,8 +7105,8 @@ function _buildVectorSymbologyBody(info) {
   // Read the actual style from legendState (populated by initLegendState
   // from the Leaflet layer's options) so the panel reflects what's on the map.
   const sym = legendState[id] || {};
-  const fillColor = sym.fillColor || info.color;
-  const strokeColor = sym.strokeColor || '#ffffff';
+  const fillColor = _cssColorToHex(sym.fillColor || info.color);
+  const strokeColor = _cssColorToHex(sym.strokeColor || '#ffffff', '#ffffff');
   const fillOpPct = Math.round((sym.fillOpacity != null ? sym.fillOpacity : 0.8) * 100);
   const strokeOpPct = Math.round((sym.strokeOpacity != null ? sym.strokeOpacity : 0.9) * 100);
   const strokeW = sym.strokeWeight != null ? sym.strokeWeight : 1.2;

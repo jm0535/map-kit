@@ -1,9 +1,12 @@
 """Test 15: Digitizing advanced — edit mode, select mode, duplicate, snap, undo/redo, feature info click."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -25,13 +28,13 @@ async def main():
             cancelDigitize: typeof cancelDigitize,
         })""")
         for name, ftype in funcs.items():
-            report(f"Digitize {name} exists", ftype == 'function', ftype)
+            report(f"Digitize {name} exists", ftype == "function", ftype)
 
         # ── Edit mode ──
         edit_ran = await page.evaluate("""() => {
             try { startEditMode(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Edit mode starts", edit_ran == 'ok' or 'no' in edit_ran.lower(), edit_ran)
+        report("Edit mode starts", edit_ran == "ok" or "no" in edit_ran.lower(), edit_ran)
         await page.evaluate("cancelDigitize()")
         await page.wait_for_timeout(300)
 
@@ -39,7 +42,11 @@ async def main():
         select_ran = await page.evaluate("""() => {
             try { startSelectMode('rect'); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Select mode (rect) starts", select_ran == 'ok' or 'no' in select_ran.lower(), select_ran)
+        report(
+            "Select mode (rect) starts",
+            select_ran == "ok" or "no" in select_ran.lower(),
+            select_ran,
+        )
         await page.evaluate("cancelDigitize()")
         await page.wait_for_timeout(300)
 
@@ -47,7 +54,11 @@ async def main():
         select_circle = await page.evaluate("""() => {
             try { startSelectMode('circle'); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Select mode (circle) starts", select_circle == 'ok' or 'no' in select_circle.lower(), select_circle)
+        report(
+            "Select mode (circle) starts",
+            select_circle == "ok" or "no" in select_circle.lower(),
+            select_circle,
+        )
         await page.evaluate("cancelDigitize()")
         await page.wait_for_timeout(300)
 
@@ -55,24 +66,28 @@ async def main():
         snap_ran = await page.evaluate("""() => {
             try { toggleSnap(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Toggle snap no crash", snap_ran == 'ok', snap_ran)
+        report("Toggle snap no crash", snap_ran == "ok", snap_ran)
 
         # ── Undo/Redo ──
         undo_ran = await page.evaluate("""() => {
             try { historyUndo(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("History undo no crash", undo_ran == 'ok' or 'no' in undo_ran.lower(), undo_ran)
+        report("History undo no crash", undo_ran == "ok" or "no" in undo_ran.lower(), undo_ran)
 
         redo_ran = await page.evaluate("""() => {
             try { historyRedo(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("History redo no crash", redo_ran == 'ok' or 'no' in redo_ran.lower(), redo_ran)
+        report("History redo no crash", redo_ran == "ok" or "no" in redo_ran.lower(), redo_ran)
 
         # ── Duplicate selected features ──
         dup_ran = await page.evaluate("""() => {
             try { duplicateSelectedFeatures(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Duplicate features no crash", dup_ran == 'ok' or 'no' in dup_ran.lower() or 'select' in dup_ran.lower(), dup_ran)
+        report(
+            "Duplicate features no crash",
+            dup_ran == "ok" or "no" in dup_ran.lower() or "select" in dup_ran.lower(),
+            dup_ran,
+        )
 
         # ── Feature info: click on a map feature ──
         # We need to click on an actual feature on the map
@@ -81,7 +96,9 @@ async def main():
         await page.wait_for_timeout(1000)
 
         # Zoom to features and wait for map to settle
-        await page.evaluate('map.fitBounds(uploadedLayers[0].layer.getBounds(), {padding: [100, 100]})')
+        await page.evaluate(
+            "map.fitBounds(uploadedLayers[0].layer.getBounds(), {padding: [100, 100]})"
+        )
         await page.wait_for_timeout(1500)
 
         # Get the pixel position of the first feature (relative to map container)
@@ -104,8 +121,8 @@ async def main():
         if feature_pos:
             map_box = await page.locator("#map").bounding_box()
             if map_box:
-                px = map_box['x'] + feature_pos['x']
-                py = map_box['y'] + feature_pos['y']
+                px = map_box["x"] + feature_pos["x"]
+                py = map_box["y"] + feature_pos["y"]
                 await page.mouse.click(px, py)
                 await page.wait_for_timeout(1000)
 
@@ -120,9 +137,13 @@ async def main():
                         text: el.textContent.substring(0, 100),
                     };
                 }""")
-                report("Feature info shows on click", fi_content and fi_content.get('hasTable'), str(fi_content))
+                report(
+                    "Feature info shows on click",
+                    fi_content and fi_content.get("hasTable"),
+                    str(fi_content),
+                )
 
-                if fi_content and fi_content.get('hasNavButtons', 0) > 0:
+                if fi_content and fi_content.get("hasNavButtons", 0) > 0:
                     # ── Test prev/next ──
                     await page.evaluate("fiNext()")
                     await page.wait_for_timeout(300)
@@ -132,7 +153,7 @@ async def main():
                     await page.wait_for_timeout(300)
                     report("Feature info prev no crash", True)
 
-                if fi_content and fi_content.get('hasActionButtons', 0) > 0:
+                if fi_content and fi_content.get("hasActionButtons", 0) > 0:
                     # ── Test zoom to feature ──
                     await page.evaluate("fiZoomTo()")
                     await page.wait_for_timeout(500)
@@ -152,7 +173,6 @@ async def main():
         report("Profile resize handle exists", handle > 0)
 
         if handle > 0:
-            panel_h_before = await page.evaluate("document.getElementById('profile-panel').offsetHeight")
             # Simulate drag by dispatching mousedown, mousemove, mouseup
             resize_result = await page.evaluate("""() => {
                 const handle = document.getElementById('profile-resize-handle');
@@ -200,11 +220,14 @@ async def main():
             await page.evaluate("clearAttrFilter()")
             await page.wait_for_timeout(500)
             rows_restored = await page.locator("#attr-table tbody tr").count()
-            report("Attribute filter clears", rows_restored >= rows_filtered, f"rows={rows_restored}")
+            report(
+                "Attribute filter clears", rows_restored >= rows_filtered, f"rows={rows_restored}"
+            )
 
         errs = await close(page)
         report("Advanced digitize tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
 print(f"\n=== Advanced tests: {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
-sys.exit(1 if COUNTS['fail'] else 0)
+sys.exit(1 if COUNTS["fail"] else 0)

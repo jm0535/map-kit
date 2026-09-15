@@ -1,12 +1,15 @@
 """Test 01: Data import — GeoJSON points/polygons/lines, CSV tabular, drag-drop."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
 POLY_GEOJSON = os.path.join(os.path.dirname(__file__), "test_polygons.geojson")
 LINE_GEOJSON = os.path.join(os.path.dirname(__file__), "test_lines.geojson")
-CSV_FILE = "/tmp/gsx_tests/test_points.csv"
+CSV_FILE = os.path.join(os.path.dirname(__file__), "test_points.csv")
+
 
 async def main():
     async with async_playwright() as p:
@@ -92,6 +95,7 @@ async def main():
         errs = await close(page)
         report("Sample check no errors", not errs, str(errs))
 
+
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

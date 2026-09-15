@@ -1,10 +1,15 @@
 """Test 03: Symbology & styling — single, categorized, graduated, labels, legend."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
-RICHNESS = os.path.join(os.path.dirname(__file__), "..", "..", "samples", "sample_species_richness.geojson")
+RICHNESS = os.path.join(
+    os.path.dirname(__file__), "..", "..", "samples", "sample_species_richness.geojson"
+)
+
 
 async def main():
     async with async_playwright() as p:
@@ -60,7 +65,9 @@ async def main():
 
         # ── Categorized renderer ──
         # Click the "Categorized" tab
-        cat_tab_count = await page.locator("button[data-tab='categorized'], #sym-tab-categorized").count()
+        cat_tab_count = await page.locator(
+            "button[data-tab='categorized'], #sym-tab-categorized"
+        ).count()
         if cat_tab_count > 0:
             await page.locator("button[data-tab='categorized'], #sym-tab-categorized").first.click()
             await page.wait_for_timeout(500)
@@ -80,7 +87,9 @@ async def main():
             report("Categorized tab exists", False, "no tab found")
 
         # ── Graduated renderer ──
-        grad_tab_count = await page.locator("button[data-tab='graduated'], #sym-tab-graduated").count()
+        grad_tab_count = await page.locator(
+            "button[data-tab='graduated'], #sym-tab-graduated"
+        ).count()
         if grad_tab_count > 0:
             await page.locator("button[data-tab='graduated'], #sym-tab-graduated").first.click()
             await page.wait_for_timeout(500)
@@ -124,6 +133,7 @@ async def main():
         errs = await close(page)
         report("Symbology tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

@@ -1,16 +1,26 @@
 """Test 10: Digitizing toolbar, feature info, console warnings, additional features."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
 
+
 async def main():
     async with async_playwright() as p:
         page = await new_page(p)
-        # Capture console warnings too
+        # Capture console warnings too (with source URL, so network-level
+        # resource failures can be attributed)
         warnings = []
-        page.on("console", lambda m: warnings.append(f"{m.type}: {m.text}") if m.type in ("warning", "error") else None)
+
+        def _on_console(m):
+            if m.type in ("warning", "error"):
+                url = (m.location or {}).get("url") or ""
+                warnings.append(f"{m.type}: {m.text} [{url}]")
+
+        page.on("console", _on_console)
         await goto(page)
         await upload_file(page, "#upload-file", ELEV_GEOJSON)
         await page.wait_for_timeout(1500)
@@ -30,17 +40,13 @@ async def main():
         if dig_point > 0:
             await js_click(page, "#dig-point")
             await page.wait_for_timeout(500)
-            # Check if digitizing mode is active
-            digitizing = await page.evaluate("""() => {
-                return document.querySelector('.digitizing-active, .dig-active') !== null ||
-                       document.body.classList.contains('digitizing');
-            }""")
+            # Check that entering digitize mode does not crash
             report("Digitize point mode activates", True)  # Just check no crash
 
             # Click on map to add a point
             map_box = await page.locator("#map").bounding_box()
             if map_box:
-                cx, cy = map_box['x'] + map_box['width']/2, map_box['y'] + map_box['height']/2
+                cx, cy = map_box["x"] + map_box["width"] / 2, map_box["y"] + map_box["height"] / 2
                 await page.mouse.click(cx, cy)
                 await page.wait_for_timeout(1000)
                 # Check if attribute form appeared
@@ -74,8 +80,6 @@ async def main():
         # Check feature info buttons
         fi_prev = await page.locator("#feature-info .fi-nav button").count()
         fi_next = 1  # nav buttons only appear when feature is clicked
-        fi_zoom = 1  # zoom button only appears when feature is clicked
-        fi_clear = 1  # clear button only appears when feature is clicked
         report("Feature info nav buttons exist", fi_prev > 0 or fi_next > 0)
 
         # ── Fullscreen control ──
@@ -96,7 +100,9 @@ async def main():
 
         # ── Panel sections expand/collapse ──
         # Count panel sections
-        sections = await page.locator("#left-panel .panel-header, #right-panel .panel-header").count()
+        sections = await page.locator(
+            "#left-panel .panel-header, #right-panel .panel-header"
+        ).count()
         report("Panel sections exist", sections > 0, f"count={sections}")
 
         # Toggle a section
@@ -117,13 +123,31 @@ async def main():
         report("Loading element exists", loading > 0)
 
         # ── Console warnings check ──
-        # Filter out common benign warnings
-        real_warnings = [w for w in warnings if "favicon" not in w.lower() and "deprecated" not in w.lower()]
-        report("No console warnings/errors", len(real_warnings) == 0, f"warnings={real_warnings[:5]}")
+        # Filter out common benign warnings. Resource-load failures for
+        # remote URLs (basemap tiles etc.) are environmental — the suite
+        # must pass without internet access. Failures for locally served
+        # resources still count as real errors.
+        def _benign(w):
+            wl = w.lower()
+            return (
+                "favicon" in wl
+                or "deprecated" in wl
+                or (
+                    "failed to load resource" in wl
+                    and "localhost" not in wl
+                    and "127.0.0.1" not in wl
+                )
+            )
+
+        real_warnings = [w for w in warnings if not _benign(w)]
+        report(
+            "No console warnings/errors", len(real_warnings) == 0, f"warnings={real_warnings[:5]}"
+        )
 
         errs = await close(page)
         report("Digitizing tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
 print(f"\n=== Digitizing tests: {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
-sys.exit(1 if COUNTS['fail'] else 0)
+sys.exit(1 if COUNTS["fail"] else 0)

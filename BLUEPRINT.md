@@ -388,7 +388,7 @@ See the in-app **"How to Cite"** tab (bottom panel) for APA, Chicago, Harvard, a
 | Web GIS | Vanilla JS + Leaflet 1.9.4 |
 | Charts | Chart.js 4.4.0 |
 | Export | html2canvas 1.4.1, jsPDF 2.5.1 |
-| Data I/O | SheetJS, shpjs, shp-write, toGeoJSON |
+| Data I/O | SheetJS, shpjs, shp-write, toGeoJSON, sql.js (GeoPackage) |
 | CRS | proj4js 2.11.0 |
 | Raster | GeoRaster + GeoRaster Layer for Leaflet + geotiff.js (fallback) |
 | Conservation | turf.js 6.5.0 (overlay, WLC, fragmentation) |

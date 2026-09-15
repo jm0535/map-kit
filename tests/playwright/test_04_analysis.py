@@ -1,5 +1,7 @@
 """Test 04: Spatial analysis — buffers, centroids, areas, lengths, NNI, convex hull, Moran's I, etc."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
@@ -7,10 +9,12 @@ ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
 POLY_GEOJSON = os.path.join(os.path.dirname(__file__), "test_polygons.geojson")
 LINE_GEOJSON = os.path.join(os.path.dirname(__file__), "test_lines.geojson")
 
+
 async def open_analysis(page):
     """Open the analysis drawer."""
     await page.click("#analysis-drawer-btn")
     await page.wait_for_timeout(500)
+
 
 async def select_layer(page, layer_idx=0):
     """Select a layer in the analysis layer selector."""
@@ -18,6 +22,7 @@ async def select_layer(page, layer_idx=0):
         const sel = document.getElementById('analysis-layer-select');
         if (sel.options.length > {layer_idx + 1}) sel.selectedIndex = {layer_idx + 1};
     }}""")
+
 
 async def run_and_check(page, button_text, analysis_name, expect_overlay_count_incr=True):
     """Click an analysis button and check for results."""
@@ -35,6 +40,7 @@ async def run_and_check(page, button_text, analysis_name, expect_overlay_count_i
     if expect_overlay_count_incr:
         report(f"{analysis_name} overlay count", after >= 0, f"{before}->{after}")
 
+
 async def main():
     async with async_playwright() as p:
         page = await new_page(p)
@@ -48,7 +54,9 @@ async def main():
         await open_analysis(page)
 
         # ── Analysis layer selector populated ──
-        opts = await page.evaluate("document.getElementById('analysis-layer-select').options.length")
+        opts = await page.evaluate(
+            "document.getElementById('analysis-layer-select').options.length"
+        )
         report("Analysis layer select populated", opts > 1, f"opts={opts}")
 
         # ── Attribute selector populated ──
@@ -127,7 +135,7 @@ async def main():
             } catch(e) { return e.message; }
         }""")
         await page.wait_for_timeout(500)
-        report("Clear analysis no crash", clear_ran == 'ok' or clear_ran == 'not found', clear_ran)
+        report("Clear analysis no crash", clear_ran == "ok" or clear_ran == "not found", clear_ran)
 
         # ── Polygon analysis: areas ──
         # Import polygons
@@ -165,6 +173,7 @@ async def main():
         errs = await close(page)
         report("Analysis tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

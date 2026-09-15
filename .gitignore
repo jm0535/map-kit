@@ -73,3 +73,6 @@ geospax_conservation_roadmap/FR422*
 
 # Old sample docs
 samples/Five test datasets pushed.*
+
+# Playwright test screenshots
+tests/playwright/screenshots/

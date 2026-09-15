@@ -1,11 +1,14 @@
 """Test 11: Layer management — rename, reorder, context menu, move up/down/top/bottom."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
 POLY_GEOJSON = os.path.join(os.path.dirname(__file__), "test_polygons.geojson")
 LINE_GEOJSON = os.path.join(os.path.dirname(__file__), "test_lines.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -67,7 +70,11 @@ async def main():
             }""")
             await page.wait_for_timeout(500)
             order_after = await page.evaluate("uploadedLayers.map(l => l.name)")
-            report("Move layer down", order_before[0] != order_after[0], f"{order_before[0]}->{order_after[0]}")
+            report(
+                "Move layer down",
+                order_before[0] != order_after[0],
+                f"{order_before[0]}->{order_after[0]}",
+            )
 
             # Move it back up
             await page.evaluate("""() => {
@@ -76,7 +83,9 @@ async def main():
             }""")
             await page.wait_for_timeout(500)
             order_back = await page.evaluate("uploadedLayers.map(l => l.name)")
-            report("Move layer up", order_back[0] == order_before[0], f"restored to {order_back[0]}")
+            report(
+                "Move layer up", order_back[0] == order_before[0], f"restored to {order_back[0]}"
+            )
 
         # ── Move to top/bottom ──
         if has_move:
@@ -94,7 +103,11 @@ async def main():
             }""")
             await page.wait_for_timeout(500)
             order_bottom = await page.evaluate("uploadedLayers.map(l => l.name)")
-            report("Move layer to bottom", order_bottom[-1] == names_before[-1], f"bottom={order_bottom[-1]}")
+            report(
+                "Move layer to bottom",
+                order_bottom[-1] == names_before[-1],
+                f"bottom={order_bottom[-1]}",
+            )
 
         # ── Context menu opens ──
         has_ctx_menu = await page.evaluate("typeof openLayerContextMenu === 'function'")
@@ -136,6 +149,7 @@ async def main():
         errs = await close(page)
         report("Layer mgmt tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
 print(f"\n=== Layer mgmt tests: {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
-sys.exit(1 if COUNTS['fail'] else 0)
+sys.exit(1 if COUNTS["fail"] else 0)

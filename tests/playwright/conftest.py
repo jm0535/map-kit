@@ -1,13 +1,18 @@
 """Shared helpers for GeoSpaX Playwright tests."""
-import asyncio
-from playwright.async_api import async_playwright
+
+import os
+
+# Re-exported: test scripts pull the shared helpers in via
+# `from conftest import *`, including async_playwright itself.
+from playwright.async_api import async_playwright as async_playwright
 
 BASE = "http://localhost:8931/index.html"
-CHROME = "/usr/bin/google-chrome"
+CHROME = os.environ.get("GSX_CHROME", "/usr/bin/google-chrome")
 CHROME_ARGS = ["--no-sandbox", "--headless=old", "--disable-gpu", "--disable-dev-shm-usage"]
 
 COUNTS = {"pass": 0, "fail": 0}
 RESULTS = []
+
 
 def report(name, ok, detail=""):
     if ok:
@@ -19,6 +24,7 @@ def report(name, ok, detail=""):
         RESULTS.append(f"FAIL  {name}  {detail}")
         print(f"FAIL  {name}  {detail}")
 
+
 async def new_page(p, viewport=None):
     b = await p.chromium.launch(executable_path=CHROME, args=CHROME_ARGS)
     ctx = await b.new_context(viewport=viewport or {"width": 1400, "height": 900})
@@ -29,18 +35,22 @@ async def new_page(p, viewport=None):
     page._gsx_browser = b
     return page
 
+
 async def close(page):
     errs = page._gsx_errors
     await page._gsx_browser.close()
     return errs
 
+
 async def goto(page, wait=3000):
     await page.goto(BASE, wait_until="domcontentloaded", timeout=30000)
     await page.wait_for_timeout(wait)
 
+
 async def upload_file(page, selector, path):
     await page.set_input_files(selector, path)
     await page.wait_for_timeout(1500)
+
 
 async def expand_all_sections(page):
     """Expand all collapsed panel sections so elements become visible."""
@@ -63,9 +73,13 @@ async def expand_all_sections(page):
     }""")
     await page.wait_for_timeout(300)
 
+
 async def js_click(page, selector):
     """Click an element via JS, bypassing Playwright visibility checks."""
-    await page.evaluate("""(sel) => {
+    await page.evaluate(
+        """(sel) => {
         const el = document.querySelector(sel);
         if (el) el.click();
-    }""", selector)
+    }""",
+        selector,
+    )

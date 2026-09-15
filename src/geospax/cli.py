@@ -18,7 +18,9 @@ def _build_geodataframes() -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, pd.DataF
     """Construct GeoDataFrames from built-in study site data."""
     all_points = YUS_POINTS + MT_WILHELM_POINTS
     df = pd.DataFrame(all_points)
-    gdf = gpd.GeoDataFrame(df, geometry=[Point(r.lon, r.lat) for r in df.itertuples()], crs="EPSG:4326")
+    gdf = gpd.GeoDataFrame(
+        df, geometry=[Point(r.lon, r.lat) for r in df.itertuples()], crs="EPSG:4326"
+    )
 
     yus_line = LineString([(r["lon"], r["lat"]) for r in YUS_POINTS])
     mtw_line = LineString([(r["lon"], r["lat"]) for r in MT_WILHELM_POINTS])
