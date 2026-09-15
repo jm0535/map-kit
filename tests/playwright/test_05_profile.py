@@ -1,4 +1,4 @@
-"""Test 05: Elevation profile — sort, Y-from-0, tab switch, collapse, export."""
+"""Test 05: Elevation profile — sort, tab switch, collapse, export."""
 import asyncio, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
@@ -23,30 +23,6 @@ async def main():
         if not has_chart:
             errs = await close(page)
             sys.exit(1)
-
-        # ── Y-from-0 checked (default) ──
-        si = await page.evaluate("""() => JSON.stringify({
-            min: profileChart.scales.y.min, beginAtZero: profileChart.options.scales.y.beginAtZero,
-            fill: profileChart.data.datasets[0].fill, checked: document.getElementById('profile-y-zero').checked,
-            ticks: profileChart.scales.y.ticks.map(t => t.label)
-        })""")
-        report("Y-from-0 checked default", '"min":0' in si and '"fill":"origin"' in si, si)
-
-        # ── Uncheck Y-from-0 ──
-        await page.locator("#profile-y-zero").click()
-        await page.wait_for_timeout(500)
-        si2 = await page.evaluate("""() => JSON.stringify({
-            min: profileChart.scales.y.min, beginAtZero: profileChart.options.scales.y.beginAtZero,
-            fill: profileChart.data.datasets[0].fill, checked: document.getElementById('profile-y-zero').checked,
-            ticks: profileChart.scales.y.ticks.map(t => t.label)
-        })""")
-        report("Y-from-0 unchecked", '"min":100' in si2 and '"fill":"start"' in si2, si2)
-
-        # ── Re-check Y-from-0 ──
-        await page.locator("#profile-y-zero").click()
-        await page.wait_for_timeout(500)
-        si3 = await page.evaluate("""() => JSON.stringify({min: profileChart.scales.y.min, checked: document.getElementById('profile-y-zero').checked})""")
-        report("Y-from-0 re-checked", '"min":0' in si3 and '"checked":true' in si3, si3)
 
         # ── Sort mode change ──
         for mode in ['west_east', 'south_north', 'survey', 'elevation']:
@@ -125,5 +101,5 @@ async def main():
         report("Profile tests no errors", not errs, str(errs))
 
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

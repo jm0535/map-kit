@@ -374,7 +374,7 @@
   var MAX_ROWS = 8;
 
   function $(id) { return document.getElementById(id); }
-  function esc(s) { return root.escapeHtml ? root.escapeHtml(String(s)) : String(s).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, '&#39;'); }
+  function esc(s) { return root.escapeHtml ? root.escapeHtml(String(s)) : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
   CF.currentLayerId = function () {
     var sel = $('analysis-layer-select');

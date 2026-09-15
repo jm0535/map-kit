@@ -41,7 +41,7 @@ GeoSpaX has four main areas:
 | Location | Panels | What you do here |
 | --- | --- | --- |
 | **Left panel** | Data Sources, Open Data, Layers, Basemap, Export (🗺 Map Image, 📄 Per-Layer Export, 📈 Elevation Profile, 📦 Bulk Data Export) | Import files, manage layers, change basemap, export data and maps |
-| **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks, User Guide | Inspect features, view/edit attribute table, style layers |
+| **Right panel** | Feature Info, Attribute Table, Symbology, Overview, Bookmarks | Inspect features, view/edit attribute table, style layers |
 | **Analysis drawer** (right side, opens on demand) | 🧪 Analysis with 13 sections (Point Pattern, Inferential Hotspots, Conservation Planning, etc.) | Click the 🧪 Analysis button in the top toolbar or press `A` to open |
 | **Bottom panel** | Elevation Profile, Analysis Results, How to Cite | View analysis results, elevation profiles, citation formats |
 
@@ -164,7 +164,7 @@ Layers with an elevation attribute (column named `elevation`, `elev`, `alt`, `z`
 
 - Distance (km) on the X-axis, elevation (m a.s.l.) on the Y-axis.
 - Multi-layer comparison via toggle checkboxes.
-- **Y from 0** checkbox: unchecked by default (Y-axis starts at actual minimum elevation); check to force Y-axis to start at 0 (sea level).
+- The elevation axis automatically scales to the observed data range.
 - Click a point on the profile chart to pan the map to that location.
 - Drag the top edge of the panel to resize it.
 
@@ -802,7 +802,7 @@ To restore the native popup for a single control, add `data-gsx-select="off"` to
 - **XSS prevention**: all user-controlled data (layer names, field names, attribute values, file names, sheet names, metadata values, warning messages) is HTML-escaped via `escapeHtml()` (in `index.html`) or `esc()` helpers (in external JS modules) before DOM insertion. Leaflet popup and tooltip content is also escaped.
 - **Expression sandbox**: the Calculate Field expression evaluator uses a custom AST parser with a function whitelist (`abs`, `min`, `max`, `round`, `floor`, `ceil`, `sqrt`, `log`, `exp`, `pow`, `coalesce`, `isnull`, `if`, `length`, `concat`, `lower`, `upper`, `to_int`, `to_num`, `to_text`). No `eval()`, no `new Function()`, no access to `window`, `document`, `fetch`, or `localStorage`.
 - **File upload limit**: 200 MB maximum file size enforced in `processFile()` to prevent memory exhaustion.
-- **Security headers** in `vercel.json`: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`.
+- **Security headers** in `vercel.json`: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`. The obsolete `interest-cohort` directive is intentionally omitted because modern browsers no longer recognize it.
 - Object URLs are revoked after download to prevent memory leaks.
 
 ---
