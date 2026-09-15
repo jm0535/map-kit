@@ -5,7 +5,7 @@
 **Tool:** GeoSpaX (<https://geospax.in4metrix.dev>)
 **Prerequisite:** Your species choice approved by the lecturer and your species GeoJSON issued to you
 
-This guide walks you through creating all four required maps entirely in GeoSpaX, with no QGIS install needed. Record the GeoSpaX version (shown in the page footer) and today's date in your provenance table.
+This guide walks you through creating all five required maps entirely in GeoSpaX, with no QGIS install needed. Record the GeoSpaX version (shown in the page footer) and today's date in your provenance table.
 
 > **Full reference:** For detailed explanations of every tool, panel, and analysis method, see the [GeoSpaX User Guide](https://geospax.in4metrix.dev/userguide.html). For version history and release notes, see the [Changelog](https://geospax.in4metrix.dev/changelog.html).
 
@@ -83,7 +83,7 @@ Unzip this to a folder called FR422_SHARED_DATA_2026. Inside you will find:
 
 ### Which files do you actually use in GeoSpaX?
 
-For the four required maps, the environmental fields (elevation_m, tree_cover_pct, rainfall_mm, bio1, bio15, worldcover_label) are already embedded in your issued species GeoJSON. You do not need to load the shared rasters into GeoSpaX to complete Maps 1 through 4.
+For the five required maps, the environmental fields (elevation_m, tree_cover_pct, rainfall_mm, bio1, bio15, worldcover_label) are already embedded in your issued species GeoJSON. You do not need to load the shared rasters into GeoSpaX to complete Maps 1 through 5.
 
 The shared rasters and vectors are for **optional extra analysis** if you want to:
 
@@ -802,9 +802,9 @@ Your convex hull (Map 1) is not just a drawing exercise - it defines the **plann
 - Pressey, R.L. & Bottrill, M.C. (2009). Systematic conservation planning. In *Encyclopedia of Life Sciences*. Wiley.
 - CBD (2022). Kunming-Montreal Global Biodiversity Framework. Convention on Biological Diversity, Montreal.
 
-## Step 5: Conservation Gap Analysis (required — the gap-analysis map is submitted)
+## Map 5: Conservation Gap Analysis (required)
 
-This step produces the fifth submitted map (the gap-analysis map). It uses the shared protected-areas layer to check whether your species' high-quality habitat is already protected or falls in a gap. The gap-analysis map is exported and submitted through Google Classroom together with Maps 1-4; the results also feed directly into Part B (the conservation plan).
+Map 5 is the gap-analysis map. It uses the shared protected-areas layer to check whether your species' high-quality habitat is already protected or falls in a gap. Map 5 is exported and submitted through Google Classroom together with Maps 1-4; the results also feed directly into Part B (the conservation plan).
 
 ### Understanding these tools: Protection Gap and Priority Area Identification
 
@@ -903,17 +903,17 @@ In Part B of your report:
 
 **Important:** The gap analysis uses your hull extent, not the national boundary. It tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
 
-### Step 6: Export the gap-analysis map
+### Step 6: Export Map 5
 
-The gap-analysis map is the fifth submitted map. Compose it the same way as Maps 1-4:
+Map 5 (the gap-analysis map) is the fifth submitted map. Compose it the same way as Maps 1-4:
 
 1. With the Protection Gap and/or Priority Areas layers visible on the map, open the **Composer**: in the **left panel**, expand **Export** → **🗺️ Map Image**, click **🖼️ Export as PNG** or **📄 Export as PDF**, then click **Preview**.
 2. Set the title to: `Protection gap and priority areas - [Your Species Name]`
 3. Set the subtitle (source line): `GBIF PNG teaching extract, [access date], not a census; Protected areas: WDPA (UNEP-WCMC), [access date]`
 4. Verify the legend shows the gap and/or priority layers, plus the scale bar, north arrow, and CRS text.
-5. Export as Surname_lab_gap_analysis.pdf at 300 DPI and submit it through Google Classroom together with Maps 1-4.
+5. Export as Surname_lab_map5_gap_analysis.pdf at 300 DPI and submit it through Google Classroom together with Maps 1-4.
 
-## After All Four Maps
+## After All Five Maps
 
 ### Export your data (for your own records — not submitted)
 
@@ -961,7 +961,7 @@ Fill in the provenance table with:
 - [ ] Map 2: Surname_lab_map2_attribute.pdf: graduated classes, legend, CRS, source line
 - [ ] Map 3: Surname_lab_map3_pattern.pdf: Gi* or LISA classes, legend, CRS, source line
 - [ ] Map 4: Surname_lab_map4_habitat_proxy.pdf: habitat_score classes, legend, CRS, source line, title says "habitat proxy"
-- [ ] Gap-analysis map: Surname_lab_gap_analysis.pdf (or .png): protection gap and/or priority areas, legend, CRS, source line with WDPA citation
+- [ ] Map 5: Surname_lab_map5_gap_analysis.pdf (or .png): protection gap and/or priority areas, legend, CRS, source line with WDPA citation
 - [ ] Statistical outputs from the Analysis Results panel (descriptive statistics, Gi* or LISA class counts, habitat-score min/max/mean, protection-gap figures) placed in the Part B report body
 - [ ] Provenance table with GeoSpaX version and access date (inside the report or as a one-page attachment)
 - [ ] Three thresholds, three weights, and citations written in the report
@@ -971,13 +971,14 @@ Fill in the provenance table with:
 
 ### Submit your work
 
-- **Google Classroom — five maps (PNG or PDF):** map 1, map 2, map 3, map 4, and the gap-analysis map. Name them Surname_lab_map1_study_area, Surname_lab_map2_attribute, Surname_lab_map3_pattern, Surname_lab_map4_habitat_proxy, and Surname_lab_gap_analysis.
+- **Google Classroom — five maps (PNG or PDF):** map 1, map 2, map 3, map 4, and map 5 (gap analysis). Name them Surname_lab_map1_study_area, Surname_lab_map2_attribute, Surname_lab_map3_pattern, Surname_lab_map4_habitat_proxy, and Surname_lab_map5_gap_analysis.
 - **Google Classroom — Part B report PDF:** with the filled provenance table inside it or as a one-page attachment, and the statistical outputs from the Analysis Results panel in the report body.
+- Six files in total are submitted via Google Classroom: the five maps and the report PDF.
 - No project file (.gspx, .qgz, or .gpkg) is submitted. No GeoJSON files are submitted — keep your exports for your own records.
 
 ## Optional: Loading and Reclassifying Raster Data
 
-The four required maps use environmental fields already embedded in your species GeoJSON, so you do not need to load rasters. However, if you want to produce a raster backdrop (e.g. a temperature or tree-cover surface) for context or for an extra map, follow these steps.
+The five required maps use environmental fields already embedded in your species GeoJSON, so you do not need to load rasters. However, if you want to produce a raster backdrop (e.g. a temperature or tree-cover surface) for context or for an extra map, follow these steps.
 
 ### Loading a GeoTIFF
 
