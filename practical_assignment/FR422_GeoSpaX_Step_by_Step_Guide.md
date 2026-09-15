@@ -47,7 +47,7 @@ The following files are posted on Google Classroom for everyone:
 | --- | --- |
 | FR422_Assignment_Brief_Habitat_Conservation_Plan.docx | Full assignment brief and rubric |
 | FR422_Assignment_Species_List_2026.xlsx | Excel workbook with species list, **My pick** sheet, and instructions |
-| FR422_GeoSpaX_Step_by_Step_Guide.docx | This guide |
+| FR422_GeoSpaX_Step_by_Step_Final_Guide.docx | This guide |
 | lab_Paradisaea_guilielmi_occurrences.geojson | Week 9 lab training file (practice only) |
 | FR422_SHARED_DATA_2026.zip | Shared GIS data package (rasters and vectors) |
 
