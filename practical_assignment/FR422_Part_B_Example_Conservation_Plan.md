@@ -124,7 +124,7 @@ UNEP-WCMC, & IUCN. (2026). *The World Database on Protected Areas (WDPA)* [Data 
 | Source CRS | EPSG:4326 |
 | Analysis CRS | EPSG:32755 (WGS 84 / UTM zone 55S) |
 | What this file is | GBIF PNG teaching extract of the species issued. Not a census. |
-| Optional extra layer, if any | PNG_protected_areas.gpkg — WDPA (UNEP-WCMC), via FR422_SHARED_DATA_2026.zip, EPSG:4326, accessed 15 September 2026 |
+| WDPA layer (Map 5) | PNG_protected_areas.gpkg — WDPA (UNEP-WCMC), via FR422_SHARED_DATA_2026.zip, EPSG:4326, accessed 15 September 2026 |
 | Calculate field expression | (elevation_m >= 0 && elevation_m <= 2000 ? 1 : 0) + (tree_cover_pct >= 50 ? 1 : 0) + (rainfall_mm >= 2500 ? 1 : 0) |
 
 ---
