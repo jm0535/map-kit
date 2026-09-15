@@ -164,7 +164,7 @@ Layers with an elevation attribute (column named `elevation`, `elev`, `alt`, `z`
 
 - Distance (km) on the X-axis, elevation (m a.s.l.) on the Y-axis.
 - Multi-layer comparison via toggle checkboxes.
-- **Y from 0** checkbox: unchecked by default (Y-axis starts at actual minimum elevation); check to force Y-axis to start at 0 (sea level).
+- The elevation axis automatically scales to the observed data range.
 - Click a point on the profile chart to pan the map to that location.
 - Drag the top edge of the panel to resize it.
 

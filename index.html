@@ -2789,10 +2789,6 @@
             <option value="survey">Survey order</option>
           </select>
         </label>
-        <label id="profile-zero-wrap" class="profile-ctl" style="cursor:pointer;">
-          <input type="checkbox" id="profile-y-zero" onclick="rebuildProfileFromCheckboxes()">
-          Y from 0
-        </label>
         <div style="flex:1"></div>
         <span id="profile-hint">Click a point on the profile to pan the map</span>
         <button id="profile-collapse-btn" onclick="toggleProfilePanel()" title="Collapse / expand bottom panel"
@@ -9127,11 +9123,9 @@ function rebuildProfileFromCheckboxes() {
   const ctx2 = document.getElementById('profile-chart').getContext('2d');
   if (profileChart) profileChart.destroy();
 
-  // Read sort mode + Y-axis baseline from the UI; default to elevation/from-zero.
+  // Read the selected profile sort mode.
   const sortEl = document.getElementById('profile-sort');
   const sortMode = sortEl ? sortEl.value : 'elevation';
-  const zeroEl = document.getElementById('profile-y-zero');
-  const yFromZero = zeroEl ? zeroEl.checked : false;
 
   // Cache the rendered (sorted) lat/lon arrays per profile so click→pan picks
   // the correct map location for the clicked point.
@@ -9148,7 +9142,7 @@ function rebuildProfileFromCheckboxes() {
       data: built.points.map(pt => ({ x: pt.dist, y: pt.elev })),
       borderColor: p.color,
       backgroundColor: hexToRgba(p.color, 0.25),
-      fill: yFromZero ? 'origin' : 'start',  // fill to Y=0 when "Y from 0" is checked, else to axis min
+      fill: 'start',
       tension: 0.3, pointRadius: 3,
       pointBackgroundColor: p.color,
       pointBorderColor: 'white', pointBorderWidth: 1,
@@ -9179,7 +9173,7 @@ function rebuildProfileFromCheckboxes() {
       },
       scales:{
         x:{type:'linear',title:{display:true,text:'Distance (km)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
-        y:{beginAtZero:yFromZero,title:{display:true,text:'Elevation (m a.s.l.)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
+        y:{title:{display:true,text:'Elevation (m a.s.l.)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:9}},grid:{color:'#1e2430'}},
       },
       onClick:(evt, elements) => {
         if (elements.length > 0) {
@@ -16402,19 +16396,6 @@ function _hideLoading() { document.getElementById('loading').style.display='none
 // First basemap load hides spinner; 2s fallback in case tiles are slow/fail
 basemapLayer.on('load', _hideLoading);
 setTimeout(_hideLoading, 2000);
-
-// Robust Y-from-0 toggle: some browsers don't fire `change` on checkboxes
-// inside <label> clicks reliably, so we listen for both `click` and `change`
-// and debounce the rebuild to avoid double-calls.
-(function () {
-  let yZeroTimer = null;
-  const handler = () => {
-    if (yZeroTimer) clearTimeout(yZeroTimer);
-    yZeroTimer = setTimeout(() => { yZeroTimer = null; rebuildProfileFromCheckboxes(); }, 30);
-  };
-  const el = document.getElementById('profile-y-zero');
-  if (el) { el.addEventListener('change', handler); el.addEventListener('click', handler); }
-})();
 
 // Multi-monitor composer popout bootstrap - detect ?composer=1
 _initComposerPopout();
