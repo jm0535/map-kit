@@ -1,9 +1,12 @@
 """Test 02: Map interactions — zoom, pan, basemaps, layers, theme, panels."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -38,7 +41,11 @@ async def main():
 
         # ── Status bar zoom display ──
         zoom_text = await page.text_content("#status-zoom")
-        report("Status bar zoom display", zoom_text is not None and "Zoom" in (zoom_text or ""), f"text='{zoom_text}'")
+        report(
+            "Status bar zoom display",
+            zoom_text is not None and "Zoom" in (zoom_text or ""),
+            f"text='{zoom_text}'",
+        )
 
         # ── Coordinate display ──
         coord_text = await page.text_content("#coord-display")
@@ -94,18 +101,17 @@ async def main():
             await js_click(page, ".layer-eye")
             await page.wait_for_timeout(500)
             vis = await page.evaluate("map.hasLayer(uploadedLayers[0].layer)")
-            report("Layer visibility toggle", vis == False, f"visible={vis}")
+            report("Layer visibility toggle", vis is False, f"visible={vis}")
             await js_click(page, ".layer-eye")
             await page.wait_for_timeout(500)
             vis2 = await page.evaluate("map.hasLayer(uploadedLayers[0].layer)")
-            report("Layer visibility re-toggle", vis2 == True, f"visible={vis2}")
+            report("Layer visibility re-toggle", vis2 is True, f"visible={vis2}")
         else:
             report("Layer visibility toggle", False, "no eye icon found")
 
         # ── Zoom to layer ──
         zoom_btn = page.locator(".layer-action-btn[title*='Zoom'], .layer-zoom-btn").first
         if await zoom_btn.count() > 0:
-            c_before = await page.evaluate("map.getCenter()")
             await js_click(page, ".layer-action-btn[title*='Zoom'], .layer-zoom-btn")
             await page.wait_for_timeout(1000)
             report("Zoom to layer", True)
@@ -124,7 +130,11 @@ async def main():
             await js_click(page, ".layer-remove")
             await page.wait_for_timeout(500)
             layer_count_after = await page.evaluate("uploadedLayers.length")
-            report("Remove layer", layer_count_after == layer_count_before - 1, f"{layer_count_before}->{layer_count_after}")
+            report(
+                "Remove layer",
+                layer_count_after == layer_count_before - 1,
+                f"{layer_count_before}->{layer_count_after}",
+            )
         else:
             report("Remove layer", False, "no remove button")
 
@@ -139,6 +149,7 @@ async def main():
         errs = await close(page)
         report("Map tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

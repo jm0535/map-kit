@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GeoSpaX Changelog</title>
+<!-- Favicon: GeoSpaX logo (assets/logo.svg, inlined as a data URI so it also works offline / from file://) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJHZW9TcGFYIGxvZ28iPgogIDwhLS0KICAgIEdlb1NwYVggbG9nbzogZm9sZGVkIG1hcCB3aXRoIGEgbG9jYXRpb24gcGluIG9uIHRoZSBhcHAvZG9jcyB0ZWFsIGFjY2VudC4KICAgIFVzZWQgYXMgdGhlIGZhdmljb24gYW5kIGJyYW5kIG1hcmsgYWNyb3NzIGluZGV4Lmh0bWwsIHVzZXJndWlkZS5odG1sIGFuZAogICAgY2hhbmdlbG9nLmh0bWwuIEtlZXAgc2hhcGVzIGJvbGQgYW5kIGZldyDigJQgdGhpcyBtdXN0IHN0YXkgbGVnaWJsZSBhdCAxNnB4LgogIC0tPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJneC1iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM0M2E2YjMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMGE3MTc3Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHJ4PSIxNCIgZmlsbD0idXJsKCNneC1iZykiLz4KICA8IS0tIGZvbGRlZCBtYXAgc2hlZXQ6IHRocmVlIHBhbmVscywgbWlkZGxlIHBhbmVsIHNoYWRlZCB0byBzdWdnZXN0IGEgZm9sZCAtLT4KICA8cGF0aCBkPSJNMTIgMTkgTDI1IDE1IFY0NSBMMTIgNDkgWiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45NCIvPgogIDxwYXRoIGQ9Ik0yNyAxNSBWNDUgTDM5IDQ5IFYxOSBaIiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjciLz4KICA8cGF0aCBkPSJNNDEgMTkgTDUyIDE2IFY0NiBMNDEgNDkgWiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45NCIvPgogIDwhLS0gbG9jYXRpb24gcGluIC0tPgogIDxwYXRoIGQ9Ik0zMiAyMSBhOCA4IDAgMCAxIDggOCBjMCA1LjMgLTQuNyA4LjggLTggMTMuMiBjLTMuMyAtNC40IC04IC03LjkgLTggLTEzLjIgYTggOCAwIDAgMSA4IC04IFoiIGZpbGw9IiMwODNjNDAiLz4KICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjI5IiByPSIzLjIiIGZpbGw9IiNmZmZmZmYiLz4KPC9zdmc+Cg==">
 <style>
 :root {
   --bg: #0f1115; --fg: #e8eaed; --accent: #3d9ba8; --muted: #a8b0bd;
@@ -144,7 +146,7 @@ body {
   <div class="cl-sidebar-header">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <div>
-        <h1>&#x1F9EA; GeoSpaX</h1>
+        <h1><img src="assets/logo.svg" alt="" aria-hidden="true" style="width:24px;height:24px;vertical-align:-5px;margin-right:7px;">GeoSpaX</h1>
         <div class="version">Changelog</div>
       </div>
       <button id="cl-theme-toggle" onclick="clToggleTheme()" title="Toggle dark/light theme" style="background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:15px;color:var(--muted);line-height:1;transition:all .15s;">&#x1F319;</button>
@@ -154,6 +156,7 @@ body {
   <input type="text" class="cl-search" id="cl-search" placeholder="Search releases..." oninput="clFilter()">
   <div class="cl-nav" id="cl-nav">
     <div class="cl-nav-group">Releases</div>
+    <a href="#unreleased" class="cl-nav-item">Unreleased</a>
     <a href="#v1.4.2" class="cl-nav-item">v1.4.2 <span class="badge latest">Latest</span></a>
     <a href="#v1.4.1" class="cl-nav-item">v1.4.1</a>
     <a href="#v1.4.0" class="cl-nav-item">v1.4.0</a>
@@ -188,6 +191,43 @@ body {
 </div>
 
 <!-- v1.4.2 -->
+<div class="cl-release" id="unreleased">
+  <div class="cl-release-header">
+    <span class="cl-release-version">Unreleased</span>
+    <span class="cl-release-date">15 September 2026</span>
+    <span class="cl-release-tag stable">In review</span>
+  </div>
+  <div class="cl-release-title">Quality Pass — Packaging, Tests, Docs</div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Bug Fixes</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Python package could not be installed</b>: modern setuptools (PEP&nbsp;639) rejects the combination of the <code>license = "MIT"</code> expression with the deprecated <code>License :: OSI Approved :: MIT License</code> classifier, so <code>pip install -e .</code> failed outright. The classifier was removed; the license expression is kept.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Console warnings from colour inputs</b>: the Symbology panel and the label popover could feed CSS keywords (e.g. <code>white</code>, used by circleMarker outlines) straight into <code>&lt;input type="color"&gt;</code>, which requires <code>#rrggbb</code>. A <code>_cssColorToHex()</code> normaliser now converts any CSS colour before it reaches a colour input.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Tests</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Suite runs on Python 3.10/3.11</b>: eight test files used nested double quotes inside f-strings (a Python&nbsp;3.12+ feature) and failed to parse on the versions declared in <code>requires-python</code>.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Portable paths</b>: test fixtures now resolve relative to the repository instead of <code>/tmp/gsx_tests</code> or a developer's home directory; test screenshots go to a git-ignored <code>tests/playwright/screenshots/</code>; the browser binary can be overridden with <code>GSX_CHROME</code>.</span></div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>Stale expectations updated</b>: the project save/load test now drives the in-app Save Workspace dialog introduced in v1.4.2; the attribute-table check accounts for 50-row pagination; the FR422 workflow test matches the bundled <code>samples/paradisaea_occurrences.geojson</code> dataset case-insensitively.</span></div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>Offline-tolerant live-API checks</b>: Natural Earth, WWF, Marine Ecoregions, World Bank and Overpass checks now accept graceful API failures (like the GBIF check already did), so the suite passes without internet while app crashes still fail.</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Documentation</div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>README</b>: project-structure tree refreshed (api/, tests/, samples/, userguide, changelog, CITATION, new JS modules and vendored libs); remaining "6 basemaps" claim corrected to 10; GeoPackage added to the import formats table.</span></div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>CONTRIBUTING.md</b>: new "Running the Tests" section (setup, <code>make serve-tests</code>, per-file runner); structure tree updated; Natural Earth connector correctly described as fetched on demand rather than bundled.</span></div>
+    <div class="cl-entry doc"><span class="cl-entry-label doc">Docs</span><span class="cl-entry-text"><b>User Guide &amp; Blueprint</b>: GeoPackage import documented in both format tables and the technology stack.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>Brand logo &amp; favicons</b>: new vector logo (<code>assets/logo.svg</code> — folded map and pin on the app teal) shown in the User Guide and Changelog sidebars, and used as the favicon on the app, User Guide, and Changelog tabs (inlined as a data URI so it works offline).</span></div>
+  </div>
+
+  <div class="cl-category">
+    <div class="cl-category-title">Tooling</div>
+    <div class="cl-entry fix"><span class="cl-entry-label fix">Fix</span><span class="cl-entry-text"><b>make check is clean again</b>: Ruff (lint + format) and mypy pass across the repo; the intentional star-import pattern of the test suite is now declared in the Ruff per-file ignores; <code>pandas-stubs</code> added to the dev extras so type checking works on a fresh clone.</span></div>
+    <div class="cl-entry new"><span class="cl-entry-label new">New</span><span class="cl-entry-text"><b>make serve-tests</b> target serves the repo on port 8931 for the Playwright suite.</span></div>
+  </div>
+</div>
+
 <div class="cl-release" id="v1.4.2">
   <div class="cl-release-header">
     <span class="cl-release-version">v1.4.2</span>

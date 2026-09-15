@@ -1,9 +1,12 @@
 """Test 05: Elevation profile — sort, tab switch, collapse, export."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -25,7 +28,7 @@ async def main():
             sys.exit(1)
 
         # ── Sort mode change ──
-        for mode in ['west_east', 'south_north', 'survey', 'elevation']:
+        for mode in ["west_east", "south_north", "survey", "elevation"]:
             await page.evaluate(f"""() => {{
                 document.getElementById('profile-sort').value = '{mode}';
                 rebuildProfileFromCheckboxes();
@@ -54,12 +57,16 @@ async def main():
         # ── Collapse/expand panel ──
         await page.evaluate("toggleProfilePanel()")
         await page.wait_for_timeout(500)
-        collapsed = await page.evaluate("document.getElementById('profile-panel').classList.contains('collapsed')")
+        collapsed = await page.evaluate(
+            "document.getElementById('profile-panel').classList.contains('collapsed')"
+        )
         report("Panel collapse", collapsed)
 
         await page.evaluate("toggleProfilePanel()")
         await page.wait_for_timeout(500)
-        collapsed2 = await page.evaluate("document.getElementById('profile-panel').classList.contains('collapsed')")
+        collapsed2 = await page.evaluate(
+            "document.getElementById('profile-panel').classList.contains('collapsed')"
+        )
         report("Panel expand", not collapsed2)
 
         # ── Profile chart click → pan map ──
@@ -99,6 +106,7 @@ async def main():
 
         errs = await close(page)
         report("Profile tests no errors", not errs, str(errs))
+
 
 asyncio.run(main())
 print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")

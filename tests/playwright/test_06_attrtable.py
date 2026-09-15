@@ -1,9 +1,12 @@
 """Test 06: Attribute table + calculate field."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -38,7 +41,9 @@ async def main():
             await page.fill("#attr-search", "100")
             await page.wait_for_timeout(500)
             filtered_rows = await page.locator("#attr-table tbody tr").count()
-            report("Attribute table search filters", filtered_rows <= rows, f"{rows}->{filtered_rows}")
+            report(
+                "Attribute table search filters", filtered_rows <= rows, f"{rows}->{filtered_rows}"
+            )
             await page.fill("#attr-search", "")
             await page.wait_for_timeout(500)
 
@@ -79,13 +84,7 @@ async def main():
             if await run_btn.count() > 0:
                 await page.evaluate("GSXCF.run()")
                 await page.wait_for_timeout(2000)
-                # Check if the new field was added
-                has_new_field = await page.evaluate("""() => {
-                    const sel = document.getElementById('attr-layer-select');
-                    if (!sel) return false;
-                    // Reload attr table to see new field
-                    return true;
-                }""")
+                # Reload attr table to see the new field
                 report("Calculate field runs", True)
 
         # ── Feature info card ──
@@ -98,6 +97,7 @@ async def main():
         errs = await close(page)
         report("Attr table tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

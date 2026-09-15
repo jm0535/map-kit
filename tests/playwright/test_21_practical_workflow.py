@@ -1,17 +1,22 @@
 """End-to-end test of the FR422 GeoSpaX practical workflow using real lab data."""
+
 import asyncio, sys, os
-sys.path.insert(0, '/home/jmoses/Documents/workspace/projects/github/mapkit/tests/playwright')
+
+sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 from playwright.async_api import async_playwright
 
-LAB_FILE = "/home/jmoses/Documents/workspace/projects/github/mapkit/practical_assignment/lab_Paradisaea_guilielmi_occurrences.geojson"
-SCREENSHOT_DIR = "/home/jmoses/Documents/workspace/projects/github/mapkit/practical_assignment/screenshots"
+HERE = os.path.dirname(os.path.abspath(__file__))
+LAB_FILE = os.path.join(HERE, "..", "..", "samples", "paradisaea_occurrences.geojson")
+SCREENSHOT_DIR = os.path.join(HERE, "screenshots")
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+
 
 async def screenshot(page, name):
     path = os.path.join(SCREENSHOT_DIR, f"{name}.png")
     await page.screenshot(path=path, full_page=False)
     print(f"  Screenshot: {path}")
+
 
 async def main():
     async with async_playwright() as p:
@@ -22,51 +27,68 @@ async def main():
         # ── Step 0: Import ──
         print("\n=== Step 0: Import lab file ===")
         await expand_all_sections(page)
-        await page.set_input_files('#upload-file', LAB_FILE)
+        await page.set_input_files("#upload-file", LAB_FILE)
         await page.wait_for_timeout(4000)
         feat_count = await page.evaluate("""() => {
-            const info = uploadedLayers.find(l => l.name && l.name.includes('Paradisaea'));
+            const info = uploadedLayers.find(l => l.name && l.name.toLowerCase().includes('paradisaea'));
             if (!info) return null;
             let count = 0; info.layer.eachLayer(() => count++); return count;
         }""")
         report("Import lab file (128 features)", feat_count == 128, f"features={feat_count}")
         await screenshot(page, "01_imported")
 
-        species_id = await page.evaluate("""() => uploadedLayers.find(l => l.name && l.name.includes('Paradisaea'))?.id""")
+        species_id = await page.evaluate(
+            """() => uploadedLayers.find(l => l.name && l.name.toLowerCase().includes('paradisaea'))?.id"""
+        )
 
         # Attribute table
         await page.evaluate(f"openAttrTableForLayer('{species_id}')")
         await page.wait_for_timeout(2000)
-        attr_rows = await page.evaluate("""() => document.querySelectorAll('#attr-table tbody tr').length""")
-        report("Attribute table shows 128 rows", attr_rows == 128, f"rows={attr_rows}")
+        attr_info = await page.evaluate("""() => ({
+            rows: document.querySelectorAll('#attr-table tbody tr').length,
+            pageInfo: (document.getElementById('attr-page-info') || {}).textContent || ''
+        })""")
+        # The attribute table is paginated (50 rows per page); total is shown in the pager
+        report(
+            "Attribute table paginates 128 rows",
+            attr_info.get("rows") == 50 and "128" in attr_info.get("pageInfo", ""),
+            f"info={attr_info}",
+        )
         await screenshot(page, "02_attribute_table")
 
         # ── Step 1: Convex Hull ──
         print("\n=== Step 1: Convex Hull (Map 1) ===")
         await expand_all_sections(page)
-        await page.evaluate(f"""() => {{
+        await page.evaluate("""() => {
             const sel = document.getElementById('analysis-layer-select');
-            for (let i = 0; i < sel.options.length; i++) {{
-                if (sel.options[i].text.includes('Paradisaea')) {{ sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); break; }}
-            }}
-        }}""")
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].text.toLowerCase().includes('paradisaea')) { sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); break; }
+            }
+        }""")
         await page.wait_for_timeout(500)
         await page.evaluate("runAnalysis('convexHull')")
         await page.wait_for_timeout(2000)
-        hull_exists = await page.evaluate("""() => !!uploadedLayers.find(l => l.name && l.name.includes('Convex Hull'))""")
+        hull_exists = await page.evaluate(
+            """() => !!uploadedLayers.find(l => l.name && l.name.includes('Convex Hull'))"""
+        )
         results_text = await page.evaluate("""() => {
             const el = document.getElementById('analysis-results-content');
             if (!el || el.style.display === 'none') return null;
             return el.textContent.substring(0, 500);
         }""")
         report("Convex Hull created", hull_exists)
-        report("Convex Hull results shown", results_text and 'Hull' in results_text, f"results={results_text[:200] if results_text else 'none'}")
+        report(
+            "Convex Hull results shown",
+            results_text and "Hull" in results_text,
+            f"results={results_text[:200] if results_text else 'none'}",
+        )
         await screenshot(page, "03_convex_hull")
 
         # ── Step 2: Feature labels ──
         print("\n=== Step 2: Feature labels ===")
         # Labels are set via the label popover on the layer panel - click the tag icon
-        label_result = await page.evaluate("""async (speciesId) => {
+        label_result = await page.evaluate(
+            """async (speciesId) => {
             // Find the label button in the layer panel
             const btn = document.querySelector(`[onclick*="openLabelPopover('${speciesId}'"]`);
             if (!btn) return { error: 'no label button found' };
@@ -85,8 +107,10 @@ async def main():
                 if (fieldSel) break;
             }
             return { ok: !!fieldSel, field: fieldSel ? 'site' : null };
-        }""", species_id)
-        report("Label field set to 'site'", label_result.get('ok', False), f"result={label_result}")
+        }""",
+            species_id,
+        )
+        report("Label field set to 'site'", label_result.get("ok", False), f"result={label_result}")
         await page.wait_for_timeout(1000)
         await screenshot(page, "04_labels")
 
@@ -106,7 +130,9 @@ async def main():
             }}
             return {{ error: 'not found', options: Array.from(sel.options).map(o => o.value).slice(0, 10) }};
         }}""")
-        report("Graduated field = tree_cover_pct", 'field' in field_result, f"result={field_result}")
+        report(
+            "Graduated field = tree_cover_pct", "field" in field_result, f"result={field_result}"
+        )
         await page.wait_for_timeout(500)
         # Set classes to 5
         await page.evaluate(f"""() => {{
@@ -115,11 +141,14 @@ async def main():
         }}""")
         await page.wait_for_timeout(300)
         # Apply
-        await page.evaluate("""(sid) => {
+        await page.evaluate(
+            """(sid) => {
             const btn = document.querySelector('[onclick="applyGraduated(\\'' + sid + '\\')"]');
             if (btn) btn.click();
             else { try { applyGraduated(sid); } catch(e) {} }
-        }""", species_id)
+        }""",
+            species_id,
+        )
         await page.wait_for_timeout(1500)
         legend_info = await page.evaluate("""() => {
             const legend = document.querySelector('.map-legend');
@@ -132,18 +161,22 @@ async def main():
                 html: legend.innerHTML.substring(0, 500)
             };
         }""")
-        report("Graduated legend visible", legend_info.get('visible', False) and legend_info.get('bodyChildren', 0) > 0, f"legend={legend_info}")
+        report(
+            "Graduated legend visible",
+            legend_info.get("visible", False) and legend_info.get("bodyChildren", 0) > 0,
+            f"legend={legend_info}",
+        )
         await screenshot(page, "05_graduated")
 
         # ── Step 4: Gi* ──
         print("\n=== Step 4: Gi* (Map 3) ===")
         await expand_all_sections(page)
-        await page.evaluate(f"""() => {{
+        await page.evaluate("""() => {
             const sel = document.getElementById('analysis-layer-select');
-            for (let i = 0; i < sel.options.length; i++) {{
-                if (sel.options[i].text.includes('Paradisaea')) {{ sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); break; }}
-            }}
-        }}""")
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].text.toLowerCase().includes('paradisaea')) { sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); break; }
+            }
+        }""")
         await page.wait_for_timeout(500)
         # Set analysis attribute to tree_cover_pct
         gi_field = await page.evaluate("""() => {
@@ -154,7 +187,7 @@ async def main():
             }
             return { error: 'not found', options: Array.from(sel.options).map(o => o.value) };
         }""")
-        report("Analysis attr = tree_cover_pct", 'field' in gi_field, f"result={gi_field}")
+        report("Analysis attr = tree_cover_pct", "field" in gi_field, f"result={gi_field}")
         await page.wait_for_timeout(500)
         # Run Gi*
         await page.evaluate("runAnalysis('gistar')")
@@ -164,18 +197,23 @@ async def main():
             if (!el || el.style.display === 'none') return null;
             return el.textContent.substring(0, 800);
         }""")
-        report("Gi* results shown", gi_results and ('hot' in gi_results.lower() or 'Gi*' in gi_results or 'z' in gi_results.lower()), f"results={gi_results[:300] if gi_results else 'none'}")
+        report(
+            "Gi* results shown",
+            gi_results
+            and ("hot" in gi_results.lower() or "Gi*" in gi_results or "z" in gi_results.lower()),
+            f"results={gi_results[:300] if gi_results else 'none'}",
+        )
         await screenshot(page, "06_gi_star")
 
         # ── Step 5: Calculate Field ──
         print("\n=== Step 5: Calculate Field (Map 4) ===")
         await expand_all_sections(page)
-        await page.evaluate(f"""() => {{
+        await page.evaluate("""() => {
             const sel = document.getElementById('analysis-layer-select');
-            for (let i = 0; i < sel.options.length; i++) {{
-                if (sel.options[i].text.includes('Paradisaea')) {{ sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); break; }}
-            }}
-        }}""")
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].text.toLowerCase().includes('paradisaea')) { sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); break; }
+            }
+        }""")
         await page.wait_for_timeout(500)
         # Expand Attributes section
         await page.evaluate("""() => {
@@ -198,7 +236,11 @@ async def main():
             fieldname: document.getElementById('gsx-calc-out')?.value,
             rowCount: document.querySelectorAll('.gsx-calc-row').length
         })""")
-        report("Calculate field UI visible", cf_state.get('fieldname') == 'habitat_score', f"state={cf_state}")
+        report(
+            "Calculate field UI visible",
+            cf_state.get("fieldname") == "habitat_score",
+            f"state={cf_state}",
+        )
 
         # Fill rows: elevation_m between 0 and 2000 weight 1, tree_cover_pct >= 50 weight 1, rainfall_mm >= 2500 weight 1
         cf_fill = await page.evaluate("""() => {
@@ -233,7 +275,7 @@ async def main():
             GSXCF.validate();
             return { ok: true, rows: rows.length };
         }""")
-        report("Calculate field rows filled", 'ok' in cf_fill, f"result={cf_fill}")
+        report("Calculate field rows filled", "ok" in cf_fill, f"result={cf_fill}")
         await page.wait_for_timeout(500)
         await screenshot(page, "07_calcfield_filled")
 
@@ -242,22 +284,33 @@ async def main():
             const el = document.getElementById('gsx-calc-preview');
             return el ? { text: el.textContent.substring(0, 300) } : { error: 'no preview' };
         }""")
-        report("Calculate field preview shown", 'text' in preview and len(preview.get('text', '')) > 0, f"preview={preview.get('text', '')[:200]}")
+        report(
+            "Calculate field preview shown",
+            "text" in preview and len(preview.get("text", "")) > 0,
+            f"preview={preview.get('text', '')[:200]}",
+        )
 
         # Run
-        await page.evaluate("""() => { const btn = document.getElementById('gsx-calc-run'); if (btn) btn.click(); }""")
+        await page.evaluate(
+            """() => { const btn = document.getElementById('gsx-calc-run'); if (btn) btn.click(); }"""
+        )
         await page.wait_for_timeout(3000)
         cf_results = await page.evaluate("""() => {
             const el = document.getElementById('analysis-results-content');
             if (!el || el.style.display === 'none') return { error: 'no results' };
             return { text: el.textContent.substring(0, 500), visible: el.style.display !== 'none' };
         }""")
-        report("Calculate field results shown", cf_results.get('text', '') and ('Features written' in cf_results['text'] or 'habitat_score' in cf_results['text']), f"results={cf_results.get('text', '')[:300]}")
+        report(
+            "Calculate field results shown",
+            cf_results.get("text", "")
+            and ("Features written" in cf_results["text"] or "habitat_score" in cf_results["text"]),
+            f"results={cf_results.get('text', '')[:300]}",
+        )
         await screenshot(page, "08_calcfield_results")
 
         # Check habitat_score field
         habitat_check = await page.evaluate("""() => {
-            const info = uploadedLayers.find(l => l.name && l.name.includes('Paradisaea'));
+            const info = uploadedLayers.find(l => l.name && l.name.toLowerCase().includes('paradisaea'));
             if (!info) return { error: 'no layer' };
             let found = false; let vals = [];
             info.layer.eachLayer(sub => {
@@ -268,13 +321,19 @@ async def main():
             });
             return { found, vals };
         }""")
-        report("habitat_score field added", habitat_check.get('found', False), f"sample={habitat_check.get('vals')}")
+        report(
+            "habitat_score field added",
+            habitat_check.get("found", False),
+            f"sample={habitat_check.get('vals')}",
+        )
 
         # ── Step 6: Composer ──
         print("\n=== Step 6: Map Composer ===")
         await page.evaluate("previewExport()")
         await page.wait_for_timeout(5000)
-        composer_open = await page.evaluate("""() => document.getElementById('layout-modal').classList.contains('show')""")
+        composer_open = await page.evaluate(
+            """() => document.getElementById('layout-modal').classList.contains('show')"""
+        )
         report("Composer opened", composer_open)
         await screenshot(page, "09_composer_open")
 
@@ -301,7 +360,11 @@ async def main():
             text: document.getElementById('layout-title')?.textContent,
             visible: document.getElementById('layout-title')?.style.display !== 'none'
         })""")
-        report("Title set in composer", title_display.get('visible') and title_display.get('text'), f"title={title_display.get('text', '')}")
+        report(
+            "Title set in composer",
+            title_display.get("visible") and title_display.get("text"),
+            f"title={title_display.get('text', '')}",
+        )
         await screenshot(page, "10_composer_titled")
 
         elements = await page.evaluate("""() => ({
@@ -313,16 +376,18 @@ async def main():
             scaleText: document.querySelector('#layout-scaletext')?.style.display !== 'none',
             dateText: document.querySelector('#layout-datetext')?.style.display !== 'none',
         })""")
-        report("Composer has scale bar", elements.get('scalebar', False))
-        report("Composer has north arrow", elements.get('northArrow', False))
-        report("Composer has legend", elements.get('legend', False))
-        report("Composer has title", elements.get('title', False))
-        report("Composer has CRS text", elements.get('crsText', False))
+        report("Composer has scale bar", elements.get("scalebar", False))
+        report("Composer has north arrow", elements.get("northArrow", False))
+        report("Composer has legend", elements.get("legend", False))
+        report("Composer has title", elements.get("title", False))
+        report("Composer has CRS text", elements.get("crsText", False))
         print(f"  Elements: {elements}")
 
         # ── Step 7: Export CRS ──
         print("\n=== Step 7: Export to EPSG:32755 ===")
-        await page.evaluate("""() => document.getElementById('layout-modal').classList.remove('show')""")
+        await page.evaluate(
+            """() => document.getElementById('layout-modal').classList.remove('show')"""
+        )
         await page.wait_for_timeout(1000)
         crs_result = await page.evaluate("""() => {
             const sel = document.getElementById('export-crs-select');
@@ -335,13 +400,15 @@ async def main():
             }
             return { error: 'not found', count: sel.options.length };
         }""")
-        report("Output CRS set to EPSG:32755", 'code' in crs_result, f"result={crs_result}")
+        report("Output CRS set to EPSG:32755", "code" in crs_result, f"result={crs_result}")
 
         # ── Summary ──
         print(f"\n=== SUMMARY: {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
         if errors:
-            for e in errors: print(f"  ERROR: {e}")
+            for e in errors:
+                print(f"  ERROR: {e}")
         await page._gsx_browser.close()
-        return COUNTS['fail'] == 0
+        return COUNTS["fail"] == 0
+
 
 asyncio.run(main())

@@ -1,9 +1,12 @@
 """Test 16: Layer export — CSV, GeoJSON, KML, GPX, XLSX, Shapefile, exportAll."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -27,11 +30,12 @@ async def main():
             exportAllXLSX: typeof exportAllXLSX,
         })""")
         for name, ftype in funcs.items():
-            report(f"{name} exists", ftype == 'function', ftype)
+            report(f"{name} exists", ftype == "function", ftype)
 
         # ── Mock download to capture export output ──
         async def capture_export(func_name):
-            result = await page.evaluate("""async (fname) => {
+            result = await page.evaluate(
+                """async (fname) => {
                 let captured = null;
                 const origClick = HTMLAnchorElement.prototype.click;
                 HTMLAnchorElement.prototype.click = function() {
@@ -50,44 +54,76 @@ async def main():
                 HTMLAnchorElement.prototype.click = origClick;
                 URL.createObjectURL = origURL;
                 return captured || 'no data';
-            }""", func_name)
+            }""",
+                func_name,
+            )
             return result
 
         # ── Export layer as CSV ──
         csv_result = await capture_export("exportLayerCSV")
-        report("Export layer CSV", csv_result and 'error' not in str(csv_result), str(csv_result)[:100])
+        report(
+            "Export layer CSV", csv_result and "error" not in str(csv_result), str(csv_result)[:100]
+        )
 
         # ── Export layer as GeoJSON ──
         geojson_result = await capture_export("exportLayerGeoJSON")
-        report("Export layer GeoJSON", geojson_result and 'error' not in str(geojson_result), str(geojson_result)[:100])
+        report(
+            "Export layer GeoJSON",
+            geojson_result and "error" not in str(geojson_result),
+            str(geojson_result)[:100],
+        )
 
         # ── Export layer as KML ──
         kml_result = await capture_export("exportLayerKML")
-        report("Export layer KML", kml_result and 'error' not in str(kml_result), str(kml_result)[:100])
+        report(
+            "Export layer KML", kml_result and "error" not in str(kml_result), str(kml_result)[:100]
+        )
 
         # ── Export layer as GPX ──
         gpx_result = await capture_export("exportLayerGPX")
-        report("Export layer GPX", gpx_result and 'error' not in str(gpx_result), str(gpx_result)[:100])
+        report(
+            "Export layer GPX", gpx_result and "error" not in str(gpx_result), str(gpx_result)[:100]
+        )
 
         # ── Export layer as XLSX ──
         xlsx_result = await capture_export("exportLayerXLSX")
-        report("Export layer XLSX", xlsx_result and 'error' not in str(xlsx_result), str(xlsx_result)[:100])
+        report(
+            "Export layer XLSX",
+            xlsx_result and "error" not in str(xlsx_result),
+            str(xlsx_result)[:100],
+        )
 
         # ── Export all as CSV ──
         all_csv_result = await capture_export("exportAllCSV")
-        report("Export all CSV", all_csv_result and 'error' not in str(all_csv_result), str(all_csv_result)[:100])
+        report(
+            "Export all CSV",
+            all_csv_result and "error" not in str(all_csv_result),
+            str(all_csv_result)[:100],
+        )
 
         # ── Export all as GeoJSON ──
         all_geojson_result = await capture_export("exportAllGeoJSON")
-        report("Export all GeoJSON", all_geojson_result and 'error' not in str(all_geojson_result), str(all_geojson_result)[:100])
+        report(
+            "Export all GeoJSON",
+            all_geojson_result and "error" not in str(all_geojson_result),
+            str(all_geojson_result)[:100],
+        )
 
         # ── Export all as XLSX ──
         all_xlsx_result = await capture_export("exportAllXLSX")
-        report("Export all XLSX", all_xlsx_result and 'error' not in str(all_xlsx_result), str(all_xlsx_result)[:100])
+        report(
+            "Export all XLSX",
+            all_xlsx_result and "error" not in str(all_xlsx_result),
+            str(all_xlsx_result)[:100],
+        )
 
         # ── Export layer selected format ──
         sel_result = await capture_export("exportLayerSelectedFormat")
-        report("Export layer selected format", sel_result and 'error' not in str(sel_result), str(sel_result)[:100])
+        report(
+            "Export layer selected format",
+            sel_result and "error" not in str(sel_result),
+            str(sel_result)[:100],
+        )
 
         # ── Check export UI exists ──
         export_layer_sel = await page.locator("#export-layer-select").count()
@@ -105,6 +141,7 @@ async def main():
         errs = await close(page)
         report("Layer export tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
 print(f"\n=== Layer export tests: {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
-sys.exit(1 if COUNTS['fail'] else 0)
+sys.exit(1 if COUNTS["fail"] else 0)

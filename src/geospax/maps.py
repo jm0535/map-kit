@@ -12,7 +12,6 @@ References:
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import contextily as ctx
@@ -24,6 +23,8 @@ from matplotlib.gridspec import GridSpec
 from pyproj import Geod
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     import geopandas as gpd
     import pandas as pd
 
@@ -112,7 +113,9 @@ def build_static_map(
 
     # Basemap - fallback to OpenStreetMap if OpenTopoMap fails
     try:
-        ctx.add_basemap(ax_map, crs="EPSG:3857", source=ctx.providers.OpenTopoMap, zoom=9, alpha=0.9)
+        ctx.add_basemap(
+            ax_map, crs="EPSG:3857", source=ctx.providers.OpenTopoMap, zoom=9, alpha=0.9
+        )
         logger.info("OpenTopoMap basemap loaded")
     except Exception:
         ctx.add_basemap(
@@ -123,12 +126,26 @@ def build_static_map(
     # Transect lines
     for _, row in lines_web.iterrows():
         xs, ys = row.geometry.xy
-        ax_map.plot(xs, ys, color=colors[row["transect"]], linewidth=2.5, linestyle="--", alpha=0.85, zorder=2)
+        ax_map.plot(
+            xs,
+            ys,
+            color=colors[row["transect"]],
+            linewidth=2.5,
+            linestyle="--",
+            alpha=0.85,
+            zorder=2,
+        )
 
     # Study points
     for transect, grp in gdf_web.groupby("transect"):
         ax_map.scatter(
-            grp.geometry.x, grp.geometry.y, color=colors[transect], s=55, zorder=4, edgecolors="white", linewidths=0.8
+            grp.geometry.x,
+            grp.geometry.y,
+            color=colors[transect],
+            s=55,
+            zorder=4,
+            edgecolors="white",
+            linewidths=0.8,
         )
         for _, row in grp.iterrows():
             ax_map.annotate(
@@ -144,7 +161,12 @@ def build_static_map(
             )
 
     ax_map.set_axis_off()
-    ax_map.set_title("YUS & Mt Wilhelm Elevational Transects - Papua New Guinea", fontsize=12, fontweight="bold", pad=8)
+    ax_map.set_title(
+        "YUS & Mt Wilhelm Elevational Transects - Papua New Guinea",
+        fontsize=12,
+        fontweight="bold",
+        pad=8,
+    )
 
     # Map legend
     handles = [
@@ -173,7 +195,14 @@ def build_static_map(
             label="Mt Wilhelm Transect",
         ),
     ]
-    ax_map.legend(handles=handles, loc="lower left", fontsize=8.5, framealpha=0.92, edgecolor="#aaaaaa", fancybox=True)
+    ax_map.legend(
+        handles=handles,
+        loc="lower left",
+        fontsize=8.5,
+        framealpha=0.92,
+        edgecolor="#aaaaaa",
+        fancybox=True,
+    )
 
     # YUS elevation profile
     yus_elev = [p["elevation_m"] for p in yus_points]
@@ -181,11 +210,19 @@ def build_static_map(
 
     ax_yus.fill_between(yus_dist, yus_elev, alpha=0.25, color=colors["YUS"])
     ax_yus.plot(yus_dist, yus_elev, color=colors["YUS"], linewidth=2, zorder=3)
-    ax_yus.scatter(yus_dist, yus_elev, color=colors["YUS"], s=50, edgecolors="white", linewidths=0.8, zorder=4)
+    ax_yus.scatter(
+        yus_dist, yus_elev, color=colors["YUS"], s=50, edgecolors="white", linewidths=0.8, zorder=4
+    )
 
     for d, e, _ in zip(yus_dist, yus_elev, yus_sites, strict=True):
         ax_yus.annotate(
-            f"{e} m", xy=(d, e), xytext=(0, 6), textcoords="offset points", fontsize=7, ha="center", color=colors["YUS"]
+            f"{e} m",
+            xy=(d, e),
+            xytext=(0, 6),
+            textcoords="offset points",
+            fontsize=7,
+            ha="center",
+            color=colors["YUS"],
         )
 
     ax_yus.set_xticks(yus_dist)
@@ -204,7 +241,13 @@ def build_static_map(
     ax_mtw.fill_between(mtwilhelm_dist, mtw_elev, alpha=0.25, color=colors["Mt Wilhelm"])
     ax_mtw.plot(mtwilhelm_dist, mtw_elev, color=colors["Mt Wilhelm"], linewidth=2, zorder=3)
     ax_mtw.scatter(
-        mtwilhelm_dist, mtw_elev, color=colors["Mt Wilhelm"], s=50, edgecolors="white", linewidths=0.8, zorder=4
+        mtwilhelm_dist,
+        mtw_elev,
+        color=colors["Mt Wilhelm"],
+        s=50,
+        edgecolors="white",
+        linewidths=0.8,
+        zorder=4,
     )
 
     for d, e, _ in zip(mtwilhelm_dist, mtw_elev, mtw_sites, strict=True):
@@ -221,7 +264,9 @@ def build_static_map(
     ax_mtw.set_xticks(mtwilhelm_dist)
     ax_mtw.set_xticklabels(mtw_sites, rotation=40, ha="right", fontsize=7.5)
     ax_mtw.set_ylabel("Elevation (m a.s.l.)", fontsize=9)
-    ax_mtw.set_title("Mt Wilhelm Transect Profile", fontsize=10, fontweight="bold", color=colors["Mt Wilhelm"])
+    ax_mtw.set_title(
+        "Mt Wilhelm Transect Profile", fontsize=10, fontweight="bold", color=colors["Mt Wilhelm"]
+    )
     ax_mtw.set_ylim(2200, max(mtw_elev) * 1.08)
     ax_mtw.grid(True, linestyle=":", alpha=0.5)
     ax_mtw.spines[["top", "right"]].set_visible(False)
@@ -275,7 +320,12 @@ def build_interactive_map(
     center_lat = (df["lat"].min() + df["lat"].max()) / 2
     center_lon = (df["lon"].min() + df["lon"].max()) / 2
 
-    m = folium.Map(location=[center_lat, center_lon], zoom_start=zoom_start, tiles="OpenTopoMap", attr="OpenTopoMap")
+    m = folium.Map(
+        location=[center_lat, center_lon],
+        zoom_start=zoom_start,
+        tiles="OpenTopoMap",
+        attr="OpenTopoMap",
+    )
 
     # Transect lines
     folium.PolyLine(
@@ -326,7 +376,7 @@ def build_interactive_map(
       <span style="font-size:11px;color:#888;">Click markers for details</span>
     </div>
     """
-    m.get_root().html.add_child(folium.Element(legend_html))
+    m.get_root().html.add_child(folium.Element(legend_html))  # type: ignore[attr-defined]
 
     out_html.parent.mkdir(parents=True, exist_ok=True)
     m.save(str(out_html))

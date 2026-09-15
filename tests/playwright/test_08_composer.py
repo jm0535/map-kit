@@ -1,9 +1,12 @@
 """Test 08: Map composer — attached, detached, lock, export, templates."""
+
 import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -35,20 +38,21 @@ async def main():
 
         # ── Lock/unlock main map ──
         locked_initial = await page.evaluate("mainLocked")
-        report("Composer initial lock state", locked_initial is not None, f"locked={locked_initial}")
+        report(
+            "Composer initial lock state", locked_initial is not None, f"locked={locked_initial}"
+        )
 
         # Unlock
         await page.evaluate("toggleLayoutLock('main')")
         await page.wait_for_timeout(500)
         unlocked = await page.evaluate("mainLocked")
-        report("Unlock composer", unlocked == True, f"unlocked={unlocked}")
+        report("Unlock composer", unlocked is True, f"unlocked={unlocked}")
 
         # Zoom controls appear when unlocked
         zoom_btns = await page.locator("#layout-map .leaflet-control-zoom-in").count()
         report("Zoom buttons when unlocked", zoom_btns == 1, f"count={zoom_btns}")
 
         # Fractional zoom in composer
-        cz0 = await page.evaluate("layoutMap.getZoom()")
         await page.evaluate("layoutMap.setZoom(layoutMap.getZoom() - 2, {animate:false})")
         await page.wait_for_timeout(300)
         cz0b = await page.evaluate("layoutMap.getZoom()")
@@ -65,7 +69,11 @@ async def main():
         await page.wait_for_timeout(500)
         relocked = await page.evaluate("mainLocked")
         zoom_btns2 = await page.locator("#layout-map .leaflet-control-zoom-in").count()
-        report("Re-lock removes zoom buttons", relocked == False and zoom_btns2 == 0, f"locked={relocked} btns={zoom_btns2}")
+        report(
+            "Re-lock removes zoom buttons",
+            relocked is False and zoom_btns2 == 0,
+            f"locked={relocked} btns={zoom_btns2}",
+        )
 
         # ── Paper size change ──
         await page.evaluate("""() => {
@@ -89,7 +97,11 @@ async def main():
             const el = document.getElementById('layout-title');
             return el ? el.textContent : null;
         }""")
-        report("Title input updates layout", title_text and "Test Map" in title_text, f"text='{title_text}'")
+        report(
+            "Title input updates layout",
+            title_text and "Test Map" in title_text,
+            f"text='{title_text}'",
+        )
 
         # ── Legend toggle ──
         await page.evaluate("""() => {
@@ -159,6 +171,7 @@ async def main():
         errs = await close(page)
         report("Composer tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
-print(f"\n=== {COUNTS["pass"]} passed, {COUNTS["fail"]} failed ===")
+print(f"\n=== {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
 sys.exit(1 if COUNTS["fail"] else 0)

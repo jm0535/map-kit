@@ -70,7 +70,7 @@ After import the layer appears in the **Layers** panel and the map zooms to its 
 | Fullscreen | Top-left | Toggle browser fullscreen (`F`) |
 | Measurement tool | Toolbar | Draw polyline or polygon to measure distance / area |
 | Minimap | Right panel (Overview section) | Overview of current viewport. Click to pan main map, double-click to zoom in |
-| Basemap selector | Left panel | Switch between 6 free basemaps (see below) |
+| Basemap selector | Left panel | Switch between 10 free basemaps (see below) |
 | Basemap opacity | Left panel | Slider 0-100% |
 
 **Keyboard shortcuts**: `+` / `−` zoom in/out, `F` toggle fullscreen, `L` toggle left panel, `A` toggle Analysis drawer, `Esc` cancel digitizing / close modals, `Enter` confirm inline rename, `Ctrl+Z` undo, `Ctrl+Y` / `Ctrl+Shift+Z` redo, `Ctrl+D` duplicate selected features. Shortcuts are suppressed when typing in text inputs.
@@ -625,16 +625,22 @@ All sample datasets are available directly from the app: open **Data Sources** i
 ```text
 map-kit/                      # Repository name (app is branded "GeoSpaX")
 ├── index.html                # Full-featured standalone Web GIS (entry point for Vercel + GitHub Pages)
+├── userguide.html            # In-depth illustrated user guide
+├── changelog.html            # Release history
 ├── vercel.json               # Vercel static hosting config (geospax.in4metrix.dev)
 ├── .vercelignore             # Files excluded from the Vercel deployment
 ├── README.md                 # This file
 ├── LICENSE                   # MIT License
 ├── CONTRIBUTING.md           # Contribution guidelines
+├── CITATION.cff              # Citation metadata
 ├── pyproject.toml            # Project config, dependencies, tool settings
+├── requirements.txt          # Runtime dependencies for the api/ serverless function
 ├── Makefile                  # Common development tasks
 ├── .editorconfig             # Editor settings
 ├── .gitignore                # Git ignore rules
 ├── .pre-commit-config.yaml   # Pre-commit hooks
+├── api/
+│   └── sdm.py                # Vercel Python serverless function: MaxEnt SDM endpoint
 ├── js/                       # GeoSpaX JS modules (loaded by index.html)
 │   ├── geospax-conservation.js      # Overlay, protection gap, area units, WLC engine
 │   ├── geospax-conservation-m2.js   # Equal-area, fragmentation, connectivity, change detection
@@ -642,11 +648,22 @@ map-kit/                      # Repository name (app is branded "GeoSpaX")
 │   ├── geospax-project.js           # Provenance stamping, .gspx project save/load, autosave
 │   ├── geospax-raster.js            # Reclassify, Otsu threshold, polygonize
 │   ├── geospax-opendata.js          # Open data connectors (Overpass, GBIF, Natural Earth, WWF, World Bank, USGS)
+│   ├── geospax-gpkg.js              # GeoPackage (.gpkg) import
 │   ├── gsx-select.js                # App-wide dropdown popup replacement (see Technical Notes)
 │   └── gsx-calcfield.js             # Calculate field tool (expression parser + weighted conditions)
-├── samples/
-│   ├── sample_species_richness.geojson   # Demo dataset (see Sample Dataset above)
-│   └── PNG_BIO1_30s.tif                  # WorldClim BIO1 (annual mean temp) for Papua New Guinea
+├── samples/                  # Bundled demo datasets (see Sample Datasets above)
+│   ├── paradisaea_occurrences.geojson    # Emperor Bird-of-paradise — 128 GBIF records (FR422 workflow)
+│   ├── sample_species_richness.geojson   # Demo dataset
+│   ├── butterfly_presences.geojson / vine_host_plants.geojson / stream_water_sources.geojson
+│   ├── png_provinces.geojson / png_protected_areas.geojson
+│   ├── forest_patches.geojson / habitat_survey_grid.geojson
+│   ├── species_occurrences.csv / species_occurrences.xlsx
+│   └── PNG_BIO1_30s.tif / PNG_BIO12_precip.tif / PNG_tree_cover_pct.tif   # PNG rasters
+├── tests/
+│   └── playwright/           # Browser test suite (standalone scripts; see CONTRIBUTING.md)
+├── geospax_conservation_roadmap/  # Conservation module roadmap docs + reference JS copies
+├── practical_assignment/     # FR422 teaching materials
+├── assets/                   # Static assets (logo.svg, og-banner.svg)
 ├── google4e0cf157f76f6227.html  # Google Search Console verification
 ├── vendor/                   # All third-party JS/CSS libraries (no CDN at runtime)
 │   ├── leaflet/
@@ -664,6 +681,9 @@ map-kit/                      # Repository name (app is branded "GeoSpaX")
 │   ├── georaster/
 │   ├── georaster-layer/
 │   ├── shp-write/
+│   ├── turf-6.5.0.min.js     # Turf.js spatial operations
+│   ├── geotiff-2.1.3.js      # GeoTIFF parsing
+│   ├── sqljs/                # SQLite WebAssembly (GeoPackage import)
 │   └── fonts/inter/          # Inter 400/500/600/700 woff2 (vendored from @fontsource/inter)
 ├── src/
 │   ├── make_maps.py          # Legacy script (backward compatible)

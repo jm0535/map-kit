@@ -13,6 +13,10 @@ Returns a GeoJSON FeatureCollection of grid points with a `suitability`
 property (0-1). Uses elapid's MaxEnt if installed, otherwise falls back to a
 logistic-regression presence/pseudo-absence model (numpy + scikit-learn).
 """
+
+# ruff: noqa: N801, N806
+# N801: Vercel's Python runtime requires the handler class to be named `handler`.
+# N806: X / X_pres / Xs etc. are conventional names for feature matrices.
 import json
 from http.server import BaseHTTPRequestHandler
 
@@ -33,8 +37,14 @@ class handler(BaseHTTPRequestHandler):
         self._send(200, {})
 
     def do_GET(self):
-        self._send(200, {"status": "ok", "service": "GeoSpaX MaxEnt SDM",
-                         "usage": "POST presences + env_vars + extent + resolution"})
+        self._send(
+            200,
+            {
+                "status": "ok",
+                "service": "GeoSpaX MaxEnt SDM",
+                "usage": "POST presences + env_vars + extent + resolution",
+            },
+        )
 
     def do_POST(self):
         try:
@@ -53,7 +63,7 @@ class handler(BaseHTTPRequestHandler):
 
             result = run_sdm(presences, env_vars, extent, resolution)
             self._send(200, result)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             self._send(500, {"error": str(e)})
 
 
@@ -121,7 +131,7 @@ def run_logreg_fallback(presences, env_vars, extent, resolution):
     for lng, lat in coords:
         d = np.sqrt((pres_xy[:, 0] - lng) ** 2 + (pres_xy[:, 1] - lat) ** 2)
         d = np.maximum(d, 1e-9)
-        w = 1.0 / (d ** 2)
+        w = 1.0 / (d**2)
         w /= w.sum()
         grid_env.append((X_pres * w[:, None]).sum(axis=0))
 
@@ -137,7 +147,7 @@ def run_logreg_fallback(presences, env_vars, extent, resolution):
             "geometry": {"type": "Point", "coordinates": [c[0], c[1]]},
             "properties": {"suitability": round(float(p), 4)},
         }
-        for c, p in zip(coords, probs)
+        for c, p in zip(coords, probs, strict=True)
     ]
     return {
         "type": "FeatureCollection",
@@ -176,7 +186,7 @@ def run_maxent_elapid(presences, env_vars, extent, resolution):
     grid_env = []
     for lng, lat in coords:
         d = np.maximum(np.sqrt((pres_xy[:, 0] - lng) ** 2 + (pres_xy[:, 1] - lat) ** 2), 1e-9)
-        w = 1.0 / (d ** 2)
+        w = 1.0 / (d**2)
         w /= w.sum()
         grid_env.append((X_pres * w[:, None]).sum(axis=0))
 
@@ -189,7 +199,7 @@ def run_maxent_elapid(presences, env_vars, extent, resolution):
             "geometry": {"type": "Point", "coordinates": [c[0], c[1]]},
             "properties": {"suitability": round(float(p), 4)},
         }
-        for c, p in zip(coords, preds)
+        for c, p in zip(coords, preds, strict=True)
     ]
     return {
         "type": "FeatureCollection",

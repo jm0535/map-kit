@@ -1,10 +1,13 @@
 """Test 18: XLSX import, drag-and-drop, CRS selection, analysis drawer, MaxEnt SDM, composer extras."""
-import asyncio, os, sys, base64
+
+import asyncio, os, sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 from conftest import *
 
 ELEV_GEOJSON = os.path.join(os.path.dirname(__file__), "elev_test.geojson")
 POLY_GEOJSON = os.path.join(os.path.dirname(__file__), "test_polygons.geojson")
+
 
 async def main():
     async with async_playwright() as p:
@@ -29,7 +32,7 @@ async def main():
             importTabularData: typeof importTabularData,
         })""")
         for name, ftype in xlsx_funcs.items():
-            report(f"XLSX {name} exists", ftype == 'function', ftype)
+            report(f"XLSX {name} exists", ftype == "function", ftype)
 
         # ── Drag-and-drop functions ──
         dd_funcs = await page.evaluate("""() => ({
@@ -40,7 +43,7 @@ async def main():
             processFile: typeof processFile,
         })""")
         for name, ftype in dd_funcs.items():
-            report(f"Drag-drop {name} exists", ftype == 'function', ftype)
+            report(f"Drag-drop {name} exists", ftype == "function", ftype)
 
         # Test handleFiles with a mock File object
         handle_files = await page.evaluate("""async () => {
@@ -53,7 +56,7 @@ async def main():
                 return 'ok';
             } catch(e) { return e.message; }
         }""")
-        report("handleFiles with GeoJSON no crash", handle_files == 'ok', handle_files)
+        report("handleFiles with GeoJSON no crash", handle_files == "ok", handle_files)
 
         # ── CRS selection functions ──
         crs_funcs = await page.evaluate("""() => ({
@@ -63,7 +66,7 @@ async def main():
             interpolateEnvAtPoint: typeof interpolateEnvAtPoint,
         })""")
         for name, ftype in crs_funcs.items():
-            report(f"CRS {name} exists", ftype == 'function', ftype)
+            report(f"CRS {name} exists", ftype == "function", ftype)
 
         # Check CRS select element
         crs_sel = await page.locator("#export-crs-select").count()
@@ -73,7 +76,7 @@ async def main():
         pop_crs = await page.evaluate("""() => {
             try { populateCrsSelect(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Populate CRS select no crash", pop_crs == 'ok', pop_crs)
+        report("Populate CRS select no crash", pop_crs == "ok", pop_crs)
 
         # ── Analysis drawer open/close ──
         drawer_funcs = await page.evaluate("""() => ({
@@ -86,15 +89,11 @@ async def main():
             runMaxEntSDM: typeof runMaxEntSDM,
         })""")
         for name, ftype in drawer_funcs.items():
-            report(f"Analysis {name} exists", ftype == 'function', ftype)
+            report(f"Analysis {name} exists", ftype == "function", ftype)
 
         # Open analysis drawer
         await page.evaluate("toggleAnalysisDrawer()")
         await page.wait_for_timeout(500)
-        drawer_open = await page.evaluate("""() => {
-            const el = document.getElementById('analysis-drawer');
-            return el && (el.classList.contains('open') || el.style.transform === 'translateX(0px)' || el.style.display !== 'none');
-        }""")
         report("Analysis drawer opens", True)  # Just check no crash
 
         # Close analysis drawer
@@ -106,19 +105,23 @@ async def main():
         clear_overlays = await page.evaluate("""() => {
             try { clearAnalysisOverlays(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Clear analysis overlays no crash", clear_overlays == 'ok', clear_overlays)
+        report("Clear analysis overlays no crash", clear_overlays == "ok", clear_overlays)
 
         # Test clearAnalysisResults
         clear_results = await page.evaluate("""() => {
             try { clearAnalysisResults(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Clear analysis results no crash", clear_results == 'ok', clear_results)
+        report("Clear analysis results no crash", clear_results == "ok", clear_results)
 
         # Test runMaxEntSDM
         maxent = await page.evaluate("""() => {
             try { runMaxEntSDM(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("MaxEnt SDM no crash", maxent == 'ok' or 'no' in maxent.lower() or 'select' in maxent.lower(), maxent)
+        report(
+            "MaxEnt SDM no crash",
+            maxent == "ok" or "no" in maxent.lower() or "select" in maxent.lower(),
+            maxent,
+        )
 
         # ── Composer extras ──
         await page.evaluate("previewExport()")
@@ -139,7 +142,7 @@ async def main():
             _populateLayoutBasemapSelect: typeof _populateLayoutBasemapSelect,
         })""")
         for name, ftype in composer_extra_funcs.items():
-            report(f"Composer {name} exists", ftype == 'function', ftype)
+            report(f"Composer {name} exists", ftype == "function", ftype)
 
         # Test onLayoutPaperChange
         paper_change = await page.evaluate("""() => {
@@ -149,7 +152,7 @@ async def main():
                 return 'ok';
             } catch(e) { return e.message; }
         }""")
-        report("Paper size change no crash", paper_change == 'ok', paper_change)
+        report("Paper size change no crash", paper_change == "ok", paper_change)
 
         # Test onLayoutExportFormatChange
         fmt_change = await page.evaluate("""() => {
@@ -159,7 +162,7 @@ async def main():
                 return 'ok';
             } catch(e) { return e.message; }
         }""")
-        report("Export format change no crash", fmt_change == 'ok', fmt_change)
+        report("Export format change no crash", fmt_change == "ok", fmt_change)
 
         # Test onLayoutScaleTextChange
         scale_text = await page.evaluate("""() => {
@@ -169,7 +172,7 @@ async def main():
                 return 'ok';
             } catch(e) { return e.message; }
         }""")
-        report("Scale text toggle no crash", scale_text == 'ok', scale_text)
+        report("Scale text toggle no crash", scale_text == "ok", scale_text)
 
         # Test onLayoutGridIntervalChange
         grid_int = await page.evaluate("""() => {
@@ -179,7 +182,7 @@ async def main():
                 return 'ok';
             } catch(e) { return e.message; }
         }""")
-        report("Grid interval change no crash", grid_int == 'ok', grid_int)
+        report("Grid interval change no crash", grid_int == "ok", grid_int)
 
         # Test onLayoutAttributionChange
         attr_change = await page.evaluate("""() => {
@@ -189,25 +192,25 @@ async def main():
                 return 'ok';
             } catch(e) { return e.message; }
         }""")
-        report("Attribution change no crash", attr_change == 'ok', attr_change)
+        report("Attribution change no crash", attr_change == "ok", attr_change)
 
         # Test setComposerAutoUpdate
         auto_update = await page.evaluate("""() => {
             try { setComposerAutoUpdate(true); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Composer auto-update no crash", auto_update == 'ok', auto_update)
+        report("Composer auto-update no crash", auto_update == "ok", auto_update)
 
         # Test requestComposerSync
         sync_result = await page.evaluate("""() => {
             try { requestComposerSync(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Request composer sync no crash", sync_result == 'ok', sync_result)
+        report("Request composer sync no crash", sync_result == "ok", sync_result)
 
         # Test setLayoutBasemap
         set_basemap = await page.evaluate("""() => {
             try { setLayoutBasemap(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Set layout basemap no crash", set_basemap == 'ok', set_basemap)
+        report("Set layout basemap no crash", set_basemap == "ok", set_basemap)
 
         # ── Profile functions ──
         profile_funcs = await page.evaluate("""() => ({
@@ -217,13 +220,13 @@ async def main():
             rebuildProfileFromCheckboxes: typeof rebuildProfileFromCheckboxes,
         })""")
         for name, ftype in profile_funcs.items():
-            report(f"Profile {name} exists", ftype == 'function', ftype)
+            report(f"Profile {name} exists", ftype == "function", ftype)
 
         # Test unregisterProfile
         unreg = await page.evaluate("""() => {
             try { unregisterProfile('upload-0'); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Unregister profile no crash", unreg == 'ok', unreg)
+        report("Unregister profile no crash", unreg == "ok", unreg)
 
         # Re-register - with the fix, registerProfile validates input and skips if no data
         reg = await page.evaluate("""() => {
@@ -235,33 +238,33 @@ async def main():
                 return 'no layers';
             } catch(e) { return e.message; }
         }""")
-        report("Re-register profile no crash", reg == 'ok' or reg == 'no layers', reg)
+        report("Re-register profile no crash", reg == "ok" or reg == "no layers", reg)
 
         # ── Citation ──
         cite_func = await page.evaluate("typeof populateCitationFormats")
-        report("populateCitationFormats exists", cite_func == 'function', cite_func)
+        report("populateCitationFormats exists", cite_func == "function", cite_func)
 
         cite_result = await page.evaluate("""() => {
             try { populateCitationFormats(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Populate citation formats no crash", cite_result == 'ok', cite_result)
+        report("Populate citation formats no crash", cite_result == "ok", cite_result)
 
         # ── Toast ──
         toast_result = await page.evaluate("""() => {
             try { showToast('Test toast', 'success'); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Show toast no crash", toast_result == 'ok', toast_result)
+        report("Show toast no crash", toast_result == "ok", toast_result)
 
         # ── Processing overlay ──
         show_proc = await page.evaluate("""() => {
             try { showProcessing('Test processing'); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Show processing no crash", show_proc == 'ok', show_proc)
+        report("Show processing no crash", show_proc == "ok", show_proc)
 
         hide_proc = await page.evaluate("""() => {
             try { hideProcessing(); return 'ok'; } catch(e) { return e.message; }
         }""")
-        report("Hide processing no crash", hide_proc == 'ok', hide_proc)
+        report("Hide processing no crash", hide_proc == "ok", hide_proc)
 
         # clearAll is nested inside createMeasureTool - not global
         report("Clear all (nested)", True, "inside createTool closure")
@@ -269,6 +272,7 @@ async def main():
         errs = await close(page)
         report("Extended tests no errors", not errs, str(errs))
 
+
 asyncio.run(main())
 print(f"\n=== Extended tests: {COUNTS['pass']} passed, {COUNTS['fail']} failed ===")
-sys.exit(1 if COUNTS['fail'] else 0)
+sys.exit(1 if COUNTS["fail"] else 0)
