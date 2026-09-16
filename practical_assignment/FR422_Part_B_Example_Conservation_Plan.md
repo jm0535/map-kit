@@ -2,7 +2,7 @@
 
 FR422 Forest Wildlife and Habitat, Semester 2, 2026
 
-EXAMPLE ONLY. This report was prepared by the lecturer as a worked example using the Week 9 training species (Emperor Bird-of-paradise, *Paradisaea guilielmi*) and the training-file maps from the GeoSpaX step-by-step guide. Do not submit this report. Your Part B must use your own issued species, your own maps, your own thresholds, and your own citations. The structure, the depth, and the way each claim is tied to a map or a cited source are what you should copy.
+EXAMPLE ONLY. This report was prepared by the lecturer using the training species (Emperor Bird-of-paradise, *Paradisaea guilielmi*) and the training-file maps. Do not submit this report. Your Part B must use your own species, maps, thresholds, and citations. Copy the structure and the way each claim is tied to a map or source, not the content.
 
 Species: Emperor Bird-of-paradise, *Paradisaea guilielmi* (Cabanis, 1888)
 IUCN Red List category: Near Threatened (BirdLife International, n.d.; accessed 15 September 2026)
@@ -10,83 +10,55 @@ Student: [Surname]    Date: [submission date]
 
 ---
 
-## 1. Introduction and species profile
+## 1. Species and study area
 
-The Emperor Bird-of-paradise is a bird-of-paradise endemic to the Huon Peninsula of Papua New Guinea, where it is recorded from the Saruwaged, Finisterre, Rawlinson and Cromwell Ranges (Australian Museum, n.d.). It lives in hill and lower montane forest, roughly 450 to 1,500 m elevation, mainly 670 to 1,350 m (Australian Museum, n.d.). It can also persist in small forest patches within garden mosaics. The IUCN lists it as Near Threatened because of its restricted range and dependence on intact forest (BirdLife International, n.d.).
+The Emperor Bird-of-paradise is endemic to the Huon Peninsula, PNG, in hill and lower montane forest at 450 to 1,500 m, mainly 670 to 1,350 m (Australian Museum, n.d.). The IUCN lists it as Near Threatened due to its restricted range and dependence on intact forest (BirdLife International, n.d.).
 
-This plan is a desk-based assessment. It uses the five maps produced in Part A, the statistics printed by GeoSpaX, and published literature. No fieldwork was done and no communities were consulted. The plan follows the systematic conservation planning (SCP) framework from the GIS practical: collect biodiversity data, describe the environment, identify spatial pattern, score habitat quality, and compare habitat with existing protection (Margules and Pressey, 2000). The output is a set of recommendations based on what the maps show, not a field-verified management plan.
+The study area is the convex hull of 128 GBIF records (56 unique sites) on the Huon Peninsula, Morobe Province (Figure 1). Hull area is 776,895 ha (EPSG:32755). This is the area of the enclosing polygon, not forest area and not the species' range. The plan is desk-based, written from the five maps and literature. No fieldwork was done and no communities were consulted.
 
-The plan works at the hull scale, not the national scale, because the species is a Huon Peninsula endemic. A national plan would cover provinces where the species does not occur. The SCP principle of efficiency asks for the smallest area that secures the most habitat (Margules and Pressey, 2000). Here, that means a single peninsula of hill forest rather than the whole of Morobe Province or PNG.
+The five maps build on each other: Map 1 defines the planning boundary, Map 2 describes the environment at each record, Map 3 shows where records cluster, Map 4 ranks habitat quality, and Map 5 compares habitat with existing protection. The conservation plan reads all five together.
 
-The five maps are not independent. Each one builds on the previous: the study area (Map 1) defines the planning boundary, the attribute map (Map 2) describes the environment at each record, the spatial pattern (Map 3) shows where records cluster, the habitat proxy (Map 4) ranks which sites have the best habitat, and the gap analysis (Map 5) compares that habitat with existing protection. The conservation plan reads all five together.
+## 2. Map results
 
-## 2. Methods
+Environmental gradient (Figure 2). tree_cover_pct ranges 1 to 100% (mean 92.6, median 98.5). 115 of 128 records have tree cover at or above 90%. The species is recorded almost exclusively in closed-canopy forest, with a few low-cover records marking garden-forest edges. Elevation spans 15 to 2,664 m and rainfall 2,230 to 3,951 mm, matching the published habitat description of hill and lower montane forest (Australian Museum, n.d.). The environmental attributes are point samples, so the map shows conditions at the record sites only, not a continuous surface.
 
-Data. The analysis used the issued species GeoJSON (128 records, 56 unique sites; GBIF teaching extract, 9 September 2026), imported into GeoSpaX v1.4.2 (accessed 15 September 2026). The file supplies elevation_m, tree_cover_pct and rainfall_mm at each record, plus stateProvince. The training file is concentrated on the Huon Peninsula (Morobe Province), so no mainland-island subset was required.
+Spatial pattern (Figure 3). Gi* (distance band 53.87 km, FDR-corrected) found 100 hot spots at 99% confidence, 14 cold spots at 99%, and 14 not significant (89.1% significant, mean z-score 2.18). The hot spots form a continuous high-tree-cover block across the peninsula's hill forest. This is the priority forest for protection. The cold spots mark degraded or open habitat. Stacked coordinates are present (128 records, 56 sites), so the results are reported with that caveat.
 
-Analysis CRS. The file is supplied in EPSG:4326, in which no area was calculated. The layer was exported to WGS 84 / UTM zone 55S (EPSG:32755) and all distance-based statistics were computed in that projected CRS.
+Habitat proxy (Figure 4). habitat_score ranges 0 to 3 (mean 2.742). 123 of 128 records score at or above 2, meaning most recorded sites meet at least two of the three environmental criteria. The proxy combines elevation, tree cover, and rainfall into one ranking that can be mapped and compared with protection status. It is a proxy of known sites only and does not predict where the species could occur.
 
-Map 1 (study area). A convex hull of the filtered points was computed with the Convex Hull tool (7 vertices; perimeter 356.95 km). Site codes were labelled from the `site` field.
+Gap analysis (Figure 5 and 6). Of the 776,895 ha hull, 43,755 ha (5.6%) is inside protected areas (Nusareng and YUS). 734,995 ha (94.4%) is unprotected. Priority Area Identification found 111 of 128 high-quality records outside any protected area, 12 already protected, and 5 below the score threshold. The gap between habitat quality and existing protection is large: most high-quality recorded habitat has no formal protection.
 
-Map 2 (attribute map). tree_cover_pct was classified into five equal-interval graduated classes.
+## 3. Ranked threats
 
-Map 3 (spatial pattern). Getis-Ord Gi* was run on tree_cover_pct with a distance-band weights matrix (auto-computed band 53.87 km) and the Benjamini-Hochberg false discovery rate (FDR) correction applied (Getis and Ord, 1992).
+1. Logging of hill forest (rank 1). The species' core habitat coincides with the 99% tree-cover hot-spot block in Figure 3. Logging removes this block. Ranked first because 94.4% of the hull is unprotected (Figure 5) and logging is the identified threat for this species (Australian Museum, n.d.).
 
-Map 4 (habitat proxy). A habitat_score field was calculated with the GeoSpaX Calculate Field tool (weighted conditions): elevation_m between 0 and 2,000 m (1 point), tree_cover_pct at or above 50% (1 point), and rainfall_mm at or above 2,500 mm (1 point), equal weights. This is a transparent rule-based proxy, not a species distribution model.
+2. Hunting for ceremonial plumes (rank 2). Birds-of-paradise are hunted for traditional headdresses and cultural performance (Supuma, 2018). This is from literature, not the lab file. Ranked second because hunting is dispersed while logging removes habitat permanently and at scale.
 
-Map 5 (gap analysis). The shared WDPA layer (PNG_protected_areas.gpkg) was loaded and the Protection Gap and Priority Area Identification tools were run with the convex hull as the habitat layer and a minimum habitat score of 2.
+3. Garden expansion at forest edges (rank 3). The 14 cold spots in Figures 2 and 3 mark garden-forest edges with reduced canopy. Ranked third because the species persists in forest pockets within gardens (Australian Museum, n.d.), so garden-edge habitat is degraded but not lost.
 
-## 3. Results: reading the five maps
+No other threats are ranked. Climate change is not ranked because the file has no time series or future-climate layer, so no effect can be calculated.
 
-Study area (Figure 1). The convex hull encloses the Morobe/Huon Peninsula cluster of records and defines the planning region for this assessment. The hull area (776,895 ha, EPSG:32755) is the area of the enclosing polygon only. It is not forest area and not the species' range.
+## 4. Conservation actions
 
-Environmental gradient (Figure 2). Graduated classes of tree_cover_pct show that records span 1 to 100% tree cover, but the distribution is strongly skewed: 115 of 128 records have tree_cover_pct at or above 90 (mean 92.6, median 98.5, minimum 0). The species is recorded almost exclusively in closed-canopy forest, with a small number of low-cover records marking garden-forest edges. Elevation in the file spans 15 to 2,664 m and rainfall 2,230 to 3,951 mm, so the recorded environment is consistently wet and mostly mid-elevation, matching the published habitat description of hill and lower montane forest (Australian Museum, n.d.). Because the environmental attributes are point samples, the map shows conditions at the record sites only, not a continuous surface.
+Action 1: Protect the hot-spot block. Establish a Wildlife Management Area under the Fauna (Protection and Control) Act 1966 over the contiguous 99% Gi* hot-spot block (Figure 3), targeting the 111 unprotected high-quality records (Figure 6). This addresses logging (threat 1) by controlling habitat use, and hunting (threat 2) by allowing WMA rules to regulate plume hunting seasons.
 
-Spatial pattern (Figure 3). The Gi* analysis (distance band 53.87 km, FDR-corrected) identified 100 hot spots at 99% confidence and 14 cold spots at 99% confidence, with 14 records not significant (114 of 128 significant, 89.1%; mean Gi* z-score 2.18). Almost nine in ten records are significant, which means the spatial pattern is strongly non-random. The hot spots form a continuous high-tree-cover block across the peninsula's hill forest. This is the priority forest for protection. The cold spots mark clusters of degraded or open habitat. Because the file has 128 records and 56 unique sites, stacked coordinates are present, and the results are reported with that caveat.
+Action 2: Restore the cold-spot cluster. Declare a Conservation Area under the Conservation Areas Act 1978 over the degraded cold-spot cluster (Figure 3) with community-led forest restoration. This adds habitat that Action 1 does not cover, targeting the low-tree-cover cluster rather than the intact block.
 
-Habitat proxy (Figure 4). The habitat_score ranges 0 to 3 (mean 2.742). 123 of 128 records score at or above 2, meaning most recorded sites meet at least two of the three environmental criteria. The proxy converts three separate environmental fields into one ranking that can be mapped and compared with protection status. This is a proxy score of known sites only. It does not predict where the species could occur.
+Action 3: Protect forest patches in the garden mosaic. Retain forest patches at the low-cover sites (Figure 2) through community forest agreements. The species persists in these pockets within gardens (Australian Museum, n.d.), so these patches connect the two larger actions and improve connectivity.
 
-## 4. Gap analysis
+The three actions cover the intact hill forest, the degraded cluster, and the garden mosaic. They do not duplicate the existing Nusareng or YUS protected areas, and they focus on the smallest area holding most high-quality records.
 
-The Protection Gap tool overlaid the hull against the WDPA protected-area layer (Figure 5). Of the 776,895 ha hull extent, 43,755 ha (5.6%) falls inside existing protected areas (Nusareng and YUS); 734,995 ha (94.4%) is unprotected. The Priority Area Identification tool (minimum score 2) found 111 of 128 high-quality records outside any protected area, 12 already protected, and 5 below the score threshold (Figure 6). The gap between habitat quality and existing protection is large: most high-quality recorded habitat has no formal protection.
+Land in PNG is under customary tenure, meaning the clans who live on the land own it. The file records no clan names, so this plan cannot name them. Any action would need clan consent in practice.
 
-## 5. Ranked threats
+## 5. Monitoring
 
-1. Logging of hill forest (rank 1). The species' core habitat is hill and lower montane forest (Australian Museum, n.d.), which coincides with the 99% tree-cover hot-spot block in Figure 3. Any loss of this block removes the hot-spot cluster identified in Map 3. This threat is ranked first because 94.4% of the hull extent is unprotected (Figure 5) and logging is the threat explicitly identified for this species (Australian Museum, n.d.).
+This is a desk-based plan, so monitoring means re-running the GeoSpaX analysis if new data comes in. Re-run Gi* on updated tree cover at the same 53.87 km band to see if the hot-spot count changes. Re-run the gap analysis after any new protected areas are gazetted to see if the protected proportion rises above 5.6%.
 
-2. Hunting for ceremonial plumes (rank 2). Birds-of-paradise are hunted in PNG for traditional headdresses and cultural performance. The Emperor Bird-of-paradise is among the species affected. Historically such hunting was small-scale and customary-regulated, but demand and population growth are increasing pressure (Supuma, 2018). This threat is from literature, not from the lab file: the issued file records no hunting. It is ranked second because hunting pressure is dispersed, whereas logging removes habitat permanently and at scale.
+Action 1 has failed if the 99% hot-spot count drops below 90 of 128 within five years, or if the protected proportion stays at 5.6% two years after gazettal. Action 2 has failed if the cold-spot count exceeds 14. Action 3 has failed if records with tree_cover_pct below 50 exceed 13. These thresholds come from the GeoSpaX results in this report.
 
-3. Garden expansion at forest edges (rank 3). The 14 cold spots and the low-cover records in Figures 2 and 3 mark forest edges and garden mosaics where canopy cover is reduced. This is a local, slow-moving threat compared with logging. It is ranked third because the species can persist in forest pockets within gardens (Australian Museum, n.d.), so garden-edge habitat is degraded but not necessarily lost.
+## 6. Limitations
 
-No other threats are ranked. Climate change is not ranked because the file has no time series and no future-climate layer, so no effect can be calculated from it. Any statement about climate effects on this species would need to come from literature outside the scope of this practical. The three threats ranked here are the ones for which evidence is available either in the maps or in the cited literature for this species.
-
-## 6. Proposed conservation actions
-
-Action 1: Protect the hot-spot block. Establish a Wildlife Management Area over the contiguous 99% Gi* hot-spot block visible in Figure 3. This block covers the hill forest of the Saruwaged-Cromwell ranges interior. It targets the 111 high-quality, unprotected records identified in Figure 6 (elevation band mainly 670 to 1,350 m; Australian Museum, n.d.). This action addresses logging (threat 1) by placing controls on the largest intact forest block in the hull, and hunting (threat 2) by allowing WMA rules to regulate plume hunting seasons.
-
-Action 2: Restore the cold-spot cluster. Declare a Conservation Area over the degraded cold-spot cluster identified in Figure 3, with community-led forest restoration. This action targets the low-tree-cover cluster rather than the intact block, so it adds habitat that Action 1 does not cover.
-
-Action 3: Protect forest patches in the garden mosaic. Negotiate community forest agreements to retain forest patches at the low-cover sites visible in Figure 2. The species persists in forest pockets within gardens (Australian Museum, n.d.), so these patches connect the two larger actions and improve connectivity across the planning region. This action is the smallest of the three but addresses the gradual threat of garden expansion into forest edges.
-
-The three actions cover the intact hill forest (high-cover stratum), the degraded cluster (low-cover stratum), and the garden mosaic (connectivity). They do not duplicate the existing Nusareng or YUS protected areas, and they focus on the smallest area holding most high-quality records.
-
-## 7. Legal instruments and land tenure
-
-Action 1 uses a Wildlife Management Area under the Fauna (Protection and Control) Act 1966. This fits logging because a WMA can set rules controlling habitat use and hunting. Action 2 uses a Conservation Area under the Conservation Areas Act 1978, which fits habitat restoration. The Protected Areas Act 2023 is the newer law and can be used for either action.
-
-Nearly all land in PNG is under customary tenure, meaning the clans who live on the land own it. Any conservation action needs the consent of those clans. The issued file does not record clan names, so this plan cannot name them. When an action moves from desk plan to the field, the first step is to identify and consult the customary landowners.
-
-## 8. Monitoring plan
-
-This is a desk-based plan, so monitoring means re-running the GeoSpaX analysis if new data comes in.
-
-What to remeasure. (a) Re-run Gi* on updated tree cover data at the same 53.87 km band to see if the hot-spot count changes. (b) Re-run the gap analysis after any new protected areas are gazetted to see if the protected proportion rises above 5.6%. (c) Re-run the habitat score if new environmental data is available.
-
-How to know the action is failing. Action 1 has failed if the 99% hot-spot count drops below 90 of 128 records within five years, or if the protected proportion stays at 5.6% two years after gazettal. Action 2 has failed if the cold-spot count increases above 14. Action 3 has failed if the number of records with tree_cover_pct below 50 increases above 13. These thresholds come directly from the GeoSpaX results in this report. If new data is loaded and re-analysed, the same thresholds can be checked. This is a desk-based monitoring approach: it does not require field visits, only updated data and a re-run of the same tools.
-
-## 9. Limitations
-
-The data are a GBIF teaching extract, not a census: 128 records at 56 unique sites, with stacked coordinates. The file has no forest-change layer, so no forest-loss hectares are reported. The file has no protected-area layer, so the WDPA layer was loaded for Map 5. No area was calculated in EPSG:4326; all areas are EPSG:32755. The hull includes non-forest area and ocean-adjacent land, so hull area is not habitat area. The habitat proxy uses a broad elevation band (0 to 2,000 m) for the training example; a literature-based band of 670 to 1,350 m (Australian Museum, n.d.) would be more defensible. The proxy is not a species distribution model. This is a desk-based plan written from maps and literature, not a field assessment. It does not include community consultation, ground-truthing, or local ecological knowledge. Any move to implement the actions would require field surveys, clan consultation, and verification of the species' current distribution.
+GBIF teaching extract, not a census. 128 records at 56 sites with stacked coordinates. No forest-change layer, no field-verified data. The plan is desk-based, not a field assessment. It does not include community consultation, ground-truthing, or local ecological knowledge. The habitat proxy is not a species distribution model. Hull area is not habitat area. Any move to implement the actions would require field surveys and clan consultation.
 
 ---
 
@@ -138,7 +110,7 @@ UNEP-WCMC, and IUCN. (2026). *The World Database on Protected Areas (WDPA)* [Dat
 
 ![Figure 1](final_guide_images/image4.png)
 
-Figure 1. Map 1, Study area and sites. Convex hull (7 vertices, perimeter 356.95 km) of the *P. guilielmi* records, with site codes labelled. CRS: EPSG:32755. Source: GBIF PNG teaching extract, 9 September 2026, not a census.
+Figure 1. Map 1, Study area and sites. Convex hull of *P. guilielmi* records. CRS: EPSG:32755. Source: GBIF PNG teaching extract, 9 September 2026, not a census.
 
 ![Figure 2](final_guide_images/image8.png)
 
@@ -150,12 +122,12 @@ Figure 3. Map 3, Spatial pattern. Getis-Ord Gi* on tree_cover_pct, distance band
 
 ![Figure 4](final_guide_images/image33.png)
 
-Figure 4. Map 4, Habitat proxy score (habitat_score 0 to 3) from elevation, tree cover and rainfall criteria. This is a proxy of known GBIF points, not a species distribution model. Source: GBIF PNG teaching extract, 9 September 2026, not a census.
+Figure 4. Map 4, Habitat proxy score (habitat_score 0 to 3). Not a species distribution model. Source: GBIF PNG teaching extract, 9 September 2026, not a census.
 
 ![Figure 5](final_guide_images/image26.png)
 
-Figure 5. Protection Gap results: total hull habitat 776,895 ha, inside protected areas 43,755 ha (5.6%), gap 734,995 ha (94.4%). Protected areas intersected: Nusareng and YUS. Source: WDPA (UNEP-WCMC) via FR422 shared data package.
+Figure 5. Protection Gap results: hull 776,895 ha, inside protected areas 43,755 ha (5.6%), gap 734,995 ha (94.4%). Protected areas: Nusareng and YUS. Source: WDPA (UNEP-WCMC).
 
 ![Figure 6](final_guide_images/image23.png)
 
-Figure 6. Priority Area Identification results: 128 total points, 111 priority (high-quality and unprotected), 12 already protected, 5 below score threshold of 2. Source: GBIF teaching extract; WDPA (UNEP-WCMC).
+Figure 6. Priority Area Identification: 128 total points, 111 priority (high-quality and unprotected), 12 already protected, 5 below threshold. Source: GBIF teaching extract; WDPA (UNEP-WCMC).
