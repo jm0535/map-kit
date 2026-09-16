@@ -984,7 +984,7 @@ Fill in the provenance table with:
 - [ ] Statistical outputs from the Analysis Results panel (descriptive statistics, Gi* or LISA class counts, habitat-score min/max/mean, protection-gap figures) placed in the Part B report body
 - [ ] Provenance table with GeoSpaX version and access date (inside the report or as a one-page attachment)
 - [ ] Three thresholds, three weights, and citations written in the report
-- [ ] No forest-loss hectares, no protected-area percentage, no clan names unless from a cited source
+- [ ] No forest-loss hectares, no protected-area percentage, no invented numbers
 - [ ] Gap analysis run with WDPA layer, protected proportion reported with citation
 - [ ] Priority areas identified and named in the conservation plan
 

@@ -70,9 +70,11 @@ Action 3: Riparian and garden-edge forest protection agreements. Negotiate commu
 
 The three actions cover the intact hill forest (representation of the high-cover stratum), the degraded cluster (representation of the low-cover stratum), and the garden mosaic (connectivity). They duplicate none of the existing Nusareng or YUS protected areas (complementarity) and concentrate on the smallest area holding most high-quality records (efficiency).
 
-## 7. Legal instruments and customary tenure
+## 7. Legal instruments and land tenure
 
-Action 1 uses the WMA instrument under the Fauna (Protection and Control) Act 1966, which fits threat 1 (logging) because a WMA is gazetted with rules controlling both habitat use and take of protected fauna. Action 2 uses the Conservation Areas Act 1978, which fits habitat restoration. Where gazettal timing is critical, the Protected Areas Act 2023 provides the modern framework for either action. Nearly all land in PNG is held under customary tenure. The issued file records no tenure and no landowner names, so this plan cannot assign an owner. Both actions must proceed through the consent of the customary clans within whose land the target areas fall, and the plan names no clan or hectare target that was not calculated from the data.
+Action 1 uses a Wildlife Management Area under the Fauna (Protection and Control) Act 1966. This fits threat 1 (logging) because a WMA can set rules controlling both habitat use and hunting. Action 2 uses a Conservation Area under the Conservation Areas Act 1978, which fits habitat restoration. The Protected Areas Act 2023 is the newer law and can be used for either action.
+
+Nearly all land in PNG is held under customary tenure, meaning the clans who live on the land own it. Any conservation action needs the consent of those clans. The issued file does not record clan names or landowner names, so this plan cannot name them. The plan names no clan and no hectare target that was not calculated from the data. When the action moves to the field, the first step is to identify and consult the customary landowners.
 
 ## 8. Monitoring plan
 
