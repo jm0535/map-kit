@@ -4,6 +4,8 @@ FR422 Forest Wildlife and Habitat, Semester 2, 2026
 
 **EXAMPLE ONLY.** Do not submit this report. Your Part B must use your own species, maps, thresholds, and citations. Copy the structure, not the content.
 
+**How to use this example:** Read it to see the structure and the length to aim for (about 800 to 1,000 words). Each section does one job. Write in full sentences, one idea per paragraph. Use active voice ("I propose", "The map shows"). Keep it simple and direct.
+
 **Species:** Emperor Bird-of-paradise, *Paradisaea guilielmi* (Cabanis, 1888)
 **IUCN Red List category:** Near Threatened (BirdLife International, n.d.; accessed 15 September 2026)
 **Student:** [Full Name]
