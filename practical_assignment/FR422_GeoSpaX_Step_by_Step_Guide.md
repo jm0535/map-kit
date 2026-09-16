@@ -200,21 +200,21 @@ GeoSpaX has three main areas. Knowing where each tool lives will save you time:
 
 5. If the count or fields do not match, you have the wrong file. Stop and reload the correct issued file.
 
-#### Field dictionary — what each attribute means
+#### Field dictionary - what each attribute means
 
 Your species GeoJSON contains point features (one per GBIF occurrence record). Each point has the following attributes. Understanding what these fields mean is essential for choosing thresholds in the habitat-score calculation (Map 4) and for writing your conservation plan (Part B).
 
 | Field | Type | Unit | What it means | Why it matters for your species |
 | --- | --- | --- | --- | --- |
-| `site` | Text | — | Site code or locality name from the GBIF record | Identifies individual sampling sites. Use these codes to name priority areas in Part B. |
-| `gbifID` | Text | — | Unique GBIF occurrence record identifier | Distinguishes individual records. Multiple records can share the same site. |
-| `stateProvince` | Text | — | PNG province where the record falls (e.g., Morobe, Western) | Used to filter by landmass or province before analysis. Different provinces have different threats. |
+| `site` | Text | - | Site code or locality name from the GBIF record | Identifies individual sampling sites. Use these codes to name priority areas in Part B. |
+| `gbifID` | Text | - | Unique GBIF occurrence record identifier | Distinguishes individual records. Multiple records can share the same site. |
+| `stateProvince` | Text | - | PNG province where the record falls (e.g., Morobe, Western) | Used to filter by landmass or province before analysis. Different provinces have different threats. |
 | `elevation_m` | Number | metres | Elevation above sea level at the record point. Derived from WorldClim 2.1 elevation surface. | Many forest species are restricted to an elevation band (e.g., lowland 0–800 m, montane 1000–2000 m). Use this to set your habitat-score threshold. |
 | `tree_cover_pct` | Number | % (0–100) | Tree-canopy cover percentage at the record point. Derived from ESA WorldCover 2021 (class 10 = tree cover). | Higher values mean denser forest. Forest-dependent species typically require ≥ 50% or ≥ 75% canopy cover. |
 | `rainfall_mm` | Number | mm/year | Total annual rainfall at the record point. Derived from WorldClim 2.1 BIO12. | Moisture-dependent species need high rainfall (e.g., ≥ 2500 mm/year). Dry-tolerant species can survive lower values. |
 | `bio1` | Number | °C | Annual mean temperature at the record point. WorldClim 2.1 BIO1. Averaged from 1970–2000 monthly means. | Lower values = cooler sites (usually higher elevation). Species restricted to montane forest have a lower temperature limit. |
 | `bio15` | Number | (coefficient of variation × 100) | Precipitation seasonality at the record point. WorldClim 2.1 BIO15. Higher values mean more variation between wet and dry months. | High seasonality means a pronounced dry season. Species sensitive to dry-season stress may be absent from high-BIO15 areas. |
-| `worldcover_label` | Text | — | ESA WorldCover 2021 land-cover class at the record point (e.g., "Tree cover", "Cropland", "Grassland") | Confirms whether the record falls in forest or non-forest. Use this to check for records in degraded or converted habitat. |
+| `worldcover_label` | Text | - | ESA WorldCover 2021 land-cover class at the record point (e.g., "Tree cover", "Cropland", "Grassland") | Confirms whether the record falls in forest or non-forest. Use this to check for records in degraded or converted habitat. |
 | `year` | Number | year | Year the GBIF occurrence was recorded | Older records may no longer reflect current habitat. Recent records (post-2000) are more reliable for conservation planning. |
 
 > **Note:** The environmental fields (`elevation_m`, `tree_cover_pct`, `rainfall_mm`, `bio1`, `bio15`, `worldcover_label`) are extracted from global datasets at each GBIF point. They are teaching extracts, not field measurements. Cite WorldClim 2.1 and ESA WorldCover 2021 in your provenance table.
@@ -497,19 +497,19 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 3. Set the **Analysis variable** to tree_cover_pct
 4. Leave **Apply FDR correction** (Benjamini-Hochberg) **checked**. Write in your report that FDR was applied.
 
-**Note:** **Distance band.** For this assignment, students should use **Distance band** — not K-nearest neighbours.
+**Note:** **Distance band.** For this assignment, students should use **Distance band** - not K-nearest neighbours.
 
 > *Why?*
 >
-> 1. **The guide's training file example only works with distance band** — 100 hot spots at 99%, 14 cold spots at 99%, 14 not significant, band = 53.87 km. KNN k=8 produces 0 hot spots on this dataset.
+> 1. **The guide's training file example only works with distance band** - 100 hot spots at 99%, 14 cold spots at 99%, 14 not significant, band = 53.87 km. KNN k=8 produces 0 hot spots on this dataset.
 >
-> 2. **The math** — with KNN k=8, each point has only 9 neighbours (including itself). The Gi* z-score scales with neighbour count. With 9 neighbours, the maximum possible z-score is ~1.14 — below even the 90% threshold (1.65). Hot spots are mathematically impossible to detect.
+> 2. **The math** - with KNN k=8, each point has only 9 neighbours (including itself). The Gi* z-score scales with neighbour count. With 9 neighbours, the maximum possible z-score is ~1.14 - below even the 90% threshold (1.65). Hot spots are mathematically impossible to detect.
 >
-> 3. **The data** — tree_cover_pct values are mostly near 99 (mean 92.6, 115 of 128 points ≥ 90). The distance band gives each point ~40–80 neighbours, which provides enough statistical power to distinguish the high-value clusters from the few low-value points.
+> 3. **The data** - tree_cover_pct values are mostly near 99 (mean 92.6, 115 of 128 points ≥ 90). The distance band gives each point ~40–80 neighbours, which provides enough statistical power to distinguish the high-value clusters from the few low-value points.
 >
 > *When would KNN be appropriate?*
 >
-> KNN k=8 is still a valid choice for **other datasets** — ones with more variable data, fewer points, or irregular spacing. But for the ***P. guilielmi*** training file in FR422, students must use **Distance band** to get the results the guide describes.
+> KNN k=8 is still a valid choice for **other datasets** - ones with more variable data, fewer points, or irregular spacing. But for the ***P. guilielmi*** training file in FR422, students must use **Distance band** to get the results the guide describes.
 
 ### Step 3: Run Getis-Ord Gi*
 
@@ -542,7 +542,7 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 >
 > **Distance Band Results (Displayed in the Analysis Results tab on bottom panel)**
 >
-> **Getis-Ord Gi\* — Hot Spot Analysis**
+> **Getis-Ord Gi\* - Hot Spot Analysis**
 >
 > **data: 128 features · attribute: tree_cover_pct**
 >
@@ -592,7 +592,7 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 >
 > **Proportion significant: 0.891**
 >
-> **89.1% of features are significant. A substantial proportion — the spatial pattern is strongly non-random.**
+> **89.1% of features are significant. A substantial proportion - the spatial pattern is strongly non-random.**
 >
 > **--- Interpretation ---**
 >
@@ -600,7 +600,7 @@ LISA (Local Indicators of Spatial Association, based on Local Moran's I) does so
 >
 > **--- Conservation Relevance ---**
 >
-> **Hot spots identify priority areas for conservation — locations where tree_cover_pct is significantly high and surrounded by similarly high values. Cold spots may indicate areas of lower priority or different management needs. FDR correction ensures these results are robust to multiple testing.**
+> **Hot spots identify priority areas for conservation - locations where tree_cover_pct is significantly high and surrounded by similarly high values. Cold spots may indicate areas of lower priority or different management needs. FDR correction ensures these results are robust to multiple testing.**
 >
 > **--- Spatial Weights ---**
 >
@@ -917,7 +917,7 @@ In Part B of your report:
 3. **Propose two or three spatially explicit actions for these priority areas, using the legal instruments from the assignment brief.** Each action should name a specific geographic area and a specific legal tool (e.g., Wildlife Management Area, Conservation Area, national park).
 4. **Explain how your plan follows SCP principles:**
    - **Representation:** Your actions cover different habitat types (e.g., lowland and montane forest) within the hull.
-   - **Complementarity:** Each action adds something new — not duplicating the existing Nusareng and YUS protected areas, but filling gaps they don't cover.
+   - **Complementarity:** Each action adds something new - not duplicating the existing Nusareng and YUS protected areas, but filling gaps they don't cover.
    - **Efficiency:** Focusing on the 111 unprotected high-quality points rather than the entire hull, so the smallest area delivers the highest conservation return.
 
 **Important:** The gap analysis uses your hull extent, not the national boundary. It tells you what proportion of YOUR species' habitat is protected, not what proportion of PNG is protected. Do not generalise it to a national figure.
@@ -934,7 +934,7 @@ Map 5 (the gap-analysis map) is the fifth submitted map. Compose it the same way
 
 ## After All Five Maps
 
-### Export your data (for your own records — not submitted)
+### Export your data (for your own records - not submitted)
 
 Exporting your layers keeps a reproducible copy of your work. These files are not submitted and are not marked, but keep them in case you need to redo a map.
 
@@ -945,7 +945,7 @@ Exporting your layers keeps a reproducible copy of your work. These files are no
 5. Export your Convex Hull layer as **GeoJSON** (Surname_lab_convex_hull_polygon_utm55S_WGS84.geojson).
 6. Export your Gi*/LISA layer as **GeoJSON** (Moses_lab_gihotspots_treecoverpct_points_utm55S_WGS84.geojson).
 
-### Save the project (optional backup — not submitted)
+### Save the project (optional backup - not submitted)
 
 Saving a .gspx project file is an optional personal backup. It is **not** submitted and is not marked. Save one if you want to be able to reopen your full GeoSpaX session (all layers, symbology, and analysis results) later.
 
@@ -990,12 +990,12 @@ Fill in the provenance table with:
 
 ### Submit your work
 
-**Due: Friday 2 October 2026 (Week 11), 11:59 pm** — submit everything through Google Classroom.
+**Due: Friday 2 October 2026 (Week 11), 11:59 pm** - submit everything through Google Classroom.
 
-- **Google Classroom — five maps (PNG or PDF):** map 1, map 2, map 3, map 4, and map 5 (gap analysis). Name them Surname_lab_map1_study_area, Surname_lab_map2_attribute, Surname_lab_map3_pattern, Surname_lab_map4_habitat_proxy, and Surname_lab_map5_gap_analysis.
-- **Google Classroom — Part B report PDF:** with the filled provenance table inside it or as a one-page attachment, and the statistical outputs from the Analysis Results panel in the report body.
+- **Google Classroom - five maps (PNG or PDF):** map 1, map 2, map 3, map 4, and map 5 (gap analysis). Name them Surname_lab_map1_study_area, Surname_lab_map2_attribute, Surname_lab_map3_pattern, Surname_lab_map4_habitat_proxy, and Surname_lab_map5_gap_analysis.
+- **Google Classroom - Part B report PDF:** with the filled provenance table inside it or as a one-page attachment, and the statistical outputs from the Analysis Results panel in the report body.
 - Six files in total are submitted via Google Classroom: the five maps and the report PDF.
-- No project file (.gspx, .qgz, or .gpkg) is submitted. No GeoJSON files are submitted — keep your exports for your own records.
+- No project file (.gspx, .qgz, or .gpkg) is submitted. No GeoJSON files are submitted - keep your exports for your own records.
 
 ## Optional: Loading and Reclassifying Raster Data
 
