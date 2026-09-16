@@ -2,7 +2,7 @@
 
 FR422 Forest Wildlife and Habitat, Semester 2, 2026
 
-EXAMPLE ONLY. This report was prepared by the lecturer using the training species (Emperor Bird-of-paradise, *Paradisaea guilielmi*) and the training-file maps. Do not submit this report. Your Part B must use your own species, maps, thresholds, and citations. Copy the structure and the way each claim is tied to a map or source, not the content.
+EXAMPLE ONLY. Do not submit this report. Your Part B must use your own species, maps, thresholds, and citations. Copy the structure, not the content.
 
 Species: Emperor Bird-of-paradise, *Paradisaea guilielmi* (Cabanis, 1888)
 IUCN Red List category: Near Threatened (BirdLife International, n.d.; accessed 15 September 2026)
@@ -12,53 +12,43 @@ Student: [Surname]    Date: [submission date]
 
 ## 1. Species and study area
 
-The Emperor Bird-of-paradise is endemic to the Huon Peninsula, PNG, in hill and lower montane forest at 450 to 1,500 m, mainly 670 to 1,350 m (Australian Museum, n.d.). The IUCN lists it as Near Threatened due to its restricted range and dependence on intact forest (BirdLife International, n.d.).
-
-The study area is the convex hull of 128 GBIF records (56 unique sites) on the Huon Peninsula, Morobe Province (Figure 1). Hull area is 776,895 ha (EPSG:32755). This is the area of the enclosing polygon, not forest area and not the species' range. The plan is desk-based, written from the five maps and literature. No fieldwork was done and no communities were consulted.
-
-The five maps build on each other: Map 1 defines the planning boundary, Map 2 describes the environment at each record, Map 3 shows where records cluster, Map 4 ranks habitat quality, and Map 5 compares habitat with existing protection. The conservation plan reads all five together.
+The Emperor Bird-of-paradise is endemic to the Huon Peninsula, PNG, in hill and lower montane forest at 450 to 1,500 m (Australian Museum, n.d.). The IUCN lists it as Near Threatened (BirdLife International, n.d.). The study area is the convex hull of 128 GBIF records (56 unique sites) in Morobe Province (Figure 1). Hull area is 776,895 ha (EPSG:32755). This is desk-based, written from the five maps and literature.
 
 ## 2. Map results
 
-Environmental gradient (Figure 2). tree_cover_pct ranges 1 to 100% (mean 92.6, median 98.5). 115 of 128 records have tree cover at or above 90%. The species is recorded almost exclusively in closed-canopy forest, with a few low-cover records marking garden-forest edges. Elevation spans 15 to 2,664 m and rainfall 2,230 to 3,951 mm, matching the published habitat description of hill and lower montane forest (Australian Museum, n.d.). The environmental attributes are point samples, so the map shows conditions at the record sites only, not a continuous surface.
+Environmental gradient (Figure 2). tree_cover_pct ranges 1 to 100% (mean 92.6). 115 of 128 records have tree cover at or above 90%. The species is recorded almost exclusively in closed-canopy forest. Elevation spans 15 to 2,664 m, rainfall 2,230 to 3,951 mm, matching the published habitat description (Australian Museum, n.d.).
 
-Spatial pattern (Figure 3). Gi* (distance band 53.87 km, FDR-corrected) found 100 hot spots at 99% confidence, 14 cold spots at 99%, and 14 not significant (89.1% significant, mean z-score 2.18). The hot spots form a continuous high-tree-cover block across the peninsula's hill forest. This is the priority forest for protection. The cold spots mark degraded or open habitat. Stacked coordinates are present (128 records, 56 sites), so the results are reported with that caveat.
+Spatial pattern (Figure 3). Gi* (distance band 53.87 km, FDR-corrected) found 100 hot spots at 99% confidence, 14 cold spots at 99%, 14 not significant (89.1% significant). Hot spots form a continuous high-tree-cover block across the peninsula's hill forest. Cold spots mark degraded habitat. Stacked coordinates present (128 records, 56 sites).
 
-Habitat proxy (Figure 4). habitat_score ranges 0 to 3 (mean 2.742). 123 of 128 records score at or above 2, meaning most recorded sites meet at least two of the three environmental criteria. The proxy combines elevation, tree cover, and rainfall into one ranking that can be mapped and compared with protection status. It is a proxy of known sites only and does not predict where the species could occur.
+Habitat proxy (Figure 4). habitat_score ranges 0 to 3 (mean 2.742). 123 of 128 records score at or above 2. Not a species distribution model.
 
-Gap analysis (Figure 5 and 6). Of the 776,895 ha hull, 43,755 ha (5.6%) is inside protected areas (Nusareng and YUS). 734,995 ha (94.4%) is unprotected. Priority Area Identification found 111 of 128 high-quality records outside any protected area, 12 already protected, and 5 below the score threshold. The gap between habitat quality and existing protection is large: most high-quality recorded habitat has no formal protection.
+Gap analysis (Figures 5 and 6). 43,755 ha (5.6%) of the hull is inside protected areas (Nusareng and YUS). 734,995 ha (94.4%) is unprotected. 111 of 128 high-quality records are outside any protected area.
 
 ## 3. Ranked threats
 
-1. Logging of hill forest (rank 1). The species' core habitat coincides with the 99% tree-cover hot-spot block in Figure 3. Logging removes this block. Ranked first because 94.4% of the hull is unprotected (Figure 5) and logging is the identified threat for this species (Australian Museum, n.d.).
+1. Logging of hill forest (rank 1). The hot-spot block in Figure 3 is the species' core habitat. Logging removes it. Ranked first because 94.4% of the hull is unprotected and logging is the identified threat (Australian Museum, n.d.).
 
-2. Hunting for ceremonial plumes (rank 2). Birds-of-paradise are hunted for traditional headdresses and cultural performance (Supuma, 2018). This is from literature, not the lab file. Ranked second because hunting is dispersed while logging removes habitat permanently and at scale.
+2. Hunting for ceremonial plumes (rank 2). Birds-of-paradise are hunted for traditional headdresses (Supuma, 2018). From literature, not the lab file. Ranked second because hunting is dispersed while logging removes habitat permanently.
 
-3. Garden expansion at forest edges (rank 3). The 14 cold spots in Figures 2 and 3 mark garden-forest edges with reduced canopy. Ranked third because the species persists in forest pockets within gardens (Australian Museum, n.d.), so garden-edge habitat is degraded but not lost.
-
-No other threats are ranked. Climate change is not ranked because the file has no time series or future-climate layer, so no effect can be calculated.
+3. Garden expansion at forest edges (rank 3). The 14 cold spots in Figures 2 and 3 mark garden edges with reduced canopy. Ranked third because the species persists in forest pockets within gardens (Australian Museum, n.d.).
 
 ## 4. Conservation actions
 
-Action 1: Protect the hot-spot block. Establish a Wildlife Management Area under the Fauna (Protection and Control) Act 1966 over the contiguous 99% Gi* hot-spot block (Figure 3), targeting the 111 unprotected high-quality records (Figure 6). This addresses logging (threat 1) by controlling habitat use, and hunting (threat 2) by allowing WMA rules to regulate plume hunting seasons.
+Action 1: Protect the hot-spot block with a Wildlife Management Area under the Fauna (Protection and Control) Act 1966. Targets the 111 unprotected high-quality records (Figure 6). Addresses logging and hunting.
 
-Action 2: Restore the cold-spot cluster. Declare a Conservation Area under the Conservation Areas Act 1978 over the degraded cold-spot cluster (Figure 3) with community-led forest restoration. This adds habitat that Action 1 does not cover, targeting the low-tree-cover cluster rather than the intact block.
+Action 2: Restore the cold-spot cluster with a Conservation Area under the Conservation Areas Act 1978. Adds habitat Action 1 does not cover.
 
-Action 3: Protect forest patches in the garden mosaic. Retain forest patches at the low-cover sites (Figure 2) through community forest agreements. The species persists in these pockets within gardens (Australian Museum, n.d.), so these patches connect the two larger actions and improve connectivity.
+Action 3: Protect forest patches in the garden mosaic through community forest agreements. The species persists in these pockets (Australian Museum, n.d.).
 
-The three actions cover the intact hill forest, the degraded cluster, and the garden mosaic. They do not duplicate the existing Nusareng or YUS protected areas, and they focus on the smallest area holding most high-quality records.
-
-Land in PNG is under customary tenure, meaning the clans who live on the land own it. The file records no clan names, so this plan cannot name them. Any action would need clan consent in practice.
+Land in PNG is under customary tenure. The file records no clan names, so this plan cannot name them. Any action needs clan consent in practice.
 
 ## 5. Monitoring
 
-This is a desk-based plan, so monitoring means re-running the GeoSpaX analysis if new data comes in. Re-run Gi* on updated tree cover at the same 53.87 km band to see if the hot-spot count changes. Re-run the gap analysis after any new protected areas are gazetted to see if the protected proportion rises above 5.6%.
-
-Action 1 has failed if the 99% hot-spot count drops below 90 of 128 within five years, or if the protected proportion stays at 5.6% two years after gazettal. Action 2 has failed if the cold-spot count exceeds 14. Action 3 has failed if records with tree_cover_pct below 50 exceed 13. These thresholds come from the GeoSpaX results in this report.
+Re-run Gi* on updated tree cover. Re-run the gap analysis after new protected areas. Action 1 fails if the 99% hot-spot count drops below 90 of 128 within five years, or if the protected proportion stays at 5.6% two years after gazettal. Action 2 fails if the cold-spot count exceeds 14. Action 3 fails if records with tree_cover_pct below 50 exceed 13.
 
 ## 6. Limitations
 
-GBIF teaching extract, not a census. 128 records at 56 sites with stacked coordinates. No forest-change layer, no field-verified data. The plan is desk-based, not a field assessment. It does not include community consultation, ground-truthing, or local ecological knowledge. The habitat proxy is not a species distribution model. Hull area is not habitat area. Any move to implement the actions would require field surveys and clan consultation.
+GBIF teaching extract, not a census. 128 records at 56 sites, stacked coordinates. No forest-change layer, no field data. Desk-based plan, not a field assessment. The habitat proxy is not a species distribution model. Hull area is not habitat area.
 
 ---
 
@@ -66,7 +56,7 @@ GBIF teaching extract, not a census. 128 records at 56 sites with stacked coordi
 
 Australian Museum. (n.d.). *Emperor Bird of Paradise*. Retrieved 15 September 2026, from https://australian.museum/about/history/exhibitions/birds-of-paradise/emperor-bird-of-paradise/
 
-BirdLife International. (n.d.). *Emperor Bird-of-paradise Paradisaea guilielmi* [Species factsheet]. *BirdLife Data Zone*. Retrieved 15 September 2026, from https://datazone.birdlife.org/species/factsheet/emperor-bird-of-paradise-paradisaea-guilielmi
+BirdLife International. (n.d.). *Emperor Bird-of-paradise Paradisaea guilielmi* [Species factsheet]. Retrieved 15 September 2026, from https://datazone.birdlife.org/species/factsheet/emperor-bird-of-paradise-paradisaea-guilielmi
 
 Conservation Areas Act 1978 (Papua New Guinea).
 
