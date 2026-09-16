@@ -6,7 +6,7 @@ EXAMPLE ONLY. Do not submit this report. Your Part B must use your own species, 
 
 Species: Emperor Bird-of-paradise, *Paradisaea guilielmi* (Cabanis, 1888)
 IUCN Red List category: Near Threatened (BirdLife International, n.d.; accessed 15 September 2026)
-Student: [Surname]    Date: [submission date]
+Student: [Full Name]    Student ID: [ID number]    Date: [submission date]
 
 ---
 
